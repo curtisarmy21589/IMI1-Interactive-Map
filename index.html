@@ -566,7 +566,7 @@
             </div>
           </div>
           <div class="control-group">
-            <label>Grid Reference (South-North Row, Left-Right Col)</label>
+            <label>Grid Reference (Building Interior)</label>
             <input type="text" id="assetGrid" placeholder="e.g., C-4">
           </div>
           <div class="control-group">
@@ -624,10 +624,10 @@
       </div>
       <form onsubmit="saveYardConfig(event)">
         <div class="modal-body">
-          <div class="control-group"><label>North Boundary Offset</label><input type="number" id="yardNorth" required></div>
-          <div class="control-group"><label>South Boundary Offset</label><input type="number" id="yardSouth" required></div>
-          <div class="control-group"><label>East Boundary Offset</label><input type="number" id="yardEast" required></div>
-          <div class="control-group"><label>West Boundary Offset</label><input type="number" id="yardWest" required></div>
+          <div class="control-group"><label>North Yard Padding</label><input type="number" id="yardNorth" required></div>
+          <div class="control-group"><label>South Yard Padding</label><input type="number" id="yardSouth" required></div>
+          <div class="control-group"><label>East Yard Padding</label><input type="number" id="yardEast" required></div>
+          <div class="control-group"><label>West Yard Padding</label><input type="number" id="yardWest" required></div>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" onclick="closeModal('yardModal')">Cancel</button>
@@ -667,8 +667,11 @@
   <div id="toastContainer"></div>
 
   <script>
-    const facilityWidth = 1500; // 30 columns width standard
-    const facilityHeight = 1400; // South (top) to North (bottom) rows span
+    // Building Interior Dimensions (Columns 1-30, Rows A-N layout space)
+    const buildingX = 100;
+    const buildingY = 100;
+    const buildingWidth = 1500; 
+    const buildingHeight = 1400;
 
     const state = {
       level: 'mezz',
@@ -687,10 +690,10 @@
         { id: 'cat_hvac', name: 'HVAC & Mechanical', color: '#10b981', icon: '❄️' }
       ],
       assets: [
-        { id: 'ast_1', name: 'Mezzanine Induction Line A', category: 'cat_conveyor', level: 'mezz', x: 300, y: 250, grid: 'C-6', notes: 'Flat belt sorter & SLAM station' },
-        { id: 'ast_2', name: 'FANUC R-30iB Vision Cell', category: 'cat_robotics', level: 'mezz', x: 600, y: 400, grid: 'F-12', notes: 'iRVision 3DV eye-in-hand sensor' },
-        { id: 'ast_3', name: 'Ground Main Sortation Loop', category: 'cat_conveyor', level: 'ground', x: 400, y: 300, grid: 'D-8', notes: 'Primary high-speed transport line' },
-        { id: 'ast_4', name: 'Roof ICP Condenser Unit 1', category: 'cat_hvac', level: 'upper', x: 500, y: 200, grid: 'B-10', notes: 'Model CA5524VKD3 rooftop HVAC' }
+        { id: 'ast_1', name: 'Mezzanine Induction Line A', category: 'cat_conveyor', level: 'mezz', x: 400, y: 350, grid: 'C-6', notes: 'Flat belt sorter & SLAM station' },
+        { id: 'ast_2', name: 'FANUC R-30iB Vision Cell', category: 'cat_robotics', level: 'mezz', x: 700, y: 500, grid: 'F-12', notes: 'iRVision 3DV eye-in-hand sensor' },
+        { id: 'ast_3', name: 'Ground Main Sortation Loop', category: 'cat_conveyor', level: 'ground', x: 500, y: 400, grid: 'D-8', notes: 'Primary high-speed transport line' },
+        { id: 'ast_4', name: 'Roof ICP Condenser Unit 1', category: 'cat_hvac', level: 'upper', x: 600, y: 300, grid: 'B-10', notes: 'Model CA5524VKD3 rooftop HVAC' }
       ]
     };
 
@@ -762,14 +765,22 @@
     const rowLabels = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'M.9', 'N'];
 
     function getGridRef(x, y) {
+      // Check if coordinates fall inside building bounds
+      if (x < buildingX || x > buildingX + buildingWidth || y < buildingY || y > buildingY + buildingHeight) {
+        return 'Exterior Yard';
+      }
+
+      const relX = x - buildingX;
+      const relY = y - buildingY;
+
       // 30 Columns from left (1) to right (30)
-      const colWidth = facilityWidth / 30;
-      let colNum = Math.floor(x / colWidth) + 1;
+      const colWidth = buildingWidth / 30;
+      let colNum = Math.floor(relX / colWidth) + 1;
       colNum = Math.max(1, Math.min(30, colNum));
 
       // Rows from South (top = A) to North (bottom = N)
-      const rowHeight = facilityHeight / rowLabels.length;
-      let rowIndex = Math.floor(y / rowHeight);
+      const rowHeight = buildingHeight / rowLabels.length;
+      let rowIndex = Math.floor(relY / rowHeight);
       rowIndex = Math.max(0, Math.min(rowLabels.length - 1, rowIndex));
       const rowLabel = rowLabels[rowIndex];
 
@@ -792,7 +803,7 @@
       if (state.placementMode) {
         btnIcon.innerText = '❌';
         btnText.innerText = 'Cancel Placement';
-        modeText.innerText = 'Placement Mode: Click anywhere on canvas to drop asset';
+        modeText.innerText = 'Placement Mode: Click inside building to drop asset';
         modeText.style.color = 'var(--accent)';
       } else {
         btnIcon.innerText = '➕';
@@ -809,19 +820,47 @@
       ctx.translate(state.panX, state.panY);
       ctx.scale(state.scale, state.scale);
 
-      // Draw Grid / Column & Row Markers
+      // Draw Exterior Yard Boundary surrounding the building
+      ctx.strokeStyle = 'rgba(245, 158, 11, 0.4)';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(
+        buildingX - state.yard.west, 
+        buildingY - state.yard.north, 
+        buildingWidth + state.yard.west + state.yard.east, 
+        buildingHeight + state.yard.north + state.yard.south
+      );
+
+      ctx.fillStyle = '#f59e0b';
+      ctx.font = 'bold 11px sans-serif';
+      ctx.fillText('EXTERIOR YARD', buildingX - state.yard.west + 10, buildingY - state.yard.north + 20);
+
+      // Draw Building Perimeter Wall (South wall at top, North wall at bottom)
+      ctx.strokeStyle = '#38bdf8';
+      ctx.lineWidth = 3;
+      ctx.strokeRect(buildingX, buildingY, buildingWidth, buildingHeight);
+
+      // Label exterior indicators relative to building walls
+      ctx.fillStyle = '#38bdf8';
+      ctx.font = 'bold 11px sans-serif';
+      ctx.fillText('SOUTH WALL (TOP)', buildingX + 20, buildingY - 10);
+      ctx.fillText('NORTH WALL (BOTTOM)', buildingX + 20, buildingY + buildingHeight + 20);
+
+      // Draw Grid / Column & Row Markers EXCLUSIVELY INSIDE THE BUILDING
+      ctx.save();
+      ctx.translate(buildingX, buildingY);
+
       ctx.strokeStyle = 'rgba(51, 65, 85, 0.4)';
       ctx.lineWidth = 1;
       
-      const colWidth = facilityWidth / 30;
-      const rowHeight = facilityHeight / rowLabels.length;
+      const colWidth = buildingWidth / 30;
+      const rowHeight = buildingHeight / rowLabels.length;
 
       // Draw vertical column dividers (1 to 30)
       for (let i = 0; i <= 30; i++) {
         const x = i * colWidth;
         ctx.beginPath();
         ctx.moveTo(x, 0);
-        ctx.lineTo(x, facilityHeight);
+        ctx.lineTo(x, buildingHeight);
         ctx.stroke();
       }
 
@@ -830,32 +869,14 @@
         const y = j * rowHeight;
         ctx.beginPath();
         ctx.moveTo(0, y);
-        ctx.lineTo(facilityWidth, y);
+        ctx.lineTo(buildingWidth, y);
         ctx.stroke();
       }
 
-      // Draw Exterior Yard
-      ctx.strokeStyle = 'rgba(245, 158, 11, 0.4)';
-      ctx.lineWidth = 2;
-      ctx.strokeRect(-state.yard.west, -state.yard.north, facilityWidth + state.yard.west + state.yard.east, facilityHeight + state.yard.north + state.yard.south);
-
-      // Draw Facility Perimeter Wall (South wall at top y=0, North wall at bottom y=facilityHeight)
-      ctx.strokeStyle = '#38bdf8';
-      ctx.lineWidth = 3;
-      ctx.strokeRect(0, 0, facilityWidth, facilityHeight);
-
-      // Label indicator: South Wall (Top) & North Wall (Bottom)
-      ctx.fillStyle = '#38bdf8';
-      ctx.font = 'bold 11px sans-serif';
-      ctx.fillText('SOUTH WALL (TOP)', 20, -10);
-      ctx.fillText('NORTH WALL (BOTTOM)', 20, facilityHeight + 20);
-
-      // Draw Mezzanine Level Structure if active (Terminates at J22 and M.9 22)
+      // Draw Mezzanine Level Structure if active (Terminates exactly at J22 and M.9 22)
       if (state.level === 'mezz') {
-        // Calculate coordinates for column 22 and row index corresponding to M.9
-        // rowLabels index for M.9 is 13 (A=0 ... M.9=13, N=14)
         const mezzEndX = 22 * colWidth; 
-        const mezzEndY = 14 * rowHeight; // Right before N starts (spanning down to M.9 boundary)
+        const mezzEndY = 14 * rowHeight; // Spans down to M.9 boundary (index 14 right before N)
 
         ctx.fillStyle = 'rgba(14, 116, 144, 0.15)';
         ctx.strokeStyle = '#06b6d4';
@@ -868,7 +889,9 @@
         ctx.fillText('MEZZANINE FLOOR LEVEL (Ends at J22 / M.9-22)', 20, 30);
       }
 
-      // Draw Assets for Current Level
+      ctx.restore(); // Restore building coordinate offset
+
+      // Draw Assets
       const currentAssets = state.assets.filter(a => a.level === state.level);
       currentAssets.forEach(asset => {
         const cat = state.categories.find(c => c.id === asset.category) || { color: '#ffffff', icon: '📍' };
@@ -1024,9 +1047,9 @@
       document.getElementById('assetId').value = '';
       document.getElementById('assetName').value = '';
       document.getElementById('assetLevel').value = state.level;
-      document.getElementById('assetX').value = x || 100;
-      document.getElementById('assetY').value = y || 100;
-      document.getElementById('assetGrid').value = getGridRef(x || 100, y || 100);
+      document.getElementById('assetX').value = x || buildingX + 100;
+      document.getElementById('assetY').value = y || buildingY + 100;
+      document.getElementById('assetGrid').value = getGridRef(x || buildingX + 100, y || buildingY + 100);
       document.getElementById('assetNotes').value = '';
       document.getElementById('deleteAssetBtn').style.display = 'none';
       populateCategorySelect();
