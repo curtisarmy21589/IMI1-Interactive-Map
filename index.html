@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Facility Layout Builder - Blueprint Match</title>
+    <title>Facility Layout Builder - Coordinate Tracker</title>
     <style>
         body {
             background-color: #0b131d;
@@ -86,6 +86,22 @@
             stroke: #132235;
             stroke-width: 1;
         }
+        .coord-label {
+            fill: #64748b;
+            font-size: 9px;
+            font-family: monospace;
+            pointer-events: none;
+        }
+        #coord-display {
+            background: #070d14;
+            border: 1px solid #1e293b;
+            padding: 8px;
+            border-radius: 4px;
+            font-family: monospace;
+            color: #38bdf8;
+            font-size: 13px;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
@@ -93,6 +109,11 @@
     <div id="sidebar">
         <h2>Layout Builder</h2>
         
+        <div>
+            <h3>Live Cursor Coordinate</h3>
+            <div id="coord-display">Col: -- | Row: --</div>
+        </div>
+
         <div>
             <h3>Interaction Mode</h3>
             <div style="display: flex; gap: 10px;">
@@ -158,7 +179,7 @@
             <p style="font-size: 11px; color: #64748b; margin-top: 10px;">
                 💡 <b>Instructions:</b><br>
                 • <b>Edit Layout Mode:</b> Click and drag departments/assets.<br>
-                • <b>Pan / Zoom Mode:</b> Drag canvas to pan; scroll mouse wheel to zoom in/out.
+                • <b>Pan / Zoom Mode:</b> Drag canvas to pan; scroll wheel to zoom.
             </p>
         </div>
     </div>
@@ -190,15 +211,26 @@
     let selectedId = null;
     let isDraggingElement = false;
     let isPanning = false;
-    let dragOffset = { x: 0, y: 0 };
     let panStart = { x: 0, y: 0 };
     
     // Viewport Transform State (Pan & Zoom)
-    let viewTransform = { x: 40, y: 40, scale: 1 };
+    let viewTransform = { x: 50, y: 50, scale: 1 };
 
     const container = document.getElementById("canvas-container");
     const svg = document.getElementById("layoutSvg");
     const viewport = document.getElementById("viewport");
+
+    // Convert row index (0-based) to letter code (A, B, C... Z, AA, AB...)
+    function getRowLetter(rowIndex) {
+        let temp, letter = '';
+        rowIndex += 1;
+        while (rowIndex > 0) {
+            temp = (rowIndex - 1) % 26;
+            letter = String.fromCharCode(temp + 65) + letter;
+            rowIndex = (rowIndex - temp - 1) / 26;
+        }
+        return letter;
+    }
 
     function setMode(mode) {
         currentMode = mode;
@@ -223,7 +255,7 @@
         viewport.innerHTML = "";
         updateTransformString();
 
-        // 1. Grid Lines
+        // 1. Grid Lines & Battleship Border Labels
         for (let c = 0; c <= cols; c++) {
             let line = document.createElementNS("http://www.w3.org/2000/svg", "line");
             line.setAttribute("x1", c * gridSize);
@@ -232,7 +264,19 @@
             line.setAttribute("y2", rows * gridSize);
             line.setAttribute("class", "grid-line");
             viewport.appendChild(line);
+
+            // Column Number Header (Top)
+            if (c < cols) {
+                let text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                text.setAttribute("x", (c * gridSize) + (gridSize / 2));
+                text.setAttribute("y", -6);
+                text.setAttribute("text-anchor", "middle");
+                text.setAttribute("class", "coord-label");
+                text.textContent = c + 1;
+                viewport.appendChild(text);
+            }
         }
+
         for (let r = 0; r <= rows; r++) {
             let line = document.createElementNS("http://www.w3.org/2000/svg", "line");
             line.setAttribute("x1", 0);
@@ -241,6 +285,17 @@
             line.setAttribute("y2", r * gridSize);
             line.setAttribute("class", "grid-line");
             viewport.appendChild(line);
+
+            // Row Letter Header (Left)
+            if (r < rows) {
+                let text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                text.setAttribute("x", -8);
+                text.setAttribute("y", (r * gridSize) + (gridSize / 2) + 3);
+                text.setAttribute("text-anchor", "end");
+                text.setAttribute("class", "coord-label");
+                text.textContent = getRowLetter(r);
+                viewport.appendChild(text);
+            }
         }
 
         // 2. Exterior / Yard Zone Border (Dashed Outer Box)
@@ -255,7 +310,6 @@
         yardBorder.setAttribute("stroke-dasharray", "6,4");
         viewport.appendChild(yardBorder);
 
-        // Yard Zone Label Text
         let yardText = document.createElementNS("http://www.w3.org/2000/svg", "text");
         yardText.setAttribute("x", 1 * gridSize);
         yardText.setAttribute("y", 1.8 * gridSize);
@@ -265,7 +319,7 @@
         yardText.textContent = "EXTERIOR / YARD ZONE";
         viewport.appendChild(yardText);
 
-        // 3. Building Interior Solid Wall Boundary (Cyan Line Box)
+        // 3. Building Interior Solid Wall Boundary
         let buildingWall = document.createElementNS("http://www.w3.org/2000/svg", "rect");
         buildingWall.setAttribute("x", 2 * gridSize);
         buildingWall.setAttribute("y", 4 * gridSize);
@@ -276,7 +330,6 @@
         buildingWall.setAttribute("stroke-width", "1.5");
         viewport.appendChild(buildingWall);
 
-        // Bottom right detail line styling matching reference image (Magenta accent line)
         let accentLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
         accentLine.setAttribute("x1", 42 * gridSize);
         accentLine.setAttribute("y1", (rows - 2) * gridSize);
@@ -294,12 +347,11 @@
         accentText.textContent = "COLUMNS 6.8 WALL LINE";
         viewport.appendChild(accentText);
 
-        // 4. Render Elements (Departments as Rectangles, Assets as Dots)
+        // 4. Render Elements
         elements.forEach(el => {
             let g = document.createElementNS("http://www.w3.org/2000/svg", "g");
 
             if (el.type === 'asset') {
-                // Utility Asset rendered strictly as a Dot (Circle)
                 let circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
                 let cx = (el.x * gridSize) + (gridSize / 2);
                 let cy = (el.y * gridSize) + (gridSize / 2);
@@ -331,7 +383,6 @@
                 g.appendChild(text);
 
             } else {
-                // Departments / Racking / Mezzanine rendered as Rectangles
                 let rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
                 rect.setAttribute("x", el.x * gridSize);
                 rect.setAttribute("y", el.y * gridSize);
@@ -374,6 +425,35 @@
         });
     }
 
+    // Live Mouse Tracking for Battleship Coordinates
+    container.addEventListener("mousemove", (e) => {
+        let rect = container.getBoundingClientRect();
+        let mouseX = e.clientX - rect.left;
+        let mouseY = e.clientY - rect.top;
+
+        // Transform screen coords to SVG local canvas coords
+        let localX = (mouseX - viewTransform.x) / viewTransform.scale;
+        let localY = (mouseY - viewTransform.y) / viewTransform.scale;
+
+        let colIdx = Math.floor(localX / gridSize);
+        let rowIdx = Math.floor(localY / gridSize);
+
+        let coordDisplay = document.getElementById("coord-display");
+        if (colIdx >= 0 && colIdx < cols && rowIdx >= 0 && rowIdx < rows) {
+            let colNum = colIdx + 1;
+            let rowLetter = getRowLetter(rowIdx);
+            coordDisplay.innerHTML = `Grid: <b>${rowLetter}-${colNum}</b> (Col ${colNum}, Row ${rowLetter})`;
+        } else {
+            coordDisplay.innerHTML = `Col: -- | Row: --`;
+        }
+
+        if (isPanning) {
+            viewTransform.x = e.clientX - panStart.x;
+            viewTransform.y = e.clientY - panStart.y;
+            render();
+        }
+    });
+
     // Mouse Wheel Zooming
     container.addEventListener("wheel", (e) => {
         e.preventDefault();
@@ -386,7 +466,6 @@
             viewTransform.scale = Math.max(viewTransform.scale * (1 - zoomIntensity), 0.3);
         }
 
-        // Zoom toward mouse pointer position
         let rect = container.getBoundingClientRect();
         let mouseX = e.clientX - rect.left;
         let mouseY = e.clientY - rect.top;
@@ -410,14 +489,6 @@
         }
     });
 
-    window.addEventListener("mousemove", (e) => {
-        if (isPanning) {
-            viewTransform.x = e.clientX - panStart.x;
-            viewTransform.y = e.clientY - panStart.y;
-            render();
-        }
-    });
-
     window.addEventListener("mouseup", () => {
         if (isPanning) {
             isPanning = false;
@@ -431,7 +502,6 @@
         
         let startX = e.clientX;
         let startY = e.clientY;
-        
         let origX = el.x;
         let origY = el.y;
 
