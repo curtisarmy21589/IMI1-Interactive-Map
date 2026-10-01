@@ -109,7 +109,7 @@
     
     <div class="status-badge" id="cloudStatusBadge">
       <span class="status-dot"></span>
-      <span id="cloudStatusText">Connecting to Firebase...</span>
+      <span id="cloudStatusText">Connecting to Live Cloud...</span>
     </div>
 
     <div class="nav-controls">
@@ -181,10 +181,13 @@
 
   <!-- Asset Modal -->
   <div class="modal-backdrop" id="assetModal">
-    <div class="modal" id="assetModalBox">
+    <div class="modal" id="assetModalBox" data-maximized="false">
       <div class="modal-header">
         <span id="modalTitle">Add System Asset</span>
-        <span style="cursor:pointer; font-size:14px;" onclick="closeModal('assetModal')">✕</span>
+        <div style="display:flex; gap:6px; align-items:center;">
+          <button class="icon-btn" type="button" title="Maximize Modal" onclick="toggleMaximizeModal('assetModalBox')">⛶</button>
+          <span style="cursor:pointer; font-size:14px;" onclick="closeModal('assetModal')">✕</span>
+        </div>
       </div>
       <form id="assetForm" onsubmit="saveAsset(event)">
         <input type="hidden" id="assetId">
@@ -219,7 +222,7 @@
         </div>
         <div class="form-group">
           <label>Grid Reference</label>
-          <input type="text" id="assetGrid" class="form-control" placeholder="e.g. Column H-12">
+          <input type="text" id="assetGrid" class="form-control" placeholder="e.g. Column H-12 or M.9-15">
         </div>
         <div class="form-group">
           <label>Notes / Isolation Steps</label>
@@ -236,10 +239,13 @@
 
   <!-- Category Modal -->
   <div class="modal-backdrop" id="catModal">
-    <div class="modal">
+    <div class="modal" id="catModalBox" data-maximized="false">
       <div class="modal-header">
         <span id="catModalTitle">Add System Category</span>
-        <span style="cursor:pointer; font-size:14px;" onclick="closeModal('catModal')">✕</span>
+        <div style="display:flex; gap:6px; align-items:center;">
+          <button class="icon-btn" type="button" title="Maximize Modal" onclick="toggleMaximizeModal('catModalBox')">⛶</button>
+          <span style="cursor:pointer; font-size:14px;" onclick="closeModal('catModal')">✕</span>
+        </div>
       </div>
       <form onsubmit="saveCategory(event)">
         <input type="hidden" id="catId">
@@ -268,10 +274,13 @@
 
   <!-- Yard Config Modal -->
   <div class="modal-backdrop" id="yardModal">
-    <div class="modal">
+    <div class="modal" id="yardModalBox" data-maximized="false">
       <div class="modal-header">
         <span>Exterior Yard & Parking Configurator</span>
-        <span style="cursor:pointer; font-size:14px;" onclick="closeModal('yardModal')">✕</span>
+        <div style="display:flex; gap:6px; align-items:center;">
+          <button class="icon-btn" type="button" title="Maximize Modal" onclick="toggleMaximizeModal('yardModalBox')">⛶</button>
+          <span style="cursor:pointer; font-size:14px;" onclick="closeModal('yardModal')">✕</span>
+        </div>
       </div>
       <form onsubmit="saveYardConfig(event)">
         <div class="form-group">
@@ -315,22 +324,21 @@
 
   <div class="toast-container" id="toastContainer"></div>
 
-  <!-- Script with your exact Firebase config & robust fallback handler -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-    import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-analytics.js";
-    import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
     import { getFirestore, doc, setDoc, deleteDoc, onSnapshot, collection } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-    // Your exact Firebase configuration
+    const appId = typeof __app_id !== 'undefined' ? __app_id : 'facility-blueprint-app';
+    
+    // YOUR ACTUAL FIREBASE CONFIGURATION
     const firebaseConfig = {
-      apiKey: "AIzaSyCrKAut8_5nHWTWtYqZZr5HOENGd8mqZxE",
-      authDomain: "imi1-interactive-map-8d929.firebaseapp.com",
-      projectId: "imi1-interactive-map-8d929",
-      storageBucket: "imi1-interactive-map-8d929.firebasestorage.app",
-      messagingSenderId: "613133090515",
-      appId: "1:613133090515:web:f8f9be365f484a3a5c5e26",
-      measurementId: "G-4QR2RSSTN1"
+      apiKey: "AIzaSyD...",
+      authDomain: "your-project-id.firebaseapp.com",
+      projectId: "your-project-id",
+      storageBucket: "your-project-id.appspot.com",
+      messagingSenderId: "123456789",
+      appId: "1:123456789:web:abcdef"
     };
 
     let db = null;
@@ -386,7 +394,7 @@
       dummy.select();
       document.execCommand('copy');
       document.body.removeChild(dummy);
-      showToast("Live collaborative link copied to clipboard!", "success");
+      showToast("Live collaborative link copied to clipboard! Anyone with this link can view and collaborate in real time.", "success");
     };
 
     function customConfirm(title, message, onConfirm) {
@@ -410,29 +418,65 @@
     window.toggleMaximizeSidebar = () => {
       const sidebar = document.getElementById('sidebar');
       if (sidebar.classList.contains('minimized')) return;
-      sidebar.dataset.maximized = sidebar.dataset.maximized === 'true' ? 'false' : 'true';
-      sidebar.style.width = sidebar.dataset.maximized === 'true' ? '550px' : '330px';
+      
+      const isMax = sidebar.dataset.maximized === 'true';
+      if (isMax) {
+        sidebar.dataset.maximized = 'false';
+        sidebar.style.width = '330px';
+      } else {
+        sidebar.dataset.maximized = 'true';
+        sidebar.style.width = '550px';
+      }
       setTimeout(resizeCanvas, 320);
     };
 
-    // Initialize Firebase with fallback
+    window.toggleMaximizeModal = (modalBoxId) => {
+      const box = document.getElementById(modalBoxId);
+      const isMax = box.dataset.maximized === 'true';
+      if (isMax) {
+        box.dataset.maximized = 'false';
+        box.style.width = '440px';
+        box.style.height = 'auto';
+      } else {
+        box.dataset.maximized = 'true';
+        box.style.width = '92vw';
+        box.style.height = '85vh';
+      }
+    };
+
+    const getCategoriesCol = () => collection(db, 'artifacts', appId, 'public', 'data', 'categories');
+    const getAssetsCol = () => collection(db, 'artifacts', appId, 'public', 'data', 'assets');
+    const getYardDocRef = () => doc(db, 'artifacts', appId, 'public', 'data', 'config', 'yard');
+
     async function initFirebase() {
+      if (!firebaseConfig || !firebaseConfig.apiKey || firebaseConfig.apiKey.includes("AIzaSyD...")) {
+        updateCloudStatus(false, "Local Memory Mode (Update Firebase Config)");
+        renderCategoryList();
+        renderAssetList();
+        draw();
+        return;
+      }
+
       try {
         const app = initializeApp(firebaseConfig);
-        try { getAnalytics(app); } catch (e) {}
         auth = getAuth(app);
         db = getFirestore(app);
 
-        const res = await signInAnonymously(auth);
-        user = res.user;
+        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+          const res = await signInWithCustomToken(auth, __initial_auth_token);
+          user = res.user;
+        } else {
+          const res = await signInAnonymously(auth);
+          user = res.user;
+        }
 
         if (user) {
-          updateCloudStatus(true, `Synced Cloud (${user.uid.slice(0, 6)}...)`);
+          updateCloudStatus(true, `Synced Live (${user.uid.slice(0, 6)}...)`);
           setupFirestoreListeners();
         }
       } catch (err) {
-        console.warn("Firebase running in offline local mode:", err);
-        updateCloudStatus(false, "Local Mode (Offline)");
+        console.error("Firebase init failed:", err);
+        updateCloudStatus(false, "Offline / Local Mode");
         renderCategoryList();
         renderAssetList();
         draw();
@@ -442,37 +486,70 @@
     function updateCloudStatus(connected, text) {
       const badge = document.getElementById('cloudStatusBadge');
       const textElem = document.getElementById('cloudStatusText');
-      if (connected) badge.classList.add('connected');
-      else badge.classList.remove('connected');
+      if (connected) {
+        badge.classList.add('connected');
+      } else {
+        badge.classList.remove('connected');
+      }
       textElem.innerText = text;
     }
 
     function setupFirestoreListeners() {
       if (!user || !db) return;
-      const catsCol = collection(db, 'blueprint_categories');
-      const assetsCol = collection(db, 'blueprint_assets');
 
-      onSnapshot(catsCol, (snapshot) => {
-        if (!snapshot.empty) {
+      onSnapshot(getCategoriesCol(), (snapshot) => {
+        if (snapshot.empty) {
+          seedCategoriesToCloud();
+        } else {
           const cats = [];
           snapshot.forEach(docSnap => cats.push({ id: docSnap.id, ...docSnap.data() }));
           state.categories = cats;
+          renderCategoryList();
+          populateCategorySelect();
+          renderAssetList();
+          draw();
         }
-        renderCategoryList();
-        populateCategorySelect();
-        renderAssetList();
-        draw();
-      }, err => console.log("Category sync note:", err));
+      }, (err) => console.error("Categories snapshot error:", err));
 
-      onSnapshot(assetsCol, (snapshot) => {
-        if (!snapshot.empty) {
+      onSnapshot(getAssetsCol(), (snapshot) => {
+        if (snapshot.empty) {
+          seedAssetsToCloud();
+        } else {
           const asts = [];
           snapshot.forEach(docSnap => asts.push({ id: docSnap.id, ...docSnap.data() }));
           state.assets = asts;
+          renderAssetList();
+          draw();
         }
-        renderAssetList();
-        draw();
-      }, err => console.log("Asset sync note:", err));
+      }, (err) => console.error("Assets snapshot error:", err));
+
+      onSnapshot(getYardDocRef(), (docSnap) => {
+        if (docSnap.exists()) {
+          state.yard = docSnap.data();
+          draw();
+        } else {
+          seedYardToCloud();
+        }
+      }, (err) => console.error("Yard snapshot error:", err));
+    }
+
+    async function seedCategoriesToCloud() {
+      if (!user || !db) return;
+      for (const cat of state.categories) {
+        await setDoc(doc(getCategoriesCol(), cat.id), cat);
+      }
+    }
+
+    async function seedAssetsToCloud() {
+      if (!user || !db) return;
+      for (const asset of state.assets) {
+        await setDoc(doc(getAssetsCol(), asset.id), asset);
+      }
+    }
+
+    async function seedYardToCloud() {
+      if (!user || !db) return;
+      await setDoc(getYardDocRef(), state.yard);
     }
 
     function resizeCanvas() {
@@ -514,7 +591,10 @@
       const col = Math.max(1, Math.min(30, Math.floor(x / 60) + 1));
       const rowIdx = Math.floor(y / 60);
       const rows = ['A','B','C','D','E','F','G','H','I','J','K','L','M'];
-      if (rowIdx >= 12 || y >= 720) return `M.9-${col}`;
+      
+      if (rowIdx >= 12 || y >= 720) {
+        return `M.9-${col}`;
+      }
       return `${rows[Math.max(0, rowIdx)] || 'M'}-${col}`;
     }
 
@@ -525,6 +605,7 @@
       ctx.scale(state.scale, state.scale);
 
       const buildingWidth = 1800;
+
       const yardX = -state.yard.west;
       const yardY = -state.yard.north;
       const yardWidth = buildingWidth + state.yard.west + state.yard.east;
@@ -532,6 +613,7 @@
 
       ctx.fillStyle = 'rgba(33, 150, 243, 0.12)';
       ctx.fillRect(yardX, yardY, yardWidth, yardHeight);
+
       ctx.strokeStyle = '#2196f3';
       ctx.lineWidth = 2;
       ctx.setLineDash([8, 6]);
@@ -548,6 +630,49 @@
       ctx.fillRect(0, 0, buildingWidth, 780);
       ctx.strokeRect(0, 0, buildingWidth, 780);
 
+      const r1X = 480; 
+      const r1Y = 75;  
+      const r1W = 1215; 
+      const r1H = 345;  
+
+      ctx.fillStyle = 'rgba(255, 152, 0, 0.12)';
+      ctx.strokeStyle = '#ff9800';
+      ctx.lineWidth = 1.5;
+      ctx.fillRect(r1X, r1Y, r1W, r1H);
+      ctx.strokeRect(r1X, r1Y, r1W, r1H);
+
+      ctx.strokeStyle = 'rgba(255, 152, 0, 0.2)';
+      ctx.lineWidth = 1;
+      for (let rx = r1X; rx <= r1X + r1W; rx += 30) {
+        ctx.beginPath(); ctx.moveTo(rx, r1Y); ctx.lineTo(rx - 30, r1Y + r1H); ctx.stroke();
+      }
+
+      ctx.fillStyle = '#ffa726'; ctx.font = 'bold 12px sans-serif';
+      ctx.fillText('MAIN RACKING AREA #1 (Cols 9 to 29.25 | Rows B.25 to G)', r1X + 20, r1Y + 25);
+
+      const r2X = 1410;
+      const r2Y = 450;
+      const r2W = 240; 
+      const r2H = 240; 
+
+      ctx.fillStyle = 'rgba(255, 152, 0, 0.18)';
+      ctx.strokeStyle = '#ff9800';
+      ctx.lineWidth = 1.5;
+      ctx.fillRect(r2X, r2Y, r2W, r2H);
+      ctx.strokeRect(r2X, r2Y, r2W, r2H);
+
+      ctx.strokeStyle = 'rgba(255, 152, 0, 0.25)';
+      for (let rx = r2X; rx <= r2X + r2W + r2H; rx += 20) {
+        ctx.beginPath(); 
+        ctx.moveTo(Math.min(rx, r2X + r2W), r2Y + Math.max(0, rx - (r2X + r2W))); 
+        ctx.lineTo(Math.max(r2X, rx - r2H), Math.min(r2Y + r2H, r2Y + (rx - r2X))); 
+        ctx.stroke();
+      }
+
+      ctx.fillStyle = '#ffa726'; ctx.font = 'bold 10px sans-serif';
+      ctx.fillText('RACKING #2', r2X + 10, r2Y + 20);
+      ctx.fillText('(Cols 24.5 to 28.5 | Rows H.5 to L.5)', r2X + 10, r2Y + 35);
+
       ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
       ctx.lineWidth = 1;
       for (let x = 0; x <= buildingWidth; x += 60) {
@@ -557,15 +682,21 @@
         ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(buildingWidth, y); ctx.stroke();
       }
 
-      const visibleAssets = state.assets.filter(a => a.level === state.level);
-      visibleAssets.forEach(asset => {
-        const cat = state.categories.find(c => c.id === asset.category) || { color: '#2196f3', icon: '📍' };
+      ctx.strokeStyle = '#e91e63';
+      ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(0, 780); ctx.lineTo(buildingWidth, 780); ctx.stroke();
+      ctx.fillStyle = '#e91e63'; ctx.font = 'bold 10px monospace';
+      ctx.fillText('COLUMN M.9 WALL LINE', 20, 772);
+
+      state.assets.filter(a => a.level === state.level).forEach(asset => {
+        const cat = state.categories.find(c => c.id === asset.category) || { color: '#ffffff', icon: '📍' };
+        
         ctx.beginPath();
-        ctx.arc(asset.x, asset.y, 14, 0, Math.PI * 2);
-        ctx.fillStyle = cat.color;
+        ctx.arc(asset.x, asset.y, 16, 0, Math.PI * 2);
+        ctx.fillStyle = '#161b26';
         ctx.fill();
-        ctx.lineWidth = 2;
-        ctx.strokeStyle = '#fff';
+        ctx.strokeStyle = cat.color;
+        ctx.lineWidth = 3;
         ctx.stroke();
 
         ctx.font = '14px sans-serif';
@@ -576,20 +707,61 @@
         ctx.font = 'bold 11px sans-serif';
         ctx.fillStyle = '#fff';
         ctx.textAlign = 'left';
-        ctx.fillText(asset.name, asset.x + 18, asset.y + 4);
+        ctx.fillText(asset.name, asset.x + 22, asset.y + 4);
       });
 
       ctx.restore();
     }
 
+    window.setLevel = (lvl, e) => {
+      state.level = lvl;
+      document.querySelectorAll('.level-btn').forEach(btn => btn.classList.remove('active'));
+      if (e && e.target) e.target.classList.add('active');
+      draw();
+    };
+
+    window.zoomButtonHandler = (factor) => {
+      const cx = canvas.width / 2;
+      const cy = canvas.height / 2;
+      const wx = (cx - state.panX) / state.scale;
+      const wy = (cy - state.panY) / state.scale;
+      state.scale = Math.max(0.2, Math.min(4, state.scale * factor));
+      state.panX = cx - wx * state.scale;
+      state.panY = cy - wy * state.scale;
+      draw();
+    };
+
+    window.resetView = () => {
+      state.scale = 1;
+      state.panX = 50;
+      state.panY = 50;
+      draw();
+    };
+
+    canvas.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      const zoomFactor = e.deltaY < 0 ? 1.15 : 0.85;
+      const rect = canvas.getBoundingClientRect();
+      const mouseX = e.clientX - rect.left;
+      const mouseY = e.clientY - rect.top;
+      const wx = (mouseX - state.panX) / state.scale;
+      const wy = (mouseY - state.panY) / state.scale;
+      state.scale = Math.max(0.2, Math.min(4, state.scale * zoomFactor));
+      state.panX = mouseX - wx * state.scale;
+      state.panY = mouseY - wy * state.scale;
+      draw();
+    }, { passive: false });
+
     canvas.addEventListener('mousedown', (e) => {
       if (e.button !== 0) return;
       const coords = screenToCanvasCoords(e.clientX, e.clientY);
+
       if (state.placementMode) {
-        openAssetModalForNew(coords.x, coords.y, getGridRef(coords.x, coords.y));
-        togglePlacementMode();
+        openAssetModalForNew(coords.x, coords.y);
+        window.togglePlacementMode();
         return;
       }
+
       state.isPanning = true;
       container.classList.add('panning');
       state.startX = e.clientX - state.panX;
@@ -598,7 +770,9 @@
 
     window.addEventListener('mousemove', (e) => {
       const coords = screenToCanvasCoords(e.clientX, e.clientY);
-      document.getElementById('coordText').innerText = `X: ${coords.x} | Y: ${coords.y} | Grid: ${getGridRef(coords.x, coords.y)}`;
+      const grid = getGridRef(coords.x, coords.y);
+      document.getElementById('coordText').innerText = `X: ${coords.x} | Y: ${coords.y} | Grid: ${grid} | Zoom: ${Math.round(state.scale * 100)}%`;
+
       if (!state.isPanning) return;
       state.panX = e.clientX - state.startX;
       state.panY = e.clientY - state.startY;
@@ -610,104 +784,79 @@
       container.classList.remove('panning');
     });
 
-    canvas.addEventListener('wheel', (e) => {
-      e.preventDefault();
-      const zoomFactor = e.deltaY < 0 ? 1.15 : 0.85;
-      const newScale = Math.max(0.2, Math.min(4, state.scale * zoomFactor));
-      const rect = canvas.getBoundingClientRect();
-      const mouseX = e.clientX - rect.left;
-      const mouseY = e.clientY - rect.top;
-      state.panX = mouseX - (mouseX - state.panX) * (newScale / state.scale);
-      state.panY = mouseY - (mouseY - state.panY) * (newScale / state.scale);
-      state.scale = newScale;
-      draw();
-    }, { passive: false });
-
-    window.setLevel = (lvl, e) => {
-      state.level = lvl;
-      document.querySelectorAll('.level-btn').forEach(b => b.classList.remove('active'));
-      if (e && e.target) e.target.classList.add('active');
-      renderAssetList();
-      draw();
-    };
-
-    window.resetView = () => { state.scale = 1; state.panX = 50; state.panY = 50; draw(); };
-    window.zoomButtonHandler = (factor) => { state.scale = Math.max(0.2, Math.min(4, state.scale * factor)); draw(); };
+    function renderCategoryList() {
+      const list = document.getElementById('categoryList');
+      list.innerHTML = state.categories.map(cat => `
+        <div class="cat-item">
+          <div class="cat-info">
+            <span class="cat-dot" style="background:${cat.color}"></span>
+            <span>${cat.icon} ${cat.name}</span>
+          </div>
+          <div class="cat-actions">
+            <button class="icon-btn" type="button" onclick="openCatModalForEdit('${cat.id}')">✏️</button>
+          </div>
+        </div>
+      `).join('');
+    }
 
     function populateCategorySelect() {
       const select = document.getElementById('assetCategory');
       select.innerHTML = state.categories.map(c => `<option value="${c.id}">${c.icon} ${c.name}</option>`).join('');
     }
 
-    window.renderCategoryList = () => {
-      const list = document.getElementById('categoryList');
-      list.innerHTML = state.categories.map(c => `
-        <div class="cat-item">
-          <div class="cat-info">
-            <span class="cat-dot" style="background:${c.color}"></span>
-            <span>${c.icon} ${c.name}</span>
-          </div>
-          <div class="cat-actions">
-            <button class="icon-btn" onclick="openCatModalForEdit('${c.id}')" title="Edit">✏️</button>
-          </div>
-        </div>
-      `).join('');
-      populateCategorySelect();
-    };
-
-    window.renderAssetList = () => {
+    function renderAssetList() {
       const query = (document.getElementById('searchBox')?.value || '').toLowerCase();
-      const filtered = state.assets.filter(a => 
-        a.name.toLowerCase().includes(query) || 
-        (a.grid && a.grid.toLowerCase().includes(query)) ||
-        (a.notes && a.notes.toLowerCase().includes(query))
-      );
-      document.getElementById('assetCount').innerText = filtered.length;
       const containerElem = document.getElementById('assetCards');
+      const filtered = state.assets.filter(a => a.name.toLowerCase().includes(query) || (a.grid && a.grid.toLowerCase().includes(query)));
       
+      document.getElementById('assetCount').innerText = filtered.length;
       containerElem.innerHTML = filtered.map(a => {
-        const cat = state.categories.find(c => c.id === a.category) || { color: '#2196f3', icon: '📍' };
+        const cat = state.categories.find(c => c.id === a.category) || { color: '#aaa', icon: '📍' };
         return `
-          <div class="asset-card" onclick="focusAsset('${a.id}')">
-            <div class="asset-title"><span>${cat.icon} ${a.name}</span></div>
+          <div class="asset-card" onclick="editAsset('${a.id}')">
+            <div class="asset-title">
+              <span>${cat.icon} ${a.name}</span>
+            </div>
             <div class="asset-meta">
-              <span>Grid: <strong>${a.grid || 'N/A'}</strong></span>
-              <span>Level: <strong>${a.level}</strong></span>
+              <span>Grid: ${a.grid || 'N/A'}</span>
+              <span>Level: ${a.level.toUpperCase()}</span>
             </div>
             <div class="asset-actions">
-              <button class="icon-btn" onclick="event.stopPropagation(); openAssetModalForEdit('${a.id}')" title="Edit">✏️</button>
+              <button class="icon-btn" type="button" title="Pan to Asset" onclick="event.stopPropagation(); focusAsset('${a.id}')">🎯</button>
             </div>
           </div>
         `;
       }).join('');
-    };
+    }
 
     window.focusAsset = (id) => {
       const asset = state.assets.find(a => a.id === id);
       if (!asset) return;
-      setLevel(asset.level);
-      state.panX = (canvas.width / 2) - (asset.x * state.scale);
-      state.panY = (canvas.height / 2) - (asset.y * state.scale);
+      state.level = asset.level;
+      document.querySelectorAll('.level-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.getAttribute('onclick').includes(asset.level));
+      });
+      state.scale = 1.5;
+      state.panX = canvas.width / 2 - asset.x * state.scale;
+      state.panY = canvas.height / 2 - asset.y * state.scale;
       draw();
     };
 
-    window.openModal = (id) => document.getElementById(id).style.display = 'flex';
-    window.closeModal = (id) => document.getElementById(id).style.display = 'none';
-
-    window.openAssetModalForNew = (x, y, grid) => {
+    window.openAssetModalForNew = (x = 200, y = 200) => {
       document.getElementById('modalTitle').innerText = 'Add System Asset';
       document.getElementById('assetId').value = '';
       document.getElementById('assetName').value = '';
       document.getElementById('assetX').value = x;
       document.getElementById('assetY').value = y;
-      document.getElementById('assetGrid').value = grid;
-      document.getElementById('assetNotes').value = '';
+      document.getElementById('assetGrid').value = getGridRef(x, y);
       document.getElementById('assetLevel').value = state.level;
+      document.getElementById('assetNotes').value = '';
       document.getElementById('deleteAssetBtn').style.display = 'none';
+      populateCategorySelect();
       openModal('assetModal');
     };
 
-    window.openAssetModalForEdit = (id) => {
+    window.editAsset = (id) => {
       const asset = state.assets.find(a => a.id === id);
       if (!asset) return;
       document.getElementById('modalTitle').innerText = 'Edit System Asset';
@@ -719,48 +868,50 @@
       document.getElementById('assetY').value = asset.y;
       document.getElementById('assetGrid').value = asset.grid || '';
       document.getElementById('assetNotes').value = asset.notes || '';
-      document.getElementById('deleteAssetBtn').style.display = 'block';
+      document.getElementById('deleteAssetBtn').style.display = 'inline-block';
+      populateCategorySelect();
       openModal('assetModal');
     };
 
     window.saveAsset = async (e) => {
       e.preventDefault();
       const id = document.getElementById('assetId').value || 'ast_' + Date.now();
-      const assetData = {
+      const asset = {
         id,
         name: document.getElementById('assetName').value,
         category: document.getElementById('assetCategory').value,
         level: document.getElementById('assetLevel').value,
-        x: Number(document.getElementById('assetX').value),
-        y: Number(document.getElementById('assetY').value),
+        x: parseInt(document.getElementById('assetX').value),
+        y: parseInt(document.getElementById('assetY').value),
         grid: document.getElementById('assetGrid').value,
         notes: document.getElementById('assetNotes').value
       };
 
-      const idx = state.assets.findIndex(a => a.id === id);
-      if (idx >= 0) state.assets[idx] = assetData;
-      else state.assets.push(assetData);
-
-      if (user && db) {
-        try { await setDoc(doc(collection(db, 'blueprint_assets'), id), assetData); } catch (e) {}
+      if (db && user) {
+        await setDoc(doc(getAssetsCol(), id), asset);
+      } else {
+        const idx = state.assets.findIndex(a => a.id === id);
+        if (idx >= 0) state.assets[idx] = asset;
+        else state.assets.push(asset);
+        renderAssetList();
+        draw();
       }
-      renderAssetList();
-      draw();
-      showToast("Asset saved successfully!", "success");
       closeModal('assetModal');
+      showToast("Asset saved successfully!", "success");
     };
 
     window.confirmDeleteCurrentAsset = () => {
       const id = document.getElementById('assetId').value;
-      customConfirm("Delete Asset", "Are you sure you want to delete this asset?", async () => {
-        state.assets = state.assets.filter(a => a.id !== id);
-        if (user && db) {
-          try { await deleteDoc(doc(collection(db, 'blueprint_assets'), id)); } catch (e) {}
+      customConfirm("Delete Asset", "Are you sure you want to delete this asset from the facility blueprint?", async () => {
+        if (db && user) {
+          await deleteDoc(doc(getAssetsCol(), id));
+        } else {
+          state.assets = state.assets.filter(a => a.id !== id);
+          renderAssetList();
+          draw();
         }
-        renderAssetList();
-        draw();
-        showToast("Asset deleted.", "success");
         closeModal('assetModal');
+        showToast("Asset deleted.", "error");
       });
     };
 
@@ -768,7 +919,7 @@
       document.getElementById('catModalTitle').innerText = 'Add System Category';
       document.getElementById('catId').value = '';
       document.getElementById('catName').value = '';
-      document.getElementById('catColor').value = '#ff9800';
+      document.getElementById('catColor').value = '#00e676';
       document.getElementById('catIcon').value = '🔧';
       document.getElementById('deleteCatBtn').style.display = 'none';
       openModal('catModal');
@@ -782,41 +933,52 @@
       document.getElementById('catName').value = cat.name;
       document.getElementById('catColor').value = cat.color;
       document.getElementById('catIcon').value = cat.icon;
-      document.getElementById('deleteCatBtn').style.display = 'block';
+      document.getElementById('deleteCatBtn').style.display = 'inline-block';
       openModal('catModal');
     };
 
     window.saveCategory = async (e) => {
       e.preventDefault();
       const id = document.getElementById('catId').value || 'cat_' + Date.now();
-      const catData = {
+      const cat = {
         id,
         name: document.getElementById('catName').value,
         color: document.getElementById('catColor').value,
         icon: document.getElementById('catIcon').value
       };
-      const idx = state.categories.findIndex(c => c.id === id);
-      if (idx >= 0) state.categories[idx] = catData;
-      else state.categories.push(catData);
 
-      if (user && db) {
-        try { await setDoc(doc(collection(db, 'blueprint_categories'), id), catData); } catch (e) {}
+      if (db && user) {
+        await setDoc(doc(getCategoriesCol(), id), cat);
+      } else {
+        const idx = state.categories.findIndex(c => c.id === id);
+        if (idx >= 0) state.categories[idx] = cat;
+        else state.categories.push(cat);
+        renderCategoryList();
+        populateCategorySelect();
+        draw();
       }
-      renderCategoryList();
-      showToast("Category saved!", "success");
       closeModal('catModal');
+      showToast("Category saved successfully!", "success");
     };
 
     window.confirmDeleteCurrentCategory = () => {
       const id = document.getElementById('catId').value;
-      customConfirm("Delete Category", "Delete this category?", async () => {
-        state.categories = state.categories.filter(c => c.id !== id);
-        if (user && db) {
-          try { await deleteDoc(doc(collection(db, 'blueprint_categories'), id)); } catch (e) {}
+      const inUse = state.assets.some(a => a.category === id);
+      if (inUse) {
+        showToast("Cannot delete category while assets are assigned to it.", "error");
+        return;
+      }
+      customConfirm("Delete Category", "Are you sure you want to delete this category?", async () => {
+        if (db && user) {
+          await deleteDoc(doc(getCategoriesCol(), id));
+        } else {
+          state.categories = state.categories.filter(c => c.id !== id);
+          renderCategoryList();
+          populateCategorySelect();
+          draw();
         }
-        renderCategoryList();
-        showToast("Category deleted.", "success");
         closeModal('catModal');
+        showToast("Category deleted.", "error");
       });
     };
 
@@ -828,18 +990,27 @@
       openModal('yardModal');
     };
 
-    window.saveYardConfig = (e) => {
+    window.saveYardConfig = async (e) => {
       e.preventDefault();
-      state.yard = {
-        north: Number(document.getElementById('yardNorth').value),
-        south: Number(document.getElementById('yardSouth').value),
-        east: Number(document.getElementById('yardEast').value),
-        west: Number(document.getElementById('yardWest').value)
+      const yard = {
+        north: parseInt(document.getElementById('yardNorth').value),
+        south: parseInt(document.getElementById('yardSouth').value),
+        east: parseInt(document.getElementById('yardEast').value),
+        west: parseInt(document.getElementById('yardWest').value)
       };
-      draw();
-      showToast("Yard updated.", "success");
+
+      if (db && user) {
+        await setDoc(getYardDocRef(), yard);
+      } else {
+        state.yard = yard;
+        draw();
+      }
       closeModal('yardModal');
+      showToast("Yard configuration updated successfully!", "success");
     };
+
+    window.openModal = (modalId) => { document.getElementById(modalId).style.display = 'flex'; };
+    window.closeModal = (modalId) => { document.getElementById(modalId).style.display = 'none'; };
 
     window.exportJSON = () => {
       const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state, null, 2));
@@ -849,34 +1020,42 @@
       document.body.appendChild(dlAnchor);
       dlAnchor.click();
       dlAnchor.remove();
-      showToast("Backup exported.", "success");
+      showToast("Blueprint backup exported successfully!", "success");
     };
 
     window.importJSON = (e) => {
       const file = e.target.files[0];
       if (!file) return;
       const reader = new FileReader();
-      reader.onload = (evt) => {
+      reader.onload = async (event) => {
         try {
-          const imported = JSON.parse(evt.target.result);
-          if (imported.categories) state.categories = imported.categories;
-          if (imported.assets) state.assets = imported.assets;
-          if (imported.yard) state.yard = imported.yard;
-          renderCategoryList();
-          renderAssetList();
-          draw();
-          showToast("Import successful!", "success");
+          const imported = JSON.parse(event.target.result);
+          if (imported.categories && imported.assets) {
+            state.categories = imported.categories;
+            state.assets = imported.assets;
+            if (imported.yard) state.yard = imported.yard;
+            
+            if (db && user) {
+              await seedCategoriesToCloud();
+              await seedAssetsToCloud();
+              await seedYardToCloud();
+            }
+            renderCategoryList();
+            renderAssetList();
+            draw();
+            showToast("Blueprint imported successfully!", "success");
+          } else {
+            showToast("Invalid JSON structure.", "error");
+          }
         } catch (err) {
-          showToast("Invalid JSON file.", "error");
+          showToast("Failed to parse JSON file.", "error");
         }
       };
       reader.readAsText(file);
     };
 
-    window.addEventListener('load', () => {
-      resizeCanvas();
-      initFirebase();
-    });
+    resizeCanvas();
+    initFirebase();
   </script>
 </body>
 </html>
