@@ -35,7 +35,7 @@
       overflow: hidden;
     }
 
-    /* Top Navigation Header matching reference */
+    /* Top Navigation Header */
     .top-nav {
       height: 60px;
       background-color: var(--bg-panel);
@@ -471,13 +471,13 @@
 </head>
 <body>
 
-  <!-- Top Navigation Header matching your screenshot -->
+  <!-- Top Navigation Header -->
   <header class="top-nav">
     <div class="nav-brand">
       <span>⚡ Facility Systems Interactive Blueprint</span>
     </div>
     <div class="nav-controls">
-      <div class="badge-status">Local Memory Mode (No Firebase)</div>
+      <div class="badge-status">Local Memory Mode</div>
       <button class="nav-btn share-link" onclick="exportJSON()">🔗 Share Live Link</button>
       <button class="nav-btn add-asset-off" id="placementToggleBtn" onclick="togglePlacementMode()">📍 Add Asset: OFF</button>
       
@@ -524,7 +524,6 @@
 
     <!-- Canvas Viewport -->
     <div class="viewport" id="canvasContainer">
-      <!-- HUD Coords overlay matching photo -->
       <div class="hud-coords" id="hudCoords">
         <span>X: <b>1136</b>, Y: <b>924</b></span>
         <span>|</span>
@@ -620,15 +619,15 @@
   <div class="modal-backdrop" id="yardModal">
     <div class="modal">
       <div class="modal-header">
-        <span>Configure Exterior Yard Boundaries</span>
+        <span>Configure Yard Boundaries</span>
         <button class="win-icon-btn" onclick="closeModal('yardModal')">✕</button>
       </div>
       <form onsubmit="saveYard(event)">
         <div class="modal-body">
-          <div class="form-group"><label>North Padding</label><input type="number" class="form-control" id="yardNorth" required></div>
-          <div class="form-group"><label>South Padding</label><input type="number" class="form-control" id="yardSouth" required></div>
-          <div class="form-group"><label>East Padding</label><input type="number" class="form-control" id="yardEast" required></div>
-          <div class="form-group"><label>West Padding</label><input type="number" class="form-control" id="yardWest" required></div>
+          <div class="form-group"><label>Car Parking Depth (Top)</label><input type="number" class="form-control" id="yardNorth" required></div>
+          <div class="form-group"><label>Truck Yard Depth (Bottom)</label><input type="number" class="form-control" id="yardSouth" required></div>
+          <div class="form-group"><label>East Buffer</label><input type="number" class="form-control" id="yardEast" required></div>
+          <div class="form-group"><label>West Buffer</label><input type="number" class="form-control" id="yardWest" required></div>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" onclick="closeModal('yardModal')">Cancel</button>
@@ -641,10 +640,11 @@
   <div id="toastContainer"></div>
 
   <script>
-    const buildingX = 280;
-    const buildingY = 240;
-    const buildingWidth = 1100;
-    const buildingHeight = 750;
+    // RECTANGULAR Building Footprint (Wide Horizontal Rectangle)
+    const buildingX = 180;
+    const buildingY = 220;
+    const buildingWidth = 1350;
+    const buildingHeight = 550;
 
     const state = {
       floor: 'ground',
@@ -655,15 +655,15 @@
       startX: 0,
       startY: 0,
       placementMode: false,
-      yard: { north: 120, south: 120, east: 160, west: 160 },
+      yard: { north: 140, south: 180, east: 140, west: 140 }, // North = Car Parking, South = Truck Yard
       categories: [
         { id: 'cat_elec', name: 'Electrical Panels', color: '#f97316', icon: '⚡' },
         { id: 'cat_plumb', name: 'Plumbing / Water', color: '#38bdf8', icon: '💧' },
         { id: 'cat_hvac', name: 'HVAC / Controls', color: '#22c55e', icon: '❄️' }
       ],
       assets: [
-        { id: 'ast_1', name: 'Main Distribution Panel MDP-1', category: 'cat_elec', level: 'ground', x: 460, y: 440, grid: 'A-2', notes: 'Main 480V service feed' },
-        { id: 'ast_2', name: 'Water Main Shutoff', category: 'cat_plumb', level: 'ground', x: 540, y: 430, grid: 'A-5', notes: 'Emergency water main valve' }
+        { id: 'ast_1', name: 'Main Distribution Panel MDP-1', category: 'cat_elec', level: 'ground', x: 460, y: 380, grid: 'A-2', notes: 'Main 480V service feed' },
+        { id: 'ast_2', name: 'Water Main Shutoff', category: 'cat_plumb', level: 'ground', x: 540, y: 370, grid: 'A-5', notes: 'Emergency water main valve' }
       ]
     };
 
@@ -683,7 +683,7 @@
 
     function persistState() {
       try {
-        localStorage.setItem('blueprint_exact_v1', JSON.stringify({
+        localStorage.setItem('blueprint_rect_v1', JSON.stringify({
           categories: state.categories,
           assets: state.assets,
           yard: state.yard
@@ -693,7 +693,7 @@
 
     function loadState() {
       try {
-        const saved = localStorage.getItem('blueprint_exact_v1');
+        const saved = localStorage.getItem('blueprint_rect_v1');
         if (saved) {
           const parsed = JSON.parse(saved);
           if (parsed.categories) state.categories = parsed.categories;
@@ -710,7 +710,7 @@
     }
     window.addEventListener('resize', resizeCanvas);
 
-    const rowLabels = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'M.9', 'N'];
+    const rowLabels = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'];
 
     function getGridRef(x, y) {
       if (x < buildingX || x > buildingX + buildingWidth || y < buildingY || y > buildingY + buildingHeight) {
@@ -768,8 +768,8 @@
       ctx.translate(state.panX, state.panY);
       ctx.scale(state.scale, state.scale);
 
-      // Exterior Yard Zone boundary
-      ctx.strokeStyle = 'rgba(56, 189, 248, 0.25)';
+      // --- OUTSIDE BLUE LINE (Perimeter Yard Boundary) ---
+      ctx.strokeStyle = 'rgba(56, 189, 248, 0.35)';
       ctx.lineWidth = 2;
       ctx.setLineDash([6, 6]);
       ctx.strokeRect(
@@ -780,11 +780,15 @@
       );
       ctx.setLineDash([]);
 
-      ctx.fillStyle = 'rgba(56, 189, 248, 0.4)';
-      ctx.font = 'bold 9px sans-serif';
-      ctx.fillText('EXTERIOR / YARD ZONE', buildingX - state.yard.west + 10, buildingY - state.yard.north + 16);
+      // Top Car Parking Zone Label
+      ctx.fillStyle = 'rgba(56, 189, 248, 0.6)';
+      ctx.font = 'bold 10px sans-serif';
+      ctx.fillText('🚗 CAR PARKING LOT (TOP)', buildingX + 10, buildingY - state.yard.north + 18);
 
-      // Main Building Boundary
+      // Bottom Truck Yard Zone Label
+      ctx.fillText('🚛 TRUCK YARD & DOCK DOORS (BOTTOM)', buildingX + 10, buildingY + buildingHeight + state.yard.south - 12);
+
+      // --- MAIN RECTANGULAR BUILDING FOOTPRINT ---
       ctx.strokeStyle = '#38bdf8';
       ctx.lineWidth = 2.5;
       ctx.strokeRect(buildingX, buildingY, buildingWidth, buildingHeight);
@@ -811,9 +815,8 @@
         ctx.stroke();
       }
 
-      // Architectural Zones matching screenshot layout
-      // Main Racking Area #1
-      const r1x = 8 * colW, r1y = 1.2 * rowH, r1w = 17.25 * colW, r1h = 5.7 * rowH;
+      // Internal Zones Layout tailored for Rectangular shape
+      const r1x = 2 * colW, r1y = 1 * rowH, r1w = 16 * colW, r1h = 5 * rowH;
       ctx.fillStyle = 'rgba(245, 158, 11, 0.1)';
       ctx.strokeStyle = '#f59e0b';
       ctx.lineWidth = 1.5;
@@ -821,25 +824,15 @@
       ctx.strokeRect(r1x, r1y, r1w, r1h);
       ctx.fillStyle = '#f59e0b';
       ctx.font = 'bold 9px sans-serif';
-      ctx.fillText('MAIN RACKING AREA #1 (Cols 9 to 26.25 | Rows B.25 to G)', r1x + 8, r1y + 16);
+      ctx.fillText('MAIN RACKING STORAGE #1', r1x + 8, r1y + 16);
 
-      // Mezzanine Floor
-      const mx = 1 * colW, my = 9.2 * rowH, mw = 21 * colW, mh = 4.8 * rowH;
+      const mx = 19.5 * colW, my = 1 * rowH, mw = 9.5 * colW, mh = 8 * rowH;
       ctx.fillStyle = 'rgba(34, 197, 94, 0.1)';
       ctx.strokeStyle = '#22c55e';
       ctx.fillRect(mx, my, mw, mh);
       ctx.strokeRect(mx, my, mw, mh);
       ctx.fillStyle = '#22c55e';
-      ctx.fillText('MEZZANINE FLOOR (Cols 2 to 22 | Rows J to M.9)', mx + 8, my + 16);
-
-      // Racking #2
-      const r2x = 23.5 * colW, r2y = 7.5 * rowH, r2w = 4.2 * colW, r2h = 4.3 * rowH;
-      ctx.fillStyle = 'rgba(245, 158, 11, 0.1)';
-      ctx.strokeStyle = '#f59e0b';
-      ctx.fillRect(r2x, r2y, r2w, r2h);
-      ctx.strokeRect(r2x, r2y, r2w, r2h);
-      ctx.fillStyle = '#f59e0b';
-      ctx.fillText('RACKING #2', r2x + 8, r2y + 16);
+      ctx.fillText('MEZZANINE & OFFICES', mx + 8, my + 16);
 
       ctx.restore(); // restore building offset
 
