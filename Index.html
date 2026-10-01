@@ -12,67 +12,116 @@
         .blueprint-grid {
             background-size: 40px 40px;
             background-image: 
-                linear-gradient(to right, rgba(59, 130, 246, 0.1) 1px, transparent 1px),
-                linear-gradient(to bottom, rgba(59, 130, 246, 0.1) 1px, transparent 1px);
+                linear-gradient(to right, rgba(59, 130, 246, 0.08) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(59, 130, 246, 0.08) 1px, transparent 1px);
         }
-        .asset-item {
-            transition: all 0.2s ease;
+        .asset-pin {
+            transition: transform 0.15s ease, filter 0.15s ease;
         }
-        .asset-item:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        .asset-pin:hover {
+            transform: translate(-50%, -50%) scale(1.15);
+            z-index: 50;
         }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: rgba(15, 23, 42, 0.6); }
+        ::-webkit-scrollbar-thumb { background: rgba(51, 65, 85, 0.8); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(71, 85, 105, 1); }
     </style>
 </head>
-<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col">
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col overflow-x-hidden">
 
-    <header class="bg-slate-800 border-b border-slate-700 px-6 py-4 flex flex-wrap justify-between items-center gap-4 shadow-md">
+    <header class="bg-slate-900/90 backdrop-blur border-b border-slate-800 px-6 py-3.5 flex flex-wrap justify-between items-center gap-4 shadow-xl z-30 sticky top-0">
         <div class="flex items-center space-x-3">
-            <div class="bg-blue-600 p-2.5 rounded-xl text-white shadow-lg shadow-blue-500/30">
-                <i class="fa-solid fa-building-shield text-xl"></i>
+            <div class="bg-gradient-to-tr from-blue-600 to-indigo-600 p-2.5 rounded-xl text-white shadow-lg shadow-blue-500/20">
+                <i class="fa-solid fa-map-location-dot text-lg"></i>
             </div>
             <div>
-                <h1 class="text-xl font-bold tracking-tight text-white">Facility Blueprint & Asset Manager</h1>
-                <p class="text-xs text-slate-400">Real-time cloud sync with live Firestore collections</p>
+                <h1 class="text-lg font-bold tracking-tight text-white flex items-center space-x-2">
+                    <span>Facility Blueprint Studio</span>
+                    <span class="text-[10px] bg-blue-500/20 text-blue-400 border border-blue-500/30 px-2 py-0.5 rounded-full font-semibold">Live v2.4</span>
+                </h1>
+                <p class="text-xs text-slate-400">Project: imi1-interactive-map-8d929</p>
             </div>
         </div>
 
         <div class="flex items-center space-x-3">
             <div id="connection-status" class="flex items-center space-x-2 px-3 py-1.5 bg-amber-500/10 text-amber-400 border border-amber-500/20 rounded-full text-xs font-medium">
                 <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
-                <span>Connecting to Cloud...</span>
+                <span>Connecting Firestore...</span>
             </div>
-            <button onclick="openAssetModal()" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-xl font-medium text-sm flex items-center space-x-2 transition shadow-lg shadow-blue-600/20">
+            
+            <button onclick="togglePlacementMode()" id="placement-mode-btn" class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-3.5 py-2 rounded-xl font-medium text-xs flex items-center space-x-2 transition shadow-sm">
+                <i class="fa-solid fa-crosshairs text-blue-400"></i>
+                <span id="placement-btn-text">Placement Mode: OFF</span>
+            </button>
+
+            <button onclick="openAssetModal()" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-xl font-medium text-xs flex items-center space-x-2 transition shadow-lg shadow-blue-600/30">
                 <i class="fa-solid fa-plus"></i>
                 <span>Add Asset</span>
             </button>
+
+            <div class="relative group">
+                <button class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-3.5 py-2 rounded-xl font-medium text-xs flex items-center space-x-1.5 border border-slate-700 transition">
+                    <i class="fa-solid fa-ellipsis-vertical"></i>
+                </button>
+                <div class="absolute right-0 mt-2 w-48 bg-slate-900 border border-slate-800 rounded-xl shadow-2xl py-2 hidden group-hover:block z-50">
+                    <button onclick="exportDataJSON()" class="w-full text-left px-4 py-2 text-xs text-slate-300 hover:bg-slate-800 hover:text-white flex items-center space-x-2">
+                        <i class="fa-solid fa-download text-blue-400"></i>
+                        <span>Export Blueprint JSON</span>
+                    </button>
+                    <label class="w-full text-left px-4 py-2 text-xs text-slate-300 hover:bg-slate-800 hover:text-white flex items-center space-x-2 cursor-pointer">
+                        <i class="fa-solid fa-upload text-emerald-400"></i>
+                        <span>Import Blueprint JSON</span>
+                        <input type="file" id="import-file-input" onchange="importDataJSON(event)" accept=".json" class="hidden">
+                    </label>
+                </div>
+            </div>
         </div>
     </header>
 
     <main class="flex-1 p-6 grid grid-cols-1 lg:grid-cols-4 gap-6 max-w-7xl mx-auto w-full">
         
         <!-- Sidebar Controls & Asset Inventory -->
-        <div class="lg:col-span-1 flex flex-col space-y-6">
-            <div class="bg-slate-800/80 backdrop-blur border border-slate-700/80 rounded-2xl p-5 shadow-xl flex flex-col h-[calc(100vh-14rem)]">
-                <div class="flex justify-between items-center mb-4">
-                    <h2 class="font-semibold text-slate-200 flex items-center space-x-2">
+        <div class="lg:col-span-1 flex flex-col space-y-4">
+            <div class="bg-slate-900/80 backdrop-blur border border-slate-800 rounded-2xl p-4 shadow-xl flex flex-col h-[calc(100vh-12rem)]">
+                <div class="flex justify-between items-center mb-3">
+                    <h2 class="font-semibold text-slate-200 text-sm flex items-center space-x-2">
                         <i class="fa-solid fa-boxes-stacked text-blue-400"></i>
-                        <span>Facility Assets</span>
+                        <span>Asset Inventory</span>
                     </h2>
-                    <span id="asset-count" class="text-xs bg-slate-700 px-2.5 py-1 rounded-full text-slate-300 font-medium">0 items</span>
+                    <span id="asset-count" class="text-[11px] bg-slate-800 border border-slate-700 px-2 py-0.5 rounded-full text-slate-300 font-medium">0 items</span>
                 </div>
 
-                <!-- Search Filter -->
-                <div class="relative mb-4">
-                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-slate-400 text-xs"></i>
-                    <input type="text" id="asset-search" oninput="filterAssets()" placeholder="Search assets..." class="w-full bg-slate-900 border border-slate-700 rounded-xl pl-9 pr-4 py-2 text-sm text-slate-200 focus:outline-none focus:border-blue-500 transition">
+                <!-- Search Filter & Category Dropdown -->
+                <div class="space-y-2 mb-3">
+                    <div class="relative">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-500 text-xs"></i>
+                        <input type="text" id="asset-search" oninput="filterAssets()" placeholder="Search assets..." class="w-full bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-blue-500 transition">
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-2">
+                        <select id="filter-category" onchange="filterAssets()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-2.5 py-1.5 text-xs text-slate-300 focus:outline-none focus:border-blue-500 transition">
+                            <option value="all">All Categories</option>
+                            <option value="Server">Servers & IT</option>
+                            <option value="HVAC">HVAC & Climate</option>
+                            <option value="Security">Security</option>
+                            <option value="Electrical">Electrical</option>
+                        </select>
+                        <select id="filter-zone" onchange="filterAssets()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-2.5 py-1.5 text-xs text-slate-300 focus:outline-none focus:border-blue-500 transition">
+                            <option value="all">All Zones</option>
+                            <option value="Server Room A">Server Room A</option>
+                            <option value="Operations Center">Operations</option>
+                            <option value="Warehouse">Warehouse</option>
+                        </select>
+                    </div>
                 </div>
 
-                <!-- Asset List container -->
-                <div id="asset-list" class="flex-1 overflow-y-auto space-y-3 pr-1 custom-scrollbar">
-                    <div class="text-center py-12 text-slate-500 text-sm">
-                        <i class="fa-solid fa-spinner animate-spin text-2xl mb-2 text-blue-400"></i>
-                        <p>Loading assets from database...</p>
+                <!-- Asset List Container -->
+                <div id="asset-list" class="flex-1 overflow-y-auto space-y-2.5 pr-1">
+                    <div class="text-center py-12 text-slate-500 text-xs">
+                        <i class="fa-solid fa-spinner animate-spin text-xl mb-2 text-blue-400"></i>
+                        <p>Loading Firestore assets...</p>
                     </div>
                 </div>
             </div>
@@ -80,45 +129,55 @@
 
         <!-- Blueprint Interactive Floor Plan View -->
         <div class="lg:col-span-3 flex flex-col">
-            <div class="bg-slate-800/80 backdrop-blur border border-slate-700/80 rounded-2xl p-5 shadow-xl flex-1 flex flex-col relative overflow-hidden min-h-[550px]">
+            <div class="bg-slate-900/80 backdrop-blur border border-slate-800 rounded-2xl p-4 shadow-xl flex-1 flex flex-col relative overflow-hidden min-h-[580px]">
                 
-                <div class="flex justify-between items-center mb-4 z-10">
+                <div class="flex justify-between items-center mb-3 z-10">
                     <div>
-                        <h2 class="font-semibold text-slate-200">Interactive Floor Plan</h2>
-                        <p class="text-xs text-slate-400">Click anywhere on the blueprint grid to place or register new equipment</p>
+                        <h2 class="font-semibold text-slate-200 text-sm flex items-center space-x-2">
+                            <i class="fa-solid fa-map text-indigo-400"></i>
+                            <span id="yard-title-display">Main Facility Floor Plan</span>
+                        </h2>
+                        <p class="text-[11px] text-slate-400">Click anywhere on blueprint to place asset (when Placement Mode is ON) or drag/pan canvas</p>
                     </div>
-                    <div class="flex space-x-2 bg-slate-900/80 p-1.5 rounded-xl border border-slate-700">
-                        <button onclick="setZoneFilter('all')" id="filter-all" class="px-3 py-1 rounded-lg text-xs font-medium bg-blue-600 text-white transition">All Zones</button>
-                        <button onclick="setZoneFilter('Server Room')" id="filter-server" class="px-3 py-1 rounded-lg text-xs font-medium text-slate-400 hover:text-white transition">Servers</button>
-                        <button onclick="setZoneFilter('Operations')" id="filter-ops" class="px-3 py-1 rounded-lg text-xs font-medium text-slate-400 hover:text-white transition">Operations</button>
+                    <div class="flex items-center space-x-2 bg-slate-950 p-1 rounded-xl border border-slate-800">
+                        <button onclick="zoomCanvas(0.1)" class="w-7 h-7 flex items-center justify-center rounded-lg text-slate-300 hover:bg-slate-800 hover:text-white transition text-xs" title="Zoom In"><i class="fa-solid fa-plus"></i></button>
+                        <button onclick="resetZoom()" class="px-2 text-[11px] font-semibold text-slate-400 hover:text-white transition" title="Reset View">100%</button>
+                        <button onclick="zoomCanvas(-0.1)" class="w-7 h-7 flex items-center justify-center rounded-lg text-slate-300 hover:bg-slate-800 hover:text-white transition text-xs" title="Zoom Out"><i class="fa-solid fa-minus"></i></button>
                     </div>
                 </div>
 
-                <!-- Blueprint Canvas Area -->
-                <div id="blueprint-canvas" onclick="handleCanvasClick(event)" class="blueprint-grid flex-1 bg-slate-900/60 rounded-xl border border-slate-700/60 relative overflow-hidden cursor-crosshair flex items-center justify-center">
+                <!-- Blueprint Canvas Viewport with Pan/Zoom wrapper -->
+                <div id="blueprint-viewport" class="blueprint-grid flex-1 bg-slate-950/80 rounded-xl border border-slate-800/80 relative overflow-hidden cursor-grab active:cursor-grabbing select-none flex items-center justify-center">
                     
-                    <!-- Blueprint Room Outlines (SVG overlay) -->
-                    <svg class="absolute inset-0 w-full h-full pointer-events-none opacity-20" xmlns="http://www.w3.org/2000/svg">
-                        <rect x="50" y="50" width="300" height="200" fill="none" stroke="#3b82f6" stroke-width="2" stroke-dasharray="6 6"/>
-                        <text x="70" y="80" fill="#3b82f6" font-size="14" font-weight="bold">Server Room A</text>
+                    <div id="blueprint-transform-container" class="absolute w-[1200px] h-[800px] transition-transform duration-75 origin-center" style="transform: scale(1) translate(0px, 0px);">
                         
-                        <rect x="380" y="50" width="350" height="200" fill="none" stroke="#10b981" stroke-width="2" stroke-dasharray="6 6"/>
-                        <text x="400" y="80" fill="#10b981" font-size="14" font-weight="bold">Operations Center</text>
+                        <!-- SVG Facility Floor Layout Outlines -->
+                        <svg class="absolute inset-0 w-full h-full pointer-events-none opacity-30" xmlns="http://www.w3.org/2000/svg">
+                            <!-- Server Room A -->
+                            <rect x="80" y="80" width="360" height="260" fill="none" stroke="#3b82f6" stroke-width="2.5" stroke-dasharray="8 6" rx="12"/>
+                            <text x="100" y="115" fill="#3b82f6" font-size="15" font-weight="bold">Server Room A (Secure)</text>
+                            
+                            <!-- Operations Center -->
+                            <rect x="480" y="80" width="620" height="260" fill="none" stroke="#10b981" stroke-width="2.5" stroke-dasharray="8 6" rx="12"/>
+                            <text x="500" y="115" fill="#10b981" font-size="15" font-weight="bold">Operations & Control Center</text>
 
-                        <rect x="50" y="280" width="680" height="180" fill="none" stroke="#f59e0b" stroke-width="2" stroke-dasharray="6 6"/>
-                        <text x="70" y="310" fill="#f59e0b" font-size="14" font-weight="bold">Main Warehouse & Logistics</text>
-                    </svg>
+                            <!-- Warehouse & Logistics -->
+                            <rect x="80" y="370" width="1020" height="340" fill="none" stroke="#f59e0b" stroke-width="2.5" stroke-dasharray="8 6" rx="12"/>
+                            <text x="100" y="405" fill="#f59e0b" font-size="15" font-weight="bold">Main Warehouse & Logistics Bay</text>
+                        </svg>
 
-                    <!-- Dynamic Asset Marker Pins rendered here -->
-                    <div id="blueprint-pins" class="absolute inset-0 pointer-events-auto"></div>
+                        <!-- Dynamic Asset Marker Pins -->
+                        <div id="blueprint-pins" class="absolute inset-0 pointer-events-auto"></div>
 
-                    <!-- Empty state placeholder -->
-                    <div id="blueprint-empty" class="text-center pointer-events-none z-10 transition opacity-0">
-                        <div class="w-16 h-16 bg-blue-500/10 text-blue-400 rounded-full flex items-center justify-center mx-auto mb-3 border border-blue-500/20">
-                            <i class="fa-solid fa-map-pin text-xl"></i>
+                    </div>
+
+                    <!-- Empty state notice -->
+                    <div id="blueprint-empty" class="absolute text-center pointer-events-none z-10 transition opacity-0">
+                        <div class="w-14 h-14 bg-blue-500/10 text-blue-400 rounded-full flex items-center justify-center mx-auto mb-2.5 border border-blue-500/20 shadow-lg">
+                            <i class="fa-solid fa-map-pin text-lg"></i>
                         </div>
-                        <h3 class="text-slate-300 font-medium text-sm">Blueprint is ready</h3>
-                        <p class="text-slate-500 text-xs mt-1">Click anywhere on the grid or use 'Add Asset' to place equipment</p>
+                        <h3 class="text-slate-300 font-semibold text-xs">Blueprint is clean</h3>
+                        <p class="text-slate-500 text-[11px] mt-0.5">Toggle Placement Mode ON and click blueprint to drop new asset</p>
                     </div>
                 </div>
 
@@ -128,31 +187,31 @@
     </main>
 
     <div id="asset-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-        <div class="bg-slate-800 border border-slate-700 rounded-2xl max-w-md w-full p-6 shadow-2xl">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl">
             <div class="flex justify-between items-center mb-5">
-                <h3 id="modal-title" class="text-lg font-bold text-white flex items-center space-x-2">
+                <h3 id="modal-title" class="text-base font-bold text-white flex items-center space-x-2">
                     <i class="fa-solid fa-circle-plus text-blue-500"></i>
-                    <span>Register New Facility Asset</span>
+                    <span>Register Facility Asset</span>
                 </h3>
                 <button onclick="closeAssetModal()" class="text-slate-400 hover:text-white transition">
-                    <i class="fa-solid fa-xmark text-lg"></i>
+                    <i class="fa-solid fa-xmark text-base"></i>
                 </button>
             </div>
 
-            <form id="asset-form" onsubmit="saveAsset(event)" class="space-y-4">
+            <form id="asset-form" onsubmit="handleAssetFormSubmit(event)" class="space-y-3.5">
                 <input type="hidden" id="asset-id">
-                <input type="hidden" id="asset-x" value="50">
-                <input type="hidden" id="asset-y" value="50">
+                <input type="hidden" id="asset-x" value="500">
+                <input type="hidden" id="asset-y" value="300">
 
                 <div>
-                    <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">Asset Name</label>
-                    <input type="text" id="form-name" required placeholder="e.g. Rack Server Alpha" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-slate-100 focus:outline-none focus:border-blue-500 transition">
+                    <label class="block text-[11px] font-semibold text-slate-300 uppercase tracking-wider mb-1">Asset Name</label>
+                    <input type="text" id="form-name" required placeholder="e.g. Rack Server Alpha" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-slate-100 focus:outline-none focus:border-blue-500 transition">
                 </div>
 
-                <div class="grid grid-cols-2 gap-4">
+                <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">Category</label>
-                        <select id="form-category" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-slate-100 focus:outline-none focus:border-blue-500 transition">
+                        <label class="block text-[11px] font-semibold text-slate-300 uppercase tracking-wider mb-1">Category</label>
+                        <select id="form-category" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-100 focus:outline-none focus:border-blue-500 transition">
                             <option value="Server">Server / IT</option>
                             <option value="HVAC">HVAC / Climate</option>
                             <option value="Security">Security & Access</option>
@@ -160,57 +219,69 @@
                         </select>
                     </div>
                     <div>
-                        <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">Zone</label>
-                        <select id="form-zone" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-slate-100 focus:outline-none focus:border-blue-500 transition">
-                            <option value="Server Room">Server Room A</option>
-                            <option value="Operations">Operations Center</option>
-                            <option value="Warehouse">Main Warehouse</option>
+                        <label class="block text-[11px] font-semibold text-slate-300 uppercase tracking-wider mb-1">Zone</label>
+                        <select id="form-zone" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-100 focus:outline-none focus:border-blue-500 transition">
+                            <option value="Server Room A">Server Room A</option>
+                            <option value="Operations Center">Operations Center</option>
+                            <option value="Warehouse">Warehouse & Logistics</option>
                         </select>
                     </div>
                 </div>
 
                 <div>
-                    <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">Status</label>
-                    <select id="form-status" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-slate-100 focus:outline-none focus:border-blue-500 transition">
+                    <label class="block text-[11px] font-semibold text-slate-300 uppercase tracking-wider mb-1">Status</label>
+                    <select id="form-status" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-100 focus:outline-none focus:border-blue-500 transition">
                         <option value="Active">Operational / Active</option>
                         <option value="Warning">Warning / Maintenance Due</option>
                         <option value="Offline">Offline / Critical</option>
                     </select>
                 </div>
 
-                <div class="flex justify-end space-x-3 pt-4 border-t border-slate-700">
-                    <button type="button" onclick="closeAssetModal()" class="px-4 py-2 rounded-xl text-sm font-medium text-slate-300 hover:bg-slate-700 transition">Cancel</button>
-                    <button type="submit" class="px-5 py-2 rounded-xl text-sm font-medium bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-600/20 transition">Save Asset</button>
+                <div class="flex justify-end space-x-3 pt-3 border-t border-slate-800">
+                    <button type="button" onclick="closeAssetModal()" class="px-4 py-2 rounded-xl text-xs font-medium text-slate-300 hover:bg-slate-800 transition">Cancel</button>
+                    <button type="submit" class="px-5 py-2 rounded-xl text-xs font-medium bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-600/30 transition">Save Asset</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <div id="toast" class="fixed bottom-6 right-6 bg-slate-800 border border-slate-700 text-slate-200 px-4 py-3 rounded-xl shadow-2xl flex items-center space-x-3 translate-y-20 opacity-0 transition-all duration-300 z-50">
+    <!-- Toast Notification Banner -->
+    <div id="toast" class="fixed bottom-6 right-6 bg-slate-900 border border-slate-800 text-slate-200 px-4 py-3 rounded-xl shadow-2xl flex items-center space-x-3 translate-y-20 opacity-0 transition-all duration-300 z-50">
         <div id="toast-icon" class="text-emerald-400"><i class="fa-solid fa-circle-check"></i></div>
-        <div id="toast-message" class="text-sm font-medium">Notification message</div>
+        <div id="toast-message" class="text-xs font-medium">Notification message</div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-analytics.js";
 
-        // Global application state variables
+        // Provided Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyCrKAut8_5nHWTWtYqZZr5HOENGd8mqZxE",
+            authDomain: "imi1-interactive-map-8d929.firebaseapp.com",
+            projectId: "imi1-interactive-map-8d929",
+            storageBucket: "imi1-interactive-map-8d929.firebasestorage.app",
+            messagingSenderId: "613133090515",
+            appId: "1:613133090515:web:f8f9be365f484a3a5c5e26",
+            measurementId: "G-4QR2RSSTN1"
+        };
+
+        // Global state
         window.allAssets = [];
-        window.currentFilter = 'all';
-        window.currentZoneFilter = 'all';
         window.db = null;
         window.auth = null;
-
-        const firebaseConfig = typeof __firebase_config !== 'undefined' 
-            ? JSON.parse(__firebase_config) 
-            : { apiKey: "demo-key", projectId: "demo-project", authDomain: "demo.firebaseapp.com" };
+        window.placementMode = false;
+        window.panX = 0;
+        window.panY = 0;
+        window.zoomScale = 1;
 
         try {
             const app = initializeApp(firebaseConfig);
             window.db = getFirestore(app);
             window.auth = getAuth(app);
+            try { getAnalytics(app); } catch(e) {}
 
             const statusEl = document.getElementById('connection-status');
             
@@ -222,25 +293,24 @@
                         await signInAnonymously(window.auth);
                     }
                     statusEl.className = "flex items-center space-x-2 px-3 py-1.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full text-xs font-medium";
-                    statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-400"></span><span>Live Cloud Connected</span>`;
+                    statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-400"></span><span>Firestore Live Sync</span>`;
                     initFirestoreListener();
                 } catch (err) {
                     console.error("Auth error:", err);
                     statusEl.className = "flex items-center space-x-2 px-3 py-1.5 bg-rose-500/10 text-rose-400 border border-rose-500/20 rounded-full text-xs font-medium";
-                    statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-rose-400"></span><span>Connection Error</span>`;
+                    statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-rose-400"></span><span>Auth Fallback Active</span>`;
                     loadLocalFallback();
                 }
             };
 
             handleAuth();
         } catch (e) {
-            console.warn("Firebase initialization fallback active:", e);
+            console.warn("Firebase init failed, using fallback:", e);
             loadLocalFallback();
         }
 
         function initFirestoreListener() {
             if (!window.db) return;
-            // Direct collection path avoiding any 404 artifact path issues
             const assetsRef = collection(window.db, 'facility_assets');
             
             onSnapshot(assetsRef, (snapshot) => {
@@ -250,27 +320,27 @@
                 });
                 
                 if (window.allAssets.length === 0) {
-                    seedInitialData();
+                    seedDefaultAssets();
                 } else {
                     renderApp();
                 }
             }, (error) => {
                 console.error("Firestore snapshot error:", error);
-                showToast("Cloud sync error. Using local cache.", "error");
+                showToast("Cloud sync error. Using local storage cache.", "error");
                 loadLocalFallback();
             });
         }
 
-        async function seedInitialData() {
-            const defaultAssets = [
-                { name: "Core Server Rack 01", category: "Server", zone: "Server Room", status: "Active", x: 25, y: 35 },
-                { name: "HVAC Unit Primary", category: "HVAC", zone: "Operations", status: "Active", x: 65, y: 40 },
-                { name: "Security Gateway Hub", category: "Security", zone: "Operations", status: "Warning", x: 80, y: 60 },
-                { name: "Backup Generator B", category: "Electrical", zone: "Warehouse", status: "Active", x: 40, y: 75 }
+        async function seedDefaultAssets() {
+            const defaults = [
+                { name: "Server Rack Alpha", category: "Server", zone: "Server Room A", status: "Active", x: 200, y: 180 },
+                { name: "Primary HVAC Unit", category: "HVAC", zone: "Operations Center", status: "Active", x: 750, y: 160 },
+                { name: "Security Biometric Hub", category: "Security", zone: "Operations Center", status: "Warning", x: 950, y: 240 },
+                { name: "Warehouse Generator", category: "Electrical", zone: "Warehouse", status: "Active", x: 300, y: 550 }
             ];
 
             try {
-                for (let item of defaultAssets) {
+                for (let item of defaults) {
                     await addDoc(collection(window.db, 'facility_assets'), item);
                 }
             } catch (err) {
@@ -279,31 +349,31 @@
         }
 
         function loadLocalFallback() {
-            if (!localStorage.getItem('facility_assets_fallback')) {
-                const initial = [
-                    { id: "local-1", name: "Core Server Rack 01", category: "Server", zone: "Server Room", status: "Active", x: 25, y: 35 },
-                    { id: "local-2", name: "HVAC Unit Primary", category: "HVAC", zone: "Operations", status: "Active", x: 65, y: 40 }
+            if (!localStorage.getItem('imi1_facility_assets')) {
+                const defaults = [
+                    { id: "local-1", name: "Server Rack Alpha", category: "Server", zone: "Server Room A", status: "Active", x: 200, y: 180 },
+                    { id: "local-2", name: "Primary HVAC Unit", category: "HVAC", zone: "Operations Center", status: "Active", x: 750, y: 160 }
                 ];
-                localStorage.setItem('facility_assets_fallback', JSON.stringify(initial));
+                localStorage.setItem('imi1_facility_assets', JSON.stringify(defaults));
             }
-            window.allAssets = JSON.parse(localStorage.getItem('facility_assets_fallback'));
+            window.allAssets = JSON.parse(localStorage.getItem('imi1_facility_assets'));
             renderApp();
-            
+
             const statusEl = document.getElementById('connection-status');
             statusEl.className = "flex items-center space-x-2 px-3 py-1.5 bg-blue-500/10 text-blue-400 border border-blue-500/20 rounded-full text-xs font-medium";
             statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-blue-400"></span><span>Local Mode</span>`;
         }
 
-        window.saveAssetToDb = async function(assetData) {
+        window.saveAssetData = async function(assetData) {
+            const id = document.getElementById('asset-id').value;
             if (window.db && window.auth && window.auth.currentUser) {
                 try {
-                    const id = document.getElementById('asset-id').value;
                     if (id && !id.startsWith('local-')) {
                         await updateDoc(doc(window.db, 'facility_assets', id), assetData);
-                        showToast("Asset updated successfully in cloud");
+                        showToast("Asset updated in Firestore");
                     } else {
                         await addDoc(collection(window.db, 'facility_assets'), assetData);
-                        showToast("Asset registered in cloud");
+                        showToast("Asset registered in Firestore");
                     }
                     return;
                 } catch (err) {
@@ -311,24 +381,24 @@
                 }
             }
 
-            // LocalStorage fallback save
-            const id = document.getElementById('asset-id').value || 'local-' + Date.now();
-            const index = window.allAssets.findIndex(a => a.id === id);
-            if (index >= 0) {
-                window.allAssets[index] = { id, ...assetData };
+            // Fallback save
+            const recordId = id || 'local-' + Date.now();
+            const idx = window.allAssets.findIndex(a => a.id === recordId);
+            if (idx >= 0) {
+                window.allAssets[idx] = { id: recordId, ...assetData };
             } else {
-                window.allAssets.push({ id, ...assetData });
+                window.allAssets.push({ id: recordId, ...assetData });
             }
-            localStorage.setItem('facility_assets_fallback', JSON.stringify(window.allAssets));
+            localStorage.setItem('imi1_facility_assets', JSON.stringify(window.allAssets));
             renderApp();
             showToast("Asset saved locally");
         }
 
-        window.deleteAssetFromDb = async function(id) {
+        window.deleteAssetRecord = async function(id) {
             if (window.db && window.auth && window.auth.currentUser && !id.startsWith('local-')) {
                 try {
                     await deleteDoc(doc(window.db, 'facility_assets', id));
-                    showToast("Asset removed from cloud");
+                    showToast("Asset removed from Firestore");
                     return;
                 } catch (err) {
                     console.error("Cloud delete failed:", err);
@@ -336,7 +406,7 @@
             }
 
             window.allAssets = window.allAssets.filter(a => a.id !== id);
-            localStorage.setItem('facility_assets_fallback', JSON.stringify(window.allAssets));
+            localStorage.setItem('imi1_facility_assets', JSON.stringify(window.allAssets));
             renderApp();
             showToast("Asset removed");
         }
@@ -352,11 +422,14 @@
             const listEl = document.getElementById('asset-list');
             const countEl = document.getElementById('asset-count');
             const searchTerm = document.getElementById('asset-search').value.toLowerCase();
+            const catFilter = document.getElementById('filter-category').value;
+            const zoneFilter = document.getElementById('filter-zone').value;
 
             const filtered = window.allAssets.filter(asset => {
                 const matchesSearch = asset.name.toLowerCase().includes(searchTerm) || asset.category.toLowerCase().includes(searchTerm);
-                const matchesZone = window.currentZoneFilter === 'all' || asset.zone === window.currentZoneFilter;
-                return matchesSearch && matchesZone;
+                const matchesCat = catFilter === 'all' || asset.category === catFilter;
+                const matchesZone = zoneFilter === 'all' || asset.zone === zoneFilter;
+                return matchesSearch && matchesCat && matchesZone;
             });
 
             countEl.innerText = `${filtered.length} items`;
@@ -364,8 +437,8 @@
             if (filtered.length === 0) {
                 listEl.innerHTML = `
                     <div class="text-center py-10 text-slate-500 text-xs">
-                        <i class="fa-solid fa-folder-open text-2xl mb-2"></i>
-                        <p>No matching assets found</p>
+                        <i class="fa-solid fa-folder-open text-xl mb-1.5"></i>
+                        <p>No assets found</p>
                     </div>`;
                 return;
             }
@@ -375,27 +448,27 @@
                 const iconClass = asset.category === 'Server' ? 'fa-server' : asset.category === 'HVAC' ? 'fa-wind' : asset.category === 'Security' ? 'fa-shield-halved' : 'fa-bolt';
                 
                 return `
-                    <div class="asset-item bg-slate-900/90 border border-slate-700/80 rounded-xl p-3.5 flex items-center justify-between shadow-sm">
-                        <div class="flex items-center space-x-3">
-                            <div class="w-10 h-10 rounded-xl bg-blue-600/10 border border-blue-500/20 text-blue-400 flex items-center justify-center shrink-0">
-                                <i class="fa-solid ${iconClass}"></i>
+                    <div class="bg-slate-950/90 border border-slate-800/80 rounded-xl p-3 flex items-center justify-between hover:border-slate-700 transition">
+                        <div class="flex items-center space-x-2.5 truncate mr-2">
+                            <div class="w-8 h-8 rounded-lg bg-blue-600/10 border border-blue-500/20 text-blue-400 flex items-center justify-center shrink-0">
+                                <i class="fa-solid ${iconClass} text-xs"></i>
                             </div>
-                            <div>
-                                <h4 class="text-sm font-semibold text-slate-200">${escapeHtml(asset.name)}</h4>
-                                <div class="flex items-center space-x-2 mt-0.5">
-                                    <span class="text-[10px] text-slate-400 bg-slate-800 px-2 py-0.5 rounded">${escapeHtml(asset.zone)}</span>
-                                    <span class="flex items-center text-[10px] text-slate-300">
-                                        <span class="w-1.5 h-1.5 rounded-full ${statusColor} mr-1.5"></span>
+                            <div class="truncate">
+                                <h4 class="text-xs font-semibold text-slate-200 truncate">${escapeHtml(asset.name)}</h4>
+                                <div class="flex items-center space-x-1.5 mt-0.5">
+                                    <span class="text-[9px] text-slate-400 bg-slate-900 px-1.5 py-0.2 rounded border border-slate-800">${escapeHtml(asset.zone)}</span>
+                                    <span class="flex items-center text-[9px] text-slate-300">
+                                        <span class="w-1.5 h-1.5 rounded-full ${statusColor} mr-1"></span>
                                         ${escapeHtml(asset.status)}
                                     </span>
                                 </div>
                             </div>
                         </div>
-                        <div class="flex items-center space-x-1">
-                            <button onclick="editAsset('${asset.id}')" class="p-2 text-slate-400 hover:text-white transition rounded-lg hover:bg-slate-800" title="Edit">
+                        <div class="flex items-center space-x-1 shrink-0">
+                            <button onclick="editAsset('${asset.id}')" class="p-1.5 text-slate-400 hover:text-white transition rounded-lg hover:bg-slate-900" title="Edit">
                                 <i class="fa-solid fa-pen-to-square text-xs"></i>
                             </button>
-                            <button onclick="deleteAssetFromDb('${asset.id}')" class="p-2 text-slate-400 hover:text-rose-400 transition rounded-lg hover:bg-slate-800" title="Delete">
+                            <button onclick="deleteAssetRecord('${asset.id}')" class="p-1.5 text-slate-400 hover:text-rose-400 transition rounded-lg hover:bg-slate-900" title="Delete">
                                 <i class="fa-solid fa-trash text-xs"></i>
                             </button>
                         </div>
@@ -417,41 +490,108 @@
             }
 
             pinsEl.innerHTML = window.allAssets.map(asset => {
-                const statusColor = asset.status === 'Active' ? 'bg-emerald-500 shadow-emerald-500/50' : asset.status === 'Warning' ? 'bg-amber-500 shadow-amber-500/50' : 'bg-rose-500 shadow-rose-500/50';
+                const statusColor = asset.status === 'Active' ? 'bg-emerald-500 shadow-emerald-500/40' : asset.status === 'Warning' ? 'bg-amber-500 shadow-amber-500/40' : 'bg-rose-500 shadow-rose-500/40';
                 const iconClass = asset.category === 'Server' ? 'fa-server' : asset.category === 'HVAC' ? 'fa-wind' : asset.category === 'Security' ? 'fa-shield-halved' : 'fa-bolt';
-                const x = asset.x || 50;
-                const y = asset.y || 50;
+                const x = asset.x || 600;
+                const y = asset.y || 400;
 
                 return `
-                    <div class="absolute group cursor-pointer transition-transform hover:scale-110" style="left: ${x}%; top: ${y}%; transform: translate(-50%, -50%);" onclick="editAsset('${asset.id}')">
-                        <div class="relative flex items-center justify-center w-9 h-9 rounded-full bg-slate-800 border-2 border-slate-600 shadow-lg text-white">
-                            <i class="fa-solid ${iconClass} text-xs text-blue-400"></i>
-                            <span class="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full ${statusColor} border-2 border-slate-900 shadow"></span>
+                    <div class="asset-pin absolute group cursor-pointer" style="left: ${x}px; top: ${y}px; transform: translate(-50%, -50%);" onclick="editAsset('${asset.id}')">
+                        <div class="relative flex items-center justify-center w-8 h-8 rounded-full bg-slate-900 border-2 border-slate-700 shadow-xl text-white">
+                            <i class="fa-solid ${iconClass} text-[11px] text-blue-400"></i>
+                            <span class="absolute -top-0.5 -right-0.5 w-3 h-3 rounded-full ${statusColor} border-2 border-slate-950 shadow"></span>
                         </div>
-                        <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 hidden group-hover:block z-20 bg-slate-900 border border-slate-700 text-white text-[11px] px-2.5 py-1 rounded-lg shadow-xl whitespace-nowrap">
+                        <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 hidden group-hover:block z-30 bg-slate-900 border border-slate-700 text-white text-[10px] px-2.5 py-1 rounded-lg shadow-2xl whitespace-nowrap pointer-events-none">
                             <span class="font-bold">${escapeHtml(asset.name)}</span>
-                            <span class="block text-slate-400 text-[10px]">${escapeHtml(asset.zone)} • ${escapeHtml(asset.status)}</span>
+                            <span class="block text-slate-400 text-[9px]">${escapeHtml(asset.zone)} • ${escapeHtml(asset.status)}</span>
                         </div>
                     </div>
                 `;
             }).join('');
         }
 
-        function handleCanvasClick(event) {
-            if (event.target.closest('.group') || event.target.closest('button')) return;
-            const rect = event.currentTarget.getBoundingClientRect();
-            const x = Math.round(((event.clientX - rect.left) / rect.width) * 100);
-            const y = Math.round(((event.clientY - rect.top) / rect.height) * 100);
+        // Pan and Zoom Controller for Blueprint Viewport
+        const viewport = document.getElementById('blueprint-viewport');
+        const transformContainer = document.getElementById('blueprint-transform-container');
+        let isDragging = false;
+        let startX = 0, startY = 0;
 
-            openAssetModal(x, y);
+        viewport.addEventListener('mousedown', (e) => {
+            if (window.placementMode) {
+                const rect = transformContainer.getBoundingClientRect();
+                const x = (e.clientX - rect.left) / window.zoomScale;
+                const y = (e.clientY - rect.top) / window.zoomScale;
+                openAssetModalAtCoords(Math.round(x), Math.round(y));
+                togglePlacementMode();
+                return;
+            }
+            if (e.target.closest('.asset-pin') || e.target.closest('button')) return;
+            isDragging = true;
+            startX = e.clientX - window.panX;
+            startY = e.clientY - window.panY;
+        });
+
+        window.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            window.panX = e.clientX - startX;
+            window.panY = e.clientY - startY;
+            updateTransform();
+        });
+
+        window.addEventListener('mouseup', () => { isDragging = false; });
+
+        viewport.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            const delta = e.deltaY < 0 ? 0.1 : -0.1;
+            zoomCanvas(delta);
+        }, { passive: false });
+
+        function zoomCanvas(amount) {
+            window.zoomScale = Math.min(Math.max(0.5, window.zoomScale + amount), 2.5);
+            updateTransform();
         }
 
-        function openAssetModal(x = 50, y = 50) {
+        function resetZoom() {
+            window.zoomScale = 1;
+            window.panX = 0;
+            window.panY = 0;
+            updateTransform();
+        }
+
+        function updateTransform() {
+            transformContainer.style.transform = `translate(${window.panX}px, ${window.panY}px) scale(${window.zoomScale})`;
+        }
+
+        function togglePlacementMode() {
+            window.placementMode = !window.placementMode;
+            const btn = document.getElementById('placement-mode-btn');
+            const txt = document.getElementById('placement-btn-text');
+            if (window.placementMode) {
+                btn.className = "bg-blue-600 text-white border border-blue-500 px-3.5 py-2 rounded-xl font-medium text-xs flex items-center space-x-2 transition shadow-lg shadow-blue-600/30 animate-pulse";
+                txt.innerText = "Placement Mode: ACTIVE";
+                viewport.style.cursor = 'crosshair';
+            } else {
+                btn.className = "bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-3.5 py-2 rounded-xl font-medium text-xs flex items-center space-x-2 transition shadow-sm";
+                txt.innerText = "Placement Mode: OFF";
+                viewport.style.cursor = 'grab';
+            }
+        }
+
+        function openAssetModal(x = 600, y = 400) {
             document.getElementById('asset-id').value = '';
             document.getElementById('form-name').value = '';
             document.getElementById('asset-x').value = x;
             document.getElementById('asset-y').value = y;
-            document.getElementById('modal-title').innerHTML = `<i class="fa-solid fa-circle-plus text-blue-500"></i><span>Register New Asset at (${x}%, ${y}%)</span>`;
+            document.getElementById('modal-title').innerHTML = `<i class="fa-solid fa-circle-plus text-blue-500"></i><span>Register New Asset</span>`;
+            document.getElementById('asset-modal').classList.remove('hidden');
+        }
+
+        function openAssetModalAtCoords(x, y) {
+            document.getElementById('asset-id').value = '';
+            document.getElementById('form-name').value = '';
+            document.getElementById('asset-x').value = x;
+            document.getElementById('asset-y').value = y;
+            document.getElementById('modal-title').innerHTML = `<i class="fa-solid fa-crosshairs text-blue-500"></i><span>Place Asset at (${x}, ${y})</span>`;
             document.getElementById('asset-modal').classList.remove('hidden');
         }
 
@@ -464,8 +604,8 @@
             document.getElementById('form-category').value = asset.category;
             document.getElementById('form-zone').value = asset.zone;
             document.getElementById('form-status').value = asset.status;
-            document.getElementById('asset-x').value = asset.x || 50;
-            document.getElementById('asset-y').value = asset.y || 50;
+            document.getElementById('asset-x').value = asset.x || 600;
+            document.getElementById('asset-y').value = asset.y || 400;
 
             document.getElementById('modal-title').innerHTML = `<i class="fa-solid fa-pen-to-square text-blue-500"></i><span>Edit Facility Asset</span>`;
             document.getElementById('asset-modal').classList.remove('hidden');
@@ -475,8 +615,8 @@
             document.getElementById('asset-modal').classList.add('hidden');
         }
 
-        async function saveAsset(event) {
-            event.preventDefault();
+        async function handleAssetFormSubmit(e) {
+            e.preventDefault();
             const assetData = {
                 name: document.getElementById('form-name').value,
                 category: document.getElementById('form-category').value,
@@ -487,25 +627,44 @@
             };
 
             closeAssetModal();
-            await window.saveAssetToDb(assetData);
-        }
-
-        function setZoneFilter(zone) {
-            window.currentZoneFilter = zone;
-            ['all', 'server', 'ops'].forEach(btn => {
-                const el = document.getElementById(`filter-${btn}`);
-                if (el) {
-                    el.className = "px-3 py-1 rounded-lg text-xs font-medium " + 
-                        ((btn === 'all' && zone === 'all') || (btn === 'server' && zone === 'Server Room') || (btn === 'ops' && zone === 'Operations') 
-                            ? "bg-blue-600 text-white" 
-                            : "text-slate-400 hover:text-white");
-                }
-            });
-            renderAssetList();
+            await window.saveAssetData(assetData);
         }
 
         function filterAssets() {
             renderAssetList();
+        }
+
+        function exportDataJSON() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(window.allAssets, null, 2));
+            const downloadAnchor = document.createElement('a');
+            downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", "facility_blueprint_backup.json");
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
+            showToast("Blueprint exported successfully");
+        }
+
+        function importDataJSON(e) {
+            const fileReader = new FileReader();
+            if (e.target.files[0]) {
+                fileReader.readAsText(e.target.files[0], "UTF-8");
+                fileReader.onload = async (event) => {
+                    try {
+                        const imported = JSON.parse(event.target.result);
+                        if (Array.isArray(imported)) {
+                            window.allAssets = imported;
+                            localStorage.setItem('imi1_facility_assets', JSON.stringify(imported));
+                            renderApp();
+                            showToast("Blueprint imported successfully");
+                        } else {
+                            showToast("Invalid JSON file format", "error");
+                        }
+                    } catch (err) {
+                        showToast("Failed to parse JSON", "error");
+                    }
+                };
+            }
         }
 
         function showToast(message, type = 'success') {
