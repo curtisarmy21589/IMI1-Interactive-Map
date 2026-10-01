@@ -1,692 +1,882 @@
 <!DOCTYPE html>
-<html lang="en" class="h-full">
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Interactive Facility Blueprint</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        body { font-family: 'Inter', sans-serif; }
-        .blueprint-grid {
-            background-image: linear-gradient(to right, rgba(59, 130, 246, 0.08) 1px, transparent 1px),
-                              linear-gradient(to bottom, rgba(59, 130, 246, 0.08) 1px, transparent 1px);
-            background-size: 30px 30px;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Facility Systems Interactive Blueprint</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: #0f1117; color: #e1e4ed; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+    
+    /* Header Bar */
+    header { height: 52px; background: #161b26; border-bottom: 1px solid #2d3548; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; z-index: 10; gap: 12px; }
+    .brand { font-weight: 700; font-size: 15px; color: #40c4ff; display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+    .nav-controls { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    
+    .status-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; padding: 4px 8px; border-radius: 12px; font-weight: 600; background: #1c2536; border: 1px solid #2d3e5e; color: #8a99ad; }
+    .status-badge.connected { background: #0d2e1e; border-color: #1b5e3a; color: #00e676; }
+    .status-dot { width: 8px; height: 8px; border-radius: 50%; background: #ff5252; }
+    .status-badge.connected .status-dot { background: #00e676; box-shadow: 0 0 8px #00e676; }
+
+    .level-selector { display: flex; background: #0f1117; padding: 3px; border-radius: 6px; border: 1px solid #2d3548; }
+    .level-btn { background: transparent; border: none; color: #8b95a5; padding: 5px 10px; font-size: 11px; font-weight: 600; border-radius: 4px; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
+    .level-btn.active { background: #2196f3; color: #fff; }
+    
+    .btn { background: #232a3b; border: 1px solid #3b465e; color: #e1e4ed; padding: 6px 12px; border-radius: 4px; font-size: 11px; cursor: pointer; font-weight: 500; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s; white-space: nowrap; }
+    .btn:hover { background: #2d364d; border-color: #4a5877; }
+    .btn-primary { background: #2196f3; border-color: #1e88e5; color: #fff; }
+    .btn-primary:hover { background: #1e88e5; }
+    .btn-danger { background: #d32f2f; border-color: #f44336; color: #fff; }
+    .btn-danger:hover { background: #e53935; }
+    .btn-share { background: #00c853; border-color: #00e676; color: #000; font-weight: 700; }
+    .btn-share:hover { background: #00e676; }
+    .btn-active-mode { background: #00c853 !important; border-color: #00e676 !important; color: #000 !important; font-weight: 700; }
+    
+    /* Main Layout */
+    .app-body { flex: 1; display: flex; position: relative; overflow: hidden; }
+    
+    /* Sidebar */
+    aside { width: 330px; background: #161b26; border-right: 1px solid #2d3548; display: flex; flex-direction: column; z-index: 5; flex-shrink: 0; transition: width 0.3s ease; position: relative; }
+    aside.minimized { width: 48px; }
+    aside.minimized .sidebar-content { display: none; }
+    aside.minimized .sidebar-header-title { display: none; }
+    aside.minimized .minimize-toggle-btn { transform: rotate(180deg); }
+
+    .sidebar-header { display: flex; align-items: center; justify-content: space-between; padding: 12px; border-bottom: 1px solid #2d3548; background: #121620; }
+    .sidebar-header-title { font-weight: 600; font-size: 12px; color: #fff; }
+    .sidebar-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+    .sidebar-section { padding: 12px; border-bottom: 1px solid #2d3548; }
+    .search-box { width: 100%; background: #0f1117; border: 1px solid #2d3548; color: #fff; padding: 8px 10px; border-radius: 4px; font-size: 12px; outline: none; }
+    .search-box:focus { border-color: #2196f3; }
+    
+    .category-list { display: flex; flex-direction: column; gap: 6px; max-height: 180px; overflow-y: auto; margin-top: 8px; }
+    .cat-item { display: flex; align-items: center; justify-content: space-between; font-size: 12px; padding: 6px 8px; border-radius: 4px; background: #0f1117; border: 1px solid #2d3548; }
+    .cat-info { display: flex; align-items: center; gap: 8px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .cat-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+    .cat-actions { display: flex; gap: 4px; flex-shrink: 0; }
+    
+    .asset-list-container { flex: 1; overflow-y: auto; padding: 12px; }
+    .asset-card { background: #0f1117; border: 1px solid #2d3548; border-radius: 6px; padding: 10px; margin-bottom: 8px; cursor: pointer; transition: border-color 0.2s; position: relative; }
+    .asset-card:hover { border-color: #2196f3; }
+    .asset-title { font-weight: 600; font-size: 13px; color: #fff; margin-bottom: 4px; display: flex; justify-content: space-between; padding-right: 48px; }
+    .asset-meta { font-size: 11px; color: #8b95a5; display: flex; gap: 8px; align-items: center; }
+    .asset-actions { position: absolute; top: 8px; right: 8px; display: flex; gap: 4px; }
+    .icon-btn { background: #232a3b; border: 1px solid #3b465e; color: #aaa; width: 22px; height: 22px; border-radius: 4px; font-size: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+    .icon-btn:hover { color: #fff; background: #2d364d; }
+    .icon-btn.delete:hover { background: #d32f2f; color: #fff; }
+
+    /* Canvas Area */
+    main { flex: 1; position: relative; background: #090b10; overflow: hidden; cursor: grab; }
+    main.panning { cursor: grabbing; }
+    main.placement-mode { cursor: crosshair !important; }
+    canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: block; }
+    
+    /* Overlay Controls */
+    .map-overlay-controls { position: absolute; bottom: 16px; right: 16px; display: flex; flex-direction: column; gap: 8px; z-index: 5; }
+    .zoom-btn { width: 36px; height: 36px; background: #161b26; border: 1px solid #2d3548; color: #fff; font-size: 18px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; user-select: none; }
+    .zoom-btn:hover { background: #232a3b; }
+    
+    .coord-banner { position: absolute; top: 16px; left: 16px; background: rgba(22, 27, 38, 0.88); backdrop-filter: blur(6px); border: 1px solid #2d3548; padding: 6px 14px; border-radius: 6px; font-family: monospace; font-size: 12px; color: #40c4ff; z-index: 5; display: flex; gap: 12px; align-items: center; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+    .mode-badge { padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold; background: #3b465e; color: #aaa; text-transform: uppercase; }
+    .mode-badge.active { background: #00c853; color: #000; }
+    
+    /* Modals & Dialogs */
+    .modal-backdrop { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.75); display: none; align-items: center; justify-content: center; z-index: 100; backdrop-filter: blur(2px); }
+    .modal { background: #161b26; border: 1px solid #2d3548; border-radius: 8px; width: 440px; max-width: 90%; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); transition: width 0.2s, height 0.2s; }
+    .modal-header { font-size: 15px; font-weight: 700; color: #fff; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; }
+    .form-group { margin-bottom: 12px; }
+    .form-group label { display: block; font-size: 11px; color: #8b95a5; margin-bottom: 4px; text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px; }
+    .form-control { width: 100%; background: #0f1117; border: 1px solid #2d3548; color: #fff; padding: 8px 10px; border-radius: 4px; font-size: 12px; outline: none; }
+    .form-control:focus { border-color: #2196f3; }
+    .form-row { display: flex; gap: 10px; }
+    .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px; }
+
+    /* Toast Notification System */
+    .toast-container { position: fixed; bottom: 20px; left: 20px; z-index: 200; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
+    .toast { background: #161b26; border: 1px solid #2196f3; color: #fff; padding: 10px 16px; border-radius: 6px; font-size: 12px; display: flex; align-items: center; gap: 8px; box-shadow: 0 6px 20px rgba(0,0,0,0.4); animation: toastIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+    .toast.error { border-color: #f44336; }
+    .toast.success { border-color: #00c853; }
+    @keyframes toastIn { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+  </style>
 </head>
-<body class="h-full bg-slate-950 text-slate-100 flex flex-col overflow-hidden">
+<body>
 
-    <header class="bg-slate-900 border-b border-slate-800 px-6 py-4 flex items-center justify-between shrink-0 shadow-lg">
-        <div class="flex items-center space-x-3">
-            <div class="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-md shadow-blue-500/20">
-                <i class="fa-solid fa-map-location-dot text-lg"></i>
-            </div>
-            <div>
-                <h1 class="font-bold text-lg text-slate-100 tracking-tight">Facility Blueprint Studio</h1>
-                <p class="text-xs text-slate-400 flex items-center gap-2">
-                    <span>Project: imi1-interactive-map-8d929</span>
-                    <span id="sync-status" class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-amber-500/10 text-amber-400 border border-amber-500/20">
-                        <span class="w-1.5 h-1.5 mr-1 rounded-full bg-amber-400 animate-pulse"></span> Connecting Cloud...
-                    </span>
-                </p>
-            </div>
-        </div>
-
-        <div class="flex items-center space-x-3">
-            <div class="bg-slate-800/80 p-1 rounded-xl border border-slate-700/60 flex items-center">
-                <button id="tool-select" onclick="setTool('select')" class="px-3 py-1.5 rounded-lg text-xs font-medium transition bg-blue-600 text-white shadow-sm flex items-center gap-1.5">
-                    <i class="fa-solid fa-arrow-pointer"></i> Select/Move
-                </button>
-                <button id="tool-add" onclick="setTool('add')" class="px-3 py-1.5 rounded-lg text-xs font-medium transition text-slate-400 hover:text-white flex items-center gap-1.5">
-                    <i class="fa-solid fa-plus"></i> Add Asset
-                </button>
-            </div>
-
-            <button onclick="zoomMap(0.1)" class="w-9 h-9 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 flex items-center justify-center transition shadow-sm" title="Zoom In">
-                <i class="fa-solid fa-magnifying-glass-plus text-sm"></i>
-            </button>
-            <button onclick="zoomMap(-0.1)" class="w-9 h-9 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 flex items-center justify-center transition shadow-sm" title="Zoom Out">
-                <i class="fa-solid fa-magnifying-glass-minus text-sm"></i>
-            </button>
-            <button onclick="resetMapView()" class="w-9 h-9 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 flex items-center justify-center transition shadow-sm" title="Reset View">
-                <i class="fa-solid fa-expand text-sm"></i>
-            </button>
-            <button onclick="openExportModal()" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 text-xs font-medium transition shadow-sm flex items-center gap-2">
-                <i class="fa-solid fa-file-export text-blue-400"></i> Export JSON
-            </button>
-        </div>
-    </header>
-
-    <div class="flex-1 flex overflow-hidden">
-        <!-- Sidebar Controls -->
-        <aside class="w-80 bg-slate-900 border-r border-slate-800 flex flex-col shrink-0 z-10 shadow-xl">
-            <!-- Tabs -->
-            <div class="flex border-b border-slate-800">
-                <button onclick="switchTab('assets')" id="tab-assets" class="flex-1 py-3 text-xs font-semibold text-blue-400 border-b-2 border-blue-500 bg-slate-800/40 transition">
-                    <i class="fa-solid fa-boxes-stacked mr-1.5"></i> Assets (<span id="asset-count">0</span>)
-                </button>
-                <button onclick="switchTab('catalog')" id="tab-catalog" class="flex-1 py-3 text-xs font-semibold text-slate-400 hover:text-slate-200 border-b-2 border-transparent transition">
-                    <i class="fa-solid fa-shapes mr-1.5"></i> Asset Library
-                </button>
-            </div>
-
-            <!-- Asset List Tab Content -->
-            <div id="panel-assets" class="flex-1 flex flex-col overflow-hidden p-4 space-y-4">
-                <!-- Search & Filters -->
-                <div class="space-y-2.5">
-                    <div class="relative">
-                        <i class="fa-solid fa-search absolute left-3 top-3 text-slate-500 text-xs"></i>
-                        <input type="text" id="asset-search" oninput="filterAssets()" placeholder="Search placed assets..." 
-                            class="w-full bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-4 py-2 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-blue-500 transition">
-                    </div>
-                    <div class="flex gap-1.5 overflow-x-auto pb-1 no-scrollbar">
-                        <button onclick="setCategoryFilter('all')" id="cat-all" class="cat-btn px-2.5 py-1 rounded-lg text-[11px] font-medium bg-blue-600 text-white shrink-0 transition">All</button>
-                        <button onclick="setCategoryFilter('Server')" id="cat-Server" class="cat-btn px-2.5 py-1 rounded-lg text-[11px] font-medium bg-slate-800 text-slate-400 hover:text-slate-200 shrink-0 transition">Servers</button>
-                        <button onclick="setCategoryFilter('Security')" id="cat-Security" class="cat-btn px-2.5 py-1 rounded-lg text-[11px] font-medium bg-slate-800 text-slate-400 hover:text-slate-200 shrink-0 transition">Security</button>
-                        <button onclick="setCategoryFilter('HVAC')" id="cat-HVAC" class="cat-btn px-2.5 py-1 rounded-lg text-[11px] font-medium bg-slate-800 text-slate-400 hover:text-slate-200 shrink-0 transition">HVAC</button>
-                        <button onclick="setCategoryFilter('Workstation')" id="cat-Workstation" class="cat-btn px-2.5 py-1 rounded-lg text-[11px] font-medium bg-slate-800 text-slate-400 hover:text-slate-200 shrink-0 transition">Workstations</button>
-                    </div>
-                </div>
-
-                <!-- Asset Item List -->
-                <div id="asset-list-container" class="flex-1 overflow-y-auto space-y-2 pr-1">
-                    <!-- Dynamic Items -->
-                </div>
-            </div>
-
-            <!-- Asset Library Tab Content -->
-            <div id="panel-catalog" class="flex-1 flex flex-col overflow-hidden p-4 space-y-4 hidden">
-                <p class="text-xs text-slate-400">Click an item to select it for placement on the facility blueprint map:</p>
-                <div class="flex-1 overflow-y-auto space-y-2 pr-1" id="catalog-list">
-                    <!-- Catalog items populated via JS -->
-                </div>
-            </div>
-
-            <!-- Selected Asset Inspector -->
-            <div id="inspector-panel" class="border-t border-slate-800 p-4 bg-slate-900/90 hidden">
-                <div class="flex items-center justify-between mb-3">
-                    <h3 class="text-xs font-semibold text-slate-300 uppercase tracking-wider">Asset Properties</h3>
-                    <button onclick="closeInspector()" class="text-slate-500 hover:text-slate-300"><i class="fa-solid fa-xmark"></i></button>
-                </div>
-                <div id="inspector-content" class="space-y-3">
-                    <!-- Inspector fields -->
-                </div>
-            </div>
-        </aside>
-
-        <!-- Interactive Map Canvas Workspace -->
-        <main class="flex-1 relative blueprint-grid overflow-hidden flex items-center justify-center">
-            <!-- Canvas HUD overlay -->
-            <div class="absolute top-4 left-4 z-10 bg-slate-900/90 backdrop-blur-md border border-slate-800 rounded-xl px-4 py-2.5 shadow-xl flex items-center gap-4 text-xs">
-                <div class="flex items-center gap-2">
-                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                    <span class="text-slate-300 font-medium">Cloud Live Sync Active</span>
-                </div>
-                <div class="h-4 w-px bg-slate-700"></div>
-                <span class="text-slate-400">Tip: Drag items to position or click to inspect</span>
-            </div>
-
-            <!-- Main Canvas Element -->
-            <div id="canvas-wrapper" class="relative w-full h-full cursor-grab active:cursor-grabbing">
-                <canvas id="blueprint-canvas" class="absolute inset-0 w-full h-full block"></canvas>
-            </div>
-        </main>
+  <header>
+    <div class="brand">
+      <span>📐</span> Facility Systems Interactive Blueprint
+    </div>
+    
+    <div class="status-badge" id="cloudStatusBadge">
+      <span class="status-dot"></span>
+      <span id="cloudStatusText">Connecting to Firebase...</span>
     </div>
 
-    <div id="export-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-xl overflow-hidden shadow-2xl flex flex-col">
-            <div class="px-6 py-4 border-b border-slate-800 flex items-center justify-between">
-                <h3 class="font-semibold text-slate-100 flex items-center gap-2"><i class="fa-solid fa-file-code text-blue-400"></i> Blueprint Export Data</h3>
-                <button onclick="closeExportModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
-            </div>
-            <div class="p-6">
-                <textarea id="export-json-area" readonly class="w-full h-64 bg-slate-950 border border-slate-800 rounded-xl p-4 font-mono text-xs text-blue-300 focus:outline-none resize-none"></textarea>
-            </div>
-            <div class="px-6 py-4 bg-slate-900/50 border-t border-slate-800 flex justify-end gap-3">
-                <button onclick="closeExportModal()" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-medium text-slate-300 transition">Close</button>
-                <button onclick="copyExportJson()" class="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-xs font-semibold text-white transition flex items-center gap-2">
-                    <i class="fa-solid fa-copy"></i> Copy to Clipboard
-                </button>
-            </div>
-        </div>
+    <div class="nav-controls">
+      <button class="btn btn-share" type="button" onclick="shareLiveLink()">🔗 Share Live Link</button>
+
+      <button class="btn" id="addAssetBtn" type="button" onclick="togglePlacementMode()">
+        📍 Add Asset: <span id="addAssetStatus">OFF</span>
+      </button>
+
+      <div class="level-selector">
+        <button class="level-btn active" type="button" onclick="setLevel('ground', event)">Ground Floor</button>
+        <button class="level-btn" type="button" onclick="setLevel('mezz', event)">MEZZ Floor</button>
+        <button class="level-btn" type="button" onclick="setLevel('roof', event)">Roof Level</button>
+        <button class="level-btn" type="button" onclick="setLevel('exterior', event)">Exterior / Yard</button>
+      </div>
+      
+      <button class="btn" type="button" onclick="openYardModal()">⚙️ Yard Config</button>
+      <button class="btn" type="button" onclick="exportJSON()">💾 Export JSON</button>
+      <button class="btn" type="button" onclick="document.getElementById('importFile').click()">📂 Import</button>
+      <input type="file" id="importFile" style="display:none" onchange="importJSON(event)" accept=".json">
     </div>
+  </header>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
-        import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
-        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
+  <div class="app-body">
+    <!-- Sidebar -->
+    <aside id="sidebar" data-maximized="false">
+      <div class="sidebar-header">
+        <span class="sidebar-header-title">Facility Navigator</span>
+        <div style="display:flex; gap:4px;">
+          <button class="icon-btn" id="maximizeSidebarBtn" type="button" title="Maximize / Restore Sidebar" onclick="toggleMaximizeSidebar()">⛶</button>
+          <button class="icon-btn minimize-toggle-btn" id="minimizeSidebarBtn" type="button" title="Minimize / Expand Sidebar" onclick="toggleMinimizeSidebar()">◀</button>
+        </div>
+      </div>
+      <div class="sidebar-content">
+        <div class="sidebar-section">
+          <input type="text" class="search-box" id="searchBox" placeholder="Search assets or grid..." oninput="renderAssetList()">
+        </div>
 
-        // Exact user-provided Firebase configuration
-        const firebaseConfig = {
-            apiKey: "AIzaSyDummyKeyForImu1InteractiveMap8d929",
-            authDomain: "imi1-interactive-map-8d929.firebaseapp.com",
-            projectId: "imi1-interactive-map-8d929",
-            storageBucket: "imi1-interactive-map-8d929.appspot.com",
-            messagingSenderId: "123456789012",
-            appId: "1:123456789012:web:abcdef1234567890"
-        };
+        <div class="sidebar-section">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+            <strong style="font-size:12px; color:#fff;">System Categories</strong>
+            <button class="btn" type="button" style="padding:3px 8px; font-size:10px;" onclick="openCatModalForNew()">+ Add</button>
+          </div>
+          <div class="category-list" id="categoryList"></div>
+        </div>
 
-        let app, db, auth;
+        <div class="asset-list-container">
+          <strong style="font-size:12px; display:block; margin-bottom:8px; color:#fff;">
+            System Assets (<span id="assetCount">0</span>)
+          </strong>
+          <div id="assetCards"></div>
+        </div>
+      </div>
+    </aside>
+
+    <main id="mapContainer">
+      <div class="coord-banner" id="coordBanner">
+        <span id="coordText">Hover or click map to inspect location</span>
+        <span class="mode-badge" id="modeBadge">PAN MODE</span>
+      </div>
+      <canvas id="mapCanvas"></canvas>
+      <div class="map-overlay-controls">
+        <button class="zoom-btn" type="button" onclick="zoomButtonHandler(1.2)">+</button>
+        <button class="zoom-btn" type="button" onclick="zoomButtonHandler(0.8)">−</button>
+        <button class="zoom-btn" type="button" onclick="resetView()">⟲</button>
+      </div>
+    </main>
+  </div>
+
+  <!-- Asset Modal -->
+  <div class="modal-backdrop" id="assetModal">
+    <div class="modal" id="assetModalBox">
+      <div class="modal-header">
+        <span id="modalTitle">Add System Asset</span>
+        <span style="cursor:pointer; font-size:14px;" onclick="closeModal('assetModal')">✕</span>
+      </div>
+      <form id="assetForm" onsubmit="saveAsset(event)">
+        <input type="hidden" id="assetId">
+        <div class="form-group">
+          <label>Asset Title / Label</label>
+          <input type="text" id="assetName" class="form-control" placeholder="e.g. Breaker Panel MDP-1" required>
+        </div>
+        <div class="form-row">
+          <div class="form-group" style="flex:1;">
+            <label>Category</label>
+            <select id="assetCategory" class="form-control"></select>
+          </div>
+          <div class="form-group" style="flex:1;">
+            <label>Level / Floor</label>
+            <select id="assetLevel" class="form-control">
+              <option value="ground">Ground Floor</option>
+              <option value="mezz">MEZZ Floor</option>
+              <option value="roof">Roof Level</option>
+              <option value="exterior">Exterior / Yard</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group" style="flex:1;">
+            <label>X Coordinate</label>
+            <input type="number" id="assetX" class="form-control" required>
+          </div>
+          <div class="form-group" style="flex:1;">
+            <label>Y Coordinate</label>
+            <input type="number" id="assetY" class="form-control" required>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Grid Reference</label>
+          <input type="text" id="assetGrid" class="form-control" placeholder="e.g. Column H-12">
+        </div>
+        <div class="form-group">
+          <label>Notes / Isolation Steps</label>
+          <textarea id="assetNotes" class="form-control" rows="3" placeholder="Enter maintenance instructions or specs..."></textarea>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-danger" id="deleteAssetBtn" style="margin-right:auto; display:none;" onclick="confirmDeleteCurrentAsset()">Delete Asset</button>
+          <button type="button" class="btn" onclick="closeModal('assetModal')">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Asset</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Category Modal -->
+  <div class="modal-backdrop" id="catModal">
+    <div class="modal">
+      <div class="modal-header">
+        <span id="catModalTitle">Add System Category</span>
+        <span style="cursor:pointer; font-size:14px;" onclick="closeModal('catModal')">✕</span>
+      </div>
+      <form onsubmit="saveCategory(event)">
+        <input type="hidden" id="catId">
+        <div class="form-group">
+          <label>Category Name</label>
+          <input type="text" id="catName" class="form-control" placeholder="e.g. Fire Protection" required>
+        </div>
+        <div class="form-row">
+          <div class="form-group" style="flex:1;">
+            <label>Color</label>
+            <input type="color" id="catColor" class="form-control" value="#ff9800" style="height:35px; padding:2px;">
+          </div>
+          <div class="form-group" style="flex:1;">
+            <label>Icon / Symbol</label>
+            <input type="text" id="catIcon" class="form-control" value="🔥" required>
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-danger" id="deleteCatBtn" style="margin-right:auto; display:none;" onclick="confirmDeleteCurrentCategory()">Delete Category</button>
+          <button type="button" class="btn" onclick="closeModal('catModal')">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Category</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Yard Config Modal -->
+  <div class="modal-backdrop" id="yardModal">
+    <div class="modal">
+      <div class="modal-header">
+        <span>Exterior Yard & Parking Configurator</span>
+        <span style="cursor:pointer; font-size:14px;" onclick="closeModal('yardModal')">✕</span>
+      </div>
+      <form onsubmit="saveYardConfig(event)">
+        <div class="form-group">
+          <label>North Staff Parking Depth (px/ft)</label>
+          <input type="number" id="yardNorth" class="form-control" value="120" required>
+        </div>
+        <div class="form-group">
+          <label>South Truck Staging Depth (px/ft)</label>
+          <input type="number" id="yardSouth" class="form-control" value="160" required>
+        </div>
+        <div class="form-group">
+          <label>East Entry Lot Width (px/ft)</label>
+          <input type="number" id="yardEast" class="form-control" value="100" required>
+        </div>
+        <div class="form-group">
+          <label>West Margin Width (px/ft)</label>
+          <input type="number" id="yardWest" class="form-control" value="100" required>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn" onclick="closeModal('yardModal')">Cancel</button>
+          <button type="submit" class="btn btn-primary">Update Yard Layout</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Custom Confirmation Dialog -->
+  <div class="modal-backdrop" id="confirmModal">
+    <div class="modal" style="width:360px;">
+      <div class="modal-header">
+        <span id="confirmTitle">Confirm Action</span>
+        <span style="cursor:pointer" onclick="closeModal('confirmModal')">✕</span>
+      </div>
+      <p id="confirmMessage" style="font-size:12px; color:#b0bec5; line-height:1.5; margin-bottom:16px;"></p>
+      <div class="modal-actions">
+        <button type="button" class="btn" onclick="closeModal('confirmModal')">Cancel</button>
+        <button type="button" class="btn btn-danger" id="confirmActionBtn">Confirm</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- Script with your exact Firebase config & robust fallback handler -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-analytics.js";
+    import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getFirestore, doc, setDoc, deleteDoc, onSnapshot, collection } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+    // Your exact Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyCrKAut8_5nHWTWtYqZZr5HOENGd8mqZxE",
+      authDomain: "imi1-interactive-map-8d929.firebaseapp.com",
+      projectId: "imi1-interactive-map-8d929",
+      storageBucket: "imi1-interactive-map-8d929.firebasestorage.app",
+      messagingSenderId: "613133090515",
+      appId: "1:613133090515:web:f8f9be365f484a3a5c5e26",
+      measurementId: "G-4QR2RSSTN1"
+    };
+
+    let db = null;
+    let auth = null;
+    let user = null;
+    let confirmCallback = null;
+
+    const state = {
+      level: 'ground',
+      placementMode: false,
+      scale: 1,
+      panX: 50,
+      panY: 50,
+      isPanning: false,
+      startX: 0,
+      startY: 0,
+      categories: [
+        { id: 'elec', name: 'Electrical Panels', color: '#e65100', icon: '⚡' },
+        { id: 'plumb', name: 'Plumbing / Water', color: '#0288d1', icon: '💧' },
+        { id: 'hvac', name: 'HVAC / Controls', color: '#2e7d32', icon: '❄️' }
+      ],
+      yard: { north: 120, south: 160, east: 100, west: 100 },
+      assets: [
+        { id: '1', name: 'Main Distribution Panel MDP-1', category: 'elec', level: 'ground', x: 280, y: 180, grid: 'A-2', notes: '480V 3-Phase Main Switch' },
+        { id: '2', name: 'Water Main Shutoff', category: 'plumb', level: 'ground', x: 520, y: 180, grid: 'A-5', notes: '3-inch main valve' },
+        { id: '3', name: 'MEZZ Air Handler AHU-2', category: 'hvac', level: 'mezz', x: 340, y: 620, grid: 'K-6', notes: 'Mezzanine cooling unit' },
+        { id: '4', name: 'Rooftop Package Unit RTU-1', category: 'hvac', level: 'roof', x: 600, y: 300, grid: 'D-12', notes: 'Main office RTU' }
+      ]
+    };
+
+    const canvas = document.getElementById('mapCanvas');
+    const ctx = canvas.getContext('2d');
+    const container = document.getElementById('mapContainer');
+
+    function showToast(msg, type = 'normal') {
+      const toastContainer = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+      toast.innerHTML = `<span>${type === 'success' ? '✅' : type === 'error' ? '⚠️' : 'ℹ️'}</span> ${msg}`;
+      toastContainer.appendChild(toast);
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transition = 'opacity 0.3s';
+        setTimeout(() => toast.remove(), 300);
+      }, 3000);
+    }
+
+    window.shareLiveLink = () => {
+      const url = window.location.href;
+      const dummy = document.createElement('input');
+      document.body.appendChild(dummy);
+      dummy.value = url;
+      dummy.select();
+      document.execCommand('copy');
+      document.body.removeChild(dummy);
+      showToast("Live collaborative link copied to clipboard!", "success");
+    };
+
+    function customConfirm(title, message, onConfirm) {
+      document.getElementById('confirmTitle').innerText = title;
+      document.getElementById('confirmMessage').innerText = message;
+      confirmCallback = onConfirm;
+      openModal('confirmModal');
+    }
+
+    document.getElementById('confirmActionBtn').onclick = () => {
+      if (confirmCallback) confirmCallback();
+      closeModal('confirmModal');
+    };
+
+    window.toggleMinimizeSidebar = () => {
+      const sidebar = document.getElementById('sidebar');
+      sidebar.classList.toggle('minimized');
+      setTimeout(resizeCanvas, 320);
+    };
+
+    window.toggleMaximizeSidebar = () => {
+      const sidebar = document.getElementById('sidebar');
+      if (sidebar.classList.contains('minimized')) return;
+      sidebar.dataset.maximized = sidebar.dataset.maximized === 'true' ? 'false' : 'true';
+      sidebar.style.width = sidebar.dataset.maximized === 'true' ? '550px' : '330px';
+      setTimeout(resizeCanvas, 320);
+    };
+
+    // Initialize Firebase with fallback
+    async function initFirebase() {
+      try {
+        const app = initializeApp(firebaseConfig);
+        try { getAnalytics(app); } catch (e) {}
+        auth = getAuth(app);
+        db = getFirestore(app);
+
+        const res = await signInAnonymously(auth);
+        user = res.user;
+
+        if (user) {
+          updateCloudStatus(true, `Synced Cloud (${user.uid.slice(0, 6)}...)`);
+          setupFirestoreListeners();
+        }
+      } catch (err) {
+        console.warn("Firebase running in offline local mode:", err);
+        updateCloudStatus(false, "Local Mode (Offline)");
+        renderCategoryList();
+        renderAssetList();
+        draw();
+      }
+    }
+
+    function updateCloudStatus(connected, text) {
+      const badge = document.getElementById('cloudStatusBadge');
+      const textElem = document.getElementById('cloudStatusText');
+      if (connected) badge.classList.add('connected');
+      else badge.classList.remove('connected');
+      textElem.innerText = text;
+    }
+
+    function setupFirestoreListeners() {
+      if (!user || !db) return;
+      const catsCol = collection(db, 'blueprint_categories');
+      const assetsCol = collection(db, 'blueprint_assets');
+
+      onSnapshot(catsCol, (snapshot) => {
+        if (!snapshot.empty) {
+          const cats = [];
+          snapshot.forEach(docSnap => cats.push({ id: docSnap.id, ...docSnap.data() }));
+          state.categories = cats;
+        }
+        renderCategoryList();
+        populateCategorySelect();
+        renderAssetList();
+        draw();
+      }, err => console.log("Category sync note:", err));
+
+      onSnapshot(assetsCol, (snapshot) => {
+        if (!snapshot.empty) {
+          const asts = [];
+          snapshot.forEach(docSnap => asts.push({ id: docSnap.id, ...docSnap.data() }));
+          state.assets = asts;
+        }
+        renderAssetList();
+        draw();
+      }, err => console.log("Asset sync note:", err));
+    }
+
+    function resizeCanvas() {
+      canvas.width = container.clientWidth;
+      canvas.height = container.clientHeight;
+      draw();
+    }
+    window.addEventListener('resize', resizeCanvas);
+
+    window.togglePlacementMode = () => {
+      state.placementMode = !state.placementMode;
+      const btn = document.getElementById('addAssetBtn');
+      const statusText = document.getElementById('addAssetStatus');
+      const badge = document.getElementById('modeBadge');
+      
+      if (state.placementMode) {
+        btn.classList.add('btn-active-mode');
+        statusText.innerText = 'ON (Click Map)';
+        container.classList.add('placement-mode');
+        badge.innerText = 'ADD ASSET MODE';
+        badge.classList.add('active');
+      } else {
+        btn.classList.remove('btn-active-mode');
+        statusText.innerText = 'OFF';
+        container.classList.remove('placement-mode');
+        badge.innerText = 'PAN MODE';
+        badge.classList.remove('active');
+      }
+    };
+
+    function screenToCanvasCoords(screenX, screenY) {
+      const rect = canvas.getBoundingClientRect();
+      const x = Math.round((screenX - rect.left - state.panX) / state.scale);
+      const y = Math.round((screenY - rect.top - state.panY) / state.scale);
+      return { x, y };
+    }
+
+    function getGridRef(x, y) {
+      const col = Math.max(1, Math.min(30, Math.floor(x / 60) + 1));
+      const rowIdx = Math.floor(y / 60);
+      const rows = ['A','B','C','D','E','F','G','H','I','J','K','L','M'];
+      if (rowIdx >= 12 || y >= 720) return `M.9-${col}`;
+      return `${rows[Math.max(0, rowIdx)] || 'M'}-${col}`;
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.save();
+      ctx.translate(state.panX, state.panY);
+      ctx.scale(state.scale, state.scale);
+
+      const buildingWidth = 1800;
+      const yardX = -state.yard.west;
+      const yardY = -state.yard.north;
+      const yardWidth = buildingWidth + state.yard.west + state.yard.east;
+      const yardHeight = 780 + state.yard.north + state.yard.south;
+
+      ctx.fillStyle = 'rgba(33, 150, 243, 0.12)';
+      ctx.fillRect(yardX, yardY, yardWidth, yardHeight);
+      ctx.strokeStyle = '#2196f3';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([8, 6]);
+      ctx.strokeRect(yardX, yardY, yardWidth, yardHeight);
+      ctx.setLineDash([]);
+
+      ctx.fillStyle = '#64b5f6';
+      ctx.font = 'bold 12px sans-serif';
+      ctx.fillText('EXTERIOR / YARD ZONE', yardX + 15, yardY + 25);
+
+      ctx.fillStyle = '#141824';
+      ctx.strokeStyle = '#40c4ff';
+      ctx.lineWidth = 3;
+      ctx.fillRect(0, 0, buildingWidth, 780);
+      ctx.strokeRect(0, 0, buildingWidth, 780);
+
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+      ctx.lineWidth = 1;
+      for (let x = 0; x <= buildingWidth; x += 60) {
+        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, 780); ctx.stroke();
+      }
+      for (let y = 0; y <= 780; y += 60) {
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(buildingWidth, y); ctx.stroke();
+      }
+
+      const visibleAssets = state.assets.filter(a => a.level === state.level);
+      visibleAssets.forEach(asset => {
+        const cat = state.categories.find(c => c.id === asset.category) || { color: '#2196f3', icon: '📍' };
+        ctx.beginPath();
+        ctx.arc(asset.x, asset.y, 14, 0, Math.PI * 2);
+        ctx.fillStyle = cat.color;
+        ctx.fill();
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = '#fff';
+        ctx.stroke();
+
+        ctx.font = '14px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(cat.icon, asset.x, asset.y);
+
+        ctx.font = 'bold 11px sans-serif';
+        ctx.fillStyle = '#fff';
+        ctx.textAlign = 'left';
+        ctx.fillText(asset.name, asset.x + 18, asset.y + 4);
+      });
+
+      ctx.restore();
+    }
+
+    canvas.addEventListener('mousedown', (e) => {
+      if (e.button !== 0) return;
+      const coords = screenToCanvasCoords(e.clientX, e.clientY);
+      if (state.placementMode) {
+        openAssetModalForNew(coords.x, coords.y, getGridRef(coords.x, coords.y));
+        togglePlacementMode();
+        return;
+      }
+      state.isPanning = true;
+      container.classList.add('panning');
+      state.startX = e.clientX - state.panX;
+      state.startY = e.clientY - state.panY;
+    });
+
+    window.addEventListener('mousemove', (e) => {
+      const coords = screenToCanvasCoords(e.clientX, e.clientY);
+      document.getElementById('coordText').innerText = `X: ${coords.x} | Y: ${coords.y} | Grid: ${getGridRef(coords.x, coords.y)}`;
+      if (!state.isPanning) return;
+      state.panX = e.clientX - state.startX;
+      state.panY = e.clientY - state.startY;
+      draw();
+    });
+
+    window.addEventListener('mouseup', () => {
+      state.isPanning = false;
+      container.classList.remove('panning');
+    });
+
+    canvas.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      const zoomFactor = e.deltaY < 0 ? 1.15 : 0.85;
+      const newScale = Math.max(0.2, Math.min(4, state.scale * zoomFactor));
+      const rect = canvas.getBoundingClientRect();
+      const mouseX = e.clientX - rect.left;
+      const mouseY = e.clientY - rect.top;
+      state.panX = mouseX - (mouseX - state.panX) * (newScale / state.scale);
+      state.panY = mouseY - (mouseY - state.panY) * (newScale / state.scale);
+      state.scale = newScale;
+      draw();
+    }, { passive: false });
+
+    window.setLevel = (lvl, e) => {
+      state.level = lvl;
+      document.querySelectorAll('.level-btn').forEach(b => b.classList.remove('active'));
+      if (e && e.target) e.target.classList.add('active');
+      renderAssetList();
+      draw();
+    };
+
+    window.resetView = () => { state.scale = 1; state.panX = 50; state.panY = 50; draw(); };
+    window.zoomButtonHandler = (factor) => { state.scale = Math.max(0.2, Math.min(4, state.scale * factor)); draw(); };
+
+    function populateCategorySelect() {
+      const select = document.getElementById('assetCategory');
+      select.innerHTML = state.categories.map(c => `<option value="${c.id}">${c.icon} ${c.name}</option>`).join('');
+    }
+
+    window.renderCategoryList = () => {
+      const list = document.getElementById('categoryList');
+      list.innerHTML = state.categories.map(c => `
+        <div class="cat-item">
+          <div class="cat-info">
+            <span class="cat-dot" style="background:${c.color}"></span>
+            <span>${c.icon} ${c.name}</span>
+          </div>
+          <div class="cat-actions">
+            <button class="icon-btn" onclick="openCatModalForEdit('${c.id}')" title="Edit">✏️</button>
+          </div>
+        </div>
+      `).join('');
+      populateCategorySelect();
+    };
+
+    window.renderAssetList = () => {
+      const query = (document.getElementById('searchBox')?.value || '').toLowerCase();
+      const filtered = state.assets.filter(a => 
+        a.name.toLowerCase().includes(query) || 
+        (a.grid && a.grid.toLowerCase().includes(query)) ||
+        (a.notes && a.notes.toLowerCase().includes(query))
+      );
+      document.getElementById('assetCount').innerText = filtered.length;
+      const containerElem = document.getElementById('assetCards');
+      
+      containerElem.innerHTML = filtered.map(a => {
+        const cat = state.categories.find(c => c.id === a.category) || { color: '#2196f3', icon: '📍' };
+        return `
+          <div class="asset-card" onclick="focusAsset('${a.id}')">
+            <div class="asset-title"><span>${cat.icon} ${a.name}</span></div>
+            <div class="asset-meta">
+              <span>Grid: <strong>${a.grid || 'N/A'}</strong></span>
+              <span>Level: <strong>${a.level}</strong></span>
+            </div>
+            <div class="asset-actions">
+              <button class="icon-btn" onclick="event.stopPropagation(); openAssetModalForEdit('${a.id}')" title="Edit">✏️</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    };
+
+    window.focusAsset = (id) => {
+      const asset = state.assets.find(a => a.id === id);
+      if (!asset) return;
+      setLevel(asset.level);
+      state.panX = (canvas.width / 2) - (asset.x * state.scale);
+      state.panY = (canvas.height / 2) - (asset.y * state.scale);
+      draw();
+    };
+
+    window.openModal = (id) => document.getElementById(id).style.display = 'flex';
+    window.closeModal = (id) => document.getElementById(id).style.display = 'none';
+
+    window.openAssetModalForNew = (x, y, grid) => {
+      document.getElementById('modalTitle').innerText = 'Add System Asset';
+      document.getElementById('assetId').value = '';
+      document.getElementById('assetName').value = '';
+      document.getElementById('assetX').value = x;
+      document.getElementById('assetY').value = y;
+      document.getElementById('assetGrid').value = grid;
+      document.getElementById('assetNotes').value = '';
+      document.getElementById('assetLevel').value = state.level;
+      document.getElementById('deleteAssetBtn').style.display = 'none';
+      openModal('assetModal');
+    };
+
+    window.openAssetModalForEdit = (id) => {
+      const asset = state.assets.find(a => a.id === id);
+      if (!asset) return;
+      document.getElementById('modalTitle').innerText = 'Edit System Asset';
+      document.getElementById('assetId').value = asset.id;
+      document.getElementById('assetName').value = asset.name;
+      document.getElementById('assetCategory').value = asset.category;
+      document.getElementById('assetLevel').value = asset.level;
+      document.getElementById('assetX').value = asset.x;
+      document.getElementById('assetY').value = asset.y;
+      document.getElementById('assetGrid').value = asset.grid || '';
+      document.getElementById('assetNotes').value = asset.notes || '';
+      document.getElementById('deleteAssetBtn').style.display = 'block';
+      openModal('assetModal');
+    };
+
+    window.saveAsset = async (e) => {
+      e.preventDefault();
+      const id = document.getElementById('assetId').value || 'ast_' + Date.now();
+      const assetData = {
+        id,
+        name: document.getElementById('assetName').value,
+        category: document.getElementById('assetCategory').value,
+        level: document.getElementById('assetLevel').value,
+        x: Number(document.getElementById('assetX').value),
+        y: Number(document.getElementById('assetY').value),
+        grid: document.getElementById('assetGrid').value,
+        notes: document.getElementById('assetNotes').value
+      };
+
+      const idx = state.assets.findIndex(a => a.id === id);
+      if (idx >= 0) state.assets[idx] = assetData;
+      else state.assets.push(assetData);
+
+      if (user && db) {
+        try { await setDoc(doc(collection(db, 'blueprint_assets'), id), assetData); } catch (e) {}
+      }
+      renderAssetList();
+      draw();
+      showToast("Asset saved successfully!", "success");
+      closeModal('assetModal');
+    };
+
+    window.confirmDeleteCurrentAsset = () => {
+      const id = document.getElementById('assetId').value;
+      customConfirm("Delete Asset", "Are you sure you want to delete this asset?", async () => {
+        state.assets = state.assets.filter(a => a.id !== id);
+        if (user && db) {
+          try { await deleteDoc(doc(collection(db, 'blueprint_assets'), id)); } catch (e) {}
+        }
+        renderAssetList();
+        draw();
+        showToast("Asset deleted.", "success");
+        closeModal('assetModal');
+      });
+    };
+
+    window.openCatModalForNew = () => {
+      document.getElementById('catModalTitle').innerText = 'Add System Category';
+      document.getElementById('catId').value = '';
+      document.getElementById('catName').value = '';
+      document.getElementById('catColor').value = '#ff9800';
+      document.getElementById('catIcon').value = '🔧';
+      document.getElementById('deleteCatBtn').style.display = 'none';
+      openModal('catModal');
+    };
+
+    window.openCatModalForEdit = (id) => {
+      const cat = state.categories.find(c => c.id === id);
+      if (!cat) return;
+      document.getElementById('catModalTitle').innerText = 'Edit System Category';
+      document.getElementById('catId').value = cat.id;
+      document.getElementById('catName').value = cat.name;
+      document.getElementById('catColor').value = cat.color;
+      document.getElementById('catIcon').value = cat.icon;
+      document.getElementById('deleteCatBtn').style.display = 'block';
+      openModal('catModal');
+    };
+
+    window.saveCategory = async (e) => {
+      e.preventDefault();
+      const id = document.getElementById('catId').value || 'cat_' + Date.now();
+      const catData = {
+        id,
+        name: document.getElementById('catName').value,
+        color: document.getElementById('catColor').value,
+        icon: document.getElementById('catIcon').value
+      };
+      const idx = state.categories.findIndex(c => c.id === id);
+      if (idx >= 0) state.categories[idx] = catData;
+      else state.categories.push(catData);
+
+      if (user && db) {
+        try { await setDoc(doc(collection(db, 'blueprint_categories'), id), catData); } catch (e) {}
+      }
+      renderCategoryList();
+      showToast("Category saved!", "success");
+      closeModal('catModal');
+    };
+
+    window.confirmDeleteCurrentCategory = () => {
+      const id = document.getElementById('catId').value;
+      customConfirm("Delete Category", "Delete this category?", async () => {
+        state.categories = state.categories.filter(c => c.id !== id);
+        if (user && db) {
+          try { await deleteDoc(doc(collection(db, 'blueprint_categories'), id)); } catch (e) {}
+        }
+        renderCategoryList();
+        showToast("Category deleted.", "success");
+        closeModal('catModal');
+      });
+    };
+
+    window.openYardModal = () => {
+      document.getElementById('yardNorth').value = state.yard.north;
+      document.getElementById('yardSouth').value = state.yard.south;
+      document.getElementById('yardEast').value = state.yard.east;
+      document.getElementById('yardWest').value = state.yard.west;
+      openModal('yardModal');
+    };
+
+    window.saveYardConfig = (e) => {
+      e.preventDefault();
+      state.yard = {
+        north: Number(document.getElementById('yardNorth').value),
+        south: Number(document.getElementById('yardSouth').value),
+        east: Number(document.getElementById('yardEast').value),
+        west: Number(document.getElementById('yardWest').value)
+      };
+      draw();
+      showToast("Yard updated.", "success");
+      closeModal('yardModal');
+    };
+
+    window.exportJSON = () => {
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state, null, 2));
+      const dlAnchor = document.createElement('a');
+      dlAnchor.setAttribute("href", dataStr);
+      dlAnchor.setAttribute("download", "facility_blueprint_backup.json");
+      document.body.appendChild(dlAnchor);
+      dlAnchor.click();
+      dlAnchor.remove();
+      showToast("Backup exported.", "success");
+    };
+
+    window.importJSON = (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (evt) => {
         try {
-            app = initializeApp(firebaseConfig);
-            db = getFirestore(app);
-            auth = getAuth(app);
-            signInAnonymously(auth).then(() => {
-                document.getElementById('sync-status').innerHTML = '<span class="w-1.5 h-1.5 mr-1 rounded-full bg-emerald-400"></span> Cloud Synchronized';
-                document.getElementById('sync-status').className = 'inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20';
-            }).catch(err => {
-                console.warn('Anonymous auth note:', err);
-                document.getElementById('sync-status').innerHTML = '<span class="w-1.5 h-1.5 mr-1 rounded-full bg-emerald-400"></span> Local Offline Mode';
-                document.getElementById('sync-status').className = 'inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20';
-            });
-        } catch (e) {
-            console.warn('Firebase initialization notice:', e);
+          const imported = JSON.parse(evt.target.result);
+          if (imported.categories) state.categories = imported.categories;
+          if (imported.assets) state.assets = imported.assets;
+          if (imported.yard) state.yard = imported.yard;
+          renderCategoryList();
+          renderAssetList();
+          draw();
+          showToast("Import successful!", "success");
+        } catch (err) {
+          showToast("Invalid JSON file.", "error");
         }
+      };
+      reader.readAsText(file);
+    };
 
-        // Asset Catalog Templates
-        const catalogItems = [
-            { name: 'Enterprise Blade Server', category: 'Server', icon: 'fa-server', color: '#3b82f6', width: 60, height: 60 },
-            { name: 'Core Router Switch', category: 'Server', icon: 'fa-network-wired', color: '#6366f1', width: 50, height: 50 },
-            { name: 'Security Camera PTZ', category: 'Security', icon: 'fa-video', color: '#ef4444', width: 40, height: 40 },
-            { name: 'Access Control Terminal', category: 'Security', icon: 'fa-id-card', color: '#f59e0b', width: 40, height: 40 },
-            { name: 'HVAC Air Handler Unit', category: 'HVAC', icon: 'fa-wind', color: '#10b981', width: 80, height: 60 },
-            { name: 'Temperature Sensor Node', category: 'HVAC', icon: 'fa-temperature-half', color: '#14b8a6', width: 35, height: 35 },
-            { name: 'Engineering Workstation', category: 'Workstation', icon: 'fa-desktop', color: '#8b5cf6', width: 60, height: 50 },
-            { name: 'Emergency Power UPS', category: 'Server', icon: 'fa-bolt', color: '#ec4899', width: 70, height: 50 }
-        ];
-
-        // Default initial assets if Firestore is empty
-        let assets = [
-            { id: 'asset-1', name: 'Server Rack Alpha', category: 'Server', icon: 'fa-server', color: '#3b82f6', x: 250, y: 180, width: 60, height: 60, status: 'Operational' },
-            { id: 'asset-2', name: 'Perimeter Camera 04', category: 'Security', icon: 'fa-video', color: '#ef4444', x: 450, y: 120, width: 40, height: 40, status: 'Active' },
-            { id: 'asset-3', name: 'Main HVAC Unit B', category: 'HVAC', icon: 'fa-wind', color: '#10b981', x: 620, y: 280, width: 80, height: 60, status: 'Normal' },
-            { id: 'asset-4', name: 'Control Desk Station 1', category: 'Workstation', icon: 'fa-desktop', color: '#8b5cf6', x: 320, y: 420, width: 60, height: 50, status: 'Online' }
-        ];
-
-        // State variables
-        let currentTool = 'select'; // 'select' or 'add'
-        let selectedCatalogTemplate = null;
-        let selectedAssetId = null;
-        let activeCategoryFilter = 'all';
-        let searchQuery = '';
-        let currentTab = 'assets';
-
-        // Canvas pan/zoom/drag state
-        let scale = 1;
-        let panX = 0;
-        let panY = 0;
-        let isDraggingCanvas = false;
-        let startX = 0;
-        let startY = 0;
-        let draggingAssetId = null;
-        let dragOffsetX = 0;
-        let dragOffsetY = 0;
-
-        const canvas = document.getElementById('blueprint-canvas');
-        const ctx = canvas.getContext('2d');
-        const wrapper = document.getElementById('canvas-wrapper');
-
-        // Setup Firestore listener if available
-        if (db) {
-            try {
-                onSnapshot(collection(db, "facility_assets"), (snapshot) => {
-                    if (!snapshot.empty) {
-                        const cloudAssets = [];
-                        snapshot.forEach(docSnap => {
-                            cloudAssets.push({ id: docSnap.id, ...docSnap.data() });
-                        });
-                        assets = cloudAssets;
-                        renderUI();
-                        drawCanvas();
-                    }
-                }, (error) => {
-                    console.log("Using local state sync fallback:", error);
-                });
-            } catch (err) {
-                console.log("Firestore snapshot listener setup note:", err);
-            }
-        }
-
-        function initApp() {
-            resizeCanvas();
-            window.addEventListener('resize', resizeCanvas);
-            renderCatalog();
-            renderUI();
-            setupCanvasEvents();
-            drawCanvas();
-        }
-
-        function resizeCanvas() {
-            canvas.width = wrapper.clientWidth;
-            canvas.height = wrapper.clientHeight;
-            drawCanvas();
-        }
-
-        window.setTool = function(tool) {
-            currentTool = tool;
-            document.getElementById('tool-select').className = tool === 'select' 
-                ? 'px-3 py-1.5 rounded-lg text-xs font-medium transition bg-blue-600 text-white shadow-sm flex items-center gap-1.5'
-                : 'px-3 py-1.5 rounded-lg text-xs font-medium transition text-slate-400 hover:text-white flex items-center gap-1.5';
-            document.getElementById('tool-add').className = tool === 'add' 
-                ? 'px-3 py-1.5 rounded-lg text-xs font-medium transition bg-blue-600 text-white shadow-sm flex items-center gap-1.5'
-                : 'px-3 py-1.5 rounded-lg text-xs font-medium transition text-slate-400 hover:text-white flex items-center gap-1.5';
-            
-            if (tool === 'add' && !selectedCatalogTemplate) {
-                selectedCatalogTemplate = catalogItems[0];
-                switchTab('catalog');
-            }
-        };
-
-        window.switchTab = function(tab) {
-            currentTab = tab;
-            const btnAssets = document.getElementById('tab-assets');
-            const btnCatalog = document.getElementById('tab-catalog');
-            const panelAssets = document.getElementById('panel-assets');
-            const panelCatalog = document.getElementById('panel-catalog');
-
-            if (tab === 'assets') {
-                btnAssets.className = 'flex-1 py-3 text-xs font-semibold text-blue-400 border-b-2 border-blue-500 bg-slate-800/40 transition';
-                btnCatalog.className = 'flex-1 py-3 text-xs font-semibold text-slate-400 hover:text-slate-200 border-b-2 border-transparent transition';
-                panelAssets.classList.remove('hidden');
-                panelCatalog.classList.add('hidden');
-            } else {
-                btnCatalog.className = 'flex-1 py-3 text-xs font-semibold text-blue-400 border-b-2 border-blue-500 bg-slate-800/40 transition';
-                btnAssets.className = 'flex-1 py-3 text-xs font-semibold text-slate-400 hover:text-slate-200 border-b-2 border-transparent transition';
-                panelCatalog.classList.remove('hidden');
-                panelAssets.classList.add('hidden');
-            }
-        };
-
-        window.setCategoryFilter = function(cat) {
-            activeCategoryFilter = cat;
-            document.querySelectorAll('.cat-btn').forEach(b => {
-                b.className = 'cat-btn px-2.5 py-1 rounded-lg text-[11px] font-medium bg-slate-800 text-slate-400 hover:text-slate-200 shrink-0 transition';
-            });
-            document.getElementById(`cat-${cat}`).className = 'cat-btn px-2.5 py-1 rounded-lg text-[11px] font-medium bg-blue-600 text-white shrink-0 transition';
-            renderUI();
-        };
-
-        window.filterAssets = function() {
-            searchQuery = document.getElementById('asset-search').value.toLowerCase();
-            renderUI();
-        };
-
-        function renderCatalog() {
-            const container = document.getElementById('catalog-list');
-            container.innerHTML = catalogItems.map(item => `
-                <div onclick="selectCatalogItem('${item.name}')" 
-                     class="p-3 bg-slate-950 border ${selectedCatalogTemplate?.name === item.name ? 'border-blue-500 bg-blue-950/20' : 'border-slate-800 hover:border-slate-700'} rounded-xl cursor-pointer transition flex items-center justify-between group">
-                    <div class="flex items-center space-x-3">
-                        <div class="w-9 h-9 rounded-lg flex items-center justify-center text-white text-sm shadow-sm" style="background-color: ${item.color}">
-                            <i class="fa-solid ${item.icon}"></i>
-                        </div>
-                        <div>
-                            <h4 class="text-xs font-medium text-slate-200">${item.name}</h4>
-                            <span class="text-[10px] text-slate-500">${item.category} • ${item.width}x${item.height}px</span>
-                        </div>
-                    </div>
-                    <span class="text-xs text-blue-400 opacity-0 group-hover:opacity-100 transition font-medium">Add <i class="fa-solid fa-plus ml-1"></i></span>
-                </div>
-            `).join('');
-        }
-
-        window.selectCatalogItem = function(name) {
-            selectedCatalogTemplate = catalogItems.find(i => i.name === name);
-            setTool('add');
-            switchTab('assets');
-            renderCatalog();
-        };
-
-        function renderUI() {
-            const filtered = assets.filter(a => {
-                const matchesCat = activeCategoryFilter === 'all' || a.category === activeCategoryFilter;
-                const matchesSearch = a.name.toLowerCase().includes(searchQuery);
-                return matchesCat && matchesSearch;
-            });
-
-            document.getElementById('asset-count').innerText = assets.length;
-            const container = document.getElementById('asset-list-container');
-            
-            if (filtered.length === 0) {
-                container.innerHTML = `<div class="text-center py-8 text-slate-500 text-xs">No assets match current filters</div>`;
-                return;
-            }
-
-            container.innerHTML = filtered.map(a => `
-                <div onclick="focusAsset('${a.id}')" 
-                     class="p-3 bg-slate-950 border ${selectedAssetId === a.id ? 'border-blue-500 bg-blue-950/20' : 'border-slate-800 hover:border-slate-700'} rounded-xl cursor-pointer transition flex items-center justify-between group">
-                    <div class="flex items-center space-x-3">
-                        <div class="w-8 h-8 rounded-lg flex items-center justify-center text-white text-xs" style="background-color: ${a.color}">
-                            <i class="fa-solid ${a.icon || 'fa-box'}"></i>
-                        </div>
-                        <div>
-                            <h4 class="text-xs font-medium text-slate-200">${a.name}</h4>
-                            <span class="text-[10px] text-slate-500">${a.category} • (${Math.round(a.x)}, ${Math.round(a.y)})</span>
-                        </div>
-                    </div>
-                    <button onclick="event.stopPropagation(); deleteAsset('${a.id}')" class="text-slate-600 hover:text-red-400 p-1.5 transition opacity-0 group-hover:opacity-100" title="Delete Asset">
-                        <i class="fa-solid fa-trash text-xs"></i>
-                    </button>
-                </div>
-            `).join('');
-
-            renderInspector();
-        }
-
-        function renderInspector() {
-            const panel = document.getElementById('inspector-panel');
-            const content = document.getElementById('inspector-content');
-            const asset = assets.find(a => a.id === selectedAssetId);
-
-            if (!asset) {
-                panel.classList.add('hidden');
-                return;
-            }
-
-            panel.classList.remove('hidden');
-            content.innerHTML = `
-                <div class="space-y-2">
-                    <div>
-                        <label class="text-[10px] text-slate-400 block mb-1">Asset Name</label>
-                        <input type="text" id="ins-name" value="${asset.name}" oninput="updateAssetProp('${asset.id}', 'name', this.value)"
-                            class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-blue-500">
-                    </div>
-                    <div class="grid grid-cols-2 gap-2">
-                        <div>
-                            <label class="text-[10px] text-slate-400 block mb-1">Position X</label>
-                            <input type="number" value="${Math.round(asset.x)}" onchange="updateAssetProp('${asset.id}', 'x', parseFloat(this.value))"
-                                class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-blue-500">
-                        </div>
-                        <div>
-                            <label class="text-[10px] text-slate-400 block mb-1">Position Y</label>
-                            <input type="number" value="${Math.round(asset.y)}" onchange="updateAssetProp('${asset.id}', 'y', parseFloat(this.value))"
-                                class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-blue-500">
-                        </div>
-                    </div>
-                    <div>
-                        <label class="text-[10px] text-slate-400 block mb-1">Status / Notes</label>
-                        <input type="text" value="${asset.status || 'Operational'}" oninput="updateAssetProp('${asset.id}', 'status', this.value)"
-                            class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-blue-500">
-                    </div>
-                    <div class="pt-2 flex justify-between">
-                        <button onclick="deleteAsset('${asset.id}')" class="px-3 py-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 text-xs font-medium transition flex items-center gap-1.5">
-                            <i class="fa-solid fa-trash"></i> Delete
-                        </button>
-                        <button onclick="closeInspector()" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium transition">
-                            Done
-                        </button>
-                    </div>
-                </div>
-            `;
-        }
-
-        window.focusAsset = function(id) {
-            selectedAssetId = id;
-            const asset = assets.find(a => a.id === id);
-            if (asset) {
-                panX = canvas.width / 2 - asset.x * scale;
-                panY = canvas.height / 2 - asset.y * scale;
-            }
-            renderUI();
-            drawCanvas();
-        };
-
-        window.closeInspector = function() {
-            selectedAssetId = null;
-            renderUI();
-            drawCanvas();
-        };
-
-        window.updateAssetProp = function(id, key, val) {
-            const asset = assets.find(a => a.id === id);
-            if (asset) {
-                asset[key] = val;
-                saveAssetToCloud(asset);
-                drawCanvas();
-            }
-        };
-
-        window.deleteAsset = async function(id) {
-            assets = assets.filter(a => a.id !== id);
-            if (selectedAssetId === id) selectedAssetId = null;
-            renderUI();
-            drawCanvas();
-            if (db) {
-                try {
-                    await deleteDoc(doc(db, "facility_assets", id));
-                } catch (e) {
-                    console.log("Cloud delete note:", e);
-                }
-            }
-        };
-
-        async function saveAssetToCloud(asset) {
-            if (db) {
-                try {
-                    await setDoc(doc(db, "facility_assets", asset.id), asset);
-                } catch (e) {
-                    console.log("Cloud save note:", e);
-                }
-            }
-        }
-
-        window.zoomMap = function(delta) {
-            scale = Math.max(0.4, Math.min(2.5, scale + delta));
-            drawCanvas();
-        };
-
-        window.resetMapView = function() {
-            scale = 1;
-            panX = 0;
-            panY = 0;
-            drawCanvas();
-        };
-
-        // Canvas Drawing Engine
-        function drawCanvas() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.save();
-
-            ctx.translate(panX, panY);
-            ctx.scale(scale, scale);
-
-            // Draw Blueprint Facility Floorplan Outline & Rooms
-            ctx.strokeStyle = '#1e293b';
-            ctx.lineWidth = 2;
-            ctx.fillStyle = '#0f172a';
-
-            // Outer Facility Perimeter
-            ctx.beginPath();
-            ctx.roundRect(100, 80, 900, 600, 16);
-            ctx.fill();
-            ctx.stroke();
-
-            // Interior Room Partitions
-            ctx.strokeStyle = '#1e293b';
-            ctx.lineWidth = 1.5;
-
-            // Server Hallway
-            ctx.strokeRect(120, 100, 380, 260);
-            ctx.fillStyle = 'rgba(30, 41, 59, 0.3)';
-            ctx.fillRect(120, 100, 380, 260);
-
-            // Security & Operations Control Room
-            ctx.strokeRect(520, 100, 460, 260);
-            ctx.fillRect(520, 100, 460, 260);
-
-            // HVAC & Utility Plant
-            ctx.strokeRect(120, 380, 380, 280);
-            ctx.fillRect(120, 380, 380, 280);
-
-            // Main Warehouse Bay
-            ctx.strokeRect(520, 380, 460, 280);
-            ctx.fillRect(520, 380, 460, 280);
-
-            // Room Labels
-            ctx.fillStyle = '#64748b';
-            ctx.font = '600 11px Inter, sans-serif';
-            ctx.fillText('SERVER HALLWAY (ZONE A)', 140, 125);
-            ctx.fillText('SECURITY & COMMAND CENTER (ZONE B)', 540, 125);
-            ctx.fillText('HVAC & POWER UTILITY PLANT (ZONE C)', 140, 405);
-            ctx.fillText('LOGISTICS WAREHOUSE BAY (ZONE D)', 540, 405);
-
-            // Draw Assets
-            assets.forEach(a => {
-                const isSelected = a.id === selectedAssetId;
-
-                ctx.save();
-                ctx.translate(a.x, a.y);
-
-                // Asset Box Shadow
-                ctx.shadowColor = 'rgba(0, 0, 0, 0.4)';
-                ctx.shadowBlur = 10;
-                ctx.shadowOffsetY = 4;
-
-                // Asset Card Background
-                ctx.fillStyle = isSelected ? '#1d4ed8' : '#1e293b';
-                ctx.strokeStyle = isSelected ? '#60a5fa' : (a.color || '#3b82f6');
-                ctx.lineWidth = isSelected ? 2.5 : 1.5;
-
-                ctx.beginPath();
-                ctx.roundRect(-a.width/2, -a.height/2, a.width, a.height, 10);
-                ctx.fill();
-                ctx.stroke();
-
-                ctx.shadowBlur = 0; // Reset shadow
-
-                // Asset Icon placeholder or FontAwesome rendering via canvas approximation
-                ctx.fillStyle = '#ffffff';
-                ctx.font = '16px "Font Awesome 6 Free", sans-serif';
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
-                
-                // Draw Icon circle/bg
-                ctx.fillStyle = a.color || '#3b82f6';
-                ctx.beginPath();
-                ctx.arc(0, -6, 14, 0, Math.PI * 2);
-                ctx.fill();
-
-                // Draw Asset Name label
-                ctx.fillStyle = '#f8fafc';
-                ctx.font = '500 10px Inter, sans-serif';
-                ctx.fillText(a.name.length > 14 ? a.name.substring(0, 12) + '...' : a.name, 0, 22);
-
-                ctx.restore();
-            });
-
-            ctx.restore();
-        }
-
-        // Mouse & Touch interaction handlers for canvas panning and asset dragging
-        function setupCanvasEvents() {
-            canvas.addEventListener('mousedown', (e) => {
-                const rect = canvas.getBoundingClientRect();
-                const mouseX = (e.clientX - rect.left - panX) / scale;
-                const mouseY = (e.clientY - rect.top - panY) / scale;
-
-                // Check if clicking an asset
-                const clickedAsset = assets.slice().reverse().find(a => {
-                    return mouseX >= a.x - a.width/2 && mouseX <= a.x + a.width/2 &&
-                           mouseY >= a.y - a.height/2 && mouseY <= a.y + a.height/2;
-                });
-
-                if (currentTool === 'add' && selectedCatalogTemplate) {
-                    // Place new asset
-                    const newAsset = {
-                        id: 'asset-' + Date.now(),
-                        name: selectedCatalogTemplate.name,
-                        category: selectedCatalogTemplate.category,
-                        icon: selectedCatalogTemplate.icon,
-                        color: selectedCatalogTemplate.color,
-                        x: mouseX,
-                        y: mouseY,
-                        width: selectedCatalogTemplate.width,
-                        height: selectedCatalogTemplate.height,
-                        status: 'Operational'
-                    };
-                    assets.push(newAsset);
-                    selectedAssetId = newAsset.id;
-                    saveAssetToCloud(newAsset);
-                    renderUI();
-                    drawCanvas();
-                    setTool('select');
-                    return;
-                }
-
-                if (clickedAsset) {
-                    selectedAssetId = clickedAsset.id;
-                    draggingAssetId = clickedAsset.id;
-                    dragOffsetX = mouseX - clickedAsset.x;
-                    dragOffsetY = mouseY - clickedAsset.y;
-                    renderUI();
-                    drawCanvas();
-                } else {
-                    selectedAssetId = null;
-                    isDraggingCanvas = true;
-                    startX = e.clientX - panX;
-                    startY = e.clientY - panY;
-                    renderUI();
-                    drawCanvas();
-                }
-            });
-
-            window.addEventListener('mousemove', (e) => {
-                const rect = canvas.getBoundingClientRect();
-                const mouseX = (e.clientX - rect.left - panX) / scale;
-                const mouseY = (e.clientY - rect.top - panY) / scale;
-
-                if (draggingAssetId) {
-                    const asset = assets.find(a => a.id === draggingAssetId);
-                    if (asset) {
-                        asset.x = mouseX - dragOffsetX;
-                        asset.y = mouseY - dragOffsetY;
-                        drawCanvas();
-                    }
-                } else if (isDraggingCanvas) {
-                    panX = e.clientX - startX;
-                    panY = e.clientY - startY;
-                    drawCanvas();
-                }
-            });
-
-            window.addEventListener('mouseup', () => {
-                if (draggingAssetId) {
-                    const asset = assets.find(a => a.id === draggingAssetId);
-                    if (asset) {
-                        saveAssetToCloud(asset);
-                    }
-                    draggingAssetId = null;
-                }
-                isDraggingCanvas = false;
-            });
-
-            canvas.addEventListener('wheel', (e) => {
-                e.preventDefault();
-                const zoomFactor = e.deltaY < 0 ? 1.1 : 0.9;
-                scale = Math.max(0.4, Math.min(2.5, scale * zoomFactor));
-                drawCanvas();
-            }, { passive: false });
-        }
-
-        window.openExportModal = function() {
-            document.getElementById('export-json-area').value = JSON.stringify(assets, null, 2);
-            document.getElementById('export-modal').classList.remove('hidden');
-        };
-
-        window.closeExportModal = function() {
-            document.getElementById('export-modal').classList.add('hidden');
-        };
-
-        window.copyExportJson = function() {
-            const textarea = document.getElementById('export-json-area');
-            textarea.select();
-            document.execCommand('copy');
-            alert('Blueprint JSON data copied successfully to clipboard!');
-        };
-
-        window.onload = initApp;
-    </script>
+    window.addEventListener('load', () => {
+      resizeCanvas();
+      initFirebase();
+    });
+  </script>
 </body>
 </html>
