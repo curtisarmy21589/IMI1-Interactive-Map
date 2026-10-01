@@ -1,18 +1,586 @@
-# 1. Initialize git in your local folder
-git init
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Interactive Facility Systems Map</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: #0f1117; color: #e1e4ed; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+    
+    /* Header Bar */
+    header { height: 50px; background: #161b26; border-bottom: 1px solid #2d3548; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; z-index: 10; }
+    .brand { font-weight: 700; font-size: 16px; color: #40c4ff; display: flex; align-items: center; gap: 8px; }
+    .nav-controls { display: flex; align-items: center; gap: 10px; }
+    
+    .level-selector { display: flex; background: #0f1117; padding: 3px; border-radius: 6px; border: 1px solid #2d3548; }
+    .level-btn { background: transparent; border: none; color: #8b95a5; padding: 5px 12px; font-size: 12px; font-weight: 600; border-radius: 4px; cursor: pointer; transition: all 0.2s; }
+    .level-btn.active { background: #2196f3; color: #fff; }
+    
+    .btn { background: #232a3b; border: 1px solid #3b465e; color: #e1e4ed; padding: 6px 12px; border-radius: 4px; font-size: 12px; cursor: pointer; font-weight: 500; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s; }
+    .btn:hover { background: #2d364d; border-color: #4a5877; }
+    .btn-primary { background: #2196f3; border-color: #1e88e5; color: #fff; }
+    .btn-primary:hover { background: #1e88e5; }
+    .btn-active-mode { background: #00c853 !important; border-color: #00e676 !important; color: #000 !important; font-weight: 700; }
+    
+    /* Main Layout */
+    .app-body { flex: 1; display: flex; position: relative; overflow: hidden; }
+    
+    /* Sidebar */
+    aside { width: 320px; background: #161b26; border-right: 1px solid #2d3548; display: flex; flex-direction: column; z-index: 5; }
+    .sidebar-section { padding: 12px; border-bottom: 1px solid #2d3548; }
+    .search-box { width: 100%; background: #0f1117; border: 1px solid #2d3548; color: #fff; padding: 8px 10px; border-radius: 4px; font-size: 12px; outline: none; }
+    .search-box:focus { border-color: #2196f3; }
+    
+    .category-list { display: flex; flex-direction: column; gap: 6px; max-height: 180px; overflow-y: auto; margin-top: 8px; }
+    .cat-item { display: flex; align-items: center; justify-content: space-between; font-size: 12px; padding: 4px 6px; border-radius: 4px; background: #0f1117; }
+    .cat-info { display: flex; align-items: center; gap: 8px; }
+    .cat-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+    
+    .asset-list-container { flex: 1; overflow-y: auto; padding: 12px; }
+    .asset-card { background: #0f1117; border: 1px solid #2d3548; border-radius: 6px; padding: 10px; margin-bottom: 8px; cursor: pointer; transition: border-color 0.2s; }
+    .asset-card:hover { border-color: #2196f3; }
+    .asset-title { font-weight: 600; font-size: 13px; color: #fff; margin-bottom: 4px; display: flex; justify-content: space-between; }
+    .asset-meta { font-size: 11px; color: #8b95a5; display: flex; gap: 8px; }
+    
+    /* Canvas Area */
+    main { flex: 1; position: relative; background: #090b10; overflow: hidden; cursor: grab; }
+    main.panning { cursor: grabbing; }
+    main.placement-mode { cursor: crosshair !important; }
+    canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+    
+    /* On-screen Controls Overlay */
+    .map-overlay-controls { position: absolute; bottom: 16px; right: 16px; display: flex; flex-direction: column; gap: 8px; z-index: 5; }
+    .zoom-btn { width: 36px; height: 36px; background: #161b26; border: 1px solid #2d3548; color: #fff; font-size: 18px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+    .zoom-btn:hover { background: #232a3b; }
+    
+    .coord-banner { position: absolute; top: 16px; left: 16px; background: rgba(22, 27, 38, 0.85); backdrop-filter: blur(4px); border: 1px solid #2d3548; padding: 6px 12px; border-radius: 6px; font-family: monospace; font-size: 12px; color: #40c4ff; z-index: 5; display: flex; gap: 12px; align-items: center; }
+    .mode-badge { padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold; background: #3b465e; color: #aaa; }
+    .mode-badge.active { background: #00c853; color: #000; }
+    
+    /* Modal Styles */
+    .modal-backdrop { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); display: none; align-items: center; justify-content: center; z-index: 100; }
+    .modal { background: #161b26; border: 1px solid #2d3548; border-radius: 8px; width: 420px; max-width: 90%; padding: 20px; }
+    .modal-header { font-size: 16px; font-weight: 700; color: #fff; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; }
+    .form-group { margin-bottom: 12px; }
+    .form-group label { display: block; font-size: 12px; color: #8b95a5; margin-bottom: 4px; }
+    .form-control { width: 100%; background: #0f1117; border: 1px solid #2d3548; color: #fff; padding: 8px; border-radius: 4px; font-size: 12px; }
+    .form-row { display: flex; gap: 10px; }
+    .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
+  </style>
+</head>
+<body>
 
-# 2. Add your index.html file
-git add index.html
+  <!-- Header Bar -->
+  <header>
+    <div class="brand">
+      <span>📐</span> Facility Systems Interactive Blueprint
+    </div>
+    <div class="nav-controls">
+      <!-- Placement Mode Toggle Button -->
+      <button class="btn" id="addAssetBtn" onclick="togglePlacementMode()">
+        📍 Add Asset: <span id="addAssetStatus">OFF</span>
+      </button>
 
-# 3. Commit the file
-git commit -m "Initial commit: facility_blueprint_app"
+      <div class="level-selector">
+        <button class="level-btn active" onclick="setLevel('ground', event)">Ground Floor</button>
+        <button class="level-btn" onclick="setLevel('mezz', event)">MEZZ Floor</button>
+        <button class="level-btn" onclick="setLevel('roof', event)">Roof Level</button>
+        <button class="level-btn" onclick="setLevel('exterior', event)">Exterior / Yard</button>
+      </div>
+      <button class="btn" onclick="openYardModal()">⚙️ Yard Config</button>
+      <button class="btn" onclick="exportJSON()">💾 Export JSON</button>
+      <button class="btn" onclick="document.getElementById('importFile').click()">📂 Import JSON</button>
+      <input type="file" id="importFile" style="display:none" onchange="importJSON(event)" accept=".json">
+    </div>
+  </header>
 
-# 4. Set your main branch name
-git branch -M main
+  <!-- App Body -->
+  <div class="app-body">
+    <!-- Sidebar -->
+    <aside>
+      <div class="sidebar-section">
+        <input type="text" class="search-box" id="searchBox" placeholder="Search assets or grid..." oninput="renderAssetList()">
+      </div>
 
-# 5. Link your local folder to your new GitHub repository 
-# (Replace YOUR_USERNAME and YOUR_REPO_NAME with your actual GitHub info)
-git remote add origin https://github.com/YOUR_USERNAME/YOUR_REPO_NAME.git
+      <div class="sidebar-section">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+          <strong style="font-size:12px;">Categories</strong>
+          <button class="btn" style="padding:2px 6px; font-size:10px;" onclick="openCatModal()">+ Add</button>
+        </div>
+        <div class="category-list" id="categoryList"></div>
+      </div>
 
-# 6. Push your code to GitHub
-git push -u origin main
+      <div class="asset-list-container">
+        <strong style="font-size:12px; display:block; margin-bottom:8px;">System Assets (<span id="assetCount">0</span>)</strong>
+        <div id="assetCards"></div>
+      </div>
+    </aside>
+
+    <!-- Canvas Floor Plan -->
+    <main id="mapContainer">
+      <div class="coord-banner" id="coordBanner">
+        <span id="coordText">Hover or click map to inspect location</span>
+        <span class="mode-badge" id="modeBadge">PAN MODE</span>
+      </div>
+      <canvas id="mapCanvas"></canvas>
+      <div class="map-overlay-controls">
+        <button class="zoom-btn" onclick="zoom(1.2)">+</button>
+        <button class="zoom-btn" onclick="zoom(0.8)">−</button>
+        <button class="zoom-btn" onclick="resetView()">⟲</button>
+      </div>
+    </main>
+  </div>
+
+  <!-- Asset Modal -->
+  <div class="modal-backdrop" id="assetModal">
+    <div class="modal">
+      <div class="modal-header">
+        <span id="modalTitle">Add System Asset</span>
+        <span style="cursor:pointer" onclick="closeModal('assetModal')">✕</span>
+      </div>
+      <form id="assetForm" onsubmit="saveAsset(event)">
+        <input type="hidden" id="assetId">
+        <div class="form-group">
+          <label>Asset Title / Label</label>
+          <input type="text" id="assetName" class="form-control" placeholder="e.g. Breaker Panel MDP-1" required>
+        </div>
+        <div class="form-row">
+          <div class="form-group" style="flex:1;">
+            <label>Category</label>
+            <select id="assetCategory" class="form-control"></select>
+          </div>
+          <div class="form-group" style="flex:1;">
+            <label>Level / Floor</label>
+            <select id="assetLevel" class="form-control">
+              <option value="ground">Ground Floor</option>
+              <option value="mezz">MEZZ Floor</option>
+              <option value="roof">Roof Level</option>
+              <option value="exterior">Exterior / Yard</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group" style="flex:1;">
+            <label>X Coordinate</label>
+            <input type="number" id="assetX" class="form-control" required readonly>
+          </div>
+          <div class="form-group" style="flex:1;">
+            <label>Y Coordinate</label>
+            <input type="number" id="assetY" class="form-control" required readonly>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Grid Reference</label>
+          <input type="text" id="assetGrid" class="form-control" placeholder="e.g. Column H-12">
+        </div>
+        <div class="form-group">
+          <label>Notes / Isolation Steps</label>
+          <textarea id="assetNotes" class="form-control" rows="3" placeholder="Enter maintenance instructions or specs..."></textarea>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn" onclick="closeModal('assetModal')">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Asset</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Category Modal -->
+  <div class="modal-backdrop" id="catModal">
+    <div class="modal">
+      <div class="modal-header">
+        <span>Add System Category</span>
+        <span style="cursor:pointer" onclick="closeModal('catModal')">✕</span>
+      </div>
+      <form onsubmit="saveCategory(event)">
+        <div class="form-group">
+          <label>Category Name</label>
+          <input type="text" id="catName" class="form-control" placeholder="e.g. Fire Protection" required>
+        </div>
+        <div class="form-row">
+          <div class="form-group" style="flex:1;">
+            <label>Color</label>
+            <input type="color" id="catColor" class="form-control" value="#ff9800" style="height:35px;">
+          </div>
+          <div class="form-group" style="flex:1;">
+            <label>Icon / Symbol</label>
+            <input type="text" id="catIcon" class="form-control" value="🔥" required>
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn" onclick="closeModal('catModal')">Cancel</button>
+          <button type="submit" class="btn btn-primary">Add Category</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Yard Config Modal -->
+  <div class="modal-backdrop" id="yardModal">
+    <div class="modal">
+      <div class="modal-header">
+        <span>Exterior Yard & Parking Configurator</span>
+        <span style="cursor:pointer" onclick="closeModal('yardModal')">✕</span>
+      </div>
+      <form onsubmit="saveYardConfig(event)">
+        <div class="form-group">
+          <label>North Staff Parking Depth (px/ft)</label>
+          <input type="number" id="yardNorth" class="form-control" value="120" required>
+        </div>
+        <div class="form-group">
+          <label>South Truck Staging Depth (px/ft)</label>
+          <input type="number" id="yardSouth" class="form-control" value="160" required>
+        </div>
+        <div class="form-group">
+          <label>East Entry Lot Width (px/ft)</label>
+          <input type="number" id="yardEast" class="form-control" value="100" required>
+        </div>
+        <div class="form-group">
+          <label>West Margin Width (px/ft)</label>
+          <input type="number" id="yardWest" class="form-control" value="100" required>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn" onclick="closeModal('yardModal')">Cancel</button>
+          <button type="submit" class="btn btn-primary">Update Yard Layout</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // --- Application State ---
+    const state = {
+      level: 'ground',
+      placementMode: false, // OFF by default so dragging pans the map
+      scale: 1,
+      panX: 50,
+      panY: 50,
+      isPanning: false,
+      startX: 0,
+      startY: 0,
+      categories: [
+        { id: 'elec', name: 'Electrical Panels', color: '#e65100', icon: '⚡' },
+        { id: 'plumb', name: 'Plumbing / Water', color: '#0288d1', icon: '💧' },
+        { id: 'hvac', name: 'HVAC / Controls', color: '#2e7d32', icon: '❄️' }
+      ],
+      yard: { north: 120, south: 160, east: 100, west: 100 },
+      assets: [
+        { id: '1', name: 'Main Distribution Panel MDP-1', category: 'elec', level: 'ground', x: 280, y: 180, grid: 'A-2', notes: '480V 3-Phase Main Switch' },
+        { id: '2', name: 'Water Main Shutoff', category: 'plumb', level: 'ground', x: 520, y: 180, grid: 'A-5', notes: '3-inch main valve' },
+        { id: '3', name: 'MEZZ Air Handler AHU-2', category: 'hvac', level: 'mezz', x: 340, y: 520, grid: 'I-8', notes: 'Mezzanine cooling unit' },
+        { id: '4', name: 'Rooftop Package Unit RTU-1', category: 'hvac', level: 'roof', x: 600, y: 300, grid: 'D-12', notes: 'Main office RTU' }
+      ]
+    };
+
+    const canvas = document.getElementById('mapCanvas');
+    const ctx = canvas.getContext('2d');
+    const container = document.getElementById('mapContainer');
+
+    function resizeCanvas() {
+      canvas.width = container.clientWidth;
+      canvas.height = container.clientHeight;
+      draw();
+    }
+    window.addEventListener('resize', resizeCanvas);
+
+    // Toggle Placement Mode
+    function togglePlacementMode() {
+      state.placementMode = !state.placementMode;
+      const btn = document.getElementById('addAssetBtn');
+      const statusText = document.getElementById('addAssetStatus');
+      const badge = document.getElementById('modeBadge');
+      
+      if (state.placementMode) {
+        btn.classList.add('btn-active-mode');
+        statusText.innerText = 'ON (Click Map)';
+        container.classList.add('placement-mode');
+        badge.innerText = 'ADD ASSET MODE';
+        badge.classList.add('active');
+      } else {
+        btn.classList.remove('btn-active-mode');
+        statusText.innerText = 'OFF';
+        container.classList.remove('placement-mode');
+        badge.innerText = 'PAN MODE';
+        badge.classList.remove('active');
+      }
+    }
+
+    // Convert Screen Pixels to Canvas Coordinates
+    function screenToCanvasCoords(screenX, screenY) {
+      const rect = canvas.getBoundingClientRect();
+      const x = Math.round((screenX - rect.left - state.panX) / state.scale);
+      const y = Math.round((screenY - rect.top - state.panY) / state.scale);
+      return { x, y };
+    }
+
+    // Grid Calculation
+    function getGridRef(x, y) {
+      const col = Math.max(1, Math.min(36, Math.floor(x / 60)));
+      const rowIdx = Math.max(0, Math.min(12, Math.floor(y / 60)));
+      const rows = ['A','B','C','D','E','F','G','H','I','J','K','L','M'];
+      return `${rows[rowIdx] || 'M'}-${col}`;
+    }
+
+    // --- Drawing System ---
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.save();
+      ctx.translate(state.panX, state.panY);
+      ctx.scale(state.scale, state.scale);
+
+      // Yard Outer Bounds
+      ctx.fillStyle = '#0a0d14';
+      ctx.fillRect(-state.yard.west, -state.yard.north, 2160 + state.yard.west + state.yard.east, 780 + state.yard.north + state.yard.south);
+
+      // Main Building Footprint
+      ctx.fillStyle = '#141824';
+      ctx.strokeStyle = '#2196f3';
+      ctx.lineWidth = 3;
+      ctx.fillRect(0, 0, 2160, 780);
+      ctx.strokeRect(0, 0, 2160, 780);
+
+      // Grid Lines
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+      ctx.lineWidth = 1;
+      for (let x = 0; x <= 2160; x += 60) {
+        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, 780); ctx.stroke();
+      }
+      for (let y = 0; y <= 780; y += 60) {
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(2160, y); ctx.stroke();
+      }
+
+      // Main Office East & West Zones
+      ctx.fillStyle = 'rgba(33, 150, 243, 0.1)';
+      ctx.fillRect(20, 20, 240, 140);
+      ctx.fillRect(280, 20, 320, 140);
+      ctx.fillStyle = '#40c4ff'; ctx.font = '12px sans-serif';
+      ctx.fillText('Main Office - East', 30, 40);
+      ctx.fillText('Main Office - West', 290, 40);
+
+      // MEZZ Section Footprint (Bottom-Left: Columns 1 to 25)
+      if (state.level === 'mezz' || state.level === 'ground') {
+        ctx.fillStyle = state.level === 'mezz' ? 'rgba(76, 175, 80, 0.25)' : 'rgba(76, 175, 80, 0.08)';
+        ctx.strokeStyle = '#4caf50';
+        ctx.fillRect(20, 420, 1440, 320);
+        ctx.strokeRect(20, 420, 1440, 320);
+        ctx.fillStyle = '#81c784';
+        ctx.fillText('MEZZANINE FLOOR (Col H1-H25 to M1-M25)', 30, 440);
+      }
+
+      // Render Assets
+      state.assets.filter(a => a.level === state.level).forEach(asset => {
+        const cat = state.categories.find(c => c.id === asset.category) || { color: '#fff', icon: '📍' };
+        ctx.fillStyle = cat.color;
+        ctx.beginPath(); ctx.arc(asset.x, asset.y, 10, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 2; ctx.stroke();
+
+        ctx.fillStyle = '#ffffff'; ctx.font = '10px sans-serif'; ctx.textAlign = 'center';
+        ctx.fillText(cat.icon, asset.x, asset.y + 3);
+        ctx.fillText(asset.name, asset.x, asset.y - 14);
+      });
+
+      ctx.restore();
+    }
+
+    // --- Mouse & Pan Interactions ---
+    canvas.addEventListener('mousedown', (e) => {
+      if (!state.placementMode) {
+        state.isPanning = true;
+        container.classList.add('panning');
+        state.startX = e.clientX - state.panX;
+        state.startY = e.clientY - state.panY;
+      }
+    });
+
+    window.addEventListener('mousemove', (e) => {
+      if (state.isPanning && !state.placementMode) {
+        state.panX = e.clientX - state.startX;
+        state.panY = e.clientY - state.startY;
+        draw();
+      } else {
+        const coords = screenToCanvasCoords(e.clientX, e.clientY);
+        const grid = getGridRef(coords.x, coords.y);
+        document.getElementById('coordText').innerText = `X: ${coords.x}, Y: ${coords.y} | Grid: ${grid}`;
+      }
+    });
+
+    window.addEventListener('mouseup', () => { 
+      state.isPanning = false; 
+      container.classList.remove('panning');
+    });
+
+    // Handle Click Actions
+    canvas.addEventListener('click', (e) => {
+      // If placement mode is ON, open Asset Modal at exact clicked coordinates
+      if (state.placementMode) {
+        const coords = screenToCanvasCoords(e.clientX, e.clientY);
+        const grid = getGridRef(coords.x, coords.y);
+
+        document.getElementById('assetId').value = '';
+        document.getElementById('modalTitle').innerText = 'Add System Asset';
+        document.getElementById('assetName').value = '';
+        document.getElementById('assetX').value = coords.x;
+        document.getElementById('assetY').value = coords.y;
+        document.getElementById('assetGrid').value = grid;
+        document.getElementById('assetLevel').value = state.level;
+        document.getElementById('assetNotes').value = '';
+        
+        populateCategorySelect();
+        openModal('assetModal');
+        
+        // Turn OFF placement mode after adding
+        togglePlacementMode();
+      }
+    });
+
+    // --- Zoom Controls ---
+    function zoom(factor) {
+      state.scale *= factor;
+      draw();
+    }
+    function resetView() {
+      state.scale = 1; state.panX = 50; state.panY = 50;
+      draw();
+    }
+
+    // --- Modal & Level Management ---
+    function openModal(id) { document.getElementById(id).style.display = 'flex'; }
+    function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+    function openCatModal() { openModal('catModal'); }
+    function openYardModal() { openModal('yardModal'); }
+
+    function setLevel(lvl, evt) {
+      state.level = lvl;
+      document.querySelectorAll('.level-btn').forEach(btn => btn.classList.remove('active'));
+      if (evt && evt.target) evt.target.classList.add('active');
+      renderAssetList();
+      draw();
+    }
+
+    function populateCategorySelect() {
+      const select = document.getElementById('assetCategory');
+      select.innerHTML = state.categories.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+    }
+
+    function renderCategoryList() {
+      const list = document.getElementById('categoryList');
+      list.innerHTML = state.categories.map(c => `
+        <div class="cat-item">
+          <div class="cat-info">
+            <span class="cat-dot" style="background:${c.color}"></span>
+            <span>${c.icon} ${c.name}</span>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function renderAssetList() {
+      const search = document.getElementById('searchBox').value.toLowerCase();
+      const filtered = state.assets.filter(a => 
+        a.level === state.level && (a.name.toLowerCase().includes(search) || a.grid.toLowerCase().includes(search))
+      );
+      
+      document.getElementById('assetCount').innerText = filtered.length;
+      document.getElementById('assetCards').innerHTML = filtered.map(a => `
+        <div class="asset-card" onclick="focusAsset(${a.x}, ${a.y})">
+          <div class="asset-title">
+            <span>${a.name}</span>
+            <span style="font-size:11px; color:#2196f3;">${a.grid}</span>
+          </div>
+          <div class="asset-meta">
+            <span>Level: ${a.level.toUpperCase()}</span>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function focusAsset(x, y) {
+      state.panX = (canvas.width / 2) - (x * state.scale);
+      state.panY = (canvas.height / 2) - (y * state.scale);
+      draw();
+    }
+
+    function saveAsset(e) {
+      e.preventDefault();
+      const id = document.getElementById('assetId').value || Date.now().toString();
+      const newAsset = {
+        id,
+        name: document.getElementById('assetName').value,
+        category: document.getElementById('assetCategory').value,
+        level: document.getElementById('assetLevel').value,
+        x: parseInt(document.getElementById('assetX').value),
+        y: parseInt(document.getElementById('assetY').value),
+        grid: document.getElementById('assetGrid').value,
+        notes: document.getElementById('assetNotes').value
+      };
+
+      const existingIdx = state.assets.findIndex(a => a.id === id);
+      if (existingIdx >= 0) state.assets[existingIdx] = newAsset;
+      else state.assets.push(newAsset);
+
+      closeModal('assetModal');
+      renderAssetList();
+      draw();
+    }
+
+    function saveCategory(e) {
+      e.preventDefault();
+      const newCat = {
+        id: Date.now().toString(),
+        name: document.getElementById('catName').value,
+        color: document.getElementById('catColor').value,
+        icon: document.getElementById('catIcon').value
+      };
+      state.categories.push(newCat);
+      closeModal('catModal');
+      renderCategoryList();
+      draw();
+    }
+
+    function saveYardConfig(e) {
+      e.preventDefault();
+      state.yard.north = parseInt(document.getElementById('yardNorth').value);
+      state.yard.south = parseInt(document.getElementById('yardSouth').value);
+      state.yard.east = parseInt(document.getElementById('yardEast').value);
+      state.yard.west = parseInt(document.getElementById('yardWest').value);
+      closeModal('yardModal');
+      draw();
+    }
+
+    // JSON Export / Import
+    function exportJSON() {
+      const data = JSON.stringify(state, null, 2);
+      const blob = new Blob([data], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'facility-systems-map.json';
+      a.click();
+    }
+
+    function importJSON(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        const imported = JSON.parse(evt.target.result);
+        if (imported.assets && imported.categories) {
+          state.assets = imported.assets;
+          state.categories = imported.categories;
+          if (imported.yard) state.yard = imported.yard;
+          renderCategoryList();
+          renderAssetList();
+          draw();
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    // Initialize
+    resizeCanvas();
+    renderCategoryList();
+    renderAssetList();
+  </script>
+</body>
+</html>
