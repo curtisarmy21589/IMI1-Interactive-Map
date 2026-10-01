@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Facility Layout Builder</title>
+    <title>Facility Layout Builder with Pan & Dot Assets</title>
     <style>
         body {
             background-color: #0d1b2a;
@@ -14,7 +14,7 @@
             overflow: hidden;
         }
         #sidebar {
-            width: 300px;
+            width: 320px;
             background-color: #1b263b;
             padding: 20px;
             display: flex;
@@ -43,31 +43,40 @@
             transition: background 0.2s;
         }
         button:hover { background: #41c1ff; color: #0d1b2a; }
+        .mode-btn {
+            background: #0b131d;
+            border: 2px solid #1d3557;
+        }
+        .mode-btn.active {
+            background: #41c1ff;
+            color: #0d1b2a;
+            border-color: #fff;
+        }
         .danger { background: #780000; border-color: #d90429; }
         .danger:hover { background: #d90429; color: #fff; }
         #canvas-container {
             flex-grow: 1;
             position: relative;
             background-color: #0b131d;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            overflow: auto;
+            overflow: hidden;
+            cursor: grab;
+        }
+        #canvas-container.panning {
+            cursor: grabbing;
         }
         svg {
-            background-color: #0d1b2a;
-            border: 2px dashed #1d3557;
-            box-shadow: 0 0 20px rgba(0,0,0,0.8);
+            position: absolute;
+            top: 0;
+            left: 0;
         }
-        .item-rect {
-            stroke-width: 2;
-            cursor: move;
+        .item-shape {
+            cursor: pointer;
             transition: stroke 0.2s;
         }
-        .item-rect:hover {
+        .item-shape:hover {
             stroke: #fff;
         }
-        .item-rect.selected {
+        .item-shape.selected {
             stroke: #ffb703;
             stroke-width: 3;
         }
@@ -75,98 +84,139 @@
             stroke: #1b263b;
             stroke-width: 1;
         }
-        .axis-label {
-            font-size: 10px;
-            fill: #415a77;
-        }
     </style>
 </head>
 <body>
 
     <div id="sidebar">
         <h2>Layout Builder</h2>
+        
+        <div>
+            <h3>Interaction Mode</h3>
+            <div style="display: flex; gap: 10px;">
+                <button id="modeEditBtn" class="mode-btn active" onclick="setMode('edit')">Edit Layout</button>
+                <button id="modePanBtn" class="mode-btn" onclick="setMode('pan')">Pan Map</button>
+            </div>
+        </div>
+
+        <hr style="border-color: #1b263b;">
+
         <div>
             <h3>Add New Element</h3>
             <label>Name / Label</label>
             <input type="text" id="newName" value="RACKING #3">
             
-            <label>Type / Color Theme</label>
-            <select id="newType">
-                <option value="racking">Racking (Orange)</option>
-                <option value="mezzanine">Mezzanine (Green)</option>
-                <option value="utility">Utility / Panel (Blue/Orange)</option>
+            <label>Category / Type</label>
+            <select id="newType" onchange="toggleSizeInputs()">
+                <option value="racking">Racking Zone (Rect)</option>
+                <option value="mezzanine">Mezzanine Floor (Rect)</option>
+                <option value="asset">Utility Asset (Dot)</option>
             </select>
 
-            <label>X Position (Columns)</label>
+            <label>X Position (Grid Column)</label>
             <input type="number" id="newX" value="10">
 
-            <label>Y Position (Rows)</label>
+            <label>Y Position (Grid Row)</label>
             <input type="number" id="newY" value="10">
 
-            <label>Width</label>
-            <input type="number" id="newW" value="5">
+            <div id="dimensionInputs">
+                <label>Width</label>
+                <input type="number" id="newW" value="5">
 
-            <label>Height</label>
-            <input type="number" id="newH" value="5">
+                <label>Height</label>
+                <input type="number" id="newH" value="5">
+            </div>
 
-            <button onclick="addElement()" style="margin-top: 10px;">Add to Layout</button>
+            <button onclick="addElement()" style="margin-top: 10px;">Add Element</button>
         </div>
 
         <hr style="border-color: #1b263b;">
 
         <div id="inspector" style="display:none;">
-            <h3>Edit Selected</h3>
+            <h3>Edit Selected Element</h3>
             <input type="hidden" id="editId">
             <label>Name</label>
             <input type="text" id="editName" oninput="updateSelected()">
-            <label>X</label>
+            <label>X Position</label>
             <input type="number" id="editX" oninput="updateSelected()">
-            <label>Y</label>
+            <label>Y Position</label>
             <input type="number" id="editY" oninput="updateSelected()">
-            <label>Width</label>
-            <input type="number" id="editW" oninput="updateSelected()">
-            <label>Height</label>
-            <input type="number" id="editH" oninput="updateSelected()">
+            
+            <div id="editDimensionFields">
+                <label>Width</label>
+                <input type="number" id="editW" oninput="updateSelected()">
+                <label>Height</label>
+                <input type="number" id="editH" oninput="updateSelected()">
+            </div>
             
             <button class="danger" onclick="deleteSelected()" style="margin-top: 10px;">Delete Element</button>
         </div>
         
         <div>
-            <p style="font-size: 11px; color: #8d99ae; margin-top: 20px;">
-                💡 <b>Tip:</b> Click any zone on the grid to select, edit parameters, or drag to move. Use the grid lines as columns/rows.
+            <p style="font-size: 11px; color: #8d99ae; margin-top: 10px;">
+                💡 <b>Instructions:</b><br>
+                • Use <b>Edit Layout</b> mode to click and drag departments/assets.<br>
+                • Use <b>Pan Map</b> mode to click and drag the canvas background to move around.
             </p>
         </div>
     </div>
 
-    <div id="canvas-container">
-        <svg id="layoutSvg" width="1000" height="600" viewBox="0 0 1000 600"></svg>
+    <div id="canvas-container" id="canvasContainer">
+        <svg id="layoutSvg" width="1200" height="800">
+            <g id="viewport">
+                <!-- Grid & Elements rendered dynamically here -->
+            </g>
+        </svg>
     </div>
 
 <script>
-    const gridSize = 20; // Size of each grid cell in pixels
-    const cols = 50;
-    const rows = 30;
+    const gridSize = 20;
+    const cols = 60;
+    const rows = 40;
 
-    // Initial state matching your blueprint photo
+    let currentMode = 'edit'; // 'edit' or 'pan'
+
+    // Initial state matching your blueprint photo (Assets as dots, Departments as rects)
     let elements = [
-        { id: 1, name: "MAIN RACKING AREA #1 (Cols 9 to 29.25 | Rows 6.25 to C)", type: "racking", x: 9, y: 6, w: 20, h: 8 },
-        { id: 2, name: "RACKING #2 (Cols 24.5 to 28.5 | Rows 11.5 to L.5)", type: "racking", x: 24, y: 11, w: 5, h: 5 },
-        { id: 3, name: "MEZZANINE: FLOOR (Cols 2 to 22 | Rows J to M.9)", type: "mezzanine", x: 2, y: 15, w: 20, h: 7 },
-        { id: 4, name: "Main Distribution Panel MDP-1", type: "utility", x: 4, y: 6, w: 2, h: 2 },
-        { id: 5, name: "Water Main Shutoff", type: "utility", x: 8, y: 6, w: 2, h: 2 }
+        { id: 1, name: "MAIN RACKING AREA #1", type: "racking", x: 9, y: 6, w: 20, h: 8 },
+        { id: 2, name: "RACKING #2", type: "racking", x: 24, y: 11, w: 5, h: 5 },
+        { id: 3, name: "MEZZANINE FLOOR", type: "mezzanine", x: 2, y: 15, w: 20, h: 7 },
+        { id: 4, name: "Main Distribution Panel MDP-1", type: "asset", x: 4, y: 6 },
+        { id: 5, name: "Water Main Shutoff", type: "asset", x: 8, y: 6 }
     ];
 
     let selectedId = null;
-    let isDragging = false;
+    let isDraggingElement = false;
+    let isPanning = false;
     let dragOffset = { x: 0, y: 0 };
+    let panStart = { x: 0, y: 0 };
+    let viewTranslate = { x: 50, y: 50 }; // Initial padding offset
 
+    const container = document.getElementById("canvas-container");
     const svg = document.getElementById("layoutSvg");
-    svg.setAttribute("width", cols * gridSize);
-    svg.setAttribute("height", rows * gridSize);
-    svg.setAttribute("viewBox", `0 0 ${cols * gridSize} ${rows * gridSize}`);
+    const viewport = document.getElementById("viewport");
+
+    svg.setAttribute("width", cols * gridSize + 200);
+    svg.setAttribute("height", rows * gridSize + 200);
+
+    function setMode(mode) {
+        currentMode = mode;
+        document.getElementById("modeEditBtn").classList.toggle("active", mode === 'edit');
+        document.getElementById("modePanBtn").classList.toggle("active", mode === 'pan');
+        container.style.cursor = mode === 'pan' ? 'grab' : 'default';
+        selectedId = null;
+        document.getElementById("inspector").style.display = "none";
+        render();
+    }
+
+    function toggleSizeInputs() {
+        let type = document.getElementById("newType").value;
+        document.getElementById("dimensionInputs").style.display = (type === 'asset') ? 'none' : 'block';
+    }
 
     function render() {
-        svg.innerHTML = "";
+        viewport.innerHTML = "";
+        viewport.setAttribute("transform", `translate(${viewTranslate.x}, ${viewTranslate.y})`);
 
         // Draw Grid Lines
         for (let c = 0; c <= cols; c++) {
@@ -176,7 +226,7 @@
             line.setAttribute("x2", c * gridSize);
             line.setAttribute("y2", rows * gridSize);
             line.setAttribute("class", "grid-line");
-            svg.appendChild(line);
+            viewport.appendChild(line);
         }
         for (let r = 0; r <= rows; r++) {
             let line = document.createElementNS("http://www.w3.org/2000/svg", "line");
@@ -185,10 +235,10 @@
             line.setAttribute("x2", cols * gridSize);
             line.setAttribute("y2", r * gridSize);
             line.setAttribute("class", "grid-line");
-            svg.appendChild(line);
+            viewport.appendChild(line);
         }
 
-        // Draw Outer Border / Yard Zone
+        // Draw Yard Zone Border
         let border = document.createElementNS("http://www.w3.org/2000/svg", "rect");
         border.setAttribute("x", gridSize);
         border.setAttribute("y", gridSize);
@@ -198,76 +248,145 @@
         border.setAttribute("stroke", "#41c1ff");
         border.setAttribute("stroke-width", "2");
         border.setAttribute("stroke-dasharray", "4");
-        svg.appendChild(border);
+        viewport.appendChild(border);
 
         // Draw Elements
         elements.forEach(el => {
             let g = document.createElementNS("http://www.w3.org/2000/svg", "g");
 
-            let rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-            rect.setAttribute("x", el.x * gridSize);
-            rect.setAttribute("y", el.y * gridSize);
-            rect.setAttribute("width", el.w * gridSize);
-            rect.setAttribute("height", el.h * gridSize);
-            rect.setAttribute("class", `item-rect ${el.id === selectedId ? 'selected' : ''}`);
+            if (el.type === 'asset') {
+                // Render asset as a Dot (Circle)
+                let circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                let cx = (el.x * gridSize) + (gridSize / 2);
+                let cy = (el.y * gridSize) + (gridSize / 2);
+                circle.setAttribute("cx", cx);
+                circle.setAttribute("cy", cy);
+                circle.setAttribute("r", 8);
+                circle.setAttribute("class", `item-shape ${el.id === selectedId ? 'selected' : ''}`);
+                circle.setAttribute("fill", "#e76f51");
+                circle.setAttribute("stroke", "#f4a261");
+                circle.setAttribute("stroke-width", "2");
 
-            // Styling based on type
-            if (el.type === 'racking') {
-                rect.setAttribute("fill", "#d47a00");
-                rect.setAttribute("fill-opacity", "0.4");
-                rect.setAttribute("stroke", "#ff9f1c");
-            } else if (el.type === 'mezzanine') {
-                rect.setAttribute("fill", "#2b9348");
-                rect.setAttribute("fill-opacity", "0.4");
-                rect.setAttribute("stroke", "#52b788");
+                circle.addEventListener("mousedown", (e) => {
+                    if (currentMode === 'edit') {
+                        e.stopPropagation();
+                        startDragElement(e, el);
+                    }
+                });
+
+                let text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                text.setAttribute("x", cx + 12);
+                text.setAttribute("y", cy + 4);
+                text.setAttribute("fill", "#fff");
+                text.setAttribute("font-size", "11px");
+                text.setAttribute("font-weight", "bold");
+                text.style.pointerEvents = "none";
+                text.textContent = el.name;
+
+                g.appendChild(circle);
+                g.appendChild(text);
+
             } else {
-                rect.setAttribute("fill", "#e76f51");
-                rect.setAttribute("fill-opacity", "0.7");
-                rect.setAttribute("stroke", "#f4a261");
+                // Render Department / Racking / Mezzanine as Rectangle
+                let rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+                rect.setAttribute("x", el.x * gridSize);
+                rect.setAttribute("y", el.y * gridSize);
+                rect.setAttribute("width", el.w * gridSize);
+                rect.setAttribute("height", el.h * gridSize);
+                rect.setAttribute("class", `item-shape ${el.id === selectedId ? 'selected' : ''}`);
+
+                if (el.type === 'racking') {
+                    rect.setAttribute("fill", "#d47a00");
+                    rect.setAttribute("fill-opacity", "0.4");
+                    rect.setAttribute("stroke", "#ff9f1c");
+                } else {
+                    rect.setAttribute("fill", "#2b9348");
+                    rect.setAttribute("fill-opacity", "0.4");
+                    rect.setAttribute("stroke", "#52b788");
+                }
+
+                rect.addEventListener("mousedown", (e) => {
+                    if (currentMode === 'edit') {
+                        e.stopPropagation();
+                        startDragElement(e, el);
+                    }
+                });
+
+                let text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                text.setAttribute("x", (el.x * gridSize) + 6);
+                text.setAttribute("y", (el.y * gridSize) + 16);
+                text.setAttribute("fill", "#fff");
+                text.setAttribute("font-size", "11px");
+                text.setAttribute("font-weight", "bold");
+                text.style.pointerEvents = "none";
+                text.textContent = el.name;
+
+                g.appendChild(rect);
+                g.appendChild(text);
             }
 
-            // Drag and click handlers
-            rect.addEventListener("mousedown", (e) => startDrag(e, el));
-
-            let text = document.createElementNS("http://www.w3.org/2000/svg", "text");
-            text.setAttribute("x", (el.x * gridSize) + 6);
-            text.setAttribute("y", (el.y * gridSize) + 16);
-            text.setAttribute("fill", "#fff");
-            text.setAttribute("font-size", "11px");
-            text.setAttribute("font-weight", "bold");
-            text.style.pointerEvents = "none";
-            text.textContent = el.name;
-
-            g.appendChild(rect);
-            g.appendChild(text);
-            svg.appendChild(g);
+            viewport.appendChild(g);
         });
     }
 
-    function startDrag(e, el) {
+    // Canvas Container Mouse Handlers for Panning or Background Click
+    container.addEventListener("mousedown", (e) => {
+        if (currentMode === 'pan') {
+            isPanning = true;
+            container.classList.add("panning");
+            panStart = { x: e.clientX - viewTranslate.x, y: e.clientY - viewTranslate.y };
+        } else if (currentMode === 'edit') {
+            // Clicked background in edit mode -> deselect
+            selectedId = null;
+            document.getElementById("inspector").style.display = "none";
+            render();
+        }
+    });
+
+    window.addEventListener("mousemove", (e) => {
+        if (isPanning) {
+            viewTranslate.x = e.clientX - panStart.x;
+            viewTranslate.y = e.clientY - panStart.y;
+            render();
+        }
+    });
+
+    window.addEventListener("mouseup", () => {
+        if (isPanning) {
+            isPanning = false;
+            container.classList.remove("panning");
+        }
+    });
+
+    function startDragElement(e, el) {
         selectedId = el.id;
-        isDragging = true;
+        isDraggingElement = true;
+        
         let mouseX = e.clientX;
         let mouseY = e.clientY;
+        
         dragOffset = {
-            x: mouseX - (el.x * gridSize),
-            y: mouseY - (el.y * gridSize)
+            x: mouseX - ((el.x * gridSize + viewTranslate.x)),
+            y: mouseY - ((el.y * gridSize + viewTranslate.y))
         };
+        
         populateInspector(el);
         render();
 
         function onMouseMove(e) {
-            if (!isDragging) return;
-            let newPxX = e.clientX - dragOffset.x;
-            let newPxY = e.clientY - dragOffset.y;
-            el.x = Math.max(0, Math.min(cols - el.w, Math.round(newPxX / gridSize)));
-            el.y = Math.max(0, Math.min(rows - el.h, Math.round(newPxY / gridSize)));
+            if (!isDraggingElement) return;
+            let newPxX = e.clientX - dragOffset.x - viewTranslate.x;
+            let newPxY = e.clientY - dragOffset.y - viewTranslate.y;
+            
+            el.x = Math.max(0, Math.min(cols - (el.w || 1), Math.round(newPxX / gridSize)));
+            el.y = Math.max(0, Math.min(rows - (el.h || 1), Math.round(newPxY / gridSize)));
+            
             populateInspector(el);
             render();
         }
 
         function onMouseUp() {
-            isDragging = false;
+            isDraggingElement = false;
             window.removeEventListener("mousemove", onMouseMove);
             window.removeEventListener("mouseup", onMouseUp);
         }
@@ -282,8 +401,15 @@
         document.getElementById("editName").value = el.name;
         document.getElementById("editX").value = el.x;
         document.getElementById("editY").value = el.y;
-        document.getElementById("editW").value = el.w;
-        document.getElementById("editH").value = el.h;
+
+        let dimFields = document.getElementById("editDimensionFields");
+        if (el.type === 'asset') {
+            dimFields.style.display = 'none';
+        } else {
+            dimFields.style.display = 'block';
+            document.getElementById("editW").value = el.w;
+            document.getElementById("editH").value = el.h;
+        }
     }
 
     function updateSelected() {
@@ -293,22 +419,27 @@
             el.name = document.getElementById("editName").value;
             el.x = parseInt(document.getElementById("editX").value) || 0;
             el.y = parseInt(document.getElementById("editY").value) || 0;
-            el.w = parseInt(document.getElementById("editW").value) || 1;
-            el.h = parseInt(document.getElementById("editH").value) || 1;
+            if (el.type !== 'asset') {
+                el.w = parseInt(document.getElementById("editW").value) || 1;
+                el.h = parseInt(document.getElementById("editH").value) || 1;
+            }
             render();
         }
     }
 
     function addElement() {
+        let type = document.getElementById("newType").value;
         let newEl = {
             id: Date.now(),
             name: document.getElementById("newName").value,
-            type: document.getElementById("newType").value,
+            type: type,
             x: parseInt(document.getElementById("newX").value),
-            y: parseInt(document.getElementById("newY").value),
-            w: parseInt(document.getElementById("newW").value),
-            h: parseInt(document.getElementById("newH").value)
+            y: parseInt(document.getElementById("newY").value)
         };
+        if (type !== 'asset') {
+            newEl.w = parseInt(document.getElementById("newW").value) || 4;
+            newEl.h = parseInt(document.getElementById("newH").value) || 4;
+        }
         elements.push(newEl);
         render();
     }
