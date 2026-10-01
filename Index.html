@@ -1,0 +1,1160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Facility Systems Interactive Blueprint</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: #0f1117; color: #e1e4ed; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+    
+    /* Header Bar */
+    header { height: 52px; background: #161b26; border-bottom: 1px solid #2d3548; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; z-index: 10; gap: 12px; }
+    .brand { font-weight: 700; font-size: 15px; color: #40c4ff; display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+    .nav-controls { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    
+    .status-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; padding: 4px 8px; border-radius: 12px; font-weight: 600; background: #1c2536; border: 1px solid #2d3e5e; color: #8a99ad; }
+    .status-badge.connected { background: #0d2e1e; border-color: #1b5e3a; color: #00e676; }
+    .status-dot { width: 8px; height: 8px; border-radius: 50%; background: #ff5252; }
+    .status-badge.connected .status-dot { background: #00e676; box-shadow: 0 0 8px #00e676; }
+
+    .level-selector { display: flex; background: #0f1117; padding: 3px; border-radius: 6px; border: 1px solid #2d3548; }
+    .level-btn { background: transparent; border: none; color: #8b95a5; padding: 5px 10px; font-size: 11px; font-weight: 600; border-radius: 4px; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
+    .level-btn.active { background: #2196f3; color: #fff; }
+    
+    .btn { background: #232a3b; border: 1px solid #3b465e; color: #e1e4ed; padding: 6px 12px; border-radius: 4px; font-size: 11px; cursor: pointer; font-weight: 500; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s; white-space: nowrap; }
+    .btn:hover { background: #2d364d; border-color: #4a5877; }
+    .btn-primary { background: #2196f3; border-color: #1e88e5; color: #fff; }
+    .btn-primary:hover { background: #1e88e5; }
+    .btn-danger { background: #d32f2f; border-color: #f44336; color: #fff; }
+    .btn-danger:hover { background: #e53935; }
+    .btn-share { background: #00c853; border-color: #00e676; color: #000; font-weight: 700; }
+    .btn-share:hover { background: #00e676; }
+    .btn-active-mode { background: #00c853 !important; border-color: #00e676 !important; color: #000 !important; font-weight: 700; }
+    
+    /* Main Layout */
+    .app-body { flex: 1; display: flex; position: relative; overflow: hidden; }
+    
+    /* Sidebar */
+    aside { width: 330px; background: #161b26; border-right: 1px solid #2d3548; display: flex; flex-direction: column; z-index: 5; flex-shrink: 0; transition: width 0.3s ease; position: relative; }
+    aside.minimized { width: 48px; }
+    aside.minimized .sidebar-content { display: none; }
+    aside.minimized .sidebar-header-title { display: none; }
+    aside.minimized .minimize-toggle-btn { transform: rotate(180deg); }
+
+    .sidebar-header { display: flex; align-items: center; justify-content: space-between; padding: 12px; border-bottom: 1px solid #2d3548; background: #121620; }
+    .sidebar-header-title { font-weight: 600; font-size: 12px; color: #fff; }
+    .sidebar-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+    .sidebar-section { padding: 12px; border-bottom: 1px solid #2d3548; }
+    .search-box { width: 100%; background: #0f1117; border: 1px solid #2d3548; color: #fff; padding: 8px 10px; border-radius: 4px; font-size: 12px; outline: none; }
+    .search-box:focus { border-color: #2196f3; }
+    
+    .category-list { display: flex; flex-direction: column; gap: 6px; max-height: 180px; overflow-y: auto; margin-top: 8px; }
+    .cat-item { display: flex; align-items: center; justify-content: space-between; font-size: 12px; padding: 6px 8px; border-radius: 4px; background: #0f1117; border: 1px solid #2d3548; }
+    .cat-info { display: flex; align-items: center; gap: 8px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .cat-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+    .cat-actions { display: flex; gap: 4px; flex-shrink: 0; }
+    
+    .asset-list-container { flex: 1; overflow-y: auto; padding: 12px; }
+    .asset-card { background: #0f1117; border: 1px solid #2d3548; border-radius: 6px; padding: 10px; margin-bottom: 8px; cursor: pointer; transition: border-color 0.2s; position: relative; }
+    .asset-card:hover { border-color: #2196f3; }
+    .asset-title { font-weight: 600; font-size: 13px; color: #fff; margin-bottom: 4px; display: flex; justify-content: space-between; padding-right: 48px; }
+    .asset-meta { font-size: 11px; color: #8b95a5; display: flex; gap: 8px; align-items: center; }
+    .asset-actions { position: absolute; top: 8px; right: 8px; display: flex; gap: 4px; }
+    .icon-btn { background: #232a3b; border: 1px solid #3b465e; color: #aaa; width: 22px; height: 22px; border-radius: 4px; font-size: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+    .icon-btn:hover { color: #fff; background: #2d364d; }
+    .icon-btn.delete:hover { background: #d32f2f; color: #fff; }
+
+    /* Canvas Area */
+    main { flex: 1; position: relative; background: #090b10; overflow: hidden; cursor: grab; }
+    main.panning { cursor: grabbing; }
+    main.placement-mode { cursor: crosshair !important; }
+    canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: block; }
+    
+    /* Overlay Controls */
+    .map-overlay-controls { position: absolute; bottom: 16px; right: 16px; display: flex; flex-direction: column; gap: 8px; z-index: 5; }
+    .zoom-btn { width: 36px; height: 36px; background: #161b26; border: 1px solid #2d3548; color: #fff; font-size: 18px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; user-select: none; }
+    .zoom-btn:hover { background: #232a3b; }
+    
+    .coord-banner { position: absolute; top: 16px; left: 16px; background: rgba(22, 27, 38, 0.88); backdrop-filter: blur(6px); border: 1px solid #2d3548; padding: 6px 14px; border-radius: 6px; font-family: monospace; font-size: 12px; color: #40c4ff; z-index: 5; display: flex; gap: 12px; align-items: center; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+    .mode-badge { padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold; background: #3b465e; color: #aaa; text-transform: uppercase; }
+    .mode-badge.active { background: #00c853; color: #000; }
+    
+    /* Modals & Dialogs */
+    .modal-backdrop { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.75); display: none; align-items: center; justify-content: center; z-index: 100; backdrop-filter: blur(2px); }
+    .modal { background: #161b26; border: 1px solid #2d3548; border-radius: 8px; width: 520px; max-width: 95%; max-height: 90vh; overflow-y: auto; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); transition: width 0.2s, height 0.2s; }
+    .modal-header { font-size: 15px; font-weight: 700; color: #fff; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; }
+    .form-group { margin-bottom: 12px; }
+    .form-group label { display: block; font-size: 11px; color: #8b95a5; margin-bottom: 4px; text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px; }
+    .form-control { width: 100%; background: #0f1117; border: 1px solid #2d3548; color: #fff; padding: 8px 10px; border-radius: 4px; font-size: 12px; outline: none; }
+    .form-control:focus { border-color: #2196f3; }
+    .form-row { display: flex; gap: 10px; }
+    .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px; }
+
+    /* Spreadsheet / Asset Record Table Styles */
+    .spreadsheet-table { width: 100%; border-collapse: collapse; margin-top: 8px; margin-bottom: 12px; font-size: 12px; background: #0f1117; border: 1px solid #2d3548; border-radius: 6px; overflow: hidden; }
+    .spreadsheet-table th, .spreadsheet-table td { border: 1px solid #2d3548; padding: 8px 10px; text-align: left; }
+    .spreadsheet-table th { background: #1c2230; color: #40c4ff; font-weight: 600; width: 35%; }
+    .spreadsheet-table td input, .spreadsheet-table td select, .spreadsheet-table td textarea { width: 100%; background: transparent; border: none; color: #fff; outline: none; font-size: 12px; font-family: inherit; }
+    .spreadsheet-table td textarea { resize: vertical; min-height: 50px; }
+
+    /* Photo Upload Grid */
+    .photo-upload-section { margin-top: 12px; border-top: 1px solid #2d3548; padding-top: 12px; }
+    .photo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 8px; margin-top: 8px; }
+    .photo-thumb-container { position: relative; width: 80px; height: 80px; border-radius: 6px; overflow: hidden; border: 1px solid #2d3548; background: #0f1117; }
+    .photo-thumb-container img { width: 100%; height: 100%; object-fit: cover; }
+    .photo-delete-btn { position: absolute; top: 2px; right: 2px; background: rgba(211, 47, 47, 0.8); color: #fff; border: none; border-radius: 50%; width: 18px; height: 18px; font-size: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+    .photo-upload-dropzone { border: 2px dashed #3b465e; border-radius: 6px; padding: 14px; text-align: center; cursor: pointer; background: #0f1117; transition: border-color 0.2s; }
+    .photo-upload-dropzone:hover { border-color: #2196f3; }
+
+    /* Toast Notification System */
+    .toast-container { position: fixed; bottom: 20px; left: 20px; z-index: 200; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
+    .toast { background: #161b26; border: 1px solid #2196f3; color: #fff; padding: 10px 16px; border-radius: 6px; font-size: 12px; display: flex; align-items: center; gap: 8px; box-shadow: 0 6px 20px rgba(0,0,0,0.4); animation: toastIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+    .toast.error { border-color: #f44336; }
+    .toast.success { border-color: #00c853; }
+    @keyframes toastIn { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="brand">
+      <span>📐</span> Facility Systems Interactive Blueprint
+    </div>
+    
+    <div class="status-badge" id="cloudStatusBadge">
+      <span class="status-dot"></span>
+      <span id="cloudStatusText">Connecting to Live Cloud...</span>
+    </div>
+
+    <div class="nav-controls">
+      <button class="btn btn-share" type="button" onclick="shareLiveLink()">🔗 Share Live Link</button>
+
+      <button class="btn" id="addAssetBtn" type="button" onclick="togglePlacementMode()">
+        📍 Add Asset: <span id="addAssetStatus">OFF</span>
+      </button>
+
+      <div class="level-selector">
+        <button class="level-btn active" type="button" onclick="setLevel('ground', event)">Ground Floor</button>
+        <button class="level-btn" type="button" onclick="setLevel('mezz', event)">MEZZ Floor</button>
+        <button class="level-btn" type="button" onclick="setLevel('roof', event)">Roof Level</button>
+        <button class="level-btn" type="button" onclick="setLevel('exterior', event)">Exterior / Yard</button>
+      </div>
+      
+      <button class="btn" type="button" onclick="openYardModal()">⚙️ Yard Config</button>
+      <button class="btn" type="button" onclick="exportJSON()">💾 Export JSON</button>
+      <button class="btn" type="button" onclick="document.getElementById('importFile').click()">📂 Import</button>
+      <input type="file" id="importFile" style="display:none" onchange="importJSON(event)" accept=".json">
+    </div>
+  </header>
+
+  <div class="app-body">
+    <!-- Sidebar -->
+    <aside id="sidebar" data-maximized="false">
+      <div class="sidebar-header">
+        <span class="sidebar-header-title">Facility Navigator</span>
+        <div style="display:flex; gap:4px;">
+          <button class="icon-btn" id="maximizeSidebarBtn" type="button" title="Maximize / Restore Sidebar" onclick="toggleMaximizeSidebar()">⛶</button>
+          <button class="icon-btn minimize-toggle-btn" id="minimizeSidebarBtn" type="button" title="Minimize / Expand Sidebar" onclick="toggleMinimizeSidebar()">◀</button>
+        </div>
+      </div>
+      <div class="sidebar-content">
+        <div class="sidebar-section">
+          <input type="text" class="search-box" id="searchBox" placeholder="Search assets or grid..." oninput="renderAssetList()">
+        </div>
+
+        <div class="sidebar-section">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+            <strong style="font-size:12px; color:#fff;">System Categories</strong>
+            <button class="btn" type="button" style="padding:3px 8px; font-size:10px;" onclick="openCatModalForNew()">+ Add</button>
+          </div>
+          <div class="category-list" id="categoryList"></div>
+        </div>
+
+        <div class="asset-list-container">
+          <strong style="font-size:12px; display:block; margin-bottom:8px; color:#fff;">
+            System Assets (<span id="assetCount">0</span>)
+          </strong>
+          <div id="assetCards"></div>
+        </div>
+      </div>
+    </aside>
+
+    <main id="mapContainer">
+      <div class="coord-banner" id="coordBanner">
+        <span id="coordText">Hover or click map to inspect location</span>
+        <span class="mode-badge" id="modeBadge">PAN MODE</span>
+      </div>
+      <canvas id="mapCanvas"></canvas>
+      <div class="map-overlay-controls">
+        <button class="zoom-btn" type="button" onclick="zoomButtonHandler(1.2)">+</button>
+        <button class="zoom-btn" type="button" onclick="zoomButtonHandler(0.8)">−</button>
+        <button class="zoom-btn" type="button" onclick="resetView()">⟲</button>
+      </div>
+    </main>
+  </div>
+
+  <!-- Interactive Spreadsheet & Photo Upload Asset Modal -->
+  <div class="modal-backdrop" id="assetModal">
+    <div class="modal" id="assetModalBox" data-maximized="false">
+      <div class="modal-header">
+        <span id="modalTitle">Asset Information & Spreadsheet Record</span>
+        <div style="display:flex; gap:6px; align-items:center;">
+          <button class="icon-btn" type="button" title="Maximize Modal" onclick="toggleMaximizeModal('assetModalBox')">⛶</button>
+          <span style="cursor:pointer; font-size:14px;" onclick="closeModal('assetModal')">✕</span>
+        </div>
+      </div>
+      <form id="assetForm" onsubmit="saveAssetRecord(event)">
+        <input type="hidden" id="assetId">
+        
+        <table class="spreadsheet-table">
+          <tr>
+            <th>Asset Title / Label</th>
+            <td><input type="text" id="assetName" placeholder="e.g. Breaker Panel MDP-1" required></td>
+          </tr>
+          <tr>
+            <th>System Category</th>
+            <td><select id="assetCategory" style="color:#fff; background:#0f1117;" required></select></td>
+          </tr>
+          <tr>
+            <th>Floor / Level</th>
+            <td>
+              <select id="assetLevel" style="color:#fff; background:#0f1117;">
+                <option value="ground">Ground Floor</option>
+                <option value="mezz">MEZZ Floor</option>
+                <option value="roof">Roof Level</option>
+                <option value="exterior">Exterior / Yard</option>
+              </select>
+            </td>
+          </tr>
+          <tr>
+            <th>Grid Location</th>
+            <td><input type="text" id="assetGrid" placeholder="e.g. Column H-12"></td>
+          </tr>
+          <tr>
+            <th>Coordinates (X, Y)</th>
+            <td>
+              <div style="display:flex; gap:8px;">
+                X: <input type="number" id="assetX" style="width:70px;" required> 
+                Y: <input type="number" id="assetY" style="width:70px;" required>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <th>Operational Status</th>
+            <td>
+              <select id="assetStatus" style="color:#fff; background:#0f1117;">
+                <option value="Operational">🟢 Operational</option>
+                <option value="Needs Maintenance">🟡 Needs Maintenance</option>
+                <option value="Out of Service">🔴 Out of Service</option>
+              </select>
+            </td>
+          </tr>
+          <tr>
+            <th>Priority Level</th>
+            <td>
+              <select id="assetPriority" style="color:#fff; background:#0f1117;">
+                <option value="Normal">Normal</option>
+                <option value="High">High</option>
+                <option value="Critical">Critical</option>
+              </select>
+            </td>
+          </tr>
+          <tr>
+            <th>Serial / Model Number</th>
+            <td><input type="text" id="assetSerial" placeholder="e.g. SN-98423-B"></td>
+          </tr>
+          <tr>
+            <th>Last Inspected By</th>
+            <td><input type="text" id="assetTech" placeholder="Technician Name / ID"></td>
+          </tr>
+          <tr>
+            <th>Notes / Isolation Steps</th>
+            <td><textarea id="assetNotes" placeholder="Enter maintenance instructions or specs..."></textarea></td>
+          </tr>
+        </table>
+
+        <!-- Photo Upload Section -->
+        <div class="photo-upload-section">
+          <label style="font-size: 11px; color: #8b95a5; font-weight: 600; text-transform: uppercase; margin-bottom: 6px; display: block;">Asset Photos & Inspection Scans</label>
+          <div class="photo-upload-dropzone" onclick="document.getElementById('photoFileInput').click()">
+            <span style="font-size: 13px; color: #40c4ff;">📷 Click to Upload Photos or Inspection Files</span>
+            <input type="file" id="photoFileInput" style="display:none" accept="image/*" multiple onchange="handlePhotoUpload(event)">
+          </div>
+          <div class="photo-grid" id="photoGrid"></div>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn btn-danger" id="deleteAssetBtn" style="margin-right:auto; display:none;" onclick="confirmDeleteCurrentAsset()">Delete Asset</button>
+          <button type="button" class="btn" onclick="closeModal('assetModal')">Cancel</button>
+          <button type="submit" class="btn btn-primary">💾 Save Spreadsheet Record</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Category Modal -->
+  <div class="modal-backdrop" id="catModal">
+    <div class="modal" id="catModalBox" data-maximized="false" style="width:400px;">
+      <div class="modal-header">
+        <span id="catModalTitle">Add System Category</span>
+        <div style="display:flex; gap:6px; align-items:center;">
+          <button class="icon-btn" type="button" title="Maximize Modal" onclick="toggleMaximizeModal('catModalBox')">⛶</button>
+          <span style="cursor:pointer; font-size:14px;" onclick="closeModal('catModal')">✕</span>
+        </div>
+      </div>
+      <form onsubmit="saveCategory(event)">
+        <input type="hidden" id="catId">
+        <div class="form-group">
+          <label>Category Name</label>
+          <input type="text" id="catName" class="form-control" placeholder="e.g. Fire Protection" required>
+        </div>
+        <div class="form-row">
+          <div class="form-group" style="flex:1;">
+            <label>Color</label>
+            <input type="color" id="catColor" class="form-control" value="#ff9800" style="height:35px; padding:2px;">
+          </div>
+          <div class="form-group" style="flex:1;">
+            <label>Icon / Symbol</label>
+            <input type="text" id="catIcon" class="form-control" value="🔥" required>
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-danger" id="deleteCatBtn" style="margin-right:auto; display:none;" onclick="confirmDeleteCurrentCategory()">Delete Category</button>
+          <button type="button" class="btn" onclick="closeModal('catModal')">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Category</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Yard Config Modal -->
+  <div class="modal-backdrop" id="yardModal">
+    <div class="modal" id="yardModalBox" data-maximized="false" style="width:400px;">
+      <div class="modal-header">
+        <span>Exterior Yard & Parking Configurator</span>
+        <div style="display:flex; gap:6px; align-items:center;">
+          <button class="icon-btn" type="button" title="Maximize Modal" onclick="toggleMaximizeModal('yardModalBox')">⛶</button>
+          <span style="cursor:pointer; font-size:14px;" onclick="closeModal('yardModal')">✕</span>
+        </div>
+      </div>
+      <form onsubmit="saveYardConfig(event)">
+        <div class="form-group">
+          <label>North Staff Parking Depth (px/ft)</label>
+          <input type="number" id="yardNorth" class="form-control" value="120" required>
+        </div>
+        <div class="form-group">
+          <label>South Truck Staging Depth (px/ft)</label>
+          <input type="number" id="yardSouth" class="form-control" value="160" required>
+        </div>
+        <div class="form-group">
+          <label>East Entry Lot Width (px/ft)</label>
+          <input type="number" id="yardEast" class="form-control" value="100" required>
+        </div>
+        <div class="form-group">
+          <label>West Margin Width (px/ft)</label>
+          <input type="number" id="yardWest" class="form-control" value="100" required>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn" onclick="closeModal('yardModal')">Cancel</button>
+          <button type="submit" class="btn btn-primary">Update Yard Layout</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Custom Confirmation Dialog -->
+  <div class="modal-backdrop" id="confirmModal">
+    <div class="modal" style="width:360px;">
+      <div class="modal-header">
+        <span id="confirmTitle">Confirm Action</span>
+        <span style="cursor:pointer" onclick="closeModal('confirmModal')">✕</span>
+      </div>
+      <p id="confirmMessage" style="font-size:12px; color:#b0bec5; line-height:1.5; margin-bottom:16px;"></p>
+      <div class="modal-actions">
+        <button type="button" class="btn" onclick="closeModal('confirmModal')">Cancel</button>
+        <button type="button" class="btn btn-danger" id="confirmActionBtn">Confirm</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getFirestore, doc, setDoc, deleteDoc, onSnapshot, collection } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+    const appId = typeof __app_id !== 'undefined' ? __app_id : 'facility-blueprint-app';
+    
+    // YOUR FIREBASE CONFIGURATION (Update with your project credentials)
+    const firebaseConfig = {
+      apiKey: "AIzaSyD...",
+      authDomain: "your-project-id.firebaseapp.com",
+      projectId: "your-project-id",
+      storageBucket: "your-project-id.appspot.com",
+      messagingSenderId: "123456789",
+      appId: "1:123456789:web:abcdef"
+    };
+
+    let db = null;
+    let auth = null;
+    let user = null;
+    let confirmCallback = null;
+    let currentAssetPhotos = [];
+
+    const savedLocalState = localStorage.getItem('facility_blueprint_local_state');
+    const defaultState = {
+      level: 'ground',
+      placementMode: false,
+      scale: 1,
+      panX: 50,
+      panY: 50,
+      categories: [
+        { id: 'elec', name: 'Electrical Panels', color: '#e65100', icon: '⚡' },
+        { id: 'plumb', name: 'Plumbing / Water', color: '#0288d1', icon: '💧' },
+        { id: 'hvac', name: 'HVAC / Controls', color: '#2e7d32', icon: '❄️' }
+      ],
+      yard: { north: 120, south: 160, east: 100, west: 100 },
+      assets: [
+        { id: '1', name: 'Main Distribution Panel MDP-1', category: 'elec', level: 'ground', x: 280, y: 180, grid: 'A-2', status: 'Operational', priority: 'Critical', serial: 'MDP-001-X', tech: 'Lead Tech', notes: '480V 3-Phase Main Switch', photos: [] },
+        { id: '2', name: 'Water Main Shutoff', category: 'plumb', level: 'ground', x: 520, y: 180, grid: 'A-5', status: 'Operational', priority: 'High', serial: 'VALVE-3IN', tech: 'Maintenance', notes: '3-inch main valve', photos: [] },
+        { id: '3', name: 'MEZZ Air Handler AHU-2', category: 'hvac', level: 'mezz', x: 340, y: 620, grid: 'K-6', status: 'Needs Maintenance', priority: 'Normal', serial: 'AHU-MEZZ-2', tech: 'HVAC Tech', notes: 'Mezzanine cooling unit', photos: [] }
+      ]
+    };
+
+    const state = savedLocalState ? JSON.parse(savedLocalState) : defaultState;
+
+    const canvas = document.getElementById('mapCanvas');
+    const ctx = canvas.getContext('2d');
+    const container = document.getElementById('mapContainer');
+
+    function persistLocally() {
+      localStorage.setItem('facility_blueprint_local_state', JSON.stringify(state));
+    }
+
+    function showToast(msg, type = 'normal') {
+      const toastContainer = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+      toast.innerHTML = `<span>${type === 'success' ? '✅' : type === 'error' ? '⚠️' : 'ℹ️'}</span> ${msg}`;
+      toastContainer.appendChild(toast);
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transition = 'opacity 0.3s';
+        setTimeout(() => toast.remove(), 300);
+      }, 3500);
+    }
+
+    window.shareLiveLink = () => {
+      const url = window.location.href;
+      const dummy = document.createElement('input');
+      document.body.appendChild(dummy);
+      dummy.value = url;
+      dummy.select();
+      document.execCommand('copy');
+      document.body.removeChild(dummy);
+      showToast("Live collaborative link copied to clipboard!", "success");
+    };
+
+    function customConfirm(title, message, onConfirm) {
+      document.getElementById('confirmTitle').innerText = title;
+      document.getElementById('confirmMessage').innerText = message;
+      confirmCallback = onConfirm;
+      openModal('confirmModal');
+    }
+
+    document.getElementById('confirmActionBtn').onclick = () => {
+      if (confirmCallback) confirmCallback();
+      closeModal('confirmModal');
+    };
+
+    window.toggleMinimizeSidebar = () => {
+      const sidebar = document.getElementById('sidebar');
+      sidebar.classList.toggle('minimized');
+      setTimeout(resizeCanvas, 320);
+    };
+
+    window.toggleMaximizeSidebar = () => {
+      const sidebar = document.getElementById('sidebar');
+      if (sidebar.classList.contains('minimized')) return;
+      const isMax = sidebar.dataset.maximized === 'true';
+      sidebar.dataset.maximized = isMax ? 'false' : 'true';
+      sidebar.style.width = isMax ? '330px' : '550px';
+      setTimeout(resizeCanvas, 320);
+    };
+
+    window.toggleMaximizeModal = (modalBoxId) => {
+      const box = document.getElementById(modalBoxId);
+      const isMax = box.dataset.maximized === 'true';
+      box.dataset.maximized = isMax ? 'false' : 'true';
+      box.style.width = isMax ? '520px' : '94vw';
+      box.style.height = isMax ? 'auto' : '90vh';
+    };
+
+    const getCategoriesCol = () => collection(db, 'artifacts', appId, 'public', 'data', 'categories');
+    const getAssetsCol = () => collection(db, 'artifacts', appId, 'public', 'data', 'assets');
+    const getYardDocRef = () => doc(db, 'artifacts', appId, 'public', 'data', 'config', 'yard');
+
+    async function initFirebase() {
+      if (!firebaseConfig || !firebaseConfig.apiKey || firebaseConfig.apiKey.includes("AIzaSyD...")) {
+        updateCloudStatus(false, "Local Memory Mode (Config Required)");
+        initAppUI();
+        return;
+      }
+      try {
+        const app = initializeApp(firebaseConfig);
+        auth = getAuth(app);
+        db = getFirestore(app);
+        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+          const res = await signInWithCustomToken(auth, __initial_auth_token);
+          user = res.user;
+        } else {
+          const res = await signInAnonymously(auth);
+          user = res.user;
+        }
+        if (user) {
+          updateCloudStatus(true, `Synced Live (${user.uid.slice(0, 6)}...)`);
+          setupFirestoreListeners();
+        }
+      } catch (err) {
+        console.error("Firebase init failed:", err);
+        updateCloudStatus(false, "Offline / Local Fallback Mode");
+        initAppUI();
+      }
+    }
+
+    function updateCloudStatus(connected, text) {
+      const badge = document.getElementById('cloudStatusBadge');
+      const textElem = document.getElementById('cloudStatusText');
+      if (connected) badge.classList.add('connected');
+      else badge.classList.remove('connected');
+      textElem.innerText = text;
+    }
+
+    function setupFirestoreListeners() {
+      if (!user || !db) return;
+      onSnapshot(getCategoriesCol(), (snapshot) => {
+        if (!snapshot.empty) {
+          const cats = [];
+          snapshot.forEach(docSnap => cats.push({ id: docSnap.id, ...docSnap.data() }));
+          state.categories = cats;
+        } else {
+          seedCategoriesToCloud();
+        }
+        initAppUI();
+      });
+
+      onSnapshot(getAssetsCol(), (snapshot) => {
+        if (!snapshot.empty) {
+          const asts = [];
+          snapshot.forEach(docSnap => asts.push({ id: docSnap.id, ...docSnap.data() }));
+          state.assets = asts;
+        } else {
+          seedAssetsToCloud();
+        }
+        initAppUI();
+      });
+
+      onSnapshot(getYardDocRef(), (docSnap) => {
+        if (docSnap.exists()) state.yard = docSnap.data();
+        else seedYardToCloud();
+        draw();
+      });
+    }
+
+    async function seedCategoriesToCloud() {
+      if (!user || !db) return;
+      for (const cat of state.categories) await setDoc(doc(getCategoriesCol(), cat.id), cat);
+    }
+    async function seedAssetsToCloud() {
+      if (!user || !db) return;
+      for (const asset of state.assets) await setDoc(doc(getAssetsCol(), asset.id), asset);
+    }
+    async function seedYardToCloud() {
+      if (!user || !db) return;
+      await setDoc(getYardDocRef(), state.yard);
+    }
+
+    function initAppUI() {
+      renderCategoryList();
+      populateCategorySelect();
+      renderAssetList();
+      resizeCanvas();
+    }
+
+    function resizeCanvas() {
+      canvas.width = container.clientWidth;
+      canvas.height = container.clientHeight;
+      draw();
+    }
+    window.addEventListener('resize', resizeCanvas);
+
+    window.togglePlacementMode = () => {
+      state.placementMode = !state.placementMode;
+      const btn = document.getElementById('addAssetBtn');
+      const statusText = document.getElementById('addAssetStatus');
+      const badge = document.getElementById('modeBadge');
+      
+      if (state.placementMode) {
+        btn.classList.add('btn-active-mode');
+        statusText.innerText = 'ON (Click Map)';
+        container.classList.add('placement-mode');
+        badge.innerText = 'ADD ASSET MODE';
+        badge.classList.add('active');
+      } else {
+        btn.classList.remove('btn-active-mode');
+        statusText.innerText = 'OFF';
+        container.classList.remove('placement-mode');
+        badge.innerText = 'PAN MODE';
+        badge.classList.remove('active');
+      }
+    };
+
+    function screenToCanvasCoords(screenX, screenY) {
+      const rect = canvas.getBoundingClientRect();
+      const x = Math.round((screenX - rect.left - state.panX) / state.scale);
+      const y = Math.round((screenY - rect.top - state.panY) / state.scale);
+      return { x, y };
+    }
+
+    function getGridRef(x, y) {
+      const col = Math.max(1, Math.min(30, Math.floor(x / 60) + 1));
+      const rowIdx = Math.floor(y / 60);
+      const rows = ['A','B','C','D','E','F','G','H','I','J','K','L','M'];
+      if (rowIdx >= 12 || y >= 720) return `M.9-${col}`;
+      return `${rows[Math.max(0, rowIdx)] || 'M'}-${col}`;
+    }
+
+    window.setLevel = (lvl, event) => {
+      state.level = lvl;
+      document.querySelectorAll('.level-btn').forEach(b => b.classList.remove('active'));
+      if (event && event.target) event.target.classList.add('active');
+      renderAssetList();
+      draw();
+    };
+
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.save();
+      ctx.translate(state.panX, state.panY);
+      ctx.scale(state.scale, state.scale);
+
+      const buildingWidth = 1800;
+      const yardX = -state.yard.west;
+      const yardY = -state.yard.north;
+      const yardWidth = buildingWidth + state.yard.west + state.yard.east;
+      const yardHeight = 780 + state.yard.north + state.yard.south;
+
+      // Exterior Yard
+      ctx.fillStyle = 'rgba(33, 150, 243, 0.12)';
+      ctx.fillRect(yardX, yardY, yardWidth, yardHeight);
+      ctx.strokeStyle = '#2196f3';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([8, 6]);
+      ctx.strokeRect(yardX, yardY, yardWidth, yardHeight);
+      ctx.setLineDash([]);
+
+      ctx.fillStyle = '#64b5f6';
+      ctx.font = 'bold 12px sans-serif';
+      ctx.fillText('EXTERIOR / YARD ZONE', yardX + 15, yardY + 25);
+
+      // Building Footprint
+      ctx.fillStyle = '#141824';
+      ctx.strokeStyle = '#40c4ff';
+      ctx.lineWidth = 3;
+      ctx.fillRect(0, 0, buildingWidth, 780);
+      ctx.strokeRect(0, 0, buildingWidth, 780);
+
+      // Level specific layout rendering
+      if (state.level === 'ground') {
+        ctx.fillStyle = 'rgba(255, 152, 0, 0.12)';
+        ctx.strokeStyle = '#ff9800';
+        ctx.lineWidth = 1.5;
+        ctx.fillRect(480, 75, 1215, 345);
+        ctx.strokeRect(480, 75, 1215, 345);
+        ctx.fillStyle = '#ffa726'; 
+        ctx.font = 'bold 12px sans-serif';
+        ctx.fillText('MAIN RACKING AREA #1', 500, 105);
+      } else if (state.level === 'mezz') {
+        ctx.fillStyle = 'rgba(0, 200, 83, 0.12)';
+        ctx.strokeStyle = '#00c853';
+        ctx.lineWidth = 1.5;
+        ctx.fillRect(120, 480, 1560, 240);
+        ctx.strokeRect(120, 480, 1560, 240);
+        ctx.fillStyle = '#00e676';
+        ctx.font = 'bold 12px sans-serif';
+        ctx.fillText('MEZZANINE PLATFORM & CONVEYORS', 140, 510);
+      } else if (state.level === 'roof') {
+        ctx.fillStyle = 'rgba(156, 39, 176, 0.12)';
+        ctx.strokeStyle = '#ab47bc';
+        ctx.lineWidth = 1.5;
+        ctx.fillRect(300, 120, 1200, 540);
+        ctx.strokeRect(300, 120, 1200, 540);
+        ctx.fillStyle = '#ce93d8';
+        ctx.font = 'bold 12px sans-serif';
+        ctx.fillText('ROOFTOP HVAC & UTILITY DECK', 320, 150);
+      }
+
+      // Draw Grid Lines
+      ctx.strokeStyle = 'rgba(255,255,255,0.04)';
+      ctx.lineWidth = 1;
+      for (let x = 0; x <= buildingWidth; x += 60) {
+        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, 780); ctx.stroke();
+      }
+      for (let y = 0; y <= 780; y += 60) {
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(buildingWidth, y); ctx.stroke();
+      }
+
+      // Render Assets for current level
+      state.assets.filter(a => a.level === state.level).forEach(asset => {
+        const cat = state.categories.find(c => c.id === asset.category) || { color: '#2196f3', icon: '📍' };
+        
+        ctx.save();
+        ctx.translate(asset.x, asset.y);
+
+        // Marker Pin Body
+        ctx.beginPath();
+        ctx.arc(0, 0, 16, 0, Math.PI * 2);
+        ctx.fillStyle = cat.color;
+        ctx.fill();
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = '#fff';
+        ctx.stroke();
+
+        // Icon inside pin
+        ctx.font = '14px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(cat.icon, 0, 0);
+
+        // Label Tag
+        ctx.fillStyle = 'rgba(22, 27, 38, 0.9)';
+        ctx.fillRect(-60, 20, 120, 22);
+        ctx.strokeStyle = cat.color;
+        ctx.strokeRect(-60, 20, 120, 22);
+
+        ctx.fillStyle = '#fff';
+        ctx.font = 'bold 10px sans-serif';
+        ctx.fillText(asset.name.length > 18 ? asset.name.slice(0, 16) + '..' : asset.name, 0, 31);
+
+        ctx.restore();
+      });
+
+      ctx.restore();
+    }
+
+    // Pan & Zoom Controls
+    let isPanning = false, startX = 0, startY = 0;
+    container.addEventListener('mousedown', (e) => {
+      if (state.placementMode) {
+        const coords = screenToCanvasCoords(e.clientX, e.clientY);
+        openAssetModalForNew(coords.x, coords.y);
+        return;
+      }
+      if (e.button === 0 || e.button === 1) {
+        isPanning = true;
+        container.classList.add('panning');
+        startX = e.clientX - state.panX;
+        startY = e.clientY - state.panY;
+      }
+    });
+
+    window.addEventListener('mousemove', (e) => {
+      const coords = screenToCanvasCoords(e.clientX, e.clientY);
+      document.getElementById('coordText').innerText = `X: ${coords.x} | Y: ${coords.y} | Grid: ${getGridRef(coords.x, coords.y)}`;
+      
+      if (!isPanning) return;
+      state.panX = e.clientX - startX;
+      state.panY = e.clientY - startY;
+      draw();
+    });
+
+    window.addEventListener('mouseup', () => {
+      isPanning = false;
+      container.classList.remove('panning');
+    });
+
+    container.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      const zoomFactor = e.deltaY < 0 ? 1.15 : 0.85;
+      const newScale = Math.max(0.2, Math.min(4, state.scale * zoomFactor));
+      
+      const rect = canvas.getBoundingClientRect();
+      const mouseX = e.clientX - rect.left;
+      const mouseY = e.clientY - rect.top;
+
+      state.panX = mouseX - (mouseX - state.panX) * (newScale / state.scale);
+      state.panY = mouseY - (mouseY - state.panY) * (newScale / state.scale);
+      state.scale = newScale;
+      draw();
+    }, { passive: false });
+
+    window.zoomButtonHandler = (factor) => {
+      state.scale = Math.max(0.2, Math.min(4, state.scale * factor));
+      draw();
+    };
+
+    window.resetView = () => {
+      state.scale = 1;
+      state.panX = 50;
+      state.panY = 50;
+      draw();
+    };
+
+    // Spreadsheet Modal and Asset Management
+    window.openAssetModalForNew = (x, y) => {
+      document.getElementById('modalTitle').innerText = "New Asset Spreadsheet Record";
+      document.getElementById('assetId').value = 'ast_' + Date.now();
+      document.getElementById('assetName').value = '';
+      document.getElementById('assetLevel').value = state.level;
+      document.getElementById('assetX').value = x;
+      document.getElementById('assetY').value = y;
+      document.getElementById('assetGrid').value = getGridRef(x, y);
+      document.getElementById('assetStatus').value = 'Operational';
+      document.getElementById('assetPriority').value = 'Normal';
+      document.getElementById('assetSerial').value = '';
+      document.getElementById('assetTech').value = '';
+      document.getElementById('assetNotes').value = '';
+      currentAssetPhotos = [];
+      renderPhotoGrid();
+      document.getElementById('deleteAssetBtn').style.display = 'none';
+      document.getElementById('assetModal').style.display = 'flex';
+      togglePlacementMode(); // Turn off placement mode
+    };
+
+    window.openAssetModalForEdit = (assetId) => {
+      const asset = state.assets.find(a => a.id === assetId);
+      if (!asset) return;
+      document.getElementById('modalTitle').innerText = `Asset Record: ${asset.name}`;
+      document.getElementById('assetId').value = asset.id;
+      document.getElementById('assetName').value = asset.name;
+      document.getElementById('assetCategory').value = asset.category;
+      document.getElementById('assetLevel').value = asset.level;
+      document.getElementById('assetX').value = asset.x;
+      document.getElementById('assetY').value = asset.y;
+      document.getElementById('assetGrid').value = asset.grid || getGridRef(asset.x, asset.y);
+      document.getElementById('assetStatus').value = asset.status || 'Operational';
+      document.getElementById('assetPriority').value = asset.priority || 'Normal';
+      document.getElementById('assetSerial').value = asset.serial || '';
+      document.getElementById('assetTech').value = asset.tech || '';
+      document.getElementById('assetNotes').value = asset.notes || '';
+      currentAssetPhotos = asset.photos ? [...asset.photos] : [];
+      renderPhotoGrid();
+      document.getElementById('deleteAssetBtn').style.display = 'inline-flex';
+      document.getElementById('assetModal').style.display = 'flex';
+    };
+
+    window.handlePhotoUpload = (event) => {
+      const files = event.target.files;
+      if (!files || files.length === 0) return;
+      
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          currentAssetPhotos.push(e.target.result);
+          renderPhotoGrid();
+        };
+        reader.readAsDataURL(file);
+      }
+    };
+
+    window.removePhoto = (index) => {
+      currentAssetPhotos.splice(index, 1);
+      renderPhotoGrid();
+    };
+
+    function renderPhotoGrid() {
+      const grid = document.getElementById('photoGrid');
+      grid.innerHTML = '';
+      currentAssetPhotos.forEach((photoData, idx) => {
+        const thumb = document.createElement('div');
+        thumb.className = 'photo-thumb-container';
+        thumb.innerHTML = `
+          <img src="${photoData}" alt="Asset Photo">
+          <button type="button" class="photo-delete-btn" onclick="removePhoto(${idx})">✕</button>
+        `;
+        grid.appendChild(thumb);
+      });
+    }
+
+    window.saveAssetRecord = async (e) => {
+      e.preventDefault();
+      const id = document.getElementById('assetId').value;
+      const assetData = {
+        id,
+        name: document.getElementById('assetName').value,
+        category: document.getElementById('assetCategory').value,
+        level: document.getElementById('assetLevel').value,
+        x: parseInt(document.getElementById('assetX').value),
+        y: parseInt(document.getElementById('assetY').value),
+        grid: document.getElementById('assetGrid').value,
+        status: document.getElementById('assetStatus').value,
+        priority: document.getElementById('assetPriority').value,
+        serial: document.getElementById('assetSerial').value,
+        tech: document.getElementById('assetTech').value,
+        notes: document.getElementById('assetNotes').value,
+        photos: currentAssetPhotos
+      };
+
+      const idx = state.assets.findIndex(a => a.id === id);
+      if (idx >= 0) state.assets[idx] = assetData;
+      else state.assets.push(assetData);
+
+      if (user && db) {
+        await setDoc(doc(getAssetsCol(), id), assetData).catch(err => console.error(err));
+      } else {
+        persistLocally();
+      }
+
+      closeModal('assetModal');
+      renderAssetList();
+      draw();
+      showToast("Spreadsheet record saved and synced successfully!", "success");
+    };
+
+    window.confirmDeleteCurrentAsset = () => {
+      const id = document.getElementById('assetId').value;
+      customConfirm("Delete Asset Record", "Are you sure you want to permanently delete this asset and its logs from the live map?", async () => {
+        state.assets = state.assets.filter(a => a.id !== id);
+        if (user && db) {
+          await deleteDoc(doc(getAssetsCol(), id)).catch(err => console.error(err));
+        } else {
+          persistLocally();
+        }
+        closeModal('assetModal');
+        renderAssetList();
+        draw();
+        showToast("Asset record deleted.", "error");
+      });
+    };
+
+    // Canvas click detection to open asset spreadsheet record
+    canvas.addEventListener('click', (e) => {
+      if (state.placementMode) return;
+      const rect = canvas.getBoundingClientRect();
+      const clickX = (e.clientX - rect.left - state.panX) / state.scale;
+      const clickY = (e.clientY - rect.top - state.panY) / state.scale;
+
+      const clickedAsset = state.assets.slice().reverse().find(asset => {
+        if (asset.level !== state.level) return false;
+        const dx = clickX - asset.x;
+        const dy = clickY - asset.y;
+        return Math.sqrt(dx * dx + dy * dy) <= 22;
+      });
+
+      if (clickedAsset) {
+        openAssetModalForEdit(clickedAsset.id);
+      }
+    });
+
+    window.renderAssetList = () => {
+      const containerElem = document.getElementById('assetCards');
+      const searchTerm = document.getElementById('searchBox').value.toLowerCase();
+      containerElem.innerHTML = '';
+
+      const filtered = state.assets.filter(a => {
+        const matchesLevel = a.level === state.level;
+        const matchesSearch = a.name.toLowerCase().includes(searchTerm) || (a.grid && a.grid.toLowerCase().includes(searchTerm));
+        return matchesLevel && matchesSearch;
+      });
+
+      document.getElementById('assetCount').innerText = filtered.length;
+
+      filtered.forEach(asset => {
+        const cat = state.categories.find(c => c.id === asset.category) || { color: '#2196f3', icon: '📍' };
+        const card = document.createElement('div');
+        card.className = 'asset-card';
+        card.innerHTML = `
+          <div class="asset-title">
+            <span>${cat.icon} ${asset.name}</span>
+          </div>
+          <div class="asset-meta">
+            <span>Grid: <strong>${asset.grid || 'N/A'}</strong></span>
+            <span>•</span>
+            <span style="color:${asset.status === 'Operational' ? '#00e676' : '#ff5252'}">${asset.status || 'Operational'}</span>
+          </div>
+          <div class="asset-actions">
+            <button class="icon-btn" title="Open Spreadsheet Record" onclick="openAssetModalForEdit('${asset.id}')">📋</button>
+          </div>
+        `;
+        card.onclick = (ev) => {
+          if (ev.target.tagName !== 'BUTTON') openAssetModalForEdit(asset.id);
+        };
+        containerElem.appendChild(card);
+      });
+    };
+
+    window.renderCategoryList = () => {
+      const list = document.getElementById('categoryList');
+      list.innerHTML = '';
+      state.categories.forEach(cat => {
+        const item = document.createElement('div');
+        item.className = 'cat-item';
+        item.innerHTML = `
+          <div class="cat-info">
+            <span class="cat-dot" style="background:${cat.color}"></span>
+            <span>${cat.icon} ${cat.name}</span>
+          </div>
+          <div class="cat-actions">
+            <button class="icon-btn" onclick="openCatModalForEdit('${cat.id}')">✏️</button>
+          </div>
+        `;
+        list.appendChild(item);
+      });
+    };
+
+    window.populateCategorySelect = () => {
+      const select = document.getElementById('assetCategory');
+      select.innerHTML = '';
+      state.categories.forEach(cat => {
+        const opt = document.createElement('option');
+        opt.value = cat.id;
+        opt.innerText = `${cat.icon} ${cat.name}`;
+        select.appendChild(opt);
+      });
+    };
+
+    window.openCatModalForNew = () => {
+      document.getElementById('catModalTitle').innerText = "Add System Category";
+      document.getElementById('catId').value = 'cat_' + Date.now();
+      document.getElementById('catName').value = '';
+      document.getElementById('catColor').value = '#00c853';
+      document.getElementById('catIcon').value = '⚙️';
+      document.getElementById('deleteCatBtn').style.display = 'none';
+      document.getElementById('catModal').style.display = 'flex';
+    };
+
+    window.openCatModalForEdit = (id) => {
+      const cat = state.categories.find(c => c.id === id);
+      if (!cat) return;
+      document.getElementById('catModalTitle').innerText = "Edit Category";
+      document.getElementById('catId').value = cat.id;
+      document.getElementById('catName').value = cat.name;
+      document.getElementById('catColor').value = cat.color;
+      document.getElementById('catIcon').value = cat.icon;
+      document.getElementById('deleteCatBtn').style.display = 'inline-flex';
+      document.getElementById('catModal').style.display = 'flex';
+    };
+
+    window.saveCategory = async (e) => {
+      e.preventDefault();
+      const id = document.getElementById('catId').value;
+      const catData = {
+        id,
+        name: document.getElementById('catName').value,
+        color: document.getElementById('catColor').value,
+        icon: document.getElementById('catIcon').value
+      };
+      const idx = state.categories.findIndex(c => c.id === id);
+      if (idx >= 0) state.categories[idx] = catData;
+      else state.categories.push(catData);
+
+      if (user && db) {
+        await setDoc(doc(getCategoriesCol(), id), catData).catch(err => console.error(err));
+      } else {
+        persistLocally();
+      }
+
+      closeModal('catModal');
+      initAppUI();
+      draw();
+      showToast("Category saved successfully!", "success");
+    };
+
+    window.confirmDeleteCurrentCategory = () => {
+      const id = document.getElementById('catId').value;
+      customConfirm("Delete Category", "Deleting this category will remove its group association. Confirm?", async () => {
+        state.categories = state.categories.filter(c => c.id !== id);
+        if (user && db) {
+          await deleteDoc(doc(getCategoriesCol(), id)).catch(err => console.error(err));
+        } else {
+          persistLocally();
+        }
+        closeModal('catModal');
+        initAppUI();
+        draw();
+        showToast("Category removed.", "error");
+      });
+    };
+
+    window.openYardModal = () => {
+      document.getElementById('yardNorth').value = state.yard.north;
+      document.getElementById('yardSouth').value = state.yard.south;
+      document.getElementById('yardEast').value = state.yard.east;
+      document.getElementById('yardWest').value = state.yard.west;
+      document.getElementById('yardModal').style.display = 'flex';
+    };
+
+    window.saveYardConfig = async (e) => {
+      e.preventDefault();
+      state.yard = {
+        north: parseInt(document.getElementById('yardNorth').value),
+        south: parseInt(document.getElementById('yardSouth').value),
+        east: parseInt(document.getElementById('yardEast').value),
+        west: parseInt(document.getElementById('yardWest').value)
+      };
+      if (user && db) {
+        await setDoc(getYardDocRef(), state.yard).catch(err => console.error(err));
+      } else {
+        persistLocally();
+      }
+      closeModal('yardModal');
+      draw();
+      showToast("Yard layout dimensions updated!", "success");
+    };
+
+    window.exportJSON = () => {
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state, null, 2));
+      const dlAnchor = document.createElement('a');
+      dlAnchor.setAttribute("href", dataStr);
+      dlAnchor.setAttribute("download", `facility_blueprint_backup_${state.level}.json`);
+      document.body.appendChild(dlAnchor);
+      dlAnchor.click();
+      dlAnchor.remove();
+      showToast("Blueprint state exported successfully!", "success");
+    };
+
+    window.importJSON = (event) => {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        try {
+          const imported = JSON.parse(e.target.result);
+          if (imported.assets && imported.categories) {
+            state.assets = imported.assets;
+            state.categories = imported.categories;
+            if (imported.yard) state.yard = imported.yard;
+            
+            if (user && db) {
+              await seedCategoriesToCloud();
+              await seedAssetsToCloud();
+              await seedYardToCloud();
+            } else {
+              persistLocally();
+            }
+            initAppUI();
+            draw();
+            showToast("Blueprint state imported successfully!", "success");
+          } else {
+            showToast("Invalid JSON schema structure.", "error");
+          }
+        } catch (err) {
+          showToast("Failed to parse JSON file.", "error");
+        }
+      };
+      reader.readAsText(file);
+    };
+
+    window.closeModal = (id) => {
+      document.getElementById(id).style.display = 'none';
+    };
+
+    // Initialize on load
+    initFirebase();
+  </script>
+</body>
+</html>
