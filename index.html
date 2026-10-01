@@ -850,17 +850,22 @@
       ctx.fillText('SOUTH WALL (TOP)', 20, -10);
       ctx.fillText('NORTH WALL (BOTTOM)', 20, facilityHeight + 20);
 
-      // Draw Mezzanine Level Structure if active
+      // Draw Mezzanine Level Structure if active (Terminates at J22 and M.9 22)
       if (state.level === 'mezz') {
+        // Calculate coordinates for column 22 and row index corresponding to M.9
+        // rowLabels index for M.9 is 13 (A=0 ... M.9=13, N=14)
+        const mezzEndX = 22 * colWidth; 
+        const mezzEndY = 14 * rowHeight; // Right before N starts (spanning down to M.9 boundary)
+
         ctx.fillStyle = 'rgba(14, 116, 144, 0.15)';
         ctx.strokeStyle = '#06b6d4';
         ctx.lineWidth = 2;
-        ctx.fillRect(150, 200, facilityWidth - 300, facilityHeight - 400);
-        ctx.strokeRect(150, 200, facilityWidth - 300, facilityHeight - 400);
+        ctx.fillRect(0, 0, mezzEndX, mezzEndY);
+        ctx.strokeRect(0, 0, mezzEndX, mezzEndY);
 
         ctx.fillStyle = '#22d3ee';
         ctx.font = '11px sans-serif';
-        ctx.fillText('MEZZANINE FLOOR LEVEL', 170, 225);
+        ctx.fillText('MEZZANINE FLOOR LEVEL (Ends at J22 / M.9-22)', 20, 30);
       }
 
       // Draw Assets for Current Level
