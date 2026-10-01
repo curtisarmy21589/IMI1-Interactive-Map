@@ -840,6 +840,64 @@
       ctx.lineWidth = 3;
       ctx.strokeRect(0, 0, 1200, 900);
 
+      // Draw Mezzanine Level Structure (Bounded from column J22 to M.922 / approx X: 135 to 1200, Y: 3150 to canvas limit, or mapped cleanly)
+      if (state.level === 'mezz') {
+        ctx.fillStyle = 'rgba(14, 116, 144, 0.15)';
+        ctx.strokeStyle = '#06b6d4';
+        ctx.lineWidth = 2;
+        // Mezzanine footprint bounded around J22 to M.922
+        ctx.fillRect(135, 315, 1065, 585);
+        ctx.strokeRect(135, 315, 1065, 585);
+
+        ctx.fillStyle = '#22d3ee';
+        ctx.font = '10px sans-serif';
+        ctx.fillText('MEZZANINE FLOOR (J22 - M.922)', 150, 335);
+      }
+
+      // Draw Added Racking Areas
+      // 1. Spanning from A9 to A36 and G9 to G36
+      ctx.fillStyle = 'rgba(100, 116, 139, 0.25)';
+      ctx.strokeStyle = '#94a3b8';
+      ctx.lineWidth = 1.5;
+      
+      // A9 to A36 Racking block
+      ctx.fillRect(0, 1200, 150, 4050);
+      ctx.strokeRect(0, 1200, 150, 4050);
+      ctx.fillStyle = '#cbd5e1';
+      ctx.font = '9px sans-serif';
+      ctx.fillText('RACKING A9-A36', 10, 1220);
+
+      // G9 to G36 Racking block
+      ctx.fillStyle = 'rgba(100, 116, 139, 0.25)';
+      ctx.fillRect(900, 1200, 150, 4050);
+      ctx.strokeRect(900, 1200, 150, 4050);
+      ctx.fillStyle = '#cbd5e1';
+      ctx.fillText('RACKING G9-G36', 910, 1220);
+
+      // 2. Racking Corners specified:
+      // Corner 1: H,J 24 & H,J 25
+      // Corner 2: L,M 24 & L,M 25
+      // Corner 3: L,M 28 & L,M 29
+      // Corner 4: H,J 28 & H,J 29
+      const corners = [
+        { label: 'RACK CORNER (H,J 24-25)', x: 1050, y: 3450 },
+        { label: 'RACK CORNER (L,M 24-25)', x: 1650, y: 3450 },
+        { label: 'RACK CORNER (L,M 28-29)', x: 1650, y: 4050 },
+        { label: 'RACK CORNER (H,J 28-29)', x: 1050, y: 4050 }
+      ];
+
+      corners.forEach(c => {
+        ctx.fillStyle = 'rgba(239, 68, 68, 0.2)';
+        ctx.strokeStyle = '#ef4444';
+        ctx.lineWidth = 2;
+        ctx.fillRect(c.x, c.y, 300, 300);
+        ctx.strokeRect(c.x, c.y, 300, 300);
+
+        ctx.fillStyle = '#fca5a5';
+        ctx.font = 'bold 10px sans-serif';
+        ctx.fillText(c.label, c.x + 10, c.y + 20);
+      });
+
       // Draw Assets for Current Level
       const currentAssets = state.assets.filter(a => a.level === state.level);
       currentAssets.forEach(asset => {
@@ -931,7 +989,7 @@
             <span>${cat.icon} ${cat.name}</span>
           </div>
           <div class="cat-actions">
-            <button class="icon-btn" onclick="openCatModalForEdit('${cat.id}')">✏️</button>
+            <button class="icon-btn" onclick="openCatModalForEdit('${cat.id}')">✏️️</button>
           </div>
         `;
         list.appendChild(div);
