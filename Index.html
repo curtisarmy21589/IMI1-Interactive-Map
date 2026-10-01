@@ -1,996 +1,530 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Facility Systems Interactive Blueprint</title>
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: #0f1117; color: #e1e4ed; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
-    
-    /* Header Bar */
-    header { height: 52px; background: #161b26; border-bottom: 1px solid #2d3548; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; z-index: 10; gap: 12px; }
-    .brand { font-weight: 700; font-size: 15px; color: #40c4ff; display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
-    .nav-controls { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-    
-    .status-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; padding: 4px 8px; border-radius: 12px; font-weight: 600; background: #1c2536; border: 1px solid #2d3e5e; color: #8a99ad; }
-    .status-badge.connected { background: #0d2e1e; border-color: #1b5e3a; color: #00e676; }
-    .status-dot { width: 8px; height: 8px; border-radius: 50%; background: #ff5252; }
-    .status-badge.connected .status-dot { background: #00e676; box-shadow: 0 0 8px #00e676; }
-
-    .level-selector { display: flex; background: #0f1117; padding: 3px; border-radius: 6px; border: 1px solid #2d3548; }
-    .level-btn { background: transparent; border: none; color: #8b95a5; padding: 5px 10px; font-size: 11px; font-weight: 600; border-radius: 4px; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
-    .level-btn.active { background: #2196f3; color: #fff; }
-    
-    .btn { background: #232a3b; border: 1px solid #3b465e; color: #e1e4ed; padding: 6px 12px; border-radius: 4px; font-size: 11px; cursor: pointer; font-weight: 500; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s; white-space: nowrap; }
-    .btn:hover { background: #2d364d; border-color: #4a5877; }
-    .btn-primary { background: #2196f3; border-color: #1e88e5; color: #fff; }
-    .btn-primary:hover { background: #1e88e5; }
-    .btn-danger { background: #d32f2f; border-color: #f44336; color: #fff; }
-    .btn-danger:hover { background: #e53935; }
-    .btn-share { background: #00c853; border-color: #00e676; color: #000; font-weight: 700; }
-    .btn-share:hover { background: #00e676; }
-    .btn-active-mode { background: #00c853 !important; border-color: #00e676 !important; color: #000 !important; font-weight: 700; }
-    
-    /* Main Layout */
-    .app-body { flex: 1; display: flex; position: relative; overflow: hidden; }
-    
-    /* Sidebar */
-    aside { width: 330px; background: #161b26; border-right: 1px solid #2d3548; display: flex; flex-direction: column; z-index: 5; flex-shrink: 0; transition: width 0.3s ease; position: relative; }
-    aside.minimized { width: 48px; }
-    aside.minimized .sidebar-content { display: none; }
-    aside.minimized .sidebar-header-title { display: none; }
-    aside.minimized .minimize-toggle-btn { transform: rotate(180deg); }
-
-    .sidebar-header { display: flex; align-items: center; justify-content: space-between; padding: 12px; border-bottom: 1px solid #2d3548; background: #121620; }
-    .sidebar-header-title { font-weight: 600; font-size: 12px; color: #fff; }
-    .sidebar-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
-
-    .sidebar-section { padding: 12px; border-bottom: 1px solid #2d3548; }
-    .search-box { width: 100%; background: #0f1117; border: 1px solid #2d3548; color: #fff; padding: 8px 10px; border-radius: 4px; font-size: 12px; outline: none; }
-    .search-box:focus { border-color: #2196f3; }
-    
-    .category-list { display: flex; flex-direction: column; gap: 6px; max-height: 180px; overflow-y: auto; margin-top: 8px; }
-    .cat-item { display: flex; align-items: center; justify-content: space-between; font-size: 12px; padding: 6px 8px; border-radius: 4px; background: #0f1117; border: 1px solid #2d3548; }
-    .cat-info { display: flex; align-items: center; gap: 8px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .cat-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
-    .cat-actions { display: flex; gap: 4px; flex-shrink: 0; }
-    
-    .asset-list-container { flex: 1; overflow-y: auto; padding: 12px; }
-    .asset-card { background: #0f1117; border: 1px solid #2d3548; border-radius: 6px; padding: 10px; margin-bottom: 8px; cursor: pointer; transition: border-color 0.2s; position: relative; }
-    .asset-card:hover { border-color: #2196f3; }
-    .asset-title { font-weight: 600; font-size: 13px; color: #fff; margin-bottom: 4px; display: flex; justify-content: space-between; padding-right: 48px; }
-    .asset-meta { font-size: 11px; color: #8b95a5; display: flex; gap: 8px; align-items: center; }
-    .asset-actions { position: absolute; top: 8px; right: 8px; display: flex; gap: 4px; }
-    .icon-btn { background: #232a3b; border: 1px solid #3b465e; color: #aaa; width: 22px; height: 22px; border-radius: 4px; font-size: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-    .icon-btn:hover { color: #fff; background: #2d364d; }
-    .icon-btn.delete:hover { background: #d32f2f; color: #fff; }
-
-    /* Canvas Area */
-    main { flex: 1; position: relative; background: #090b10; overflow: hidden; cursor: grab; }
-    main.panning { cursor: grabbing; }
-    main.placement-mode { cursor: crosshair !important; }
-    canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: block; }
-    
-    /* Overlay Controls */
-    .map-overlay-controls { position: absolute; bottom: 16px; right: 16px; display: flex; flex-direction: column; gap: 8px; z-index: 5; }
-    .zoom-btn { width: 36px; height: 36px; background: #161b26; border: 1px solid #2d3548; color: #fff; font-size: 18px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; user-select: none; }
-    .zoom-btn:hover { background: #232a3b; }
-    
-    .coord-banner { position: absolute; top: 16px; left: 16px; background: rgba(22, 27, 38, 0.88); backdrop-filter: blur(6px); border: 1px solid #2d3548; padding: 6px 14px; border-radius: 6px; font-family: monospace; font-size: 12px; color: #40c4ff; z-index: 5; display: flex; gap: 12px; align-items: center; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
-    .mode-badge { padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold; background: #3b465e; color: #aaa; text-transform: uppercase; }
-    .mode-badge.active { background: #00c853; color: #000; }
-    
-    /* Modals & Dialogs */
-    .modal-backdrop { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.75); display: none; align-items: center; justify-content: center; z-index: 100; backdrop-filter: blur(2px); }
-    .modal { background: #161b26; border: 1px solid #2d3548; border-radius: 8px; width: 440px; max-width: 90%; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); transition: width 0.2s, height 0.2s; }
-    .modal-header { font-size: 15px; font-weight: 700; color: #fff; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; }
-    .form-group { margin-bottom: 12px; }
-    .form-group label { display: block; font-size: 11px; color: #8b95a5; margin-bottom: 4px; text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px; }
-    .form-control { width: 100%; background: #0f1117; border: 1px solid #2d3548; color: #fff; padding: 8px 10px; border-radius: 4px; font-size: 12px; outline: none; }
-    .form-control:focus { border-color: #2196f3; }
-    .form-row { display: flex; gap: 10px; }
-    .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px; }
-
-    /* Toast Notification System */
-    .toast-container { position: fixed; bottom: 20px; left: 20px; z-index: 200; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
-    .toast { background: #161b26; border: 1px solid #2196f3; color: #fff; padding: 10px 16px; border-radius: 6px; font-size: 12px; display: flex; align-items: center; gap: 8px; box-shadow: 0 6px 20px rgba(0,0,0,0.4); animation: toastIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
-    .toast.error { border-color: #f44336; }
-    .toast.success { border-color: #00c853; }
-    @keyframes toastIn { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Facility Blueprint</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .blueprint-grid {
+            background-size: 40px 40px;
+            background-image: 
+                linear-gradient(to right, rgba(59, 130, 246, 0.1) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(59, 130, 246, 0.1) 1px, transparent 1px);
+        }
+        .asset-item {
+            transition: all 0.2s ease;
+        }
+        .asset-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+    </style>
 </head>
-<body>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col">
 
-  <header>
-    <div class="brand">
-      <span>📐</span> Facility Systems Interactive Blueprint
-    </div>
-    
-    <div class="status-badge" id="cloudStatusBadge">
-      <span class="status-dot"></span>
-      <span id="cloudStatusText">Connecting to Live Cloud...</span>
-    </div>
-
-    <div class="nav-controls">
-      <button class="btn btn-share" type="button" onclick="shareLiveLink()">🔗 Share Live Link</button>
-
-      <button class="btn" id="addAssetBtn" type="button" onclick="togglePlacementMode()">
-        📍 Add Asset: <span id="addAssetStatus">OFF</span>
-      </button>
-
-      <div class="level-selector">
-        <button class="level-btn active" type="button" onclick="setLevel('ground', event)">Ground Floor</button>
-        <button class="level-btn" type="button" onclick="setLevel('mezz', event)">MEZZ Floor</button>
-        <button class="level-btn" type="button" onclick="setLevel('roof', event)">Roof Level</button>
-        <button class="level-btn" type="button" onclick="setLevel('exterior', event)">Exterior / Yard</button>
-      </div>
-      
-      <button class="btn" type="button" onclick="openYardModal()">⚙️ Yard Config</button>
-      <button class="btn" type="button" onclick="exportJSON()">💾 Export JSON</button>
-      <button class="btn" type="button" onclick="document.getElementById('importFile').click()">📂 Import</button>
-      <input type="file" id="importFile" style="display:none" onchange="importJSON(event)" accept=".json">
-    </div>
-  </header>
-
-  <div class="app-body">
-    <!-- Sidebar -->
-    <aside id="sidebar" data-maximized="false">
-      <div class="sidebar-header">
-        <span class="sidebar-header-title">Facility Navigator</span>
-        <div style="display:flex; gap:4px;">
-          <button class="icon-btn" id="maximizeSidebarBtn" type="button" title="Maximize / Restore Sidebar" onclick="toggleMaximizeSidebar()">⛶</button>
-          <button class="icon-btn minimize-toggle-btn" id="minimizeSidebarBtn" type="button" title="Minimize / Expand Sidebar" onclick="toggleMinimizeSidebar()">◀</button>
-        </div>
-      </div>
-      <div class="sidebar-content">
-        <div class="sidebar-section">
-          <input type="text" class="search-box" id="searchBox" placeholder="Search assets or grid..." oninput="renderAssetList()">
+    <header class="bg-slate-800 border-b border-slate-700 px-6 py-4 flex flex-wrap justify-between items-center gap-4 shadow-md">
+        <div class="flex items-center space-x-3">
+            <div class="bg-blue-600 p-2.5 rounded-xl text-white shadow-lg shadow-blue-500/30">
+                <i class="fa-solid fa-building-shield text-xl"></i>
+            </div>
+            <div>
+                <h1 class="text-xl font-bold tracking-tight text-white">Facility Blueprint & Asset Manager</h1>
+                <p class="text-xs text-slate-400">Real-time cloud sync with live Firestore collections</p>
+            </div>
         </div>
 
-        <div class="sidebar-section">
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-            <strong style="font-size:12px; color:#fff;">System Categories</strong>
-            <button class="btn" type="button" style="padding:3px 8px; font-size:10px;" onclick="openCatModalForNew()">+ Add</button>
-          </div>
-          <div class="category-list" id="categoryList"></div>
+        <div class="flex items-center space-x-3">
+            <div id="connection-status" class="flex items-center space-x-2 px-3 py-1.5 bg-amber-500/10 text-amber-400 border border-amber-500/20 rounded-full text-xs font-medium">
+                <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+                <span>Connecting to Cloud...</span>
+            </div>
+            <button onclick="openAssetModal()" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-xl font-medium text-sm flex items-center space-x-2 transition shadow-lg shadow-blue-600/20">
+                <i class="fa-solid fa-plus"></i>
+                <span>Add Asset</span>
+            </button>
         </div>
+    </header>
 
-        <div class="asset-list-container">
-          <strong style="font-size:12px; display:block; margin-bottom:8px; color:#fff;">
-            System Assets (<span id="assetCount">0</span>)
-          </strong>
-          <div id="assetCards"></div>
-        </div>
-      </div>
-    </aside>
-
-    <main id="mapContainer">
-      <div class="coord-banner" id="coordBanner">
-        <span id="coordText">Hover or click map to inspect location</span>
-        <span class="mode-badge" id="modeBadge">PAN MODE</span>
-      </div>
-      <canvas id="mapCanvas"></canvas>
-      <div class="map-overlay-controls">
-        <button class="zoom-btn" type="button" onclick="zoomButtonHandler(1.2)">+</button>
-        <button class="zoom-btn" type="button" onclick="zoomButtonHandler(0.8)">−</button>
-        <button class="zoom-btn" type="button" onclick="resetView()">⟲</button>
-      </div>
-    </main>
-  </div>
-
-  <!-- Asset Modal -->
-  <div class="modal-backdrop" id="assetModal">
-    <div class="modal" id="assetModalBox" data-maximized="false">
-      <div class="modal-header">
-        <span id="modalTitle">Add System Asset</span>
-        <div style="display:flex; gap:6px; align-items:center;">
-          <button class="icon-btn" type="button" title="Maximize Modal" onclick="toggleMaximizeModal('assetModalBox')">⛶</button>
-          <span style="cursor:pointer; font-size:14px;" onclick="closeModal('assetModal')">✕</span>
-        </div>
-      </div>
-      <form id="assetForm" onsubmit="saveAsset(event)">
-        <input type="hidden" id="assetId">
-        <div class="form-group">
-          <label>Asset Title / Label</label>
-          <input type="text" id="assetName" class="form-control" placeholder="e.g. Breaker Panel MDP-1" required>
-        </div>
-        <div class="form-row">
-          <div class="form-group" style="flex:1;">
-            <label>Category</label>
-            <select id="assetCategory" class="form-control"></select>
-          </div>
-          <div class="form-group" style="flex:1;">
-            <label>Level / Floor</label>
-            <select id="assetLevel" class="form-control">
-              <option value="ground">Ground Floor</option>
-              <option value="mezz">MEZZ Floor</option>
-              <option value="roof">Roof Level</option>
-              <option value="exterior">Exterior / Yard</option>
-            </select>
-          </div>
-        </div>
-        <div class="form-row">
-          <div class="form-group" style="flex:1;">
-            <label>X Coordinate</label>
-            <input type="number" id="assetX" class="form-control" required>
-          </div>
-          <div class="form-group" style="flex:1;">
-            <label>Y Coordinate</label>
-            <input type="number" id="assetY" class="form-control" required>
-          </div>
-        </div>
-        <div class="form-group">
-          <label>Grid Reference</label>
-          <input type="text" id="assetGrid" class="form-control" placeholder="e.g. Column H-12 or M.9-15">
-        </div>
-        <div class="form-group">
-          <label>Notes / Isolation Steps</label>
-          <textarea id="assetNotes" class="form-control" rows="3" placeholder="Enter maintenance instructions or specs..."></textarea>
-        </div>
-        <div class="modal-actions">
-          <button type="button" class="btn btn-danger" id="deleteAssetBtn" style="margin-right:auto; display:none;" onclick="confirmDeleteCurrentAsset()">Delete Asset</button>
-          <button type="button" class="btn" onclick="closeModal('assetModal')">Cancel</button>
-          <button type="submit" class="btn btn-primary">Save Asset</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- Category Modal -->
-  <div class="modal-backdrop" id="catModal">
-    <div class="modal" id="catModalBox" data-maximized="false">
-      <div class="modal-header">
-        <span id="catModalTitle">Add System Category</span>
-        <div style="display:flex; gap:6px; align-items:center;">
-          <button class="icon-btn" type="button" title="Maximize Modal" onclick="toggleMaximizeModal('catModalBox')">⛶</button>
-          <span style="cursor:pointer; font-size:14px;" onclick="closeModal('catModal')">✕</span>
-        </div>
-      </div>
-      <form onsubmit="saveCategory(event)">
-        <input type="hidden" id="catId">
-        <div class="form-group">
-          <label>Category Name</label>
-          <input type="text" id="catName" class="form-control" placeholder="e.g. Fire Protection" required>
-        </div>
-        <div class="form-row">
-          <div class="form-group" style="flex:1;">
-            <label>Color</label>
-            <input type="color" id="catColor" class="form-control" value="#ff9800" style="height:35px; padding:2px;">
-          </div>
-          <div class="form-group" style="flex:1;">
-            <label>Icon / Symbol</label>
-            <input type="text" id="catIcon" class="form-control" value="🔥" required>
-          </div>
-        </div>
-        <div class="modal-actions">
-          <button type="button" class="btn btn-danger" id="deleteCatBtn" style="margin-right:auto; display:none;" onclick="confirmDeleteCurrentCategory()">Delete Category</button>
-          <button type="button" class="btn" onclick="closeModal('catModal')">Cancel</button>
-          <button type="submit" class="btn btn-primary">Save Category</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- Yard Config Modal -->
-  <div class="modal-backdrop" id="yardModal">
-    <div class="modal" id="yardModalBox" data-maximized="false">
-      <div class="modal-header">
-        <span>Exterior Yard & Parking Configurator</span>
-        <div style="display:flex; gap:6px; align-items:center;">
-          <button class="icon-btn" type="button" title="Maximize Modal" onclick="toggleMaximizeModal('yardModalBox')">⛶</button>
-          <span style="cursor:pointer; font-size:14px;" onclick="closeModal('yardModal')">✕</span>
-        </div>
-      </div>
-      <form onsubmit="saveYardConfig(event)">
-        <div class="form-group">
-          <label>North Staff Parking Depth (px/ft)</label>
-          <input type="number" id="yardNorth" class="form-control" value="120" required>
-        </div>
-        <div class="form-group">
-          <label>South Truck Staging Depth (px/ft)</label>
-          <input type="number" id="yardSouth" class="form-control" value="160" required>
-        </div>
-        <div class="form-group">
-          <label>East Entry Lot Width (px/ft)</label>
-          <input type="number" id="yardEast" class="form-control" value="100" required>
-        </div>
-        <div class="form-group">
-          <label>West Margin Width (px/ft)</label>
-          <input type="number" id="yardWest" class="form-control" value="100" required>
-        </div>
-        <div class="modal-actions">
-          <button type="button" class="btn" onclick="closeModal('yardModal')">Cancel</button>
-          <button type="submit" class="btn btn-primary">Update Yard Layout</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- Custom Confirmation Dialog -->
-  <div class="modal-backdrop" id="confirmModal">
-    <div class="modal" style="width:360px;">
-      <div class="modal-header">
-        <span id="confirmTitle">Confirm Action</span>
-        <span style="cursor:pointer" onclick="closeModal('confirmModal')">✕</span>
-      </div>
-      <p id="confirmMessage" style="font-size:12px; color:#b0bec5; line-height:1.5; margin-bottom:16px;"></p>
-      <div class="modal-actions">
-        <button type="button" class="btn" onclick="closeModal('confirmModal')">Cancel</button>
-        <button type="button" class="btn btn-danger" id="confirmActionBtn">Confirm</button>
-      </div>
-    </div>
-  </div>
-
-  <div class="toast-container" id="toastContainer"></div>
-
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-    import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-    import { getFirestore, doc, setDoc, deleteDoc, onSnapshot, collection } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
-    const appId = 'facility-blueprint-app';
-    
-    // YOUR FIREBASE CONFIGURATION
-    const firebaseConfig = {
-      apiKey: "AIzaSyAJX40zI8_Y7MlpG5-xHNHHQsmzRoKCabY",
-      authDomain: "imi1-interactive-map.firebaseapp.com",
-      projectId: "imi1-interactive-map",
-      storageBucket: "imi1-interactive-map.firebasestorage.app",
-      messagingSenderId: "396990647633",
-      appId: "1:396990647633:web:2b4d7c962f2a707d121770",
-      measurementId: "G-EZV4DWYS5F"
-    };
-
-    let db = null;
-    let auth = null;
-    let user = null;
-    let confirmCallback = null;
-
-    const state = {
-      level: 'ground',
-      placementMode: false,
-      scale: 1,
-      panX: 50,
-      panY: 50,
-      isPanning: false,
-      startX: 0,
-      startY: 0,
-      categories: [
-        { id: 'elec', name: 'Electrical Panels', color: '#e65100', icon: '⚡' },
-        { id: 'plumb', name: 'Plumbing / Water', color: '#0288d1', icon: '💧' },
-        { id: 'hvac', name: 'HVAC / Controls', color: '#2e7d32', icon: '❄️' }
-      ],
-      yard: { north: 120, south: 160, east: 100, west: 100 },
-      assets: [
-        { id: '1', name: 'Main Distribution Panel MDP-1', category: 'elec', level: 'ground', x: 280, y: 180, grid: 'A-2', notes: '480V 3-Phase Main Switch' },
-        { id: '2', name: 'Water Main Shutoff', category: 'plumb', level: 'ground', x: 520, y: 180, grid: 'A-5', notes: '3-inch main valve' },
-        { id: '3', name: 'MEZZ Air Handler AHU-2', category: 'hvac', level: 'mezz', x: 340, y: 620, grid: 'K-6', notes: 'Mezzanine cooling unit' },
-        { id: '4', name: 'Rooftop Package Unit RTU-1', category: 'hvac', level: 'roof', x: 600, y: 300, grid: 'D-12', notes: 'Main office RTU' }
-      ]
-    };
-
-    const canvas = document.getElementById('mapCanvas');
-    const ctx = canvas.getContext('2d');
-    const container = document.getElementById('mapContainer');
-
-    function showToast(msg, type = 'normal') {
-      const toastContainer = document.getElementById('toastContainer');
-      const toast = document.createElement('div');
-      toast.className = `toast ${type}`;
-      toast.innerHTML = `<span>${type === 'success' ? '✅' : type === 'error' ? '⚠️' : 'ℹ️'}</span> ${msg}`;
-      toastContainer.appendChild(toast);
-      setTimeout(() => {
-        toast.style.opacity = '0';
-        toast.style.transition = 'opacity 0.3s';
-        setTimeout(() => toast.remove(), 300);
-      }, 3000);
-    }
-
-    window.shareLiveLink = () => {
-      const url = window.location.href;
-      const dummy = document.createElement('input');
-      document.body.appendChild(dummy);
-      dummy.value = url;
-      dummy.select();
-      document.execCommand('copy');
-      document.body.removeChild(dummy);
-      showToast("Live collaborative link copied to clipboard! Anyone with this link can view and collaborate in real time.", "success");
-    };
-
-    function customConfirm(title, message, onConfirm) {
-      document.getElementById('confirmTitle').innerText = title;
-      document.getElementById('confirmMessage').innerText = message;
-      confirmCallback = onConfirm;
-      openModal('confirmModal');
-    }
-
-    document.getElementById('confirmActionBtn').onclick = () => {
-      if (confirmCallback) confirmCallback();
-      closeModal('confirmModal');
-    };
-
-    window.toggleMinimizeSidebar = () => {
-      const sidebar = document.getElementById('sidebar');
-      sidebar.classList.toggle('minimized');
-      setTimeout(resizeCanvas, 320);
-    };
-
-    window.toggleMaximizeSidebar = () => {
-      const sidebar = document.getElementById('sidebar');
-      if (sidebar.classList.contains('minimized')) return;
-      
-      const isMax = sidebar.dataset.maximized === 'true';
-      if (isMax) {
-        sidebar.dataset.maximized = 'false';
-        sidebar.style.width = '330px';
-      } else {
-        sidebar.dataset.maximized = 'true';
-        sidebar.style.width = '550px';
-      }
-      setTimeout(resizeCanvas, 320);
-    };
-
-    window.toggleMaximizeModal = (modalBoxId) => {
-      const box = document.getElementById(modalBoxId);
-      const isMax = box.dataset.maximized === 'true';
-      if (isMax) {
-        box.dataset.maximized = 'false';
-        box.style.width = '440px';
-        box.style.height = 'auto';
-      } else {
-        box.dataset.maximized = 'true';
-        box.style.width = '92vw';
-        box.style.height = '85vh';
-      }
-    };
-
-    const getCategoriesCol = () => collection(db, 'artifacts', appId, 'public', 'data', 'categories');
-    const getAssetsCol = () => collection(db, 'artifacts', appId, 'public', 'data', 'assets');
-    const getYardDocRef = () => doc(db, 'artifacts', appId, 'public', 'data', 'config', 'yard');
-
-    async function initFirebase() {
-      try {
-        const app = initializeApp(firebaseConfig);
-        auth = getAuth(app);
-        db = getFirestore(app);
-
-        const res = await signInAnonymously(auth);
-        user = res.user;
-
-        if (user) {
-          updateCloudStatus(true, `Synced Live (${user.uid.slice(0, 6)}...)`);
-          setupFirestoreListeners();
-        }
-      } catch (err) {
-        console.error("Firebase init failed:", err);
-        updateCloudStatus(false, "Offline / Local Mode");
-        renderCategoryList();
-        renderAssetList();
-        draw();
-      }
-    }
-
-    function updateCloudStatus(connected, text) {
-      const badge = document.getElementById('cloudStatusBadge');
-      const textElem = document.getElementById('cloudStatusText');
-      if (connected) {
-        badge.classList.add('connected');
-      } else {
-        badge.classList.remove('connected');
-      }
-      textElem.innerText = text;
-    }
-
-    function setupFirestoreListeners() {
-      if (!user || !db) return;
-
-      onSnapshot(getCategoriesCol(), (snapshot) => {
-        if (snapshot.empty) {
-          seedCategoriesToCloud();
-        } else {
-          const cats = [];
-          snapshot.forEach(docSnap => cats.push({ id: docSnap.id, ...docSnap.data() }));
-          state.categories = cats;
-          renderCategoryList();
-          populateCategorySelect();
-          renderAssetList();
-          draw();
-        }
-      }, (err) => console.error("Categories snapshot error:", err));
-
-      onSnapshot(getAssetsCol(), (snapshot) => {
-        if (snapshot.empty) {
-          seedAssetsToCloud();
-        } else {
-          const asts = [];
-          snapshot.forEach(docSnap => asts.push({ id: docSnap.id, ...docSnap.data() }));
-          state.assets = asts;
-          renderAssetList();
-          draw();
-        }
-      }, (err) => console.error("Assets snapshot error:", err));
-
-      onSnapshot(getYardDocRef(), (docSnap) => {
-        if (docSnap.exists()) {
-          state.yard = docSnap.data();
-          draw();
-        } else {
-          seedYardToCloud();
-        }
-      }, (err) => console.error("Yard snapshot error:", err));
-    }
-
-    async function seedCategoriesToCloud() {
-      if (!user || !db) return;
-      for (const cat of state.categories) {
-        await setDoc(doc(getCategoriesCol(), cat.id), cat);
-      }
-    }
-
-    async function seedAssetsToCloud() {
-      if (!user || !db) return;
-      for (const asset of state.assets) {
-        await setDoc(doc(getAssetsCol(), asset.id), asset);
-      }
-    }
-
-    async function seedYardToCloud() {
-      if (!user || !db) return;
-      await setDoc(getYardDocRef(), state.yard);
-    }
-
-    function resizeCanvas() {
-      canvas.width = container.clientWidth;
-      canvas.height = container.clientHeight;
-      draw();
-    }
-    window.addEventListener('resize', resizeCanvas);
-
-    window.togglePlacementMode = () => {
-      state.placementMode = !state.placementMode;
-      const btn = document.getElementById('addAssetBtn');
-      const statusText = document.getElementById('addAssetStatus');
-      const badge = document.getElementById('modeBadge');
-      
-      if (state.placementMode) {
-        btn.classList.add('btn-active-mode');
-        statusText.innerText = 'ON (Click Map)';
-        container.classList.add('placement-mode');
-        badge.innerText = 'ADD ASSET MODE';
-        badge.classList.add('active');
-      } else {
-        btn.classList.remove('btn-active-mode');
-        statusText.innerText = 'OFF';
-        container.classList.remove('placement-mode');
-        badge.innerText = 'PAN MODE';
-        badge.classList.remove('active');
-      }
-    };
-
-    function screenToCanvasCoords(screenX, screenY) {
-      const rect = canvas.getBoundingClientRect();
-      const x = Math.round((screenX - rect.left - state.panX) / state.scale);
-      const y = Math.round((screenY - rect.top - state.panY) / state.scale);
-      return { x, y };
-    }
-
-    function getGridRef(x, y) {
-      const col = Math.max(1, Math.min(30, Math.floor(x / 60) + 1));
-      const rowIdx = Math.floor(y / 60);
-      const rows = ['A','B','C','D','E','F','G','H','I','J','K','L','M'];
-      
-      if (rowIdx >= 12 || y >= 720) {
-        return `M.9-${col}`;
-      }
-      return `${rows[Math.max(0, rowIdx)] || 'M'}-${col}`;
-    }
-
-    function draw() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.save();
-      ctx.translate(state.panX, state.panY);
-      ctx.scale(state.scale, state.scale);
-
-      const buildingWidth = 1800;
-
-      const yardX = -state.yard.west;
-      const yardY = -state.yard.north;
-      const yardWidth = buildingWidth + state.yard.west + state.yard.east;
-      const yardHeight = 780 + state.yard.north + state.yard.south;
-
-      ctx.fillStyle = 'rgba(33, 150, 243, 0.12)';
-      ctx.fillRect(yardX, yardY, yardWidth, yardHeight);
-
-      ctx.strokeStyle = '#2196f3';
-      ctx.lineWidth = 2;
-      ctx.setLineDash([8, 6]);
-      ctx.strokeRect(yardX, yardY, yardWidth, yardHeight);
-      ctx.setLineDash([]);
-
-      ctx.fillStyle = '#64b5f6';
-      ctx.font = 'bold 12px sans-serif';
-      ctx.fillText('EXTERIOR / YARD ZONE', yardX + 15, yardY + 25);
-
-      ctx.fillStyle = '#141824';
-      ctx.strokeStyle = '#40c4ff';
-      ctx.lineWidth = 3;
-      ctx.fillRect(0, 0, buildingWidth, 780);
-      ctx.strokeRect(0, 0, buildingWidth, 780);
-
-      // Grid lines
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
-      ctx.lineWidth = 1;
-      for (let x = 0; x <= buildingWidth; x += 60) {
-        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, 780); ctx.stroke();
-      }
-      for (let y = 0; y <= 780; y += 60) {
-        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(buildingWidth, y); ctx.stroke();
-      }
-
-      // Draw Assets for Current Level
-      const visibleAssets = state.assets.filter(a => a.level === state.level);
-      visibleAssets.forEach(asset => {
-        const cat = state.categories.find(c => c.id === asset.category) || { color: '#2196f3', icon: '📍' };
+    <main class="flex-1 p-6 grid grid-cols-1 lg:grid-cols-4 gap-6 max-w-7xl mx-auto w-full">
         
-        ctx.beginPath();
-        ctx.arc(asset.x, asset.y, 14, 0, Math.PI * 2);
-        ctx.fillStyle = cat.color;
-        ctx.fill();
-        ctx.lineWidth = 2;
-        ctx.strokeStyle = '#fff';
-        ctx.stroke();
+        <!-- Sidebar Controls & Asset Inventory -->
+        <div class="lg:col-span-1 flex flex-col space-y-6">
+            <div class="bg-slate-800/80 backdrop-blur border border-slate-700/80 rounded-2xl p-5 shadow-xl flex flex-col h-[calc(100vh-14rem)]">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="font-semibold text-slate-200 flex items-center space-x-2">
+                        <i class="fa-solid fa-boxes-stacked text-blue-400"></i>
+                        <span>Facility Assets</span>
+                    </h2>
+                    <span id="asset-count" class="text-xs bg-slate-700 px-2.5 py-1 rounded-full text-slate-300 font-medium">0 items</span>
+                </div>
 
-        ctx.font = '14px sans-serif';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(cat.icon, asset.x, asset.y);
+                <!-- Search Filter -->
+                <div class="relative mb-4">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-slate-400 text-xs"></i>
+                    <input type="text" id="asset-search" oninput="filterAssets()" placeholder="Search assets..." class="w-full bg-slate-900 border border-slate-700 rounded-xl pl-9 pr-4 py-2 text-sm text-slate-200 focus:outline-none focus:border-blue-500 transition">
+                </div>
 
-        ctx.font = 'bold 11px sans-serif';
-        ctx.fillStyle = '#fff';
-        ctx.textAlign = 'left';
-        ctx.fillText(asset.name, asset.x + 18, asset.y + 4);
-      });
-
-      ctx.restore();
-    }
-
-    // Interaction Handlers
-    canvas.addEventListener('mousedown', (e) => {
-      if (e.button !== 0) return;
-      const coords = screenToCanvasCoords(e.clientX, e.clientY);
-
-      if (state.placementMode) {
-        openAssetModalForNew(coords.x, coords.y, getGridRef(coords.x, coords.y));
-        togglePlacementMode();
-        return;
-      }
-
-      state.isPanning = true;
-      container.classList.add('panning');
-      state.startX = e.clientX - state.panX;
-      state.startY = e.clientY - state.panY;
-    });
-
-    window.addEventListener('mousemove', (e) => {
-      const coords = screenToCanvasCoords(e.clientX, e.clientY);
-      document.getElementById('coordText').innerText = `X: ${coords.x} | Y: ${coords.y} | Grid: ${getGridRef(coords.x, coords.y)}`;
-
-      if (!state.isPanning) return;
-      state.panX = e.clientX - state.startX;
-      state.panY = e.clientY - state.startY;
-      draw();
-    });
-
-    window.addEventListener('mouseup', () => {
-      state.isPanning = false;
-      container.classList.remove('panning');
-    });
-
-    canvas.addEventListener('wheel', (e) => {
-      e.preventDefault();
-      const zoomFactor = e.deltaY < 0 ? 1.15 : 0.85;
-      const newScale = Math.max(0.2, Math.min(4, state.scale * zoomFactor));
-      
-      const rect = canvas.getBoundingClientRect();
-      const mouseX = e.clientX - rect.left;
-      const mouseY = e.clientY - rect.top;
-
-      state.panX = mouseX - (mouseX - state.panX) * (newScale / state.scale);
-      state.panY = mouseY - (mouseY - state.panY) * (newScale / state.scale);
-      state.scale = newScale;
-      draw();
-    }, { passive: false });
-
-    window.setLevel = (lvl, e) => {
-      state.level = lvl;
-      document.querySelectorAll('.level-btn').forEach(b => b.classList.remove('active'));
-      if (e && e.target) e.target.classList.add('active');
-      renderAssetList();
-      draw();
-    };
-
-    window.resetView = () => {
-      state.scale = 1;
-      state.panX = 50;
-      state.panY = 50;
-      draw();
-    };
-
-    window.zoomButtonHandler = (factor) => {
-      state.scale = Math.max(0.2, Math.min(4, state.scale * factor));
-      draw();
-    };
-
-    function populateCategorySelect() {
-      const select = document.getElementById('assetCategory');
-      select.innerHTML = state.categories.map(c => `<option value="${c.id}">${c.icon} ${c.name}</option>`).join('');
-    }
-
-    window.renderCategoryList = () => {
-      const list = document.getElementById('categoryList');
-      list.innerHTML = state.categories.map(c => `
-        <div class="cat-item">
-          <div class="cat-info">
-            <span class="cat-dot" style="background:${c.color}"></span>
-            <span>${c.icon} ${c.name}</span>
-          </div>
-          <div class="cat-actions">
-            <button class="icon-btn" onclick="openCatModalForEdit('${c.id}')" title="Edit">✏️</button>
-          </div>
+                <!-- Asset List container -->
+                <div id="asset-list" class="flex-1 overflow-y-auto space-y-3 pr-1 custom-scrollbar">
+                    <div class="text-center py-12 text-slate-500 text-sm">
+                        <i class="fa-solid fa-spinner animate-spin text-2xl mb-2 text-blue-400"></i>
+                        <p>Loading assets from database...</p>
+                    </div>
+                </div>
+            </div>
         </div>
-      `).join('');
-      populateCategorySelect();
-    };
 
-    window.renderAssetList = () => {
-      const query = (document.getElementById('searchBox')?.value || '').toLowerCase();
-      const filtered = state.assets.filter(a => 
-        a.name.toLowerCase().includes(query) || 
-        (a.grid && a.grid.toLowerCase().includes(query)) ||
-        (a.notes && a.notes.toLowerCase().includes(query))
-      );
+        <!-- Blueprint Interactive Floor Plan View -->
+        <div class="lg:col-span-3 flex flex-col">
+            <div class="bg-slate-800/80 backdrop-blur border border-slate-700/80 rounded-2xl p-5 shadow-xl flex-1 flex flex-col relative overflow-hidden min-h-[550px]">
+                
+                <div class="flex justify-between items-center mb-4 z-10">
+                    <div>
+                        <h2 class="font-semibold text-slate-200">Interactive Floor Plan</h2>
+                        <p class="text-xs text-slate-400">Click anywhere on the blueprint grid to place or register new equipment</p>
+                    </div>
+                    <div class="flex space-x-2 bg-slate-900/80 p-1.5 rounded-xl border border-slate-700">
+                        <button onclick="setZoneFilter('all')" id="filter-all" class="px-3 py-1 rounded-lg text-xs font-medium bg-blue-600 text-white transition">All Zones</button>
+                        <button onclick="setZoneFilter('Server Room')" id="filter-server" class="px-3 py-1 rounded-lg text-xs font-medium text-slate-400 hover:text-white transition">Servers</button>
+                        <button onclick="setZoneFilter('Operations')" id="filter-ops" class="px-3 py-1 rounded-lg text-xs font-medium text-slate-400 hover:text-white transition">Operations</button>
+                    </div>
+                </div>
 
-      document.getElementById('assetCount').innerText = filtered.length;
-      const containerElem = document.getElementById('assetCards');
-      
-      containerElem.innerHTML = filtered.map(a => {
-        const cat = state.categories.find(c => c.id === a.category) || { color: '#2196f3', icon: '📍' };
-        return `
-          <div class="asset-card" onclick="focusAsset('${a.id}')">
-            <div class="asset-title">
-              <span>${cat.icon} ${a.name}</span>
+                <!-- Blueprint Canvas Area -->
+                <div id="blueprint-canvas" onclick="handleCanvasClick(event)" class="blueprint-grid flex-1 bg-slate-900/60 rounded-xl border border-slate-700/60 relative overflow-hidden cursor-crosshair flex items-center justify-center">
+                    
+                    <!-- Blueprint Room Outlines (SVG overlay) -->
+                    <svg class="absolute inset-0 w-full h-full pointer-events-none opacity-20" xmlns="http://www.w3.org/2000/svg">
+                        <rect x="50" y="50" width="300" height="200" fill="none" stroke="#3b82f6" stroke-width="2" stroke-dasharray="6 6"/>
+                        <text x="70" y="80" fill="#3b82f6" font-size="14" font-weight="bold">Server Room A</text>
+                        
+                        <rect x="380" y="50" width="350" height="200" fill="none" stroke="#10b981" stroke-width="2" stroke-dasharray="6 6"/>
+                        <text x="400" y="80" fill="#10b981" font-size="14" font-weight="bold">Operations Center</text>
+
+                        <rect x="50" y="280" width="680" height="180" fill="none" stroke="#f59e0b" stroke-width="2" stroke-dasharray="6 6"/>
+                        <text x="70" y="310" fill="#f59e0b" font-size="14" font-weight="bold">Main Warehouse & Logistics</text>
+                    </svg>
+
+                    <!-- Dynamic Asset Marker Pins rendered here -->
+                    <div id="blueprint-pins" class="absolute inset-0 pointer-events-auto"></div>
+
+                    <!-- Empty state placeholder -->
+                    <div id="blueprint-empty" class="text-center pointer-events-none z-10 transition opacity-0">
+                        <div class="w-16 h-16 bg-blue-500/10 text-blue-400 rounded-full flex items-center justify-center mx-auto mb-3 border border-blue-500/20">
+                            <i class="fa-solid fa-map-pin text-xl"></i>
+                        </div>
+                        <h3 class="text-slate-300 font-medium text-sm">Blueprint is ready</h3>
+                        <p class="text-slate-500 text-xs mt-1">Click anywhere on the grid or use 'Add Asset' to place equipment</p>
+                    </div>
+                </div>
+
             </div>
-            <div class="asset-meta">
-              <span>Grid: <strong>${a.grid || 'N/A'}</strong></span>
-              <span>Level: <strong>${a.level}</strong></span>
+        </div>
+
+    </main>
+
+    <div id="asset-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-slate-800 border border-slate-700 rounded-2xl max-w-md w-full p-6 shadow-2xl">
+            <div class="flex justify-between items-center mb-5">
+                <h3 id="modal-title" class="text-lg font-bold text-white flex items-center space-x-2">
+                    <i class="fa-solid fa-circle-plus text-blue-500"></i>
+                    <span>Register New Facility Asset</span>
+                </h3>
+                <button onclick="closeAssetModal()" class="text-slate-400 hover:text-white transition">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
             </div>
-            <div class="asset-actions">
-              <button class="icon-btn" onclick="event.stopPropagation(); openAssetModalForEdit('${a.id}')" title="Edit">✏️</button>
-            </div>
-          </div>
-        `;
-      }).join('');
-    };
 
-    window.focusAsset = (id) => {
-      const asset = state.assets.find(a => a.id === id);
-      if (!asset) return;
-      setLevel(asset.level);
-      state.panX = (canvas.width / 2) - (asset.x * state.scale);
-      state.panY = (canvas.height / 2) - (asset.y * state.scale);
-      draw();
-    };
+            <form id="asset-form" onsubmit="saveAsset(event)" class="space-y-4">
+                <input type="hidden" id="asset-id">
+                <input type="hidden" id="asset-x" value="50">
+                <input type="hidden" id="asset-y" value="50">
 
-    // Modal Helpers
-    window.openModal = (id) => document.getElementById(id).style.display = 'flex';
-    window.closeModal = (id) => document.getElementById(id).style.display = 'none';
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">Asset Name</label>
+                    <input type="text" id="form-name" required placeholder="e.g. Rack Server Alpha" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-slate-100 focus:outline-none focus:border-blue-500 transition">
+                </div>
 
-    window.openAssetModalForNew = (x, y, grid) => {
-      document.getElementById('modalTitle').innerText = 'Add System Asset';
-      document.getElementById('assetId').value = '';
-      document.getElementById('assetName').value = '';
-      document.getElementById('assetX').value = x;
-      document.getElementById('assetY').value = y;
-      document.getElementById('assetGrid').value = grid;
-      document.getElementById('assetNotes').value = '';
-      document.getElementById('assetLevel').value = state.level;
-      document.getElementById('deleteAssetBtn').style.display = 'none';
-      openModal('assetModal');
-    };
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">Category</label>
+                        <select id="form-category" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-slate-100 focus:outline-none focus:border-blue-500 transition">
+                            <option value="Server">Server / IT</option>
+                            <option value="HVAC">HVAC / Climate</option>
+                            <option value="Security">Security & Access</option>
+                            <option value="Electrical">Electrical Power</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">Zone</label>
+                        <select id="form-zone" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-slate-100 focus:outline-none focus:border-blue-500 transition">
+                            <option value="Server Room">Server Room A</option>
+                            <option value="Operations">Operations Center</option>
+                            <option value="Warehouse">Main Warehouse</option>
+                        </select>
+                    </div>
+                </div>
 
-    window.openAssetModalForEdit = (id) => {
-      const asset = state.assets.find(a => a.id === id);
-      if (!asset) return;
-      document.getElementById('modalTitle').innerText = 'Edit System Asset';
-      document.getElementById('assetId').value = asset.id;
-      document.getElementById('assetName').value = asset.name;
-      document.getElementById('assetCategory').value = asset.category;
-      document.getElementById('assetLevel').value = asset.level;
-      document.getElementById('assetX').value = asset.x;
-      document.getElementById('assetY').value = asset.y;
-      document.getElementById('assetGrid').value = asset.grid || '';
-      document.getElementById('assetNotes').value = asset.notes || '';
-      document.getElementById('deleteAssetBtn').style.display = 'block';
-      openModal('assetModal');
-    };
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">Status</label>
+                    <select id="form-status" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-slate-100 focus:outline-none focus:border-blue-500 transition">
+                        <option value="Active">Operational / Active</option>
+                        <option value="Warning">Warning / Maintenance Due</option>
+                        <option value="Offline">Offline / Critical</option>
+                    </select>
+                </div>
 
-    window.saveAsset = async (e) => {
-      e.preventDefault();
-      const id = document.getElementById('assetId').value || 'ast_' + Date.now();
-      const assetData = {
-        id,
-        name: document.getElementById('assetName').value,
-        category: document.getElementById('assetCategory').value,
-        level: document.getElementById('assetLevel').value,
-        x: Number(document.getElementById('assetX').value),
-        y: Number(document.getElementById('assetY').value),
-        grid: document.getElementById('assetGrid').value,
-        notes: document.getElementById('assetNotes').value
-      };
+                <div class="flex justify-end space-x-3 pt-4 border-t border-slate-700">
+                    <button type="button" onclick="closeAssetModal()" class="px-4 py-2 rounded-xl text-sm font-medium text-slate-300 hover:bg-slate-700 transition">Cancel</button>
+                    <button type="submit" class="px-5 py-2 rounded-xl text-sm font-medium bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-600/20 transition">Save Asset</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
-      if (user && db) {
-        await setDoc(doc(getAssetsCol(), id), assetData);
-        showToast("Asset saved to live cloud database!", "success");
-      } else {
-        const idx = state.assets.findIndex(a => a.id === id);
-        if (idx >= 0) state.assets[idx] = assetData;
-        else state.assets.push(assetData);
-        renderAssetList();
-        draw();
-        showToast("Asset saved locally.", "success");
-      }
-      closeModal('assetModal');
-    };
+    <div id="toast" class="fixed bottom-6 right-6 bg-slate-800 border border-slate-700 text-slate-200 px-4 py-3 rounded-xl shadow-2xl flex items-center space-x-3 translate-y-20 opacity-0 transition-all duration-300 z-50">
+        <div id="toast-icon" class="text-emerald-400"><i class="fa-solid fa-circle-check"></i></div>
+        <div id="toast-message" class="text-sm font-medium">Notification message</div>
+    </div>
 
-    window.confirmDeleteCurrentAsset = () => {
-      const id = document.getElementById('assetId').value;
-      customConfirm("Delete Asset", "Are you sure you want to permanently delete this asset from the facility map?", async () => {
-        if (user && db) {
-          await deleteDoc(doc(getAssetsCol(), id));
-          showToast("Asset deleted from cloud.", "success");
-        } else {
-          state.assets = state.assets.filter(a => a.id !== id);
-          renderAssetList();
-          draw();
-          showToast("Asset deleted locally.", "success");
-        }
-        closeModal('assetModal');
-      });
-    };
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-    window.openCatModalForNew = () => {
-      document.getElementById('catModalTitle').innerText = 'Add System Category';
-      document.getElementById('catId').value = '';
-      document.getElementById('catName').value = '';
-      document.getElementById('catColor').value = '#ff9800';
-      document.getElementById('catIcon').value = '🔧';
-      document.getElementById('deleteCatBtn').style.display = 'none';
-      openModal('catModal');
-    };
+        // Global application state variables
+        window.allAssets = [];
+        window.currentFilter = 'all';
+        window.currentZoneFilter = 'all';
+        window.db = null;
+        window.auth = null;
 
-    window.openCatModalForEdit = (id) => {
-      const cat = state.categories.find(c => c.id === id);
-      if (!cat) return;
-      document.getElementById('catModalTitle').innerText = 'Edit System Category';
-      document.getElementById('catId').value = cat.id;
-      document.getElementById('catName').value = cat.name;
-      document.getElementById('catColor').value = cat.color;
-      document.getElementById('catIcon').value = cat.icon;
-      document.getElementById('deleteCatBtn').style.display = 'block';
-      openModal('catModal');
-    };
+        const firebaseConfig = typeof __firebase_config !== 'undefined' 
+            ? JSON.parse(__firebase_config) 
+            : { apiKey: "demo-key", projectId: "demo-project", authDomain: "demo.firebaseapp.com" };
 
-    window.saveCategory = async (e) => {
-      e.preventDefault();
-      const id = document.getElementById('catId').value || 'cat_' + Date.now();
-      const catData = {
-        id,
-        name: document.getElementById('catName').value,
-        color: document.getElementById('catColor').value,
-        icon: document.getElementById('catIcon').value
-      };
-
-      if (user && db) {
-        await setDoc(doc(getCategoriesCol(), id), catData);
-        showToast("Category saved to live cloud!", "success");
-      } else {
-        const idx = state.categories.findIndex(c => c.id === id);
-        if (idx >= 0) state.categories[idx] = catData;
-        else state.categories.push(catData);
-        renderCategoryList();
-        showToast("Category saved locally.", "success");
-      }
-      closeModal('catModal');
-    };
-
-    window.confirmDeleteCurrentCategory = () => {
-      const id = document.getElementById('catId').value;
-      customConfirm("Delete Category", "Deleting this category will remove it from filter options. Continue?", async () => {
-        if (user && db) {
-          await deleteDoc(doc(getCategoriesCol(), id));
-          showToast("Category deleted from cloud.", "success");
-        } else {
-          state.categories = state.categories.filter(c => c.id !== id);
-          renderCategoryList();
-          showToast("Category deleted locally.", "success");
-        }
-        closeModal('catModal');
-      });
-    };
-
-    window.openYardModal = () => {
-      document.getElementById('yardNorth').value = state.yard.north;
-      document.getElementById('yardSouth').value = state.yard.south;
-      document.getElementById('yardEast').value = state.yard.east;
-      document.getElementById('yardWest').value = state.yard.west;
-      openModal('yardModal');
-    };
-
-    window.saveYardConfig = async (e) => {
-      e.preventDefault();
-      const yardData = {
-        north: Number(document.getElementById('yardNorth').value),
-        south: Number(document.getElementById('yardSouth').value),
-        east: Number(document.getElementById('yardEast').value),
-        west: Number(document.getElementById('yardWest').value)
-      };
-
-      if (user && db) {
-        await setDoc(getYardDocRef(), yardData);
-        showToast("Yard layout updated in live cloud!", "success");
-      } else {
-        state.yard = yardData;
-        draw();
-        showToast("Yard layout updated locally.", "success");
-      }
-      closeModal('yardModal');
-    };
-
-    window.exportJSON = () => {
-      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state, null, 2));
-      const dlAnchor = document.createElement('a');
-      dlAnchor.setAttribute("href", dataStr);
-      dlAnchor.setAttribute("download", "facility_blueprint_backup.json");
-      document.body.appendChild(dlAnchor);
-      dlAnchor.click();
-      dlAnchor.remove();
-      showToast("Blueprint backup exported successfully.", "success");
-    };
-
-    window.importJSON = (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = async (evt) => {
         try {
-          const imported = JSON.parse(evt.target.result);
-          if (imported.categories) state.categories = imported.categories;
-          if (imported.assets) state.assets = imported.assets;
-          if (imported.yard) state.yard = imported.yard;
+            const app = initializeApp(firebaseConfig);
+            window.db = getFirestore(app);
+            window.auth = getAuth(app);
 
-          if (user && db) {
-            await seedCategoriesToCloud();
-            await seedAssetsToCloud();
-            await seedYardToCloud();
-          }
+            const statusEl = document.getElementById('connection-status');
+            
+            const handleAuth = async () => {
+                try {
+                    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                        await signInWithCustomToken(window.auth, __initial_auth_token);
+                    } else {
+                        await signInAnonymously(window.auth);
+                    }
+                    statusEl.className = "flex items-center space-x-2 px-3 py-1.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full text-xs font-medium";
+                    statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-400"></span><span>Live Cloud Connected</span>`;
+                    initFirestoreListener();
+                } catch (err) {
+                    console.error("Auth error:", err);
+                    statusEl.className = "flex items-center space-x-2 px-3 py-1.5 bg-rose-500/10 text-rose-400 border border-rose-500/20 rounded-full text-xs font-medium";
+                    statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-rose-400"></span><span>Connection Error</span>`;
+                    loadLocalFallback();
+                }
+            };
 
-          renderCategoryList();
-          renderAssetList();
-          draw();
-          showToast("Blueprint state imported successfully!", "success");
-        } catch (err) {
-          showToast("Invalid JSON backup file.", "error");
+            handleAuth();
+        } catch (e) {
+            console.warn("Firebase initialization fallback active:", e);
+            loadLocalFallback();
         }
-      };
-      reader.readAsText(file);
-    };
 
-    // Initialize application on load
-    window.addEventListener('load', () => {
-      resizeCanvas();
-      initFirebase();
-    });
-  </script>
+        function initFirestoreListener() {
+            if (!window.db) return;
+            // Direct collection path avoiding any 404 artifact path issues
+            const assetsRef = collection(window.db, 'facility_assets');
+            
+            onSnapshot(assetsRef, (snapshot) => {
+                window.allAssets = [];
+                snapshot.forEach((docSnap) => {
+                    window.allAssets.push({ id: docSnap.id, ...docSnap.data() });
+                });
+                
+                if (window.allAssets.length === 0) {
+                    seedInitialData();
+                } else {
+                    renderApp();
+                }
+            }, (error) => {
+                console.error("Firestore snapshot error:", error);
+                showToast("Cloud sync error. Using local cache.", "error");
+                loadLocalFallback();
+            });
+        }
+
+        async function seedInitialData() {
+            const defaultAssets = [
+                { name: "Core Server Rack 01", category: "Server", zone: "Server Room", status: "Active", x: 25, y: 35 },
+                { name: "HVAC Unit Primary", category: "HVAC", zone: "Operations", status: "Active", x: 65, y: 40 },
+                { name: "Security Gateway Hub", category: "Security", zone: "Operations", status: "Warning", x: 80, y: 60 },
+                { name: "Backup Generator B", category: "Electrical", zone: "Warehouse", status: "Active", x: 40, y: 75 }
+            ];
+
+            try {
+                for (let item of defaultAssets) {
+                    await addDoc(collection(window.db, 'facility_assets'), item);
+                }
+            } catch (err) {
+                console.error("Seeding error:", err);
+            }
+        }
+
+        function loadLocalFallback() {
+            if (!localStorage.getItem('facility_assets_fallback')) {
+                const initial = [
+                    { id: "local-1", name: "Core Server Rack 01", category: "Server", zone: "Server Room", status: "Active", x: 25, y: 35 },
+                    { id: "local-2", name: "HVAC Unit Primary", category: "HVAC", zone: "Operations", status: "Active", x: 65, y: 40 }
+                ];
+                localStorage.setItem('facility_assets_fallback', JSON.stringify(initial));
+            }
+            window.allAssets = JSON.parse(localStorage.getItem('facility_assets_fallback'));
+            renderApp();
+            
+            const statusEl = document.getElementById('connection-status');
+            statusEl.className = "flex items-center space-x-2 px-3 py-1.5 bg-blue-500/10 text-blue-400 border border-blue-500/20 rounded-full text-xs font-medium";
+            statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-blue-400"></span><span>Local Mode</span>`;
+        }
+
+        window.saveAssetToDb = async function(assetData) {
+            if (window.db && window.auth && window.auth.currentUser) {
+                try {
+                    const id = document.getElementById('asset-id').value;
+                    if (id && !id.startsWith('local-')) {
+                        await updateDoc(doc(window.db, 'facility_assets', id), assetData);
+                        showToast("Asset updated successfully in cloud");
+                    } else {
+                        await addDoc(collection(window.db, 'facility_assets'), assetData);
+                        showToast("Asset registered in cloud");
+                    }
+                    return;
+                } catch (err) {
+                    console.error("Cloud save failed:", err);
+                }
+            }
+
+            // LocalStorage fallback save
+            const id = document.getElementById('asset-id').value || 'local-' + Date.now();
+            const index = window.allAssets.findIndex(a => a.id === id);
+            if (index >= 0) {
+                window.allAssets[index] = { id, ...assetData };
+            } else {
+                window.allAssets.push({ id, ...assetData });
+            }
+            localStorage.setItem('facility_assets_fallback', JSON.stringify(window.allAssets));
+            renderApp();
+            showToast("Asset saved locally");
+        }
+
+        window.deleteAssetFromDb = async function(id) {
+            if (window.db && window.auth && window.auth.currentUser && !id.startsWith('local-')) {
+                try {
+                    await deleteDoc(doc(window.db, 'facility_assets', id));
+                    showToast("Asset removed from cloud");
+                    return;
+                } catch (err) {
+                    console.error("Cloud delete failed:", err);
+                }
+            }
+
+            window.allAssets = window.allAssets.filter(a => a.id !== id);
+            localStorage.setItem('facility_assets_fallback', JSON.stringify(window.allAssets));
+            renderApp();
+            showToast("Asset removed");
+        }
+    </script>
+
+    <script>
+        function renderApp() {
+            renderAssetList();
+            renderBlueprintPins();
+        }
+
+        function renderAssetList() {
+            const listEl = document.getElementById('asset-list');
+            const countEl = document.getElementById('asset-count');
+            const searchTerm = document.getElementById('asset-search').value.toLowerCase();
+
+            const filtered = window.allAssets.filter(asset => {
+                const matchesSearch = asset.name.toLowerCase().includes(searchTerm) || asset.category.toLowerCase().includes(searchTerm);
+                const matchesZone = window.currentZoneFilter === 'all' || asset.zone === window.currentZoneFilter;
+                return matchesSearch && matchesZone;
+            });
+
+            countEl.innerText = `${filtered.length} items`;
+
+            if (filtered.length === 0) {
+                listEl.innerHTML = `
+                    <div class="text-center py-10 text-slate-500 text-xs">
+                        <i class="fa-solid fa-folder-open text-2xl mb-2"></i>
+                        <p>No matching assets found</p>
+                    </div>`;
+                return;
+            }
+
+            listEl.innerHTML = filtered.map(asset => {
+                const statusColor = asset.status === 'Active' ? 'bg-emerald-500' : asset.status === 'Warning' ? 'bg-amber-500' : 'bg-rose-500';
+                const iconClass = asset.category === 'Server' ? 'fa-server' : asset.category === 'HVAC' ? 'fa-wind' : asset.category === 'Security' ? 'fa-shield-halved' : 'fa-bolt';
+                
+                return `
+                    <div class="asset-item bg-slate-900/90 border border-slate-700/80 rounded-xl p-3.5 flex items-center justify-between shadow-sm">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-10 h-10 rounded-xl bg-blue-600/10 border border-blue-500/20 text-blue-400 flex items-center justify-center shrink-0">
+                                <i class="fa-solid ${iconClass}"></i>
+                            </div>
+                            <div>
+                                <h4 class="text-sm font-semibold text-slate-200">${escapeHtml(asset.name)}</h4>
+                                <div class="flex items-center space-x-2 mt-0.5">
+                                    <span class="text-[10px] text-slate-400 bg-slate-800 px-2 py-0.5 rounded">${escapeHtml(asset.zone)}</span>
+                                    <span class="flex items-center text-[10px] text-slate-300">
+                                        <span class="w-1.5 h-1.5 rounded-full ${statusColor} mr-1.5"></span>
+                                        ${escapeHtml(asset.status)}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-1">
+                            <button onclick="editAsset('${asset.id}')" class="p-2 text-slate-400 hover:text-white transition rounded-lg hover:bg-slate-800" title="Edit">
+                                <i class="fa-solid fa-pen-to-square text-xs"></i>
+                            </button>
+                            <button onclick="deleteAssetFromDb('${asset.id}')" class="p-2 text-slate-400 hover:text-rose-400 transition rounded-lg hover:bg-slate-800" title="Delete">
+                                <i class="fa-solid fa-trash text-xs"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderBlueprintPins() {
+            const pinsEl = document.getElementById('blueprint-pins');
+            const emptyEl = document.getElementById('blueprint-empty');
+
+            if (window.allAssets.length === 0) {
+                emptyEl.style.opacity = '1';
+                pinsEl.innerHTML = '';
+                return;
+            } else {
+                emptyEl.style.opacity = '0';
+            }
+
+            pinsEl.innerHTML = window.allAssets.map(asset => {
+                const statusColor = asset.status === 'Active' ? 'bg-emerald-500 shadow-emerald-500/50' : asset.status === 'Warning' ? 'bg-amber-500 shadow-amber-500/50' : 'bg-rose-500 shadow-rose-500/50';
+                const iconClass = asset.category === 'Server' ? 'fa-server' : asset.category === 'HVAC' ? 'fa-wind' : asset.category === 'Security' ? 'fa-shield-halved' : 'fa-bolt';
+                const x = asset.x || 50;
+                const y = asset.y || 50;
+
+                return `
+                    <div class="absolute group cursor-pointer transition-transform hover:scale-110" style="left: ${x}%; top: ${y}%; transform: translate(-50%, -50%);" onclick="editAsset('${asset.id}')">
+                        <div class="relative flex items-center justify-center w-9 h-9 rounded-full bg-slate-800 border-2 border-slate-600 shadow-lg text-white">
+                            <i class="fa-solid ${iconClass} text-xs text-blue-400"></i>
+                            <span class="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full ${statusColor} border-2 border-slate-900 shadow"></span>
+                        </div>
+                        <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 hidden group-hover:block z-20 bg-slate-900 border border-slate-700 text-white text-[11px] px-2.5 py-1 rounded-lg shadow-xl whitespace-nowrap">
+                            <span class="font-bold">${escapeHtml(asset.name)}</span>
+                            <span class="block text-slate-400 text-[10px]">${escapeHtml(asset.zone)} • ${escapeHtml(asset.status)}</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function handleCanvasClick(event) {
+            if (event.target.closest('.group') || event.target.closest('button')) return;
+            const rect = event.currentTarget.getBoundingClientRect();
+            const x = Math.round(((event.clientX - rect.left) / rect.width) * 100);
+            const y = Math.round(((event.clientY - rect.top) / rect.height) * 100);
+
+            openAssetModal(x, y);
+        }
+
+        function openAssetModal(x = 50, y = 50) {
+            document.getElementById('asset-id').value = '';
+            document.getElementById('form-name').value = '';
+            document.getElementById('asset-x').value = x;
+            document.getElementById('asset-y').value = y;
+            document.getElementById('modal-title').innerHTML = `<i class="fa-solid fa-circle-plus text-blue-500"></i><span>Register New Asset at (${x}%, ${y}%)</span>`;
+            document.getElementById('asset-modal').classList.remove('hidden');
+        }
+
+        function editAsset(id) {
+            const asset = window.allAssets.find(a => a.id === id);
+            if (!asset) return;
+
+            document.getElementById('asset-id').value = asset.id;
+            document.getElementById('form-name').value = asset.name;
+            document.getElementById('form-category').value = asset.category;
+            document.getElementById('form-zone').value = asset.zone;
+            document.getElementById('form-status').value = asset.status;
+            document.getElementById('asset-x').value = asset.x || 50;
+            document.getElementById('asset-y').value = asset.y || 50;
+
+            document.getElementById('modal-title').innerHTML = `<i class="fa-solid fa-pen-to-square text-blue-500"></i><span>Edit Facility Asset</span>`;
+            document.getElementById('asset-modal').classList.remove('hidden');
+        }
+
+        function closeAssetModal() {
+            document.getElementById('asset-modal').classList.add('hidden');
+        }
+
+        async function saveAsset(event) {
+            event.preventDefault();
+            const assetData = {
+                name: document.getElementById('form-name').value,
+                category: document.getElementById('form-category').value,
+                zone: document.getElementById('form-zone').value,
+                status: document.getElementById('form-status').value,
+                x: parseFloat(document.getElementById('asset-x').value),
+                y: parseFloat(document.getElementById('asset-y').value)
+            };
+
+            closeAssetModal();
+            await window.saveAssetToDb(assetData);
+        }
+
+        function setZoneFilter(zone) {
+            window.currentZoneFilter = zone;
+            ['all', 'server', 'ops'].forEach(btn => {
+                const el = document.getElementById(`filter-${btn}`);
+                if (el) {
+                    el.className = "px-3 py-1 rounded-lg text-xs font-medium " + 
+                        ((btn === 'all' && zone === 'all') || (btn === 'server' && zone === 'Server Room') || (btn === 'ops' && zone === 'Operations') 
+                            ? "bg-blue-600 text-white" 
+                            : "text-slate-400 hover:text-white");
+                }
+            });
+            renderAssetList();
+        }
+
+        function filterAssets() {
+            renderAssetList();
+        }
+
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const msgEl = document.getElementById('toast-message');
+            const iconEl = document.getElementById('toast-icon');
+
+            msgEl.innerText = message;
+            iconEl.innerHTML = type === 'success' ? '<i class="fa-solid fa-circle-check text-emerald-400"></i>' : '<i class="fa-solid fa-circle-exclamation text-rose-400"></i>';
+            
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+
+        function escapeHtml(str) {
+            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        }
+    </script>
 </body>
 </html>
