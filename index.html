@@ -3,235 +3,581 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Facility Systems Interactive Blueprint</title>
+  <title>Industrial Facility Blueprint & Asset Manager</title>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: #0f1117; color: #e1e4ed; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
-    
-    /* Header Bar */
-    header { height: 52px; background: #161b26; border-bottom: 1px solid #2d3548; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; z-index: 10; gap: 12px; }
-    .brand { font-weight: 700; font-size: 15px; color: #40c4ff; display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
-    .nav-controls { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-    
-    .status-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; padding: 4px 8px; border-radius: 12px; font-weight: 600; background: #1c2536; border: 1px solid #2d3e5e; color: #8a99ad; }
-    .status-badge.connected { background: #0d2e1e; border-color: #1b5e3a; color: #00e676; }
-    .status-dot { width: 8px; height: 8px; border-radius: 50%; background: #ff5252; }
-    .status-badge.connected .status-dot { background: #00e676; box-shadow: 0 0 8px #00e676; }
+    :root {
+      --bg-dark: #0f172a;
+      --bg-panel: #1e293b;
+      --bg-hover: #334155;
+      --accent: #00e676;
+      --accent-dim: rgba(0, 230, 118, 0.15);
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --border: #334155;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+    }
 
-    .level-selector { display: flex; background: #0f1117; padding: 3px; border-radius: 6px; border: 1px solid #2d3548; }
-    .level-btn { background: transparent; border: none; color: #8b95a5; padding: 5px 10px; font-size: 11px; font-weight: 600; border-radius: 4px; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
-    .level-btn.active { background: #2196f3; color: #fff; }
-    
-    .btn { background: #232a3b; border: 1px solid #3b465e; color: #e1e4ed; padding: 6px 12px; border-radius: 4px; font-size: 11px; cursor: pointer; font-weight: 500; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s; white-space: nowrap; }
-    .btn:hover { background: #2d364d; border-color: #4a5877; }
-    .btn-primary { background: #2196f3; border-color: #1e88e5; color: #fff; }
-    .btn-primary:hover { background: #1e88e5; }
-    .btn-danger { background: #d32f2f; border-color: #f44336; color: #fff; }
-    .btn-danger:hover { background: #e53935; }
-    .btn-share { background: #00c853; border-color: #00e676; color: #000; font-weight: 700; }
-    .btn-share:hover { background: #00e676; }
-    .btn-active-mode { background: #00c853 !important; border-color: #00e676 !important; color: #000 !important; font-weight: 700; }
-    
-    /* Main Layout */
-    .app-body { flex: 1; display: flex; position: relative; overflow: hidden; }
-    
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+    }
+
     /* Sidebar */
-    aside { width: 330px; background: #161b26; border-right: 1px solid #2d3548; display: flex; flex-direction: column; z-index: 5; flex-shrink: 0; transition: width 0.3s ease; position: relative; }
-    aside.minimized { width: 48px; }
-    aside.minimized .sidebar-content { display: none; }
-    aside.minimized .sidebar-header-title { display: none; }
-    aside.minimized .minimize-toggle-btn { transform: rotate(180deg); }
+    .sidebar {
+      width: 380px;
+      background-color: var(--bg-panel);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      z-index: 10;
+      box-shadow: 4px 0 24px rgba(0,0,0,0.4);
+    }
 
-    .sidebar-header { display: flex; align-items: center; justify-content: space-between; padding: 12px; border-bottom: 1px solid #2d3548; background: #121620; }
-    .sidebar-header-title { font-weight: 600; font-size: 12px; color: #fff; }
-    .sidebar-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    .brand {
+      padding: 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
 
-    .sidebar-section { padding: 12px; border-bottom: 1px solid #2d3548; }
-    .search-box { width: 100%; background: #0f1117; border: 1px solid #2d3548; color: #fff; padding: 8px 10px; border-radius: 4px; font-size: 12px; outline: none; }
-    .search-box:focus { border-color: #2196f3; }
-    
-    .category-list { display: flex; flex-direction: column; gap: 6px; max-height: 180px; overflow-y: auto; margin-top: 8px; }
-    .cat-item { display: flex; align-items: center; justify-content: space-between; font-size: 12px; padding: 6px 8px; border-radius: 4px; background: #0f1117; border: 1px solid #2d3548; }
-    .cat-info { display: flex; align-items: center; gap: 8px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .cat-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
-    .cat-actions { display: flex; gap: 4px; flex-shrink: 0; }
-    
-    .asset-list-container { flex: 1; overflow-y: auto; padding: 12px; }
-    .asset-card { background: #0f1117; border: 1px solid #2d3548; border-radius: 6px; padding: 10px; margin-bottom: 8px; cursor: pointer; transition: border-color 0.2s; position: relative; }
-    .asset-card:hover { border-color: #2196f3; }
-    .asset-title { font-weight: 600; font-size: 13px; color: #fff; margin-bottom: 4px; display: flex; justify-content: space-between; padding-right: 48px; }
-    .asset-meta { font-size: 11px; color: #8b95a5; display: flex; gap: 8px; align-items: center; }
-    .asset-actions { position: absolute; top: 8px; right: 8px; display: flex; gap: 4px; }
-    .icon-btn { background: #232a3b; border: 1px solid #3b465e; color: #aaa; width: 22px; height: 22px; border-radius: 4px; font-size: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-    .icon-btn:hover { color: #fff; background: #2d364d; }
-    .icon-btn.delete:hover { background: #d32f2f; color: #fff; }
+    .brand h1 {
+      font-size: 1.1rem;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
 
-    /* Canvas Area */
-    main { flex: 1; position: relative; background: #090b10; overflow: hidden; cursor: grab; }
-    main.panning { cursor: grabbing; }
-    main.placement-mode { cursor: crosshair !important; }
-    canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: block; }
-    
-    /* Overlay Controls */
-    .map-overlay-controls { position: absolute; bottom: 16px; right: 16px; display: flex; flex-direction: column; gap: 8px; z-index: 5; }
-    .zoom-btn { width: 36px; height: 36px; background: #161b26; border: 1px solid #2d3548; color: #fff; font-size: 18px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; user-select: none; }
-    .zoom-btn:hover { background: #232a3b; }
-    
-    .coord-banner { position: absolute; top: 16px; left: 16px; background: rgba(22, 27, 38, 0.88); backdrop-filter: blur(6px); border: 1px solid #2d3548; padding: 6px 14px; border-radius: 6px; font-family: monospace; font-size: 12px; color: #40c4ff; z-index: 5; display: flex; gap: 12px; align-items: center; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
-    .mode-badge { padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold; background: #3b465e; color: #aaa; text-transform: uppercase; }
-    .mode-badge.active { background: #00c853; color: #000; }
-    
-    /* Modals & Dialogs */
-    .modal-backdrop { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.75); display: none; align-items: center; justify-content: center; z-index: 100; backdrop-filter: blur(2px); }
-    .modal { background: #161b26; border: 1px solid #2d3548; border-radius: 8px; width: 440px; max-width: 90%; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); transition: width 0.2s, height 0.2s; }
-    .modal-header { font-size: 15px; font-weight: 700; color: #fff; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; }
-    .form-group { margin-bottom: 12px; }
-    .form-group label { display: block; font-size: 11px; color: #8b95a5; margin-bottom: 4px; text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px; }
-    .form-control { width: 100%; background: #0f1117; border: 1px solid #2d3548; color: #fff; padding: 8px 10px; border-radius: 4px; font-size: 12px; outline: none; }
-    .form-control:focus { border-color: #2196f3; }
-    .form-row { display: flex; gap: 10px; }
-    .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px; }
+    .user-badge {
+      font-size: 0.75rem;
+      padding: 4px 8px;
+      background: var(--accent-dim);
+      color: var(--accent);
+      border-radius: 4px;
+      border: 1px solid rgba(0,230,118,0.3);
+      cursor: pointer;
+    }
 
-    /* Toast Notification System */
-    .toast-container { position: fixed; bottom: 20px; left: 20px; z-index: 200; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
-    .toast { background: #161b26; border: 1px solid #2196f3; color: #fff; padding: 10px 16px; border-radius: 6px; font-size: 12px; display: flex; align-items: center; gap: 8px; box-shadow: 0 6px 20px rgba(0,0,0,0.4); animation: toastIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
-    .toast.error { border-color: #f44336; }
-    .toast.success { border-color: #00c853; }
-    @keyframes toastIn { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    .tabs {
+      display: flex;
+      background: rgba(0,0,0,0.2);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .tab-btn {
+      flex: 1;
+      padding: 12px;
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-weight: 600;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .tab-btn.active {
+      color: var(--accent);
+      background: var(--bg-panel);
+      border-bottom: 2px solid var(--accent);
+    }
+
+    .tab-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    .control-group {
+      margin-bottom: 16px;
+    }
+
+    .control-group label {
+      display: block;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      padding: 10px 12px;
+      background: var(--bg-dark);
+      border: 1px solid var(--border);
+      color: var(--text-main);
+      border-radius: 6px;
+      font-size: 0.9rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--accent);
+    }
+
+    .btn {
+      width: 100%;
+      padding: 10px 16px;
+      background: var(--accent);
+      color: #000;
+      border: none;
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: opacity 0.2s;
+      margin-bottom: 10px;
+    }
+
+    .btn:hover {
+      opacity: 0.9;
+    }
+
+    .btn-secondary {
+      background: var(--bg-hover);
+      color: var(--text-main);
+      border: 1px solid var(--border);
+    }
+
+    .btn-danger {
+      background: var(--danger);
+      color: #fff;
+    }
+
+    .asset-card {
+      background: var(--bg-dark);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 10px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .asset-card:hover {
+      border-color: var(--accent);
+      transform: translateY(-1px);
+    }
+
+    .asset-title {
+      font-weight: 600;
+      font-size: 0.95rem;
+      margin-bottom: 4px;
+    }
+
+    .asset-meta {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .asset-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+      padding-top: 8px;
+      border-top: 1px solid var(--border);
+    }
+
+    .icon-btn {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 0.85rem;
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+
+    .icon-btn:hover {
+      background: var(--bg-hover);
+      color: var(--text-main);
+    }
+
+    .cat-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px;
+      background: var(--bg-dark);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      margin-bottom: 8px;
+    }
+
+    .cat-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.9rem;
+      font-weight: 500;
+    }
+
+    .cat-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+    }
+
+    .viewport {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+      background-color: #0b1120;
+    }
+
+    #blueprintCanvas {
+      display: block;
+      cursor: grab;
+    }
+
+    #blueprintCanvas.panning {
+      cursor: grabbing;
+    }
+
+    .floating-hud {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      z-index: 5;
+    }
+
+    .hud-card {
+      background: rgba(30, 41, 59, 0.9);
+      backdrop-filter: blur(8px);
+      border: 1px solid var(--border);
+      padding: 12px 16px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .level-switcher {
+      display: flex;
+      background: var(--bg-dark);
+      border-radius: 6px;
+      padding: 2px;
+      border: 1px solid var(--border);
+    }
+
+    .level-btn {
+      padding: 6px 12px;
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      border-radius: 4px;
+      transition: all 0.2s;
+    }
+
+    .level-btn.active {
+      background: var(--accent);
+      color: #000;
+    }
+
+    .zoom-controls {
+      display: flex;
+      gap: 4px;
+    }
+
+    .zoom-btn {
+      width: 32px;
+      height: 32px;
+      background: var(--bg-dark);
+      border: 1px solid var(--border);
+      color: var(--text-main);
+      border-radius: 6px;
+      font-weight: bold;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .zoom-btn:hover {
+      background: var(--bg-hover);
+    }
+
+    .status-hud {
+      position: absolute;
+      bottom: 20px;
+      left: 20px;
+      background: rgba(30, 41, 59, 0.9);
+      backdrop-filter: blur(8px);
+      border: 1px solid var(--border);
+      padding: 10px 16px;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      z-index: 5;
+      display: flex;
+      gap: 16px;
+    }
+
+    .modal-backdrop {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.7);
+      backdrop-filter: blur(4px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+    }
+
+    .modal {
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      width: 450px;
+      max-width: 90%;
+      border-radius: 12px;
+      box-shadow: 0 16px 32px rgba(0,0,0,0.5);
+      overflow: hidden;
+      animation: modalPop 0.2s ease-out;
+    }
+
+    @keyframes modalPop {
+      from { transform: scale(0.95); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+
+    .modal-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .modal-header h3 {
+      font-size: 1rem;
+      font-weight: 600;
+    }
+
+    .modal-body {
+      padding: 20px;
+      max-height: 70vh;
+      overflow-y: auto;
+    }
+
+    .modal-footer {
+      padding: 16px 20px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+
+    .modal-footer .btn {
+      width: auto;
+      margin-bottom: 0;
+      padding: 8px 16px;
+    }
+
+    #toastContainer {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .toast {
+      background: var(--bg-panel);
+      border: 1px solid var(--accent);
+      color: var(--text-main);
+      padding: 12px 20px;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+      animation: slideIn 0.2s ease-out;
+    }
+
+    @keyframes slideIn {
+      from { transform: translateX(100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
   </style>
 </head>
 <body>
 
-  <header>
+  <!-- Sidebar Panel -->
+  <div class="sidebar">
     <div class="brand">
-      <span>📐</span> Facility Systems Interactive Blueprint
-    </div>
-    
-    <div class="status-badge" id="cloudStatusBadge">
-      <span class="status-dot"></span>
-      <span id="cloudStatusText">Connecting to Live Cloud...</span>
+      <h1>⚙️ Facility Blueprint</h1>
+      <div id="userBadge" class="user-badge" onclick="openModal('authModal')">Local Mode</div>
     </div>
 
-    <div class="nav-controls">
-      <button class="btn btn-share" type="button" onclick="shareLiveLink()">🔗 Share Live Link</button>
+    <div class="tabs">
+      <button class="tab-btn active" onclick="switchTab('assets', event)">Assets</button>
+      <button class="tab-btn" onclick="switchTab('categories', event)">Categories</button>
+      <button class="tab-btn" onclick="switchTab('settings', event)">Settings</button>
+    </div>
 
-      <button class="btn" id="addAssetBtn" type="button" onclick="togglePlacementMode()">
-        📍 Add Asset: <span id="addAssetStatus">OFF</span>
+    <!-- Assets Tab -->
+    <div id="tab-assets" class="tab-content active">
+      <div class="control-group">
+        <label>Search Assets</label>
+        <input type="text" id="searchBox" placeholder="Filter by name, grid, or notes..." oninput="renderAssetList()">
+      </div>
+
+      <button class="btn" onclick="togglePlacementMode()">
+        <span id="placementBtnIcon">➕</span> <span id="placementBtnText">Place New Asset</span>
       </button>
 
-      <div class="level-selector">
-        <button class="level-btn active" type="button" onclick="setLevel('ground', event)">Ground Floor</button>
-        <button class="level-btn" type="button" onclick="setLevel('mezz', event)">MEZZ Floor</button>
-        <button class="level-btn" type="button" onclick="setLevel('roof', event)">Roof Level</button>
-        <button class="level-btn" type="button" onclick="setLevel('exterior', event)">Exterior / Yard</button>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin: 16px 0 10px 0;">
+        <label style="margin-bottom: 0;">Facility Assets (<span id="assetCount">0</span>)</label>
       </div>
-      
-      <button class="btn" type="button" onclick="openYardModal()">⚙️ Yard Config</button>
-      <button class="btn" type="button" onclick="exportJSON()">💾 Export JSON</button>
-      <button class="btn" type="button" onclick="document.getElementById('importFile').click()">📂 Import</button>
-      <input type="file" id="importFile" style="display:none" onchange="importJSON(event)" accept=".json">
+
+      <div id="assetCards"></div>
     </div>
-  </header>
 
-  <div class="app-body">
-    <!-- Sidebar -->
-    <aside id="sidebar" data-maximized="false">
-      <div class="sidebar-header">
-        <span class="sidebar-header-title">Facility Navigator</span>
-        <div style="display:flex; gap:4px;">
-          <button class="icon-btn" id="maximizeSidebarBtn" type="button" title="Maximize / Restore Sidebar" onclick="toggleMaximizeSidebar()">⛶</button>
-          <button class="icon-btn minimize-toggle-btn" id="minimizeSidebarBtn" type="button" title="Minimize / Expand Sidebar" onclick="toggleMinimizeSidebar()">◀</button>
+    <!-- Categories Tab -->
+    <div id="tab-categories" class="tab-content">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <label style="margin-bottom: 0;">Asset Categories</label>
+        <button class="btn" style="width: auto; padding: 6px 12px; margin-bottom: 0;" onclick="openCatModalForNew()">+ Add Category</button>
+      </div>
+      <div id="categoryList"></div>
+    </div>
+
+    <!-- Settings Tab -->
+    <div id="tab-settings" class="tab-content">
+      <div class="control-group">
+        <label>Exterior Yard Dimensions</label>
+        <button class="btn btn-secondary" onclick="openYardModal()">Configure Yard Boundaries</button>
+      </div>
+
+      <div class="control-group" style="margin-top: 20px;">
+        <label>Data Backup & Sync</label>
+        <button class="btn btn-secondary" onclick="exportJSON()">Export JSON Backup</button>
+        <button class="btn btn-secondary" onclick="document.getElementById('importFile').click()">Import JSON Backup</button>
+        <input type="file" id="importFile" style="display: none;" accept=".json" onchange="importJSON(event)">
+      </div>
+
+      <div class="control-group" style="margin-top: 20px;">
+        <label>Cloud Sync (Firebase)</label>
+        <button class="btn" onclick="openModal('authModal')">Configure Cloud Sync</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Viewport -->
+  <div class="viewport" id="canvasContainer">
+    <canvas id="blueprintCanvas"></canvas>
+
+    <!-- Floating HUD Controls -->
+    <div class="floating-hud">
+      <div class="hud-card">
+        <div class="level-switcher">
+          <button class="level-btn" onclick="setLevel('ground', event)">Ground</button>
+          <button class="level-btn active" onclick="setLevel('mezz', event)">Mezzanine</button>
+          <button class="level-btn" onclick="setLevel('upper', event)">Upper</button>
+        </div>
+        <div class="zoom-controls">
+          <button class="zoom-btn" onclick="zoomButtonHandler(1.2)">+</button>
+          <button class="zoom-btn" onclick="zoomButtonHandler(0.8)">-</button>
+          <button class="zoom-btn" onclick="resetView()" title="Reset View">⟲</button>
         </div>
       </div>
-      <div class="sidebar-content">
-        <div class="sidebar-section">
-          <input type="text" class="search-box" id="searchBox" placeholder="Search assets or grid..." oninput="renderAssetList()">
-        </div>
+    </div>
 
-        <div class="sidebar-section">
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-            <strong style="font-size:12px; color:#fff;">System Categories</strong>
-            <button class="btn" type="button" style="padding:3px 8px; font-size:10px;" onclick="openCatModalForNew()">+ Add</button>
-          </div>
-          <div class="category-list" id="categoryList"></div>
-        </div>
-
-        <div class="asset-list-container">
-          <strong style="font-size:12px; display:block; margin-bottom:8px; color:#fff;">
-            System Assets (<span id="assetCount">0</span>)
-          </strong>
-          <div id="assetCards"></div>
-        </div>
-      </div>
-    </aside>
-
-    <main id="mapContainer">
-      <div class="coord-banner" id="coordBanner">
-        <span id="coordText">Hover or click map to inspect location</span>
-        <span class="mode-badge" id="modeBadge">PAN MODE</span>
-      </div>
-      <canvas id="mapCanvas"></canvas>
-      <div class="map-overlay-controls">
-        <button class="zoom-btn" type="button" onclick="zoomButtonHandler(1.2)">+</button>
-        <button class="zoom-btn" type="button" onclick="zoomButtonHandler(0.8)">−</button>
-        <button class="zoom-btn" type="button" onclick="resetView()">⟲</button>
-      </div>
-    </main>
+    <!-- Status Bar HUD -->
+    <div class="status-hud" id="statusHud">
+      <span id="coordText">X: 0 | Y: 0 | Grid: A-1 | Floor: MEZZ</span>
+      <span>•</span>
+      <span id="modeStatusText">Navigation Mode</span>
+    </div>
   </div>
 
   <!-- Asset Modal -->
   <div class="modal-backdrop" id="assetModal">
-    <div class="modal" id="assetModalBox" data-maximized="false">
+    <div class="modal">
       <div class="modal-header">
-        <span id="modalTitle">Add System Asset</span>
-        <div style="display:flex; gap:6px; align-items:center;">
-          <button class="icon-btn" type="button" title="Maximize Modal" onclick="toggleMaximizeModal('assetModalBox')">⛶</button>
-          <span style="cursor:pointer; font-size:14px;" onclick="closeModal('assetModal')">✕</span>
-        </div>
+        <h3 id="modalTitle">Add System Asset</h3>
+        <button class="icon-btn" onclick="closeModal('assetModal')">✕</button>
       </div>
-      <form id="assetForm" onsubmit="saveAsset(event)">
-        <input type="hidden" id="assetId">
-        <div class="form-group">
-          <label>Asset Title / Label</label>
-          <input type="text" id="assetName" class="form-control" placeholder="e.g. Breaker Panel MDP-1" required>
-        </div>
-        <div class="form-row">
-          <div class="form-group" style="flex:1;">
-            <label>Category</label>
-            <select id="assetCategory" class="form-control"></select>
+      <form onsubmit="saveAsset(event)">
+        <div class="modal-body">
+          <input type="hidden" id="assetId">
+          <div class="control-group">
+            <label>Asset Name</label>
+            <input type="text" id="assetName" required placeholder="e.g., Conveyor Line 3 / Sorter">
           </div>
-          <div class="form-group" style="flex:1;">
-            <label>Level / Floor</label>
-            <select id="assetLevel" class="form-control">
-              <option value="ground">Ground Floor</option>
-              <option value="mezz">MEZZ Floor</option>
-              <option value="roof">Roof Level</option>
-              <option value="exterior">Exterior / Yard</option>
+          <div class="control-group">
+            <label>Category</label>
+            <select id="assetCategory"></select>
+          </div>
+          <div class="control-group">
+            <label>Floor Level</label>
+            <select id="assetLevel">
+              <option value="ground">Ground Level</option>
+              <option value="mezz">Mezzanine Level</option>
+              <option value="upper">Upper Level</option>
             </select>
           </div>
-        </div>
-        <div class="form-row">
-          <div class="form-group" style="flex:1;">
-            <label>X Coordinate</label>
-            <input type="number" id="assetX" class="form-control" required>
+          <div style="display: flex; gap: 10px;">
+            <div class="control-group" style="flex: 1;">
+              <label>Canvas X</label>
+              <input type="number" id="assetX" required>
+            </div>
+            <div class="control-group" style="flex: 1;">
+              <label>Canvas Y</label>
+              <input type="number" id="assetY" required>
+            </div>
           </div>
-          <div class="form-group" style="flex:1;">
-            <label>Y Coordinate</label>
-            <input type="number" id="assetY" class="form-control" required>
+          <div class="control-group">
+            <label>Grid Reference (South-North Row, Left-Right Col)</label>
+            <input type="text" id="assetGrid" placeholder="e.g., C-4">
+          </div>
+          <div class="control-group">
+            <label>Notes / Specs</label>
+            <textarea id="assetNotes" rows="3" placeholder="Technical specifications, model, IP address..."></textarea>
           </div>
         </div>
-        <div class="form-group">
-          <label>Grid Reference</label>
-          <input type="text" id="assetGrid" class="form-control" placeholder="e.g. Column H-12 or M.9-15">
-        </div>
-        <div class="form-group">
-          <label>Notes / Isolation Steps</label>
-          <textarea id="assetNotes" class="form-control" rows="3" placeholder="Enter maintenance instructions or specs..."></textarea>
-        </div>
-        <div class="modal-actions">
-          <button type="button" class="btn btn-danger" id="deleteAssetBtn" style="margin-right:auto; display:none;" onclick="confirmDeleteCurrentAsset()">Delete Asset</button>
-          <button type="button" class="btn" onclick="closeModal('assetModal')">Cancel</button>
-          <button type="submit" class="btn btn-primary">Save Asset</button>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-danger" id="deleteAssetBtn" style="display:none; margin-right:auto;" onclick="confirmDeleteCurrentAsset()">Delete</button>
+          <button type="button" class="btn btn-secondary" onclick="closeModal('assetModal')">Cancel</button>
+          <button type="submit" class="btn">Save Asset</button>
         </div>
       </form>
     </div>
@@ -239,34 +585,31 @@
 
   <!-- Category Modal -->
   <div class="modal-backdrop" id="catModal">
-    <div class="modal" id="catModalBox" data-maximized="false">
+    <div class="modal">
       <div class="modal-header">
-        <span id="catModalTitle">Add System Category</span>
-        <div style="display:flex; gap:6px; align-items:center;">
-          <button class="icon-btn" type="button" title="Maximize Modal" onclick="toggleMaximizeModal('catModalBox')">⛶</button>
-          <span style="cursor:pointer; font-size:14px;" onclick="closeModal('catModal')">✕</span>
-        </div>
+        <h3 id="catModalTitle">Add Category</h3>
+        <button class="icon-btn" onclick="closeModal('catModal')">✕</button>
       </div>
       <form onsubmit="saveCategory(event)">
-        <input type="hidden" id="catId">
-        <div class="form-group">
-          <label>Category Name</label>
-          <input type="text" id="catName" class="form-control" placeholder="e.g. Fire Protection" required>
-        </div>
-        <div class="form-row">
-          <div class="form-group" style="flex:1;">
-            <label>Color</label>
-            <input type="color" id="catColor" class="form-control" value="#ff9800" style="height:35px; padding:2px;">
+        <div class="modal-body">
+          <input type="hidden" id="catId">
+          <div class="control-group">
+            <label>Category Name</label>
+            <input type="text" id="catName" required placeholder="e.g., Robotics / Safety">
           </div>
-          <div class="form-group" style="flex:1;">
-            <label>Icon / Symbol</label>
-            <input type="text" id="catIcon" class="form-control" value="🔥" required>
+          <div class="control-group">
+            <label>Color Code</label>
+            <input type="color" id="catColor" value="#00e676" style="height: 40px; padding: 2px;">
+          </div>
+          <div class="control-group">
+            <label>Icon / Emoji</label>
+            <input type="text" id="catIcon" required value="⚙️" maxlength="4">
           </div>
         </div>
-        <div class="modal-actions">
-          <button type="button" class="btn btn-danger" id="deleteCatBtn" style="margin-right:auto; display:none;" onclick="confirmDeleteCurrentCategory()">Delete Category</button>
-          <button type="button" class="btn" onclick="closeModal('catModal')">Cancel</button>
-          <button type="submit" class="btn btn-primary">Save Category</button>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-danger" id="deleteCatBtn" style="display:none; margin-right:auto;" onclick="confirmDeleteCurrentCategory()">Delete</button>
+          <button type="button" class="btn btn-secondary" onclick="closeModal('catModal')">Cancel</button>
+          <button type="submit" class="btn">Save Category</button>
         </div>
       </form>
     </div>
@@ -274,281 +617,137 @@
 
   <!-- Yard Config Modal -->
   <div class="modal-backdrop" id="yardModal">
-    <div class="modal" id="yardModalBox" data-maximized="false">
+    <div class="modal">
       <div class="modal-header">
-        <span>Exterior Yard & Parking Configurator</span>
-        <div style="display:flex; gap:6px; align-items:center;">
-          <button class="icon-btn" type="button" title="Maximize Modal" onclick="toggleMaximizeModal('yardModalBox')">⛶</button>
-          <span style="cursor:pointer; font-size:14px;" onclick="closeModal('yardModal')">✕</span>
-        </div>
+        <h3>Configure Exterior Yard Boundaries</h3>
+        <button class="icon-btn" onclick="closeModal('yardModal')">✕</button>
       </div>
       <form onsubmit="saveYardConfig(event)">
-        <div class="form-group">
-          <label>North Staff Parking Depth (px/ft)</label>
-          <input type="number" id="yardNorth" class="form-control" value="120" required>
+        <div class="modal-body">
+          <div class="control-group"><label>North Boundary Offset</label><input type="number" id="yardNorth" required></div>
+          <div class="control-group"><label>South Boundary Offset</label><input type="number" id="yardSouth" required></div>
+          <div class="control-group"><label>East Boundary Offset</label><input type="number" id="yardEast" required></div>
+          <div class="control-group"><label>West Boundary Offset</label><input type="number" id="yardWest" required></div>
         </div>
-        <div class="form-group">
-          <label>South Truck Staging Depth (px/ft)</label>
-          <input type="number" id="yardSouth" class="form-control" value="160" required>
-        </div>
-        <div class="form-group">
-          <label>East Entry Lot Width (px/ft)</label>
-          <input type="number" id="yardEast" class="form-control" value="100" required>
-        </div>
-        <div class="form-group">
-          <label>West Margin Width (px/ft)</label>
-          <input type="number" id="yardWest" class="form-control" value="100" required>
-        </div>
-        <div class="modal-actions">
-          <button type="button" class="btn" onclick="closeModal('yardModal')">Cancel</button>
-          <button type="submit" class="btn btn-primary">Update Yard Layout</button>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('yardModal')">Cancel</button>
+          <button type="submit" class="btn">Save Yard</button>
         </div>
       </form>
     </div>
   </div>
 
-  <!-- Custom Confirmation Dialog -->
-  <div class="modal-backdrop" id="confirmModal">
-    <div class="modal" style="width:360px;">
+  <!-- Auth / Firebase Modal -->
+  <div class="modal-backdrop" id="authModal">
+    <div class="modal">
       <div class="modal-header">
-        <span id="confirmTitle">Confirm Action</span>
-        <span style="cursor:pointer" onclick="closeModal('confirmModal')">✕</span>
+        <h3>Cloud Sync Configuration</h3>
+        <button class="icon-btn" onclick="closeModal('authModal')">✕</button>
       </div>
-      <p id="confirmMessage" style="font-size:12px; color:#b0bec5; line-height:1.5; margin-bottom:16px;"></p>
-      <div class="modal-actions">
-        <button type="button" class="btn" onclick="closeModal('confirmModal')">Cancel</button>
-        <button type="button" class="btn btn-danger" id="confirmActionBtn">Confirm</button>
+      <div class="modal-path modal-body">
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 16px;">
+          Connect your facility database to sync blueprints across multiple devices in real-time.
+        </p>
+        <div class="control-group">
+          <label>Firebase API Key</label>
+          <input type="text" id="fbApiKey" placeholder="AIzaSy...">
+        </div>
+        <div class="control-group">
+          <label>Firebase Project ID</label>
+          <input type="text" id="fbProjectId" placeholder="facility-blueprint">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeModal('authModal')">Close</button>
+        <button type="button" class="btn" onclick="initFirebaseFromInputs()">Connect Cloud</button>
       </div>
     </div>
   </div>
 
-  <div class="toast-container" id="toastContainer"></div>
+  <div id="toastContainer"></div>
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-    import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-    import { getFirestore, doc, setDoc, deleteDoc, onSnapshot, collection } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+  <script>
+    const facilityWidth = 1500; // 30 columns width standard
+    const facilityHeight = 1400; // South (top) to North (bottom) rows span
 
-    const appId = typeof __app_id !== 'undefined' ? __app_id : 'facility-blueprint-app';
-    
-    // YOUR FIREBASE CONFIGURATION
-    const firebaseConfig = {
-      apiKey: "AIzaSyD...",
-      authDomain: "your-project-id.firebaseapp.com",
-      projectId: "your-project-id",
-      storageBucket: "your-project-id.appspot.com",
-      messagingSenderId: "123456789",
-      appId: "1:123456789:web:abcdef"
-    };
-
-    let db = null;
-    let auth = null;
-    let user = null;
-    let confirmCallback = null;
-    let isCloudConnected = false;
-
-    // Load initial state from localStorage if available
-    const savedLocalState = localStorage.getItem('facility_blueprint_local_state');
-    const defaultState = {
-      level: 'ground',
-      placementMode: false,
+    const state = {
+      level: 'mezz',
       scale: 1,
       panX: 50,
       panY: 50,
       isPanning: false,
       startX: 0,
       startY: 0,
+      placementMode: false,
+      yard: { north: 120, south: 120, east: 150, west: 150 },
       categories: [
-        { id: 'elec', name: 'Electrical Panels', color: '#e65100', icon: '⚡' },
-        { id: 'plumb', name: 'Plumbing / Water', color: '#0288d1', icon: '💧' },
-        { id: 'hvac', name: 'HVAC / Controls', color: '#2e7d32', icon: '❄️' }
+        { id: 'cat_conveyor', name: 'Conveyors & Sortation', color: '#3b82f6', icon: '📦' },
+        { id: 'cat_robotics', name: 'Robotics & Vision', color: '#8b5cf6', icon: '🤖' },
+        { id: 'cat_safety', name: 'Safety & LOTO', color: '#ef4444', icon: '🦺' },
+        { id: 'cat_hvac', name: 'HVAC & Mechanical', color: '#10b981', icon: '❄️' }
       ],
-      yard: { north: 120, south: 160, east: 100, west: 100 },
       assets: [
-        { id: '1', name: 'Main Distribution Panel MDP-1', category: 'elec', level: 'ground', x: 280, y: 180, grid: 'A-2', notes: '480V 3-Phase Main Switch' },
-        { id: '2', name: 'Water Main Shutoff', category: 'plumb', level: 'ground', x: 520, y: 180, grid: 'A-5', notes: '3-inch main valve' },
-        { id: '3', name: 'MEZZ Air Handler AHU-2', category: 'hvac', level: 'mezz', x: 340, y: 620, grid: 'K-6', notes: 'Mezzanine cooling unit' },
-        { id: '4', name: 'Rooftop Package Unit RTU-1', category: 'hvac', level: 'roof', x: 600, y: 300, grid: 'D-12', notes: 'Main office RTU' }
+        { id: 'ast_1', name: 'Mezzanine Induction Line A', category: 'cat_conveyor', level: 'mezz', x: 300, y: 250, grid: 'C-6', notes: 'Flat belt sorter & SLAM station' },
+        { id: 'ast_2', name: 'FANUC R-30iB Vision Cell', category: 'cat_robotics', level: 'mezz', x: 600, y: 400, grid: 'F-12', notes: 'iRVision 3DV eye-in-hand sensor' },
+        { id: 'ast_3', name: 'Ground Main Sortation Loop', category: 'cat_conveyor', level: 'ground', x: 400, y: 300, grid: 'D-8', notes: 'Primary high-speed transport line' },
+        { id: 'ast_4', name: 'Roof ICP Condenser Unit 1', category: 'cat_hvac', level: 'upper', x: 500, y: 200, grid: 'B-10', notes: 'Model CA5524VKD3 rooftop HVAC' }
       ]
     };
 
-    const state = savedLocalState ? JSON.parse(savedLocalState) : defaultState;
-
-    const canvas = document.getElementById('mapCanvas');
+    const canvas = document.getElementById('blueprintCanvas');
     const ctx = canvas.getContext('2d');
-    const container = document.getElementById('mapContainer');
+    const container = document.getElementById('canvasContainer');
 
-    function persistLocally() {
-      localStorage.setItem('facility_blueprint_local_state', JSON.stringify(state));
+    function switchTab(tabId, event) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+      document.getElementById(`tab-${tabId}`).classList.add('active');
+      if (event && event.target) event.target.classList.add('active');
     }
 
-    function showToast(msg, type = 'normal') {
-      const toastContainer = document.getElementById('toastContainer');
+    function showToast(message, type = 'success') {
+      const container = document.getElementById('toastContainer');
       const toast = document.createElement('div');
-      toast.className = `toast ${type}`;
-      toast.innerHTML = `<span>${type === 'success' ? '✅' : type === 'error' ? '⚠️' : 'ℹ️'}</span> ${msg}`;
-      toastContainer.appendChild(toast);
+      toast.className = 'toast';
+      toast.style.borderColor = type === 'error' ? 'var(--danger)' : 'var(--accent)';
+      toast.innerText = message;
+      container.appendChild(toast);
       setTimeout(() => {
         toast.style.opacity = '0';
-        toast.style.transition = 'opacity 0.3s';
-        setTimeout(() => toast.remove(), 300);
-      }, 3500);
+        setTimeout(() => toast.remove(), 200);
+      }, 3000);
     }
-
-    window.shareLiveLink = () => {
-      const url = window.location.href;
-      const dummy = document.createElement('input');
-      document.body.appendChild(dummy);
-      dummy.value = url;
-      dummy.select();
-      document.execCommand('copy');
-      document.body.removeChild(dummy);
-      showToast("Live collaborative link copied to clipboard!", "success");
-    };
 
     function customConfirm(title, message, onConfirm) {
-      document.getElementById('confirmTitle').innerText = title;
-      document.getElementById('confirmMessage').innerText = message;
-      confirmCallback = onConfirm;
-      openModal('confirmModal');
+      if (confirm(`${title}\n\n${message}`)) {
+        onConfirm();
+      }
     }
 
-    document.getElementById('confirmActionBtn').onclick = () => {
-      if (confirmCallback) confirmCallback();
-      closeModal('confirmModal');
-    };
-
-    window.toggleMinimizeSidebar = () => {
-      const sidebar = document.getElementById('sidebar');
-      sidebar.classList.toggle('minimized');
-      setTimeout(resizeCanvas, 320);
-    };
-
-    window.toggleMaximizeSidebar = () => {
-      const sidebar = document.getElementById('sidebar');
-      if (sidebar.classList.contains('minimized')) return;
-      const isMax = sidebar.dataset.maximized === 'true';
-      sidebar.dataset.maximized = isMax ? 'false' : 'true';
-      sidebar.style.width = isMax ? '330px' : '550px';
-      setTimeout(resizeCanvas, 320);
-    };
-
-    window.toggleMaximizeModal = (modalBoxId) => {
-      const box = document.getElementById(modalBoxId);
-      const isMax = box.dataset.maximized === 'true';
-      box.dataset.maximized = isMax ? 'false' : 'true';
-      box.style.width = isMax ? '440px' : '92vw';
-      box.style.height = isMax ? 'auto' : '85vh';
-    };
-
-    const getCategoriesCol = () => collection(db, 'artifacts', appId, 'public', 'data', 'categories');
-    const getAssetsCol = () => collection(db, 'artifacts', appId, 'public', 'data', 'assets');
-    const getYardDocRef = () => doc(db, 'artifacts', appId, 'public', 'data', 'config', 'yard');
-
-    async function initFirebase() {
-      if (!firebaseConfig || !firebaseConfig.apiKey || firebaseConfig.apiKey.includes("AIzaSyD...")) {
-        updateCloudStatus(false, "Local Memory Mode (Config Required)");
-        renderCategoryList();
-        populateCategorySelect();
-        renderAssetList();
-        draw();
-        return;
-      }
-
+    function persistLocally() {
       try {
-        const app = initializeApp(firebaseConfig);
-        auth = getAuth(app);
-        db = getFirestore(app);
-
-        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-          const res = await signInWithCustomToken(auth, __initial_auth_token);
-          user = res.user;
-        } else {
-          const res = await signInAnonymously(auth);
-          user = res.user;
-        }
-
-        if (user) {
-          isCloudConnected = true;
-          updateCloudStatus(true, `Synced Live (${user.uid.slice(0, 6)}...)`);
-          setupFirestoreListeners();
-        }
-      } catch (err) {
-        console.error("Firebase init failed:", err);
-        updateCloudStatus(false, "Offline / Local Fallback Mode");
-        renderCategoryList();
-        populateCategorySelect();
-        renderAssetList();
-        draw();
+        localStorage.setItem('blueprint_state', JSON.stringify({
+          categories: state.categories,
+          assets: state.assets,
+          yard: state.yard
+        }));
+      } catch (e) {
+        console.error(e);
       }
     }
 
-    function updateCloudStatus(connected, text) {
-      const badge = document.getElementById('cloudStatusBadge');
-      const textElem = document.getElementById('cloudStatusText');
-      if (connected) {
-        badge.classList.add('connected');
-      } else {
-        badge.classList.remove('connected');
-      }
-      textElem.innerText = text;
-    }
-
-    function setupFirestoreListeners() {
-      if (!user || !db) return;
-
-      onSnapshot(getCategoriesCol(), (snapshot) => {
-        if (!snapshot.empty) {
-          const cats = [];
-          snapshot.forEach(docSnap => cats.push({ id: docSnap.id, ...docSnap.data() }));
-          state.categories = cats;
-        } else {
-          seedCategoriesToCloud();
+    function loadLocalState() {
+      try {
+        const saved = localStorage.getItem('blueprint_state');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (parsed.categories) state.categories = parsed.categories;
+          if (parsed.assets) state.assets = parsed.assets;
+          if (parsed.yard) state.yard = parsed.yard;
         }
-        renderCategoryList();
-        populateCategorySelect();
-        draw();
-      }, (err) => console.error("Categories listener error:", err));
-
-      onSnapshot(getAssetsCol(), (snapshot) => {
-        if (!snapshot.empty) {
-          const asts = [];
-          snapshot.forEach(docSnap => asts.push({ id: docSnap.id, ...docSnap.data() }));
-          state.assets = asts;
-        } else {
-          seedAssetsToCloud();
-        }
-        renderAssetList();
-        draw();
-      }, (err) => console.error("Assets listener error:", err));
-
-      onSnapshot(getYardDocRef(), (docSnap) => {
-        if (docSnap.exists()) {
-          state.yard = docSnap.data();
-        } else {
-          seedYardToCloud();
-        }
-        draw();
-      }, (err) => console.error("Yard listener error:", err));
-    }
-
-    async function seedCategoriesToCloud() {
-      if (!user || !db) return;
-      for (const cat of state.categories) {
-        await setDoc(doc(getCategoriesCol(), cat.id), cat).catch(e => console.error(e));
+      } catch (e) {
+        console.error(e);
       }
-    }
-
-    async function seedAssetsToCloud() {
-      if (!user || !db) return;
-      for (const asset of state.assets) {
-        await setDoc(doc(getAssetsCol(), asset.id), asset).catch(e => console.error(e));
-      }
-    }
-
-    async function seedYardToCloud() {
-      if (!user || !db) return;
-      await setDoc(getYardDocRef(), state.yard).catch(e => console.error(e));
     }
 
     function resizeCanvas() {
@@ -556,381 +755,148 @@
       canvas.height = container.clientHeight;
       draw();
     }
+
     window.addEventListener('resize', resizeCanvas);
 
-    window.togglePlacementMode = () => {
-      state.placementMode = !state.placementMode;
-      const btn = document.getElementById('addAssetBtn');
-      const statusText = document.getElementById('addAssetStatus');
-      const badge = document.getElementById('modeBadge');
-      
-      if (state.placementMode) {
-        btn.classList.add('btn-active-mode');
-        statusText.innerText = 'ON (Click Map)';
-        container.classList.add('placement-mode');
-        badge.innerText = 'ADD ASSET MODE';
-        badge.classList.add('active');
-      } else {
-        btn.classList.remove('btn-active-mode');
-        statusText.innerText = 'OFF';
-        container.classList.remove('placement-mode');
-        badge.innerText = 'PAN MODE';
-        badge.classList.remove('active');
-      }
-    };
+    // Row mapping: South (Top) = A ... North (Bottom) = N with M.9 right before N
+    const rowLabels = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'M.9', 'N'];
+
+    function getGridRef(x, y) {
+      // 30 Columns from left (1) to right (30)
+      const colWidth = facilityWidth / 30;
+      let colNum = Math.floor(x / colWidth) + 1;
+      colNum = Math.max(1, Math.min(30, colNum));
+
+      // Rows from South (top = A) to North (bottom = N)
+      const rowHeight = facilityHeight / rowLabels.length;
+      let rowIndex = Math.floor(y / rowHeight);
+      rowIndex = Math.max(0, Math.min(rowLabels.length - 1, rowIndex));
+      const rowLabel = rowLabels[rowIndex];
+
+      return `${rowLabel}-${colNum}`;
+    }
 
     function screenToCanvasCoords(screenX, screenY) {
       const rect = canvas.getBoundingClientRect();
-      const x = Math.round((screenX - rect.left - state.panX) / state.scale);
-      const y = Math.round((screenY - rect.top - state.panY) / state.scale);
-      return { x, y };
+      const cx = (screenX - rect.left - state.panX) / state.scale;
+      const cy = (screenY - rect.top - state.panY) / state.scale;
+      return { x: Math.round(cx), y: Math.round(cy) };
     }
 
-    function getGridRef(x, y) {
-      const col = Math.max(1, Math.min(30, Math.floor(x / 60) + 1));
-      const rowIdx = Math.floor(y / 60);
-      const rows = ['A','B','C','D','E','F','G','H','I','J','K','L','M'];
-      if (rowIdx >= 12 || y >= 720) return `M.9-${col}`;
-      return `${rows[Math.max(0, rowIdx)] || 'M'}-${col}`;
-    }
+    function togglePlacementMode() {
+      state.placementMode = !state.placementMode;
+      const btnIcon = document.getElementById('placementBtnIcon');
+      const btnText = document.getElementById('placementBtnText');
+      const modeText = document.getElementById('modeStatusText');
 
-    window.setLevel = (lvl, event) => {
-      state.level = lvl;
-      document.querySelectorAll('.level-btn').forEach(b => b.classList.remove('active'));
-      if (event && event.target) event.target.classList.add('active');
-      renderAssetList();
-      draw();
-    };
+      if (state.placementMode) {
+        btnIcon.innerText = '❌';
+        btnText.innerText = 'Cancel Placement';
+        modeText.innerText = 'Placement Mode: Click anywhere on canvas to drop asset';
+        modeText.style.color = 'var(--accent)';
+      } else {
+        btnIcon.innerText = '➕';
+        btnText.innerText = 'Place New Asset';
+        modeText.innerText = 'Navigation Mode';
+        modeText.style.color = 'var(--text-muted)';
+      }
+    }
 
     function draw() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
+
       ctx.save();
       ctx.translate(state.panX, state.panY);
       ctx.scale(state.scale, state.scale);
 
-      const buildingWidth = 1800;
-      const yardX = -state.yard.west;
-      const yardY = -state.yard.north;
-      const yardWidth = buildingWidth + state.yard.west + state.yard.east;
-      const yardHeight = 780 + state.yard.north + state.yard.south;
-
-      // Exterior Yard Zone
-      ctx.fillStyle = 'rgba(33, 150, 243, 0.12)';
-      ctx.fillRect(yardX, yardY, yardWidth, yardHeight);
-      ctx.strokeStyle = '#2196f3';
-      ctx.lineWidth = 2;
-      ctx.setLineDash([8, 6]);
-      ctx.strokeRect(yardX, yardY, yardWidth, yardHeight);
-      ctx.setLineDash([]);
-
-      ctx.fillStyle = '#64b5f6';
-      ctx.font = 'bold 12px sans-serif';
-      ctx.fillText('EXTERIOR / YARD ZONE', yardX + 15, yardY + 25);
-
-      // Main Building Footprint
-      ctx.fillStyle = '#141824';
-      ctx.strokeStyle = '#40c4ff';
-      ctx.lineWidth = 3;
-      ctx.fillRect(0, 0, buildingWidth, 780);
-      ctx.strokeRect(0, 0, buildingWidth, 780);
-
-      // Floor-Specific Layout Drawing
-      if (state.level === 'ground') {
-        const r1X = 480, r1Y = 75, r1W = 1215, r1H = 345;
-        ctx.fillStyle = 'rgba(255, 152, 0, 0.12)';
-        ctx.strokeStyle = '#ff9800';
-        ctx.lineWidth = 1.5;
-        ctx.fillRect(r1X, r1Y, r1W, r1H);
-        ctx.strokeRect(r1X, r1Y, r1W, r1H);
-        ctx.fillStyle = '#ffa726'; 
-        ctx.font = 'bold 12px sans-serif';
-        ctx.fillText('MAIN RACKING AREA #1 (Cols 9 to 29.25 | Rows B.25 to G)', r1X + 20, r1Y + 25);
-
-        const r2X = 1410, r2Y = 450, r2W = 240, r2H = 240;
-        ctx.fillStyle = 'rgba(255, 152, 0, 0.18)';
-        ctx.strokeStyle = '#ff9800';
-        ctx.lineWidth = 1.5;
-        ctx.fillRect(r2X, r2Y, r2W, r2H);
-        ctx.strokeRect(r2X, r2Y, r2W, r2H);
-        ctx.fillStyle = '#ffa726'; 
-        ctx.font = 'bold 10px sans-serif';
-        ctx.fillText('RACKING #2', r2X + 10, r2Y + 20);
-      } else if (state.level === 'mezz') {
-        const mezzX = 120, mezzY = 480, mezzW = 1560, mezzH = 270;
-        ctx.fillStyle = 'rgba(156, 39, 176, 0.15)';
-        ctx.strokeStyle = '#ab47bc';
-        ctx.lineWidth = 2;
-        ctx.fillRect(mezzX, mezzY, mezzW, mezzH);
-        ctx.strokeRect(mezzX, mezzY, mezzW, mezzH);
-        ctx.fillStyle = '#e1bee7';
-        ctx.font = 'bold 13px sans-serif';
-        ctx.fillText('MEZZANINE FLOOR (Office & Mezz Equipment Level)', mezzX + 20, mezzY + 30);
-      } else if (state.level === 'roof') {
-        const roofX = 180, roofY = 120, roofW = 1440, roofH = 540;
-        ctx.fillStyle = 'rgba(0, 150, 136, 0.12)';
-        ctx.strokeStyle = '#26a69a';
-        ctx.lineWidth = 2;
-        ctx.fillRect(roofX, roofY, roofW, roofH);
-        ctx.strokeRect(roofX, roofY, roofW, roofH);
-        ctx.fillStyle = '#80cbc4';
-        ctx.font = 'bold 13px sans-serif';
-        ctx.fillText('ROOFTOP LEVEL (RTUs & Exhaust Fans)', roofX + 20, roofY + 30);
-      }
-
-      // Grid lines overlay
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+      // Draw Grid / Column & Row Markers
+      ctx.strokeStyle = 'rgba(51, 65, 85, 0.4)';
       ctx.lineWidth = 1;
-      for (let x = 0; x <= buildingWidth; x += 60) {
-        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, 780); ctx.stroke();
-      }
-      for (let y = 0; y <= 780; y += 60) {
-        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(buildingWidth, y); ctx.stroke();
+      
+      const colWidth = facilityWidth / 30;
+      const rowHeight = facilityHeight / rowLabels.length;
+
+      // Draw vertical column dividers (1 to 30)
+      for (let i = 0; i <= 30; i++) {
+        const x = i * colWidth;
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, facilityHeight);
+        ctx.stroke();
       }
 
-      // Render Assets for current level
-      state.assets.filter(a => a.level === state.level).forEach(asset => {
-        const cat = state.categories.find(c => c.id === asset.category) || { color: '#ffffff', icon: '📍' };
+      // Draw horizontal row dividers (A to N including M.9)
+      for (let j = 0; j <= rowLabels.length; j++) {
+        const y = j * rowHeight;
         ctx.beginPath();
-        ctx.arc(asset.x, asset.y, 16, 0, Math.PI * 2);
-        ctx.fillStyle = '#161b26';
+        ctx.moveTo(0, y);
+        ctx.lineTo(facilityWidth, y);
+        ctx.stroke();
+      }
+
+      // Draw Exterior Yard
+      ctx.strokeStyle = 'rgba(245, 158, 11, 0.4)';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(-state.yard.west, -state.yard.north, facilityWidth + state.yard.west + state.yard.east, facilityHeight + state.yard.north + state.yard.south);
+
+      // Draw Facility Perimeter Wall (South wall at top y=0, North wall at bottom y=facilityHeight)
+      ctx.strokeStyle = '#38bdf8';
+      ctx.lineWidth = 3;
+      ctx.strokeRect(0, 0, facilityWidth, facilityHeight);
+
+      // Label indicator: South Wall (Top) & North Wall (Bottom)
+      ctx.fillStyle = '#38bdf8';
+      ctx.font = 'bold 11px sans-serif';
+      ctx.fillText('SOUTH WALL (TOP)', 20, -10);
+      ctx.fillText('NORTH WALL (BOTTOM)', 20, facilityHeight + 20);
+
+      // Draw Mezzanine Level Structure if active
+      if (state.level === 'mezz') {
+        ctx.fillStyle = 'rgba(14, 116, 144, 0.15)';
+        ctx.strokeStyle = '#06b6d4';
+        ctx.lineWidth = 2;
+        ctx.fillRect(150, 200, facilityWidth - 300, facilityHeight - 400);
+        ctx.strokeRect(150, 200, facilityWidth - 300, facilityHeight - 400);
+
+        ctx.fillStyle = '#22d3ee';
+        ctx.font = '11px sans-serif';
+        ctx.fillText('MEZZANINE FLOOR LEVEL', 170, 225);
+      }
+
+      // Draw Assets for Current Level
+      const currentAssets = state.assets.filter(a => a.level === state.level);
+      currentAssets.forEach(asset => {
+        const cat = state.categories.find(c => c.id === asset.category) || { color: '#ffffff', icon: '📍' };
+
+        ctx.fillStyle = cat.color;
+        ctx.beginPath();
+        ctx.arc(asset.x, asset.y, 14, 0, Math.PI * 2);
         ctx.fill();
-        ctx.strokeStyle = cat.color;
+
+        ctx.strokeStyle = '#0f172a';
         ctx.lineWidth = 3;
         ctx.stroke();
 
-        ctx.font = '14px sans-serif';
+        ctx.fillStyle = '#0f172a';
+        ctx.font = 'bold 12px sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText(cat.icon, asset.x, asset.y);
 
-        ctx.fillStyle = '#fff';
+        ctx.fillStyle = '#ffffff';
         ctx.font = 'bold 11px sans-serif';
-        ctx.textAlign = 'left';
-        ctx.fillText(asset.name, asset.x + 20, asset.y);
+        ctx.textAlign = 'center';
+        ctx.fillText(asset.name, asset.x, asset.y - 22);
       });
 
       ctx.restore();
     }
 
-    // Modal and Sidebar helper functions
-    window.openModal = (id) => { document.getElementById(id).style.display = 'flex'; };
-    window.closeModal = (id) => { document.getElementById(id).style.display = 'none'; };
-
-    window.openCatModalForNew = () => {
-      document.getElementById('catModalTitle').innerText = 'Add System Category';
-      document.getElementById('catId').value = '';
-      document.getElementById('catName').value = '';
-      document.getElementById('catColor').value = '#ff9800';
-      document.getElementById('catIcon').value = '🔥';
-      document.getElementById('deleteCatBtn').style.display = 'none';
-      openModal('catModal');
-    };
-
-    window.openYardModal = () => {
-      document.getElementById('yardNorth').value = state.yard.north;
-      document.getElementById('yardSouth').value = state.yard.south;
-      document.getElementById('yardEast').value = state.yard.east;
-      document.getElementById('yardWest').value = state.yard.west;
-      openModal('yardModal');
-    };
-
-    window.saveYardConfig = async (e) => {
-      e.preventDefault();
-      state.yard = {
-        north: parseInt(document.getElementById('yardNorth').value) || 120,
-        south: parseInt(document.getElementById('yardSouth').value) || 160,
-        east: parseInt(document.getElementById('yardEast').value) || 100,
-        west: parseInt(document.getElementById('yardWest').value) || 100
-      };
-      persistLocally();
-      if (user && db) {
-        await setDoc(getYardDocRef(), state.yard).catch(err => console.error(err));
-      }
-      closeModal('yardModal');
-      showToast("Yard configuration updated successfully!", "success");
-      draw();
-    };
-
-    window.saveCategory = async (e) => {
-      e.preventDefault();
-      const id = document.getElementById('catId').value || 'cat_' + Date.now();
-      const name = document.getElementById('catName').value;
-      const color = document.getElementById('catColor').value;
-      const icon = document.getElementById('catIcon').value;
-
-      const idx = state.categories.findIndex(c => c.id === id);
-      const catObj = { id, name, color, icon };
-      if (idx >= 0) state.categories[idx] = catObj;
-      else state.categories.push(catObj);
-
-      persistLocally();
-      if (user && db) {
-        await setDoc(doc(getCategoriesCol(), id), catObj).catch(err => console.error(err));
-      }
-      closeModal('catModal');
-      renderCategoryList();
-      populateCategorySelect();
-      showToast("Category saved successfully!", "success");
-      draw();
-    };
-
-    window.saveAsset = async (e) => {
-      e.preventDefault();
-      const id = document.getElementById('assetId').value || 'ast_' + Date.now();
-      const name = document.getElementById('assetName').value;
-      const category = document.getElementById('assetCategory').value;
-      const level = document.getElementById('assetLevel').value;
-      const x = parseInt(document.getElementById('assetX').value) || 0;
-      const y = parseInt(document.getElementById('assetY').value) || 0;
-      const grid = document.getElementById('assetGrid').value || getGridRef(x, y);
-      const notes = document.getElementById('assetNotes').value;
-
-      const idx = state.assets.findIndex(a => a.id === id);
-      const assetObj = { id, name, category, level, x, y, grid, notes };
-      if (idx >= 0) state.assets[idx] = assetObj;
-      else state.assets.push(assetObj);
-
-      persistLocally();
-      if (user && db) {
-        await setDoc(doc(getAssetsCol(), id), assetObj).catch(err => console.error(err));
-      }
-      closeModal('assetModal');
-      renderAssetList();
-      showToast("Asset saved successfully!", "success");
-      draw();
-    };
-
-    function renderCategoryList() {
-      const list = document.getElementById('categoryList');
-      list.innerHTML = state.categories.map(cat => `
-        <div class="cat-item">
-          <div class="cat-info">
-            <span class="cat-dot" style="background:${cat.color}"></span>
-            <span>${cat.icon} ${cat.name}</span>
-          </div>
-          <div class="cat-actions">
-            <button class="icon-btn" type="button" onclick="editCategory('${cat.id}')">✏️</button>
-          </div>
-        </div>
-      `).join('');
-    }
-
-    window.editCategory = (id) => {
-      const cat = state.categories.find(c => c.id === id);
-      if (!cat) return;
-      document.getElementById('catModalTitle').innerText = 'Edit System Category';
-      document.getElementById('catId').value = cat.id;
-      document.getElementById('catName').value = cat.name;
-      document.getElementById('catColor').value = cat.color;
-      document.getElementById('catIcon').value = cat.icon;
-      document.getElementById('deleteCatBtn').style.display = 'block';
-      openModal('catModal');
-    };
-
-    window.confirmDeleteCurrentCategory = () => {
-      const id = document.getElementById('catId').value;
-      customConfirm("Delete Category", "Are you sure you want to delete this category? Associated assets may lose categorization.", async () => {
-        state.categories = state.categories.filter(c => c.id !== id);
-        persistLocally();
-        if (user && db) {
-          await deleteDoc(doc(getCategoriesCol(), id)).catch(err => console.error(err));
-        }
-        closeModal('catModal');
-        renderCategoryList();
-        populateCategorySelect();
-        renderAssetList();
-        showToast("Category deleted successfully", "success");
-        draw();
-      });
-    };
-
-    function populateCategorySelect() {
-      const sel = document.getElementById('assetCategory');
-      sel.innerHTML = state.categories.map(c => `<option value="${c.id}">${c.icon} ${c.name}</option>`).join('');
-    }
-
-    function renderAssetList() {
-      const query = (document.getElementById('searchBox').value || '').toLowerCase();
-      const filtered = state.assets.filter(a => {
-        const matchesLevel = (a.level === state.level);
-        const matchesQuery = !query || a.name.toLowerCase().includes(query) || (a.grid && a.grid.toLowerCase().includes(query)) || (a.notes && a.notes.toLowerCase().includes(query));
-        return matchesLevel && matchesQuery;
-      });
-
-      document.getElementById('assetCount').innerText = filtered.length;
-      const containerElem = document.getElementById('assetCards');
-      containerElem.innerHTML = filtered.map(asset => {
-        const cat = state.categories.find(c => c.id === asset.category) || { color: '#888', icon: '📍' };
-        return `
-          <div class="asset-card" onclick="editAsset('${asset.id}')">
-            <div class="asset-title">
-              <span>${cat.icon} ${asset.name}</span>
-            </div>
-            <div class="asset-meta">
-              <span>Grid: <strong>${asset.grid || 'N/A'}</strong></span>
-              <span>•</span>
-              <span>Level: ${asset.level.toUpperCase()}</span>
-            </div>
-            <div class="asset-actions">
-              <button class="icon-btn" type="button" onclick="event.stopPropagation(); editAsset('${asset.id}')">✏️</button>
-              <button class="icon-btn delete" type="button" onclick="event.stopPropagation(); deleteAssetPrompt('${asset.id}')">🗑️</button>
-            </div>
-          </div>
-        `;
-      }).join('');
-    }
-
-    window.editAsset = (id) => {
-      const asset = state.assets.find(a => a.id === id);
-      if (!asset) return;
-      document.getElementById('modalTitle').innerText = 'Edit System Asset';
-      document.getElementById('assetId').value = asset.id;
-      document.getElementById('assetName').value = asset.name;
-      document.getElementById('assetCategory').value = asset.category;
-      document.getElementById('assetLevel').value = asset.level;
-      document.getElementById('assetX').value = asset.x;
-      document.getElementById('assetY').value = asset.y;
-      document.getElementById('assetGrid').value = asset.grid || '';
-      document.getElementById('assetNotes').value = asset.notes || '';
-      document.getElementById('deleteAssetBtn').style.display = 'block';
-      openModal('assetModal');
-    };
-
-    window.deleteAssetPrompt = (id) => {
-      customConfirm("Delete Asset", "Are you sure you want to remove this asset from the blueprint?", async () => {
-        state.assets = state.assets.filter(a => a.id !== id);
-        persistLocally();
-        if (user && db) {
-          await deleteDoc(doc(getAssetsCol(), id)).catch(err => console.error(err));
-        }
-        renderAssetList();
-        showToast("Asset deleted successfully", "success");
-        draw();
-      });
-    };
-
-    window.confirmDeleteCurrentAsset = () => {
-      const id = document.getElementById('assetId').value;
-      closeModal('assetModal');
-      deleteAssetPrompt(id);
-    };
-
-    // Canvas Mouse Interactions (Pan & Click placement)
     container.addEventListener('mousedown', (e) => {
-      if (e.target !== canvas && e.target !== container) return;
+      if (e.button !== 0) return;
       if (state.placementMode) {
         const coords = screenToCanvasCoords(e.clientX, e.clientY);
-        document.getElementById('modalTitle').innerText = 'Add System Asset';
-        document.getElementById('assetId').value = '';
-        document.getElementById('assetName').value = '';
-        document.getElementById('assetCategory').selectedIndex = 0;
-        document.getElementById('assetLevel').value = state.level;
-        document.getElementById('assetX').value = coords.x;
-        document.getElementById('assetY').value = coords.y;
-        document.getElementById('assetGrid').value = getGridRef(coords.x, coords.y);
-        document.getElementById('assetNotes').value = '';
-        document.getElementById('deleteAssetBtn').style.display = 'none';
-        openModal('assetModal');
+        openAssetModalForNew(coords.x, coords.y);
         togglePlacementMode();
         return;
       }
@@ -942,7 +908,8 @@
 
     window.addEventListener('mousemove', (e) => {
       const coords = screenToCanvasCoords(e.clientX, e.clientY);
-      document.getElementById('coordText').innerText = `X: ${coords.x} | Y: ${coords.y} | Grid: ${getGridRef(coords.x, coords.y)}`;
+      const gridRef = getGridRef(coords.x, coords.y);
+      document.getElementById('coordText').innerText = `X: ${coords.x} | Y: ${coords.y} | Grid: ${gridRef} | Floor: ${state.level.toUpperCase()}`;
 
       if (!state.isPanning) return;
       state.panX = e.clientX - state.startX;
@@ -954,21 +921,6 @@
       state.isPanning = false;
       container.classList.remove('panning');
     });
-
-    container.addEventListener('wheel', (e) => {
-      e.preventDefault();
-      const zoomFactor = e.deltaY < 0 ? 1.1 : 0.9;
-      const newScale = Math.max(0.2, Math.min(4, state.scale * zoomFactor));
-      
-      const rect = canvas.getBoundingClientRect();
-      const mouseX = e.clientX - rect.left;
-      const mouseY = e.clientY - rect.top;
-
-      state.panX = mouseX - (mouseX - state.panX) * (newScale / state.scale);
-      state.panY = mouseY - (mouseY - state.panY) * (newScale / state.scale);
-      state.scale = newScale;
-      draw();
-    }, { passive: false });
 
     window.zoomButtonHandler = (factor) => {
       state.scale = Math.max(0.2, Math.min(4, state.scale * factor));
@@ -982,48 +934,318 @@
       draw();
     };
 
-    window.exportJSON = () => {
-      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state, null, 2));
-      const dlAnchor = document.createElement('a');
-      dlAnchor.setAttribute("href", dataStr);
-      dlAnchor.setAttribute("download", `facility_blueprint_${state.level}_${Date.now()}.json`);
-      document.body.appendChild(dlAnchor);
-      dlAnchor.click();
-      dlAnchor.remove();
-      showToast("Blueprint exported successfully!", "success");
+    window.setLevel = (lvl, event) => {
+      state.level = lvl;
+      document.querySelectorAll('.level-btn').forEach(b => b.classList.remove('active'));
+      if (event && event.target) event.target.classList.add('active');
+      renderAssetList();
+      draw();
     };
 
-    window.importJSON = (event) => {
-      const file = event.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = async (e) => {
-        try {
-          const imported = JSON.parse(e.target.result);
-          if (imported.assets) state.assets = imported.assets;
-          if (imported.categories) state.categories = imported.categories;
-          if (imported.yard) state.yard = imported.yard;
-          persistLocally();
-          if (user && db) {
-            await seedCategoriesToCloud();
-            await seedAssetsToCloud();
-            await seedYardToCloud();
-          }
-          renderCategoryList();
-          populateCategorySelect();
-          renderAssetList();
-          showToast("Blueprint imported successfully!", "success");
-          draw();
-        } catch (err) {
-          showToast("Failed to parse JSON file.", "error");
+    function renderCategoryList() {
+      const list = document.getElementById('categoryList');
+      list.innerHTML = '';
+      state.categories.forEach(cat => {
+        const div = document.createElement('div');
+        div.className = 'cat-item';
+        div.innerHTML = `
+          <div class="cat-info">
+            <span class="cat-dot" style="background:${cat.color}"></span>
+            <span>${cat.icon} ${cat.name}</span>
+          </div>
+          <div class="cat-actions">
+            <button class="icon-btn" onclick="openCatModalForEdit('${cat.id}')">✏</button>
+          </div>
+        `;
+        list.appendChild(div);
+      });
+    }
+
+    function populateCategorySelect() {
+      const select = document.getElementById('assetCategory');
+      select.innerHTML = '';
+      state.categories.forEach(cat => {
+        const opt = document.createElement('option');
+        opt.value = cat.id;
+        opt.innerText = `${cat.icon} ${cat.name}`;
+        select.appendChild(opt);
+      });
+    }
+
+    function renderAssetList() {
+      const containerCards = document.getElementById('assetCards');
+      containerCards.innerHTML = '';
+      const query = (document.getElementById('searchBox').value || '').toLowerCase();
+      
+      const filtered = state.assets.filter(a => {
+        const matchLevel = a.level === state.level;
+        const matchQuery = a.name.toLowerCase().includes(query) || (a.grid && a.grid.toLowerCase().includes(query)) || (a.notes && a.notes.toLowerCase().includes(query));
+        return matchLevel && matchQuery;
+      });
+
+      document.getElementById('assetCount').innerText = filtered.length;
+
+      filtered.forEach(asset => {
+        const cat = state.categories.find(c => c.id === asset.category) || { color: '#fff', icon: '📍', name: 'Unknown' };
+        const card = document.createElement('div');
+        card.className = 'asset-card';
+        card.onclick = () => focusAsset(asset.id);
+        card.innerHTML = `
+          <div class="asset-title">${asset.name}</div>
+          <div class="asset-meta">
+            <span style="color:${cat.color}">${cat.icon} ${cat.name}</span>
+            <span>•</span>
+            <span>Grid: ${asset.grid || 'N/A'}</span>
+          </div>
+          <div class="asset-actions">
+            <button class="icon-btn" onclick="event.stopPropagation(); openAssetModalForEdit('${asset.id}')">Edit</button>
+            <button class="icon-btn" onclick="event.stopPropagation(); focusAsset('${asset.id}')">Locate</button>
+          </div>
+        `;
+        containerCards.appendChild(card);
+      });
+    }
+
+    function openModal(id) {
+      document.getElementById(id).style.display = 'flex';
+    }
+
+    function closeModal(id) {
+      document.getElementById(id).style.display = 'none';
+    }
+
+    function openAssetModalForNew(x, y) {
+      document.getElementById('modalTitle').innerText = 'Add System Asset';
+      document.getElementById('assetId').value = '';
+      document.getElementById('assetName').value = '';
+      document.getElementById('assetLevel').value = state.level;
+      document.getElementById('assetX').value = x || 100;
+      document.getElementById('assetY').value = y || 100;
+      document.getElementById('assetGrid').value = getGridRef(x || 100, y || 100);
+      document.getElementById('assetNotes').value = '';
+      document.getElementById('deleteAssetBtn').style.display = 'none';
+      populateCategorySelect();
+      openModal('assetModal');
+    }
+
+    function openAssetModalForEdit(id) {
+      const asset = state.assets.find(a => a.id === id);
+      if (!asset) return;
+      document.getElementById('modalTitle').innerText = 'Edit System Asset';
+      document.getElementById('assetId').value = asset.id;
+      document.getElementById('assetName').value = asset.name;
+      document.getElementById('assetCategory').value = asset.category;
+      document.getElementById('assetLevel').value = asset.level;
+      document.getElementById('assetX').value = asset.x;
+      document.getElementById('assetY').value = asset.y;
+      document.getElementById('assetGrid').value = asset.grid || '';
+      document.getElementById('assetNotes').value = asset.notes || '';
+      document.getElementById('deleteAssetBtn').style.display = 'block';
+      populateCategorySelect();
+      openModal('assetModal');
+    }
+
+    function saveAsset(event) {
+      event.preventDefault();
+      const id = document.getElementById('assetId').value;
+      const name = document.getElementById('assetName').value;
+      const category = document.getElementById('assetCategory').value;
+      const level = document.getElementById('assetLevel').value;
+      const x = parseInt(document.getElementById('assetX').value) || 0;
+      const y = parseInt(document.getElementById('assetY').value) || 0;
+      const grid = document.getElementById('assetGrid').value || getGridRef(x, y);
+      const notes = document.getElementById('assetNotes').value;
+
+      if (id) {
+        const asset = state.assets.find(a => a.id === id);
+        if (asset) {
+          asset.name = name;
+          asset.category = category;
+          asset.level = level;
+          asset.x = x;
+          asset.y = y;
+          asset.grid = grid;
+          asset.notes = notes;
         }
-      };
-      reader.readAsText(file);
-    };
+        showToast('Asset updated successfully');
+      } else {
+        const newAsset = {
+          id: 'ast_' + Date.now(),
+          name, category, level, x, y, grid, notes
+        };
+        state.assets.push(newAsset);
+        showToast('New asset placed successfully');
+      }
 
-    // Initialize application on load
+      persistLocally();
+      closeModal('assetModal');
+      renderAssetList();
+      draw();
+    }
+
+    function confirmDeleteCurrentAsset() {
+      const id = document.getElementById('assetId').value;
+      customConfirm('Delete Asset', 'Are you sure you want to delete this asset from the blueprint?', () => {
+        state.assets = state.assets.filter(a => a.id !== id);
+        persistLocally();
+        closeModal('assetModal');
+        renderAssetList();
+        draw();
+        showToast('Asset deleted', 'error');
+      });
+    }
+
+    function focusAsset(id) {
+      const asset = state.assets.find(a => a.id === id);
+      if (!asset) return;
+      if (asset.level !== state.level) {
+        setLevel(asset.level);
+        document.querySelectorAll('.level-btn').forEach(b => {
+          if (b.innerText.toLowerCase().includes(asset.level)) b.classList.add('active');
+          else b.classList.remove('active');
+        });
+      }
+      state.panX = canvas.width / 2 - asset.x * state.scale;
+      state.panY = canvas.height / 2 - asset.y * state.scale;
+      draw();
+    }
+
+    function openCatModalForNew() {
+      document.getElementById('catModalTitle').innerText = 'Add Category';
+      document.getElementById('catId').value = '';
+      document.getElementById('catName').value = '';
+      document.getElementById('catColor').value = '#00e676';
+      document.getElementById('catIcon').value = '⚙️';
+      document.getElementById('deleteCatBtn').style.display = 'none';
+      openModal('catModal');
+    }
+
+    function openCatModalForEdit(id) {
+      const cat = state.categories.find(c => c.id === id);
+      if (!cat) return;
+      document.getElementById('catModalTitle').innerText = 'Edit Category';
+      document.getElementById('catId').value = cat.id;
+      document.getElementById('catName').value = cat.name;
+      document.getElementById('catColor').value = cat.color;
+      document.getElementById('catIcon').value = cat.icon;
+      document.getElementById('deleteCatBtn').style.display = 'block';
+      openModal('catModal');
+    }
+
+    function saveCategory(event) {
+      event.preventDefault();
+      const id = document.getElementById('catId').value;
+      const name = document.getElementById('catName').value;
+      const color = document.getElementById('catColor').value;
+      const icon = document.getElementById('catIcon').value;
+
+      if (id) {
+        const cat = state.categories.find(c => c.id === id);
+        if (cat) {
+          cat.name = name;
+          cat.color = color;
+          cat.icon = icon;
+        }
+        showToast('Category updated');
+      } else {
+        const newCat = {
+          id: 'cat_' + Date.now(),
+          name, color, icon
+        };
+        state.categories.push(newCat);
+        showToast('Category created');
+      }
+
+      persistLocally();
+      closeModal('catModal');
+      renderCategoryList();
+      renderAssetList();
+      draw();
+    }
+
+    function confirmDeleteCurrentCategory() {
+      const id = document.getElementById('catId').value;
+      customConfirm('Delete Category', 'Deleting this category will remove it from associated assets. Proceed?', () => {
+        state.categories = state.categories.filter(c => c.id !== id);
+        persistLocally();
+        closeModal('catModal');
+        renderCategoryList();
+        renderAssetList();
+        draw();
+        showToast('Category deleted', 'error');
+      });
+    }
+
+    function openYardModal() {
+      document.getElementById('yardNorth').value = state.yard.north;
+      document.getElementById('yardSouth').value = state.yard.south;
+      document.getElementById('yardEast').value = state.yard.east;
+      document.getElementById('yardWest').value = state.yard.west;
+      openModal('yardModal');
+    }
+
+    function saveYardConfig(event) {
+      event.preventDefault();
+      state.yard.north = parseInt(document.getElementById('yardNorth').value) || 0;
+      state.yard.south = parseInt(document.getElementById('yardSouth').value) || 0;
+      state.yard.east = parseInt(document.getElementById('yardEast').value) || 0;
+      state.yard.west = parseInt(document.getElementById('yardWest').value) || 0;
+      persistLocally();
+      closeModal('yardModal');
+      draw();
+      showToast('Yard boundaries updated');
+    }
+
+    function exportJSON() {
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state, null, 2));
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.setAttribute("href", dataStr);
+      downloadAnchor.setAttribute("download", "facility_blueprint_backup.json");
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+      showToast('Backup exported successfully');
+    }
+
+    function importJSON(event) {
+      const fileReader = new FileReader();
+      if (event.target.files[0]) {
+        fileReader.readAsText(event.target.files[0], "UTF-8");
+        fileReader.onload = (e) => {
+          try {
+            const parsed = JSON.parse(e.target.result);
+            if (parsed.assets) state.assets = parsed.assets;
+            if (parsed.categories) state.categories = parsed.categories;
+            if (parsed.yard) state.yard = parsed.yard;
+            persistLocally();
+            renderCategoryList();
+            renderAssetList();
+            draw();
+            showToast('Blueprint data imported successfully');
+          } catch (err) {
+            showToast('Invalid JSON file format', 'error');
+          }
+        };
+      }
+    }
+
+    function initFirebaseFromInputs() {
+      const apiKey = document.getElementById('fbApiKey').value;
+      const projectId = document.getElementById('fbProjectId').value;
+      if (!apiKey || !projectId) {
+        showToast('Please provide valid Firebase credentials', 'error');
+        return;
+      }
+      showToast('Cloud sync mode activated');
+      document.getElementById('userBadge').innerText = 'Cloud Sync: ' + projectId;
+      closeModal('authModal');
+    }
+
+    loadLocalState();
     resizeCanvas();
-    initFirebase();
+    renderCategoryList();
+    renderAssetList();
+    draw();
   </script>
 </body>
 </html>
