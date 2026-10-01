@@ -329,18 +329,18 @@
     import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
     import { getFirestore, doc, setDoc, deleteDoc, onSnapshot, collection } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-    const appId = typeof __app_id !== 'undefined' ? __app_id : 'facility-blueprint-app';
+    const appId = 'facility-blueprint-app';
     
-    // YOUR ACTUAL FIREBASE CONFIGURATION
-const firebaseConfig = {
-  apiKey: "AIzaSyAJX40zI8_Y7MlpG5-xHNHHQsmzRoKCabY",
-  authDomain: "imi1-interactive-map.firebaseapp.com",
-  projectId: "imi1-interactive-map",
-  storageBucket: "imi1-interactive-map.firebasestorage.app",
-  messagingSenderId: "396990647633",
-  appId: "1:396990647633:web:2b4d7c962f2a707d121770",
-  measurementId: "G-EZV4DWYS5F"
-};
+    // YOUR FIREBASE CONFIGURATION
+    const firebaseConfig = {
+      apiKey: "AIzaSyAJX40zI8_Y7MlpG5-xHNHHQsmzRoKCabY",
+      authDomain: "imi1-interactive-map.firebaseapp.com",
+      projectId: "imi1-interactive-map",
+      storageBucket: "imi1-interactive-map.firebasestorage.app",
+      messagingSenderId: "396990647633",
+      appId: "1:396990647633:web:2b4d7c962f2a707d121770",
+      measurementId: "G-EZV4DWYS5F"
+    };
 
     let db = null;
     let auth = null;
@@ -450,26 +450,13 @@ const firebaseConfig = {
     const getYardDocRef = () => doc(db, 'artifacts', appId, 'public', 'data', 'config', 'yard');
 
     async function initFirebase() {
-      if (!firebaseConfig || !firebaseConfig.apiKey || firebaseConfig.apiKey.includes("AIzaSyD...")) {
-        updateCloudStatus(false, "Local Memory Mode (Update Firebase Config)");
-        renderCategoryList();
-        renderAssetList();
-        draw();
-        return;
-      }
-
       try {
         const app = initializeApp(firebaseConfig);
         auth = getAuth(app);
         db = getFirestore(app);
 
-        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-          const res = await signInWithCustomToken(auth, __initial_auth_token);
-          user = res.user;
-        } else {
-          const res = await signInAnonymously(auth);
-          user = res.user;
-        }
+        const res = await signInAnonymously(auth);
+        user = res.user;
 
         if (user) {
           updateCloudStatus(true, `Synced Live (${user.uid.slice(0, 6)}...)`);
@@ -631,49 +618,7 @@ const firebaseConfig = {
       ctx.fillRect(0, 0, buildingWidth, 780);
       ctx.strokeRect(0, 0, buildingWidth, 780);
 
-      const r1X = 480; 
-      const r1Y = 75;  
-      const r1W = 1215; 
-      const r1H = 345;  
-
-      ctx.fillStyle = 'rgba(255, 152, 0, 0.12)';
-      ctx.strokeStyle = '#ff9800';
-      ctx.lineWidth = 1.5;
-      ctx.fillRect(r1X, r1Y, r1W, r1H);
-      ctx.strokeRect(r1X, r1Y, r1W, r1H);
-
-      ctx.strokeStyle = 'rgba(255, 152, 0, 0.2)';
-      ctx.lineWidth = 1;
-      for (let rx = r1X; rx <= r1X + r1W; rx += 30) {
-        ctx.beginPath(); ctx.moveTo(rx, r1Y); ctx.lineTo(rx - 30, r1Y + r1H); ctx.stroke();
-      }
-
-      ctx.fillStyle = '#ffa726'; ctx.font = 'bold 12px sans-serif';
-      ctx.fillText('MAIN RACKING AREA #1 (Cols 9 to 29.25 | Rows B.25 to G)', r1X + 20, r1Y + 25);
-
-      const r2X = 1410;
-      const r2Y = 450;
-      const r2W = 240; 
-      const r2H = 240; 
-
-      ctx.fillStyle = 'rgba(255, 152, 0, 0.18)';
-      ctx.strokeStyle = '#ff9800';
-      ctx.lineWidth = 1.5;
-      ctx.fillRect(r2X, r2Y, r2W, r2H);
-      ctx.strokeRect(r2X, r2Y, r2W, r2H);
-
-      ctx.strokeStyle = 'rgba(255, 152, 0, 0.25)';
-      for (let rx = r2X; rx <= r2X + r2W + r2H; rx += 20) {
-        ctx.beginPath(); 
-        ctx.moveTo(Math.min(rx, r2X + r2W), r2Y + Math.max(0, rx - (r2X + r2W))); 
-        ctx.lineTo(Math.max(r2X, rx - r2H), Math.min(r2Y + r2H, r2Y + (rx - r2X))); 
-        ctx.stroke();
-      }
-
-      ctx.fillStyle = '#ffa726'; ctx.font = 'bold 10px sans-serif';
-      ctx.fillText('RACKING #2', r2X + 10, r2Y + 20);
-      ctx.fillText('(Cols 24.5 to 28.5 | Rows H.5 to L.5)', r2X + 10, r2Y + 35);
-
+      // Grid lines
       ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
       ctx.lineWidth = 1;
       for (let x = 0; x <= buildingWidth; x += 60) {
@@ -683,21 +628,17 @@ const firebaseConfig = {
         ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(buildingWidth, y); ctx.stroke();
       }
 
-      ctx.strokeStyle = '#e91e63';
-      ctx.lineWidth = 2;
-      ctx.beginPath(); ctx.moveTo(0, 780); ctx.lineTo(buildingWidth, 780); ctx.stroke();
-      ctx.fillStyle = '#e91e63'; ctx.font = 'bold 10px monospace';
-      ctx.fillText('COLUMN M.9 WALL LINE', 20, 772);
-
-      state.assets.filter(a => a.level === state.level).forEach(asset => {
-        const cat = state.categories.find(c => c.id === asset.category) || { color: '#ffffff', icon: '📍' };
+      // Draw Assets for Current Level
+      const visibleAssets = state.assets.filter(a => a.level === state.level);
+      visibleAssets.forEach(asset => {
+        const cat = state.categories.find(c => c.id === asset.category) || { color: '#2196f3', icon: '📍' };
         
         ctx.beginPath();
-        ctx.arc(asset.x, asset.y, 16, 0, Math.PI * 2);
-        ctx.fillStyle = '#161b26';
+        ctx.arc(asset.x, asset.y, 14, 0, Math.PI * 2);
+        ctx.fillStyle = cat.color;
         ctx.fill();
-        ctx.strokeStyle = cat.color;
-        ctx.lineWidth = 3;
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = '#fff';
         ctx.stroke();
 
         ctx.font = '14px sans-serif';
@@ -708,58 +649,20 @@ const firebaseConfig = {
         ctx.font = 'bold 11px sans-serif';
         ctx.fillStyle = '#fff';
         ctx.textAlign = 'left';
-        ctx.fillText(asset.name, asset.x + 22, asset.y + 4);
+        ctx.fillText(asset.name, asset.x + 18, asset.y + 4);
       });
 
       ctx.restore();
     }
 
-    window.setLevel = (lvl, e) => {
-      state.level = lvl;
-      document.querySelectorAll('.level-btn').forEach(btn => btn.classList.remove('active'));
-      if (e && e.target) e.target.classList.add('active');
-      draw();
-    };
-
-    window.zoomButtonHandler = (factor) => {
-      const cx = canvas.width / 2;
-      const cy = canvas.height / 2;
-      const wx = (cx - state.panX) / state.scale;
-      const wy = (cy - state.panY) / state.scale;
-      state.scale = Math.max(0.2, Math.min(4, state.scale * factor));
-      state.panX = cx - wx * state.scale;
-      state.panY = cy - wy * state.scale;
-      draw();
-    };
-
-    window.resetView = () => {
-      state.scale = 1;
-      state.panX = 50;
-      state.panY = 50;
-      draw();
-    };
-
-    canvas.addEventListener('wheel', (e) => {
-      e.preventDefault();
-      const zoomFactor = e.deltaY < 0 ? 1.15 : 0.85;
-      const rect = canvas.getBoundingClientRect();
-      const mouseX = e.clientX - rect.left;
-      const mouseY = e.clientY - rect.top;
-      const wx = (mouseX - state.panX) / state.scale;
-      const wy = (mouseY - state.panY) / state.scale;
-      state.scale = Math.max(0.2, Math.min(4, state.scale * zoomFactor));
-      state.panX = mouseX - wx * state.scale;
-      state.panY = mouseY - wy * state.scale;
-      draw();
-    }, { passive: false });
-
+    // Interaction Handlers
     canvas.addEventListener('mousedown', (e) => {
       if (e.button !== 0) return;
       const coords = screenToCanvasCoords(e.clientX, e.clientY);
 
       if (state.placementMode) {
-        openAssetModalForNew(coords.x, coords.y);
-        window.togglePlacementMode();
+        openAssetModalForNew(coords.x, coords.y, getGridRef(coords.x, coords.y));
+        togglePlacementMode();
         return;
       }
 
@@ -771,8 +674,7 @@ const firebaseConfig = {
 
     window.addEventListener('mousemove', (e) => {
       const coords = screenToCanvasCoords(e.clientX, e.clientY);
-      const grid = getGridRef(coords.x, coords.y);
-      document.getElementById('coordText').innerText = `X: ${coords.x} | Y: ${coords.y} | Grid: ${grid} | Zoom: ${Math.round(state.scale * 100)}%`;
+      document.getElementById('coordText').innerText = `X: ${coords.x} | Y: ${coords.y} | Grid: ${getGridRef(coords.x, coords.y)}`;
 
       if (!state.isPanning) return;
       state.panX = e.clientX - state.startX;
@@ -785,79 +687,119 @@ const firebaseConfig = {
       container.classList.remove('panning');
     });
 
-    function renderCategoryList() {
-      const list = document.getElementById('categoryList');
-      list.innerHTML = state.categories.map(cat => `
-        <div class="cat-item">
-          <div class="cat-info">
-            <span class="cat-dot" style="background:${cat.color}"></span>
-            <span>${cat.icon} ${cat.name}</span>
-          </div>
-          <div class="cat-actions">
-            <button class="icon-btn" type="button" onclick="openCatModalForEdit('${cat.id}')">✏️</button>
-          </div>
-        </div>
-      `).join('');
-    }
+    canvas.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      const zoomFactor = e.deltaY < 0 ? 1.15 : 0.85;
+      const newScale = Math.max(0.2, Math.min(4, state.scale * zoomFactor));
+      
+      const rect = canvas.getBoundingClientRect();
+      const mouseX = e.clientX - rect.left;
+      const mouseY = e.clientY - rect.top;
+
+      state.panX = mouseX - (mouseX - state.panX) * (newScale / state.scale);
+      state.panY = mouseY - (mouseY - state.panY) * (newScale / state.scale);
+      state.scale = newScale;
+      draw();
+    }, { passive: false });
+
+    window.setLevel = (lvl, e) => {
+      state.level = lvl;
+      document.querySelectorAll('.level-btn').forEach(b => b.classList.remove('active'));
+      if (e && e.target) e.target.classList.add('active');
+      renderAssetList();
+      draw();
+    };
+
+    window.resetView = () => {
+      state.scale = 1;
+      state.panX = 50;
+      state.panY = 50;
+      draw();
+    };
+
+    window.zoomButtonHandler = (factor) => {
+      state.scale = Math.max(0.2, Math.min(4, state.scale * factor));
+      draw();
+    };
 
     function populateCategorySelect() {
       const select = document.getElementById('assetCategory');
       select.innerHTML = state.categories.map(c => `<option value="${c.id}">${c.icon} ${c.name}</option>`).join('');
     }
 
-    function renderAssetList() {
+    window.renderCategoryList = () => {
+      const list = document.getElementById('categoryList');
+      list.innerHTML = state.categories.map(c => `
+        <div class="cat-item">
+          <div class="cat-info">
+            <span class="cat-dot" style="background:${c.color}"></span>
+            <span>${c.icon} ${c.name}</span>
+          </div>
+          <div class="cat-actions">
+            <button class="icon-btn" onclick="openCatModalForEdit('${c.id}')" title="Edit">✏️</button>
+          </div>
+        </div>
+      `).join('');
+      populateCategorySelect();
+    };
+
+    window.renderAssetList = () => {
       const query = (document.getElementById('searchBox')?.value || '').toLowerCase();
-      const containerElem = document.getElementById('assetCards');
-      const filtered = state.assets.filter(a => a.name.toLowerCase().includes(query) || (a.grid && a.grid.toLowerCase().includes(query)));
-      
+      const filtered = state.assets.filter(a => 
+        a.name.toLowerCase().includes(query) || 
+        (a.grid && a.grid.toLowerCase().includes(query)) ||
+        (a.notes && a.notes.toLowerCase().includes(query))
+      );
+
       document.getElementById('assetCount').innerText = filtered.length;
+      const containerElem = document.getElementById('assetCards');
+      
       containerElem.innerHTML = filtered.map(a => {
-        const cat = state.categories.find(c => c.id === a.category) || { color: '#aaa', icon: '📍' };
+        const cat = state.categories.find(c => c.id === a.category) || { color: '#2196f3', icon: '📍' };
         return `
-          <div class="asset-card" onclick="editAsset('${a.id}')">
+          <div class="asset-card" onclick="focusAsset('${a.id}')">
             <div class="asset-title">
               <span>${cat.icon} ${a.name}</span>
             </div>
             <div class="asset-meta">
-              <span>Grid: ${a.grid || 'N/A'}</span>
-              <span>Level: ${a.level.toUpperCase()}</span>
+              <span>Grid: <strong>${a.grid || 'N/A'}</strong></span>
+              <span>Level: <strong>${a.level}</strong></span>
             </div>
             <div class="asset-actions">
-              <button class="icon-btn" type="button" title="Pan to Asset" onclick="event.stopPropagation(); focusAsset('${a.id}')">🎯</button>
+              <button class="icon-btn" onclick="event.stopPropagation(); openAssetModalForEdit('${a.id}')" title="Edit">✏️</button>
             </div>
           </div>
         `;
       }).join('');
-    }
+    };
 
     window.focusAsset = (id) => {
       const asset = state.assets.find(a => a.id === id);
       if (!asset) return;
-      state.level = asset.level;
-      document.querySelectorAll('.level-btn').forEach(btn => {
-        btn.classList.toggle('active', btn.getAttribute('onclick').includes(asset.level));
-      });
-      state.scale = 1.5;
-      state.panX = canvas.width / 2 - asset.x * state.scale;
-      state.panY = canvas.height / 2 - asset.y * state.scale;
+      setLevel(asset.level);
+      state.panX = (canvas.width / 2) - (asset.x * state.scale);
+      state.panY = (canvas.height / 2) - (asset.y * state.scale);
       draw();
     };
 
-    window.openAssetModalForNew = (x = 200, y = 200) => {
+    // Modal Helpers
+    window.openModal = (id) => document.getElementById(id).style.display = 'flex';
+    window.closeModal = (id) => document.getElementById(id).style.display = 'none';
+
+    window.openAssetModalForNew = (x, y, grid) => {
       document.getElementById('modalTitle').innerText = 'Add System Asset';
       document.getElementById('assetId').value = '';
       document.getElementById('assetName').value = '';
       document.getElementById('assetX').value = x;
       document.getElementById('assetY').value = y;
-      document.getElementById('assetGrid').value = getGridRef(x, y);
-      document.getElementById('assetLevel').value = state.level;
+      document.getElementById('assetGrid').value = grid;
       document.getElementById('assetNotes').value = '';
+      document.getElementById('assetLevel').value = state.level;
       document.getElementById('deleteAssetBtn').style.display = 'none';
-      populateCategorySelect();
       openModal('assetModal');
     };
 
-    window.editAsset = (id) => {
+    window.openAssetModalForEdit = (id) => {
       const asset = state.assets.find(a => a.id === id);
       if (!asset) return;
       document.getElementById('modalTitle').innerText = 'Edit System Asset';
@@ -869,50 +811,51 @@ const firebaseConfig = {
       document.getElementById('assetY').value = asset.y;
       document.getElementById('assetGrid').value = asset.grid || '';
       document.getElementById('assetNotes').value = asset.notes || '';
-      document.getElementById('deleteAssetBtn').style.display = 'inline-block';
-      populateCategorySelect();
+      document.getElementById('deleteAssetBtn').style.display = 'block';
       openModal('assetModal');
     };
 
     window.saveAsset = async (e) => {
       e.preventDefault();
       const id = document.getElementById('assetId').value || 'ast_' + Date.now();
-      const asset = {
+      const assetData = {
         id,
         name: document.getElementById('assetName').value,
         category: document.getElementById('assetCategory').value,
         level: document.getElementById('assetLevel').value,
-        x: parseInt(document.getElementById('assetX').value),
-        y: parseInt(document.getElementById('assetY').value),
+        x: Number(document.getElementById('assetX').value),
+        y: Number(document.getElementById('assetY').value),
         grid: document.getElementById('assetGrid').value,
         notes: document.getElementById('assetNotes').value
       };
 
-      if (db && user) {
-        await setDoc(doc(getAssetsCol(), id), asset);
+      if (user && db) {
+        await setDoc(doc(getAssetsCol(), id), assetData);
+        showToast("Asset saved to live cloud database!", "success");
       } else {
         const idx = state.assets.findIndex(a => a.id === id);
-        if (idx >= 0) state.assets[idx] = asset;
-        else state.assets.push(asset);
+        if (idx >= 0) state.assets[idx] = assetData;
+        else state.assets.push(assetData);
         renderAssetList();
         draw();
+        showToast("Asset saved locally.", "success");
       }
       closeModal('assetModal');
-      showToast("Asset saved successfully!", "success");
     };
 
     window.confirmDeleteCurrentAsset = () => {
       const id = document.getElementById('assetId').value;
-      customConfirm("Delete Asset", "Are you sure you want to delete this asset from the facility blueprint?", async () => {
-        if (db && user) {
+      customConfirm("Delete Asset", "Are you sure you want to permanently delete this asset from the facility map?", async () => {
+        if (user && db) {
           await deleteDoc(doc(getAssetsCol(), id));
+          showToast("Asset deleted from cloud.", "success");
         } else {
           state.assets = state.assets.filter(a => a.id !== id);
           renderAssetList();
           draw();
+          showToast("Asset deleted locally.", "success");
         }
         closeModal('assetModal');
-        showToast("Asset deleted.", "error");
       });
     };
 
@@ -920,7 +863,7 @@ const firebaseConfig = {
       document.getElementById('catModalTitle').innerText = 'Add System Category';
       document.getElementById('catId').value = '';
       document.getElementById('catName').value = '';
-      document.getElementById('catColor').value = '#00e676';
+      document.getElementById('catColor').value = '#ff9800';
       document.getElementById('catIcon').value = '🔧';
       document.getElementById('deleteCatBtn').style.display = 'none';
       openModal('catModal');
@@ -934,52 +877,45 @@ const firebaseConfig = {
       document.getElementById('catName').value = cat.name;
       document.getElementById('catColor').value = cat.color;
       document.getElementById('catIcon').value = cat.icon;
-      document.getElementById('deleteCatBtn').style.display = 'inline-block';
+      document.getElementById('deleteCatBtn').style.display = 'block';
       openModal('catModal');
     };
 
     window.saveCategory = async (e) => {
       e.preventDefault();
       const id = document.getElementById('catId').value || 'cat_' + Date.now();
-      const cat = {
+      const catData = {
         id,
         name: document.getElementById('catName').value,
         color: document.getElementById('catColor').value,
         icon: document.getElementById('catIcon').value
       };
 
-      if (db && user) {
-        await setDoc(doc(getCategoriesCol(), id), cat);
+      if (user && db) {
+        await setDoc(doc(getCategoriesCol(), id), catData);
+        showToast("Category saved to live cloud!", "success");
       } else {
         const idx = state.categories.findIndex(c => c.id === id);
-        if (idx >= 0) state.categories[idx] = cat;
-        else state.categories.push(cat);
+        if (idx >= 0) state.categories[idx] = catData;
+        else state.categories.push(catData);
         renderCategoryList();
-        populateCategorySelect();
-        draw();
+        showToast("Category saved locally.", "success");
       }
       closeModal('catModal');
-      showToast("Category saved successfully!", "success");
     };
 
     window.confirmDeleteCurrentCategory = () => {
       const id = document.getElementById('catId').value;
-      const inUse = state.assets.some(a => a.category === id);
-      if (inUse) {
-        showToast("Cannot delete category while assets are assigned to it.", "error");
-        return;
-      }
-      customConfirm("Delete Category", "Are you sure you want to delete this category?", async () => {
-        if (db && user) {
+      customConfirm("Delete Category", "Deleting this category will remove it from filter options. Continue?", async () => {
+        if (user && db) {
           await deleteDoc(doc(getCategoriesCol(), id));
+          showToast("Category deleted from cloud.", "success");
         } else {
           state.categories = state.categories.filter(c => c.id !== id);
           renderCategoryList();
-          populateCategorySelect();
-          draw();
+          showToast("Category deleted locally.", "success");
         }
         closeModal('catModal');
-        showToast("Category deleted.", "error");
       });
     };
 
@@ -993,25 +929,23 @@ const firebaseConfig = {
 
     window.saveYardConfig = async (e) => {
       e.preventDefault();
-      const yard = {
-        north: parseInt(document.getElementById('yardNorth').value),
-        south: parseInt(document.getElementById('yardSouth').value),
-        east: parseInt(document.getElementById('yardEast').value),
-        west: parseInt(document.getElementById('yardWest').value)
+      const yardData = {
+        north: Number(document.getElementById('yardNorth').value),
+        south: Number(document.getElementById('yardSouth').value),
+        east: Number(document.getElementById('yardEast').value),
+        west: Number(document.getElementById('yardWest').value)
       };
 
-      if (db && user) {
-        await setDoc(getYardDocRef(), yard);
+      if (user && db) {
+        await setDoc(getYardDocRef(), yardData);
+        showToast("Yard layout updated in live cloud!", "success");
       } else {
-        state.yard = yard;
+        state.yard = yardData;
         draw();
+        showToast("Yard layout updated locally.", "success");
       }
       closeModal('yardModal');
-      showToast("Yard configuration updated successfully!", "success");
     };
-
-    window.openModal = (modalId) => { document.getElementById(modalId).style.display = 'flex'; };
-    window.closeModal = (modalId) => { document.getElementById(modalId).style.display = 'none'; };
 
     window.exportJSON = () => {
       const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state, null, 2));
@@ -1021,42 +955,42 @@ const firebaseConfig = {
       document.body.appendChild(dlAnchor);
       dlAnchor.click();
       dlAnchor.remove();
-      showToast("Blueprint backup exported successfully!", "success");
+      showToast("Blueprint backup exported successfully.", "success");
     };
 
     window.importJSON = (e) => {
       const file = e.target.files[0];
       if (!file) return;
       const reader = new FileReader();
-      reader.onload = async (event) => {
+      reader.onload = async (evt) => {
         try {
-          const imported = JSON.parse(event.target.result);
-          if (imported.categories && imported.assets) {
-            state.categories = imported.categories;
-            state.assets = imported.assets;
-            if (imported.yard) state.yard = imported.yard;
-            
-            if (db && user) {
-              await seedCategoriesToCloud();
-              await seedAssetsToCloud();
-              await seedYardToCloud();
-            }
-            renderCategoryList();
-            renderAssetList();
-            draw();
-            showToast("Blueprint imported successfully!", "success");
-          } else {
-            showToast("Invalid JSON structure.", "error");
+          const imported = JSON.parse(evt.target.result);
+          if (imported.categories) state.categories = imported.categories;
+          if (imported.assets) state.assets = imported.assets;
+          if (imported.yard) state.yard = imported.yard;
+
+          if (user && db) {
+            await seedCategoriesToCloud();
+            await seedAssetsToCloud();
+            await seedYardToCloud();
           }
+
+          renderCategoryList();
+          renderAssetList();
+          draw();
+          showToast("Blueprint state imported successfully!", "success");
         } catch (err) {
-          showToast("Failed to parse JSON file.", "error");
+          showToast("Invalid JSON backup file.", "error");
         }
       };
       reader.readAsText(file);
     };
 
-    resizeCanvas();
-    initFirebase();
+    // Initialize application on load
+    window.addEventListener('load', () => {
+      resizeCanvas();
+      initFirebase();
+    });
   </script>
 </body>
 </html>
