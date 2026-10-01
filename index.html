@@ -2,10 +2,10 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Facility Layout Builder with Pan & Dot Assets</title>
+    <title>Facility Layout Builder - Blueprint Match</title>
     <style>
         body {
-            background-color: #0d1b2a;
+            background-color: #0b131d;
             color: #e0e1dd;
             font-family: sans-serif;
             margin: 0;
@@ -15,49 +15,50 @@
         }
         #sidebar {
             width: 320px;
-            background-color: #1b263b;
+            background-color: #111b27;
             padding: 20px;
             display: flex;
             flex-direction: column;
             gap: 15px;
-            box-shadow: 2px 0 10px rgba(0,0,0,0.5);
+            box-shadow: 2px 0 10px rgba(0,0,0,0.7);
             z-index: 10;
             overflow-y: auto;
+            border-right: 1px solid #1f2d3d;
         }
-        h2, h3 { margin-top: 0; color: #41c1ff; }
-        label { font-size: 12px; color: #a5c4d4; }
+        h2, h3 { margin-top: 0; color: #38bdf8; }
+        label { font-size: 12px; color: #94a3b8; }
         input, select, button {
             width: 100%;
             padding: 8px;
-            background: #0d1b2a;
-            border: 1px solid #41c1ff;
+            background: #0b131d;
+            border: 1px solid #38bdf8;
             color: #fff;
             border-radius: 4px;
             box-sizing: border-box;
             margin-top: 4px;
         }
         button {
-            background: #1d3557;
+            background: #1e293b;
             font-weight: bold;
             cursor: pointer;
             transition: background 0.2s;
         }
-        button:hover { background: #41c1ff; color: #0d1b2a; }
+        button:hover { background: #38bdf8; color: #0b131d; }
         .mode-btn {
-            background: #0b131d;
-            border: 2px solid #1d3557;
+            background: #070d14;
+            border: 2px solid #1e293b;
         }
         .mode-btn.active {
-            background: #41c1ff;
-            color: #0d1b2a;
+            background: #38bdf8;
+            color: #0b131d;
             border-color: #fff;
         }
-        .danger { background: #780000; border-color: #d90429; }
-        .danger:hover { background: #d90429; color: #fff; }
+        .danger { background: #7f1d1d; border-color: #ef4444; }
+        .danger:hover { background: #ef4444; color: #fff; }
         #canvas-container {
             flex-grow: 1;
             position: relative;
-            background-color: #0b131d;
+            background-color: #070d14;
             overflow: hidden;
             cursor: grab;
         }
@@ -68,6 +69,7 @@
             position: absolute;
             top: 0;
             left: 0;
+            transform-origin: 0 0;
         }
         .item-shape {
             cursor: pointer;
@@ -77,11 +79,11 @@
             stroke: #fff;
         }
         .item-shape.selected {
-            stroke: #ffb703;
+            stroke: #fbbf24;
             stroke-width: 3;
         }
         .grid-line {
-            stroke: #1b263b;
+            stroke: #132235;
             stroke-width: 1;
         }
     </style>
@@ -95,11 +97,11 @@
             <h3>Interaction Mode</h3>
             <div style="display: flex; gap: 10px;">
                 <button id="modeEditBtn" class="mode-btn active" onclick="setMode('edit')">Edit Layout</button>
-                <button id="modePanBtn" class="mode-btn" onclick="setMode('pan')">Pan Map</button>
+                <button id="modePanBtn" class="mode-btn" onclick="setMode('pan')">Pan / Zoom</button>
             </div>
         </div>
 
-        <hr style="border-color: #1b263b;">
+        <hr style="border-color: #1e293b;">
 
         <div>
             <h3>Add New Element</h3>
@@ -130,7 +132,7 @@
             <button onclick="addElement()" style="margin-top: 10px;">Add Element</button>
         </div>
 
-        <hr style="border-color: #1b263b;">
+        <hr style="border-color: #1e293b;">
 
         <div id="inspector" style="display:none;">
             <h3>Edit Selected Element</h3>
@@ -153,36 +155,36 @@
         </div>
         
         <div>
-            <p style="font-size: 11px; color: #8d99ae; margin-top: 10px;">
+            <p style="font-size: 11px; color: #64748b; margin-top: 10px;">
                 💡 <b>Instructions:</b><br>
-                • Use <b>Edit Layout</b> mode to click and drag departments/assets.<br>
-                • Use <b>Pan Map</b> mode to click and drag the canvas background to move around.
+                • <b>Edit Layout Mode:</b> Click and drag departments/assets.<br>
+                • <b>Pan / Zoom Mode:</b> Drag canvas to pan; scroll mouse wheel to zoom in/out.
             </p>
         </div>
     </div>
 
-    <div id="canvas-container" id="canvasContainer">
-        <svg id="layoutSvg" width="1200" height="800">
+    <div id="canvas-container">
+        <svg id="layoutSvg" width="1600" height="1000">
             <g id="viewport">
-                <!-- Grid & Elements rendered dynamically here -->
+                <!-- Blueprint components rendered dynamically -->
             </g>
         </svg>
     </div>
 
 <script>
     const gridSize = 20;
-    const cols = 60;
-    const rows = 40;
+    const cols = 65;
+    const rows = 45;
 
     let currentMode = 'edit'; // 'edit' or 'pan'
 
-    // Initial state matching your blueprint photo (Assets as dots, Departments as rects)
+    // Exact Mezzanine and Racking specifications preserved as requested
     let elements = [
-        { id: 1, name: "MAIN RACKING AREA #1", type: "racking", x: 9, y: 6, w: 20, h: 8 },
-        { id: 2, name: "RACKING #2", type: "racking", x: 24, y: 11, w: 5, h: 5 },
-        { id: 3, name: "MEZZANINE FLOOR", type: "mezzanine", x: 2, y: 15, w: 20, h: 7 },
-        { id: 4, name: "Main Distribution Panel MDP-1", type: "asset", x: 4, y: 6 },
-        { id: 5, name: "Water Main Shutoff", type: "asset", x: 8, y: 6 }
+        { id: 1, name: "MAIN RACKING AREA #1 (Col 9 to 29.25 | Rows 6.25 to 13)", type: "racking", x: 9, y: 6, w: 20, h: 7 },
+        { id: 2, name: "RACKING #2 (Col. 34.5 to 38.8 | Rows 14.8 to 21.8)", type: "racking", x: 34, y: 15, w: 5, h: 7 },
+        { id: 3, name: "MEZZANINE FLOOR (Col 2 to 22 | Rows 21 to 30.8)", type: "mezzanine", x: 2, y: 21, w: 20, h: 10 },
+        { id: 4, name: "Main Distribution Panel MDP-1", type: "asset", x: 12, y: 10 },
+        { id: 5, name: "Water Main Shutoff", type: "asset", x: 17, y: 10 }
     ];
 
     let selectedId = null;
@@ -190,14 +192,13 @@
     let isPanning = false;
     let dragOffset = { x: 0, y: 0 };
     let panStart = { x: 0, y: 0 };
-    let viewTranslate = { x: 50, y: 50 }; // Initial padding offset
+    
+    // Viewport Transform State (Pan & Zoom)
+    let viewTransform = { x: 40, y: 40, scale: 1 };
 
     const container = document.getElementById("canvas-container");
     const svg = document.getElementById("layoutSvg");
     const viewport = document.getElementById("viewport");
-
-    svg.setAttribute("width", cols * gridSize + 200);
-    svg.setAttribute("height", rows * gridSize + 200);
 
     function setMode(mode) {
         currentMode = mode;
@@ -214,11 +215,15 @@
         document.getElementById("dimensionInputs").style.display = (type === 'asset') ? 'none' : 'block';
     }
 
+    function updateTransformString() {
+        viewport.setAttribute("transform", `translate(${viewTransform.x}, ${viewTransform.y}) scale(${viewTransform.scale})`);
+    }
+
     function render() {
         viewport.innerHTML = "";
-        viewport.setAttribute("transform", `translate(${viewTranslate.x}, ${viewTranslate.y})`);
+        updateTransformString();
 
-        // Draw Grid Lines
+        // 1. Grid Lines
         for (let c = 0; c <= cols; c++) {
             let line = document.createElementNS("http://www.w3.org/2000/svg", "line");
             line.setAttribute("x1", c * gridSize);
@@ -238,34 +243,73 @@
             viewport.appendChild(line);
         }
 
-        // Draw Yard Zone Border
-        let border = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-        border.setAttribute("x", gridSize);
-        border.setAttribute("y", gridSize);
-        border.setAttribute("width", (cols - 2) * gridSize);
-        border.setAttribute("height", (rows - 2) * gridSize);
-        border.setAttribute("fill", "none");
-        border.setAttribute("stroke", "#41c1ff");
-        border.setAttribute("stroke-width", "2");
-        border.setAttribute("stroke-dasharray", "4");
-        viewport.appendChild(border);
+        // 2. Exterior / Yard Zone Border (Dashed Outer Box)
+        let yardBorder = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+        yardBorder.setAttribute("x", 0.5 * gridSize);
+        yardBorder.setAttribute("y", 0.5 * gridSize);
+        yardBorder.setAttribute("width", (cols - 1) * gridSize);
+        yardBorder.setAttribute("height", (rows - 1) * gridSize);
+        yardBorder.setAttribute("fill", "none");
+        yardBorder.setAttribute("stroke", "#38bdf8");
+        yardBorder.setAttribute("stroke-width", "1.5");
+        yardBorder.setAttribute("stroke-dasharray", "6,4");
+        viewport.appendChild(yardBorder);
 
-        // Draw Elements
+        // Yard Zone Label Text
+        let yardText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        yardText.setAttribute("x", 1 * gridSize);
+        yardText.setAttribute("y", 1.8 * gridSize);
+        yardText.setAttribute("fill", "#38bdf8");
+        yardText.setAttribute("font-size", "10px");
+        yardText.setAttribute("font-weight", "bold");
+        yardText.textContent = "EXTERIOR / YARD ZONE";
+        viewport.appendChild(yardText);
+
+        // 3. Building Interior Solid Wall Boundary (Cyan Line Box)
+        let buildingWall = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+        buildingWall.setAttribute("x", 2 * gridSize);
+        buildingWall.setAttribute("y", 4 * gridSize);
+        buildingWall.setAttribute("width", (cols - 4) * gridSize);
+        buildingWall.setAttribute("height", (rows - 6) * gridSize);
+        buildingWall.setAttribute("fill", "none");
+        buildingWall.setAttribute("stroke", "#38bdf8");
+        buildingWall.setAttribute("stroke-width", "1.5");
+        viewport.appendChild(buildingWall);
+
+        // Bottom right detail line styling matching reference image (Magenta accent line)
+        let accentLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        accentLine.setAttribute("x1", 42 * gridSize);
+        accentLine.setAttribute("y1", (rows - 2) * gridSize);
+        accentLine.setAttribute("x2", (cols - 2) * gridSize);
+        accentLine.setAttribute("y2", (rows - 2) * gridSize);
+        accentLine.setAttribute("stroke", "#ec4899");
+        accentLine.setAttribute("stroke-width", "1.5");
+        viewport.appendChild(accentLine);
+
+        let accentText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        accentText.setAttribute("x", 2.2 * gridSize);
+        accentText.setAttribute("y", (rows - 2.3) * gridSize);
+        accentText.setAttribute("fill", "#ec4899");
+        accentText.setAttribute("font-size", "8px");
+        accentText.textContent = "COLUMNS 6.8 WALL LINE";
+        viewport.appendChild(accentText);
+
+        // 4. Render Elements (Departments as Rectangles, Assets as Dots)
         elements.forEach(el => {
             let g = document.createElementNS("http://www.w3.org/2000/svg", "g");
 
             if (el.type === 'asset') {
-                // Render asset as a Dot (Circle)
+                // Utility Asset rendered strictly as a Dot (Circle)
                 let circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
                 let cx = (el.x * gridSize) + (gridSize / 2);
                 let cy = (el.y * gridSize) + (gridSize / 2);
                 circle.setAttribute("cx", cx);
                 circle.setAttribute("cy", cy);
-                circle.setAttribute("r", 8);
+                circle.setAttribute("r", 7);
                 circle.setAttribute("class", `item-shape ${el.id === selectedId ? 'selected' : ''}`);
-                circle.setAttribute("fill", "#e76f51");
-                circle.setAttribute("stroke", "#f4a261");
-                circle.setAttribute("stroke-width", "2");
+                circle.setAttribute("fill", "#f97316");
+                circle.setAttribute("stroke", "#fb923c");
+                circle.setAttribute("stroke-width", "1.5");
 
                 circle.addEventListener("mousedown", (e) => {
                     if (currentMode === 'edit') {
@@ -275,10 +319,10 @@
                 });
 
                 let text = document.createElementNS("http://www.w3.org/2000/svg", "text");
-                text.setAttribute("x", cx + 12);
+                text.setAttribute("x", cx + 10);
                 text.setAttribute("y", cy + 4);
                 text.setAttribute("fill", "#fff");
-                text.setAttribute("font-size", "11px");
+                text.setAttribute("font-size", "10px");
                 text.setAttribute("font-weight", "bold");
                 text.style.pointerEvents = "none";
                 text.textContent = el.name;
@@ -287,7 +331,7 @@
                 g.appendChild(text);
 
             } else {
-                // Render Department / Racking / Mezzanine as Rectangle
+                // Departments / Racking / Mezzanine rendered as Rectangles
                 let rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
                 rect.setAttribute("x", el.x * gridSize);
                 rect.setAttribute("y", el.y * gridSize);
@@ -296,14 +340,15 @@
                 rect.setAttribute("class", `item-shape ${el.id === selectedId ? 'selected' : ''}`);
 
                 if (el.type === 'racking') {
-                    rect.setAttribute("fill", "#d47a00");
-                    rect.setAttribute("fill-opacity", "0.4");
-                    rect.setAttribute("stroke", "#ff9f1c");
+                    rect.setAttribute("fill", "#d97706");
+                    rect.setAttribute("fill-opacity", "0.35");
+                    rect.setAttribute("stroke", "#f59e0b");
                 } else {
-                    rect.setAttribute("fill", "#2b9348");
-                    rect.setAttribute("fill-opacity", "0.4");
-                    rect.setAttribute("stroke", "#52b788");
+                    rect.setAttribute("fill", "#10b981");
+                    rect.setAttribute("fill-opacity", "0.35");
+                    rect.setAttribute("stroke", "#34d399");
                 }
+                rect.setAttribute("stroke-width", "1");
 
                 rect.addEventListener("mousedown", (e) => {
                     if (currentMode === 'edit') {
@@ -316,7 +361,7 @@
                 text.setAttribute("x", (el.x * gridSize) + 6);
                 text.setAttribute("y", (el.y * gridSize) + 16);
                 text.setAttribute("fill", "#fff");
-                text.setAttribute("font-size", "11px");
+                text.setAttribute("font-size", "10px");
                 text.setAttribute("font-weight", "bold");
                 text.style.pointerEvents = "none";
                 text.textContent = el.name;
@@ -329,14 +374,36 @@
         });
     }
 
-    // Canvas Container Mouse Handlers for Panning or Background Click
+    // Mouse Wheel Zooming
+    container.addEventListener("wheel", (e) => {
+        e.preventDefault();
+        let zoomIntensity = 0.1;
+        let oldScale = viewTransform.scale;
+        
+        if (e.deltaY < 0) {
+            viewTransform.scale = Math.min(viewTransform.scale * (1 + zoomIntensity), 3.0);
+        } else {
+            viewTransform.scale = Math.max(viewTransform.scale * (1 - zoomIntensity), 0.3);
+        }
+
+        // Zoom toward mouse pointer position
+        let rect = container.getBoundingClientRect();
+        let mouseX = e.clientX - rect.left;
+        let mouseY = e.clientY - rect.top;
+
+        viewTransform.x = mouseX - (mouseX - viewTransform.x) * (viewTransform.scale / oldScale);
+        viewTransform.y = mouseY - (mouseY - viewTransform.y) * (viewTransform.scale / oldScale);
+
+        render();
+    }, { passive: false });
+
+    // Panning and Background Click Handlers
     container.addEventListener("mousedown", (e) => {
         if (currentMode === 'pan') {
             isPanning = true;
             container.classList.add("panning");
-            panStart = { x: e.clientX - viewTranslate.x, y: e.clientY - viewTranslate.y };
+            panStart = { x: e.clientX - viewTransform.x, y: e.clientY - viewTransform.y };
         } else if (currentMode === 'edit') {
-            // Clicked background in edit mode -> deselect
             selectedId = null;
             document.getElementById("inspector").style.display = "none";
             render();
@@ -345,8 +412,8 @@
 
     window.addEventListener("mousemove", (e) => {
         if (isPanning) {
-            viewTranslate.x = e.clientX - panStart.x;
-            viewTranslate.y = e.clientY - panStart.y;
+            viewTransform.x = e.clientX - panStart.x;
+            viewTransform.y = e.clientY - panStart.y;
             render();
         }
     });
@@ -362,24 +429,19 @@
         selectedId = el.id;
         isDraggingElement = true;
         
-        let mouseX = e.clientX;
-        let mouseY = e.clientY;
+        let startX = e.clientX;
+        let startY = e.clientY;
         
-        dragOffset = {
-            x: mouseX - ((el.x * gridSize + viewTranslate.x)),
-            y: mouseY - ((el.y * gridSize + viewTranslate.y))
-        };
-        
-        populateInspector(el);
-        render();
+        let origX = el.x;
+        let origY = el.y;
 
         function onMouseMove(e) {
             if (!isDraggingElement) return;
-            let newPxX = e.clientX - dragOffset.x - viewTranslate.x;
-            let newPxY = e.clientY - dragOffset.y - viewTranslate.y;
+            let dx = (e.clientX - startX) / viewTransform.scale;
+            let dy = (e.clientY - startY) / viewTransform.scale;
             
-            el.x = Math.max(0, Math.min(cols - (el.w || 1), Math.round(newPxX / gridSize)));
-            el.y = Math.max(0, Math.min(rows - (el.h || 1), Math.round(newPxY / gridSize)));
+            el.x = Math.max(0, Math.min(cols - (el.w || 1), origX + Math.round(dx / gridSize)));
+            el.y = Math.max(0, Math.min(rows - (el.h || 1), origY + Math.round(dy / gridSize)));
             
             populateInspector(el);
             render();
@@ -393,6 +455,9 @@
 
         window.addEventListener("mousemove", onMouseMove);
         window.addEventListener("mouseup", onMouseUp);
+        
+        populateInspector(el);
+        render();
     }
 
     function populateInspector(el) {
