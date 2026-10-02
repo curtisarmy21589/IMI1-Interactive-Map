@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Facility Layout Builder - Firebase Sync</title>
+    <title>Facility Layout Builder - Multi-Layer & Firebase</title>
     <style>
         body {
             background-color: #0b131d;
@@ -53,6 +53,23 @@
             background: #38bdf8;
             color: #0b131d;
             border-color: #fff;
+        }
+        .layer-btn {
+            flex: 1;
+            padding: 6px 4px;
+            background: #070d14;
+            border: 1px solid #1e293b;
+            color: #94a3b8;
+            font-size: 10px;
+            cursor: pointer;
+            border-radius: 4px;
+            text-align: center;
+        }
+        .layer-btn.active {
+            background: #0284c7;
+            color: #fff;
+            border-color: #38bdf8;
+            font-weight: bold;
         }
         .danger { background: #7f1d1d; border-color: #ef4444; }
         .danger:hover { background: #ef4444; color: #fff; }
@@ -138,6 +155,16 @@
         <div id="coord-display">Col: -- | Row: --</div>
         <div id="sync-status">Connected to Firebase</div>
 
+        <!-- LAYER SELECTION MENU -->
+        <div>
+            <label>Active View Layer</label>
+            <div style="display: flex; gap: 4px; margin-top: 2px;">
+                <button class="layer-btn active" id="layerGroundBtn" onclick="switchLayer('ground')">Ground Floor</button>
+                <button class="layer-btn" id="layerMezzBtn" onclick="switchLayer('mezzanine')">Mezz Floor</button>
+                <button class="layer-btn" id="layerRoofBtn" onclick="switchLayer('roof')">Roof Layer</button>
+            </div>
+        </div>
+
         <div>
             <label>Interaction Mode</label>
             <div style="display: flex; gap: 6px; margin-top: 2px;">
@@ -158,11 +185,12 @@
         <div id="panelDept" class="panel active">
             <h3>Department Management</h3>
             <div>
-                <label>Add New Department / Racking</label>
-                <input type="text" id="newDeptName" value="RACKING #3">
+                <label>Add New Item to Current Layer</label>
+                <input type="text" id="newDeptName" value="New Zone">
                 <select id="newDeptType">
-                    <option value="racking">Racking Zone (Rect - 90 deg)</option>
+                    <option value="racking">Racking Zone (Rect)</option>
                     <option value="mezzanine">Mezzanine Floor (Rect)</option>
+                    <option value="general">General Dept / Roof Unit</option>
                 </select>
                 <div style="display: flex; gap: 6px;">
                     <div style="flex:1;"><label>X Col (1-30)</label><input type="number" id="newDeptX" value="5"></div>
@@ -172,11 +200,11 @@
                     <div style="flex:1;"><label>Width</label><input type="number" id="newDeptW" value="5"></div>
                     <div style="flex:1;"><label>Height</label><input type="number" id="newDeptH" value="4"></div>
                 </div>
-                <button onclick="addDepartment()" style="margin-top: 6px;">Add Department</button>
+                <button onclick="addDepartment()" style="margin-top: 6px;">Add to Current Layer</button>
             </div>
 
             <div id="inspectorDept" style="display:none; border-top: 1px solid #1e293b; padding-top: 6px; margin-top: 4px;">
-                <h3>Edit Selected Dept</h3>
+                <h3>Edit Selected Item</h3>
                 <input type="hidden" id="editDeptId">
                 <label>Name</label>
                 <input type="text" id="editDeptName" oninput="updateSelectedDept()">
@@ -188,7 +216,7 @@
                     <div style="flex:1;"><label>Width</label><input type="number" id="editDeptW" oninput="updateSelectedDept()"></div>
                     <div style="flex:1;"><label>Height</label><input type="number" id="editDeptH" oninput="updateSelectedDept()"></div>
                 </div>
-                <button class="danger" onclick="deleteSelected()" style="margin-top: 6px;">Delete Department</button>
+                <button class="danger" onclick="deleteSelected()" style="margin-top: 6px;">Delete Item</button>
             </div>
         </div>
 
@@ -196,7 +224,7 @@
         <div id="panelAsset" class="panel">
             <h3>Utility Assets Menu (Dots)</h3>
             <div>
-                <label>Add New Asset</label>
+                <label>Add Asset to Current Layer</label>
                 <input type="text" id="newAssetName" value="Emergency Shutoff">
                 <div style="display: flex; gap: 6px;">
                     <div style="flex:1;"><label>X Col (1-30)</label><input type="number" id="newAssetX" value="10"></div>
@@ -220,7 +248,7 @@
         
         <div>
             <p style="font-size: 10px; color: #64748b; margin: 4px 0 0 0;">
-                💡 <b>Grid Range:</b> Columns 1 to 30, Rows A (Top/South) to N (Bottom/North) with M.9 near bottom. Changes auto-save to Firebase.
+                💡 <b>Layers:</b> View Ground Floor, Mezzanine, or Roof independently. Changes auto-save to Firebase.
             </p>
         </div>
     </div>
@@ -257,13 +285,17 @@
 
         let currentMode = 'edit'; 
         let currentTab = 'dept'; 
+        let currentLayer = 'ground'; // 'ground', 'mezzanine', or 'roof'
 
+        // Default elements categorized by layer
         let elements = [
-            { id: 1, name: "MAIN RACKING AREA #1", type: "racking", x: 4, y: 2, w: 4, h: 8 },
-            { id: 2, name: "RACKING #2", type: "racking", x: 18, y: 5, w: 4, h: 4 },
-            { id: 3, name: "MEZZANINE FLOOR", type: "mezzanine", x: 2, y: 9, w: 10, h: 4 },
-            { id: 4, name: "Main Distribution Panel MDP-1", type: "asset", x: 6, y: 3 },
-            { id: 5, name: "Water Main Shutoff", type: "asset", x: 9, y: 3 }
+            { id: 1, layer: "ground", name: "MAIN RACKING AREA #1", type: "racking", x: 4, y: 2, w: 4, h: 8 },
+            { id: 2, layer: "ground", name: "RACKING #2", type: "racking", x: 18, y: 5, w: 4, h: 4 },
+            { id: 3, layer: "ground", name: "MEZZANINE FLOOR", type: "mezzanine", x: 2, y: 9, w: 10, h: 4 },
+            { id: 4, layer: "ground", name: "Main Distribution Panel MDP-1", type: "asset", x: 6, y: 3 },
+            { id: 5, layer: "ground", name: "Water Main Shutoff", type: "asset", x: 9, y: 3 },
+            { id: 6, layer: "mezzanine", name: "Mezzanine Level Office & Storage", type: "mezzanine", x: 2, y: 2, w: 12, h: 10 },
+            { id: 7, layer: "roof", name: "Roof HVAC Unit & Solar Array Zone", type: "general", x: 5, y: 3, w: 8, h: 6 }
         ];
 
         let selectedId = null;
@@ -277,7 +309,6 @@
         const viewport = document.getElementById("viewport");
         const syncStatus = document.getElementById("sync-status");
 
-        // Load data from Firebase on startup
         async function loadFromFirebase() {
             try {
                 const docRef = doc(db, "layouts", "facility_main");
@@ -286,7 +317,6 @@
                     elements = docSnap.data().elements;
                     syncStatus.innerText = "Loaded from Firebase";
                 } else {
-                    // Save default data if nothing exists yet
                     await saveToFirebase();
                 }
                 render();
@@ -298,7 +328,6 @@
             }
         }
 
-        // Save layout data to Firebase
         async function saveToFirebase() {
             try {
                 syncStatus.innerText = "Saving...";
@@ -325,6 +354,16 @@
                 index -= 1;
             }
             return String.fromCharCode(65 + index); 
+        }
+
+        window.switchLayer = function(layerName) {
+            currentLayer = layerName;
+            document.getElementById("layerGroundBtn").classList.toggle("active", layerName === 'ground');
+            document.getElementById("layerMezzBtn").classList.toggle("active", layerName === 'mezzanine');
+            document.getElementById("layerRoofBtn").classList.toggle("active", layerName === 'roof');
+            selectedId = null;
+            hideInspectors();
+            render();
         }
 
         window.setMode = function(mode) {
@@ -423,13 +462,14 @@
             buildingWall.setAttribute("stroke-width", "2");
             viewport.appendChild(buildingWall);
 
+            let layerTitleName = currentLayer.toUpperCase();
             let topLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
             topLabel.setAttribute("x", 0.5 * gridSize);
             topLabel.setAttribute("y", -22);
             topLabel.setAttribute("fill", "#38bdf8");
             topLabel.setAttribute("font-size", "10px");
             topLabel.setAttribute("font-weight", "bold");
-            topLabel.textContent = "SOUTH WALL (ROW A TOP) ▲";
+            topLabel.textContent = `SOUTH WALL (${layerTitleName} LAYER - ROW A TOP) ▲`;
             viewport.appendChild(topLabel);
 
             let bottomLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
@@ -438,11 +478,13 @@
             bottomLabel.setAttribute("fill", "#38bdf8");
             bottomLabel.setAttribute("font-size", "10px");
             bottomLabel.setAttribute("font-weight", "bold");
-            bottomLabel.textContent = "NORTH WALL (ROW N BOTTOM / M.9 NEARBY) ▼";
+            bottomLabel.textContent = `NORTH WALL (${layerTitleName} LAYER - ROW N BOTTOM) ▼`;
             viewport.appendChild(bottomLabel);
 
-            // 3. Render Elements
-            elements.forEach(el => {
+            // 3. Render Elements matching Current Layer only
+            let visibleElements = elements.filter(el => (el.layer || 'ground') === currentLayer);
+
+            visibleElements.forEach(el => {
                 let g = document.createElementNS("http://www.w3.org/2000/svg", "g");
 
                 if (el.type === 'asset') {
@@ -489,10 +531,14 @@
                         rect.setAttribute("fill", "#d97706");
                         rect.setAttribute("fill-opacity", "0.35");
                         rect.setAttribute("stroke", "#f59e0b");
-                    } else {
+                    } else if (el.type === 'mezzanine') {
                         rect.setAttribute("fill", "#10b981");
                         rect.setAttribute("fill-opacity", "0.35");
                         rect.setAttribute("stroke", "#34d399");
+                    } else {
+                        rect.setAttribute("fill", "#0284c7");
+                        rect.setAttribute("fill-opacity", "0.35");
+                        rect.setAttribute("stroke", "#38bdf8");
                     }
                     rect.setAttribute("stroke-width", "1");
 
@@ -613,7 +659,7 @@
                 isDraggingElement = false;
                 window.removeEventListener("mousemove", onMouseMove);
                 window.removeEventListener("mouseup", onMouseUp);
-                saveToFirebase(); // Save to database when dragging stops
+                saveToFirebase(); 
             }
 
             window.addEventListener("mousemove", onMouseMove);
@@ -672,6 +718,7 @@
         window.addDepartment = function() {
             let newEl = {
                 id: Date.now(),
+                layer: currentLayer, // Assign to whatever layer is currently active
                 name: document.getElementById("newDeptName").value,
                 type: document.getElementById("newDeptType").value,
                 x: parseInt(document.getElementById("newDeptX").value) || 0,
@@ -687,6 +734,7 @@
         window.addAsset = function() {
             let newEl = {
                 id: Date.now(),
+                layer: currentLayer, // Assign to whatever layer is currently active
                 name: document.getElementById("newAssetName").value,
                 type: "asset",
                 x: parseInt(document.getElementById("newAssetX").value) || 0,
@@ -706,7 +754,6 @@
             saveToFirebase();
         }
 
-        // Initialize connection and fetch map data
         loadFromFirebase();
     </script>
 
