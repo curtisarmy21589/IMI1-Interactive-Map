@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Facility Layout Builder - A to N Rows, 1 to 30 Cols</title>
+    <title>Facility Layout Builder - Firebase Sync</title>
     <style>
         body {
             background-color: #0b131d;
@@ -121,6 +121,13 @@
             font-size: 12px;
             text-align: center;
         }
+        #sync-status {
+            font-size: 10px;
+            text-align: center;
+            color: #10b981;
+            font-weight: bold;
+            margin-top: -4px;
+        }
     </style>
 </head>
 <body>
@@ -129,6 +136,7 @@
         <h2>Layout Builder</h2>
         
         <div id="coord-display">Col: -- | Row: --</div>
+        <div id="sync-status">Connected to Firebase</div>
 
         <div>
             <label>Interaction Mode</label>
@@ -212,7 +220,7 @@
         
         <div>
             <p style="font-size: 10px; color: #64748b; margin: 4px 0 0 0;">
-                💡 <b>Grid Range:</b> Columns 1 to 30, Rows A (Top/South) to N (Bottom/North) with M.9 near the bottom wall.
+                💡 <b>Grid Range:</b> Columns 1 to 30, Rows A (Top/South) to N (Bottom/North) with M.9 near bottom. Changes auto-save to Firebase.
             </p>
         </div>
     </div>
@@ -225,424 +233,482 @@
         </svg>
     </div>
 
-<script>
-    const gridSize = 25;
-    const cols = 30; // Exactly columns 1 to 30
-    const rows = 14; // Exactly rows A to N (14 rows total)
+    <!-- Firebase SDK Imports -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-    let currentMode = 'edit'; // 'edit' or 'pan'
-    let currentTab = 'dept'; // 'dept' or 'asset'
+        const firebaseConfig = {
+            apiKey: "AIzaSyCrKAut8_5nHWTWtYqZZr5HOENGd8mqZxE",
+            authDomain: "imi1-interactive-map-8d929.firebaseapp.com",
+            projectId: "imi1-interactive-map-8d929",
+            storageBucket: "imi1-interactive-map-8d929.firebasestorage.app",
+            messagingSenderId: "613133090515",
+            appId: "1:613133090515:web:f8f9be365f484a3a5c5e26",
+            measurementId: "G-4QR2RSSTN1"
+        };
 
-    // Scaled elements fit within 1-30 cols and A-N rows
-    let elements = [
-        { id: 1, name: "MAIN RACKING AREA #1", type: "racking", x: 4, y: 2, w: 4, h: 8 },
-        { id: 2, name: "RACKING #2", type: "racking", x: 18, y: 5, w: 4, h: 4 },
-        { id: 3, name: "MEZZANINE FLOOR", type: "mezzanine", x: 2, y: 9, w: 10, h: 4 },
-        { id: 4, name: "Main Distribution Panel MDP-1", type: "asset", x: 6, y: 3 },
-        { id: 5, name: "Water Main Shutoff", type: "asset", x: 9, y: 3 }
-    ];
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
 
-    let selectedId = null;
-    let isDraggingElement = false;
-    let isPanning = false;
-    let panStart = { x: 0, y: 0 };
-    let viewTransform = { x: 80, y: 80, scale: 1 };
+        const gridSize = 25;
+        const cols = 30; 
+        const rows = 14; 
 
-    const container = document.getElementById("canvas-container");
-    const svg = document.getElementById("layoutSvg");
-    const viewport = document.getElementById("viewport");
+        let currentMode = 'edit'; 
+        let currentTab = 'dept'; 
 
-    // Row mapping: 0 = 'A' (Top/South), index 11/12 handles 'M.9' custom offset, index 13 = 'N' (Bottom/North)
-    function getRowLabel(r) {
-        if (r === rows - 2) return "M.9"; // Special row near the bottom wall
-        
-        let index = r;
-        if (index > rows - 2) {
-            index -= 1;
-        }
-        return String.fromCharCode(65 + index); // A to N
-    }
+        let elements = [
+            { id: 1, name: "MAIN RACKING AREA #1", type: "racking", x: 4, y: 2, w: 4, h: 8 },
+            { id: 2, name: "RACKING #2", type: "racking", x: 18, y: 5, w: 4, h: 4 },
+            { id: 3, name: "MEZZANINE FLOOR", type: "mezzanine", x: 2, y: 9, w: 10, h: 4 },
+            { id: 4, name: "Main Distribution Panel MDP-1", type: "asset", x: 6, y: 3 },
+            { id: 5, name: "Water Main Shutoff", type: "asset", x: 9, y: 3 }
+        ];
 
-    function setMode(mode) {
-        currentMode = mode;
-        document.getElementById("modeEditBtn").classList.toggle("active", mode === 'edit');
-        document.getElementById("modePanBtn").classList.toggle("active", mode === 'pan');
-        container.style.cursor = mode === 'pan' ? 'grab' : 'default';
-        selectedId = null;
-        hideInspectors();
-        render();
-    }
+        let selectedId = null;
+        let isDraggingElement = false;
+        let isPanning = false;
+        let panStart = { x: 0, y: 0 };
+        let viewTransform = { x: 80, y: 80, scale: 1 };
 
-    function switchTab(tab) {
-        currentTab = tab;
-        document.getElementById("tabDeptBtn").classList.toggle("active", tab === 'dept');
-        document.getElementById("tabAssetBtn").classList.toggle("active", tab === 'asset');
-        document.getElementById("panelDept").classList.toggle("active", tab === 'dept');
-        document.getElementById("panelAsset").classList.toggle("active", tab === 'asset');
-        selectedId = null;
-        hideInspectors();
-        render();
-    }
+        const container = document.getElementById("canvas-container");
+        const svg = document.getElementById("layoutSvg");
+        const viewport = document.getElementById("viewport");
+        const syncStatus = document.getElementById("sync-status");
 
-    function hideInspectors() {
-        document.getElementById("inspectorDept").style.display = "none";
-        document.getElementById("inspectorAsset").style.display = "none";
-    }
-
-    function updateTransformString() {
-        viewport.setAttribute("transform", `translate(${viewTransform.x}, ${viewTransform.y}) scale(${viewTransform.scale})`);
-    }
-
-    function render() {
-        viewport.innerHTML = "";
-        updateTransformString();
-
-        // 1. Grid Lines & Coordinate Labels (Cols 1-30, Rows A-N)
-        for (let c = 0; c <= cols; c++) {
-            let line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-            line.setAttribute("x1", c * gridSize);
-            line.setAttribute("y1", 0);
-            line.setAttribute("x2", c * gridSize);
-            line.setAttribute("y2", rows * gridSize);
-            line.setAttribute("class", "grid-line");
-            viewport.appendChild(line);
-
-            if (c < cols) {
-                let text = document.createElementNS("http://www.w3.org/2000/svg", "text");
-                text.setAttribute("x", (c * gridSize) + (gridSize / 2));
-                text.setAttribute("y", -8);
-                text.setAttribute("text-anchor", "middle");
-                text.setAttribute("class", "coord-label");
-                text.textContent = c + 1; // 1 to 30
-                viewport.appendChild(text);
-            }
-        }
-
-        for (let r = 0; r <= rows; r++) {
-            let line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-            line.setAttribute("x1", 0);
-            line.setAttribute("y1", r * gridSize);
-            line.setAttribute("x2", cols * gridSize);
-            line.setAttribute("y2", r * gridSize);
-            
-            // Highlight M.9 row offset line
-            if (r === rows - 2) {
-                line.setAttribute("stroke", "#f43f5e");
-                line.setAttribute("stroke-dasharray", "2,2");
-            } else {
-                line.setAttribute("class", "grid-line");
-            }
-            viewport.appendChild(line);
-
-            if (r < rows) {
-                let text = document.createElementNS("http://www.w3.org/2000/svg", "text");
-                text.setAttribute("x", -10);
-                text.setAttribute("y", (r * gridSize) + (gridSize / 2) + 3);
-                text.setAttribute("text-anchor", "end");
-                text.setAttribute("class", "coord-label");
-                if (r === rows - 2) {
-                    text.setAttribute("fill", "#f43f5e");
-                    text.setAttribute("font-weight", "bold");
-                }
-                text.textContent = getRowLabel(r);
-                viewport.appendChild(text);
-            }
-        }
-
-        // 2. Building Interior Wall Boundary (Col 1 to 30, Row A to N)
-        let buildingWall = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-        buildingWall.setAttribute("x", 0);
-        buildingWall.setAttribute("y", 0);
-        buildingWall.setAttribute("width", cols * gridSize);
-        buildingWall.setAttribute("height", rows * gridSize);
-        buildingWall.setAttribute("fill", "none");
-        buildingWall.setAttribute("stroke", "#38bdf8");
-        buildingWall.setAttribute("stroke-width", "2");
-        viewport.appendChild(buildingWall);
-
-        // Wall Labels indicator
-        let topLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
-        topLabel.setAttribute("x", 0.5 * gridSize);
-        topLabel.setAttribute("y", -22);
-        topLabel.setAttribute("fill", "#38bdf8");
-        topLabel.setAttribute("font-size", "10px");
-        topLabel.setAttribute("font-weight", "bold");
-        topLabel.textContent = "SOUTH WALL (ROW A TOP) ▲";
-        viewport.appendChild(topLabel);
-
-        let bottomLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
-        bottomLabel.setAttribute("x", 0.5 * gridSize);
-        bottomLabel.setAttribute("y", (rows * gridSize) + 15);
-        bottomLabel.setAttribute("fill", "#38bdf8");
-        bottomLabel.setAttribute("font-size", "10px");
-        bottomLabel.setAttribute("font-weight", "bold");
-        bottomLabel.textContent = "NORTH WALL (ROW N BOTTOM / M.9 NEARBY) ▼";
-        viewport.appendChild(bottomLabel);
-
-        // 3. Render Elements
-        elements.forEach(el => {
-            let g = document.createElementNS("http://www.w3.org/2000/svg", "g");
-
-            if (el.type === 'asset') {
-                let circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-                let cx = (el.x * gridSize) + (gridSize / 2);
-                let cy = (el.y * gridSize) + (gridSize / 2);
-                circle.setAttribute("cx", cx);
-                circle.setAttribute("cy", cy);
-                circle.setAttribute("r", 7);
-                circle.setAttribute("class", `item-shape ${el.id === selectedId ? 'selected' : ''}`);
-                circle.setAttribute("fill", "#f97316");
-                circle.setAttribute("stroke", "#fb923c");
-                circle.setAttribute("stroke-width", "1.5");
-
-                circle.addEventListener("mousedown", (e) => {
-                    if (currentMode === 'edit') {
-                        e.stopPropagation();
-                        switchTab('asset');
-                        startDragElement(e, el);
-                    }
-                });
-
-                let text = document.createElementNS("http://www.w3.org/2000/svg", "text");
-                text.setAttribute("x", cx + 10);
-                text.setAttribute("y", cy + 4);
-                text.setAttribute("fill", "#fff");
-                text.setAttribute("font-size", "10px");
-                text.setAttribute("font-weight", "bold");
-                text.style.pointerEvents = "none";
-                text.textContent = el.name;
-
-                g.appendChild(circle);
-                g.appendChild(text);
-
-            } else {
-                let rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-                rect.setAttribute("x", el.x * gridSize);
-                rect.setAttribute("y", el.y * gridSize);
-                rect.setAttribute("width", el.w * gridSize);
-                rect.setAttribute("height", el.h * gridSize);
-                rect.setAttribute("class", `item-shape ${el.id === selectedId ? 'selected' : ''}`);
-
-                if (el.type === 'racking') {
-                    rect.setAttribute("fill", "#d97706");
-                    rect.setAttribute("fill-opacity", "0.35");
-                    rect.setAttribute("stroke", "#f59e0b");
+        // Load data from Firebase on startup
+        async function loadFromFirebase() {
+            try {
+                const docRef = doc(db, "layouts", "facility_main");
+                const docSnap = await getDoc(docRef);
+                if (docSnap.exists() && docSnap.data().elements) {
+                    elements = docSnap.data().elements;
+                    syncStatus.innerText = "Loaded from Firebase";
                 } else {
-                    rect.setAttribute("fill", "#10b981");
-                    rect.setAttribute("fill-opacity", "0.35");
-                    rect.setAttribute("stroke", "#34d399");
+                    // Save default data if nothing exists yet
+                    await saveToFirebase();
                 }
-                rect.setAttribute("stroke-width", "1");
-
-                rect.addEventListener("mousedown", (e) => {
-                    if (currentMode === 'edit') {
-                        e.stopPropagation();
-                        switchTab('dept');
-                        startDragElement(e, el);
-                    }
-                });
-
-                let text = document.createElementNS("http://www.w3.org/2000/svg", "text");
-                text.setAttribute("x", (el.x * gridSize) + 6);
-                text.setAttribute("y", (el.y * gridSize) + 16);
-                text.setAttribute("fill", "#fff");
-                text.setAttribute("font-size", "10px");
-                text.setAttribute("font-weight", "bold");
-                text.style.pointerEvents = "none";
-                text.textContent = el.name;
-
-                g.appendChild(rect);
-                g.appendChild(text);
+                render();
+            } catch (error) {
+                console.error("Error loading layout:", error);
+                syncStatus.innerText = "Error Loading Database";
+                syncStatus.style.color = "#ef4444";
+                render();
             }
-
-            viewport.appendChild(g);
-        });
-    }
-
-    // Live Mouse Coordinates & Panning
-    container.addEventListener("mousemove", (e) => {
-        let rect = container.getBoundingClientRect();
-        let mouseX = e.clientX - rect.left;
-        let mouseY = e.clientY - rect.top;
-
-        let localX = (mouseX - viewTransform.x) / viewTransform.scale;
-        let localY = (mouseY - viewTransform.y) / viewTransform.scale;
-
-        let colIdx = Math.floor(localX / gridSize);
-        let rowIdx = Math.floor(localY / gridSize);
-
-        let coordDisplay = document.getElementById("coord-display");
-        if (colIdx >= 0 && colIdx < cols && rowIdx >= 0 && rowIdx < rows) {
-            let colNum = colIdx + 1;
-            let rowLabel = getRowLabel(rowIdx);
-            coordDisplay.innerHTML = `Grid: <b>Row ${rowLabel}, Col ${colNum}</b>`;
-        } else {
-            coordDisplay.innerHTML = `Col: -- | Row: --`;
         }
 
-        if (isPanning) {
-            viewTransform.x = e.clientX - panStart.x;
-            viewTransform.y = e.clientY - panStart.y;
-            render();
+        // Save layout data to Firebase
+        async function saveToFirebase() {
+            try {
+                syncStatus.innerText = "Saving...";
+                syncStatus.style.color = "#fbbf24";
+                
+                await setDoc(doc(db, "layouts", "facility_main"), {
+                    elements: elements,
+                    updatedAt: new Date().toISOString()
+                });
+                
+                syncStatus.innerText = "Synced to Firebase";
+                syncStatus.style.color = "#10b981";
+            } catch (error) {
+                console.error("Error saving layout:", error);
+                syncStatus.innerText = "Sync Failed";
+                syncStatus.style.color = "#ef4444";
+            }
         }
-    });
 
-    // Zooming
-    container.addEventListener("wheel", (e) => {
-        e.preventDefault();
-        let zoomIntensity = 0.1;
-        let oldScale = viewTransform.scale;
-        
-        if (e.deltaY < 0) {
-            viewTransform.scale = Math.min(viewTransform.scale * (1 + zoomIntensity), 3.0);
-        } else {
-            viewTransform.scale = Math.max(viewTransform.scale * (1 - zoomIntensity), 0.3);
+        function getRowLabel(r) {
+            if (r === rows - 2) return "M.9"; 
+            let index = r;
+            if (index > rows - 2) {
+                index -= 1;
+            }
+            return String.fromCharCode(65 + index); 
         }
 
-        let rect = container.getBoundingClientRect();
-        let mouseX = e.clientX - rect.left;
-        let mouseY = e.clientY - rect.top;
-
-        viewTransform.x = mouseX - (mouseX - viewTransform.x) * (viewTransform.scale / oldScale);
-        viewTransform.y = mouseY - (mouseY - viewTransform.y) * (viewTransform.scale / oldScale);
-
-        render();
-    }, { passive: false });
-
-    container.addEventListener("mousedown", (e) => {
-        if (currentMode === 'pan') {
-            isPanning = true;
-            container.classList.add("panning");
-            panStart = { x: e.clientX - viewTransform.x, y: e.clientY - viewTransform.y };
-        } else if (currentMode === 'edit') {
+        window.setMode = function(mode) {
+            currentMode = mode;
+            document.getElementById("modeEditBtn").classList.toggle("active", mode === 'edit');
+            document.getElementById("modePanBtn").classList.toggle("active", mode === 'pan');
+            container.style.cursor = mode === 'pan' ? 'grab' : 'default';
             selectedId = null;
             hideInspectors();
             render();
         }
-    });
 
-    window.addEventListener("mouseup", () => {
-        if (isPanning) {
-            isPanning = false;
-            container.classList.remove("panning");
+        window.switchTab = function(tab) {
+            currentTab = tab;
+            document.getElementById("tabDeptBtn").classList.toggle("active", tab === 'dept');
+            document.getElementById("tabAssetBtn").classList.toggle("active", tab === 'asset');
+            document.getElementById("panelDept").classList.toggle("active", tab === 'dept');
+            document.getElementById("panelAsset").classList.toggle("active", tab === 'asset');
+            selectedId = null;
+            hideInspectors();
+            render();
         }
-    });
 
-    function startDragElement(e, el) {
-        selectedId = el.id;
-        isDraggingElement = true;
-        
-        let startX = e.clientX;
-        let startY = e.clientY;
-        let origX = el.x;
-        let origY = el.y;
+        function hideInspectors() {
+            document.getElementById("inspectorDept").style.display = "none";
+            document.getElementById("inspectorAsset").style.display = "none";
+        }
 
-        function onMouseMove(e) {
-            if (!isDraggingElement) return;
-            let dx = (e.clientX - startX) / viewTransform.scale;
-            let dy = (e.clientY - startY) / viewTransform.scale;
+        function updateTransformString() {
+            viewport.setAttribute("transform", `translate(${viewTransform.x}, ${viewTransform.y}) scale(${viewTransform.scale})`);
+        }
+
+        function render() {
+            viewport.innerHTML = "";
+            updateTransformString();
+
+            // 1. Grid Lines & Coordinate Labels (Cols 1-30, Rows A-N)
+            for (let c = 0; c <= cols; c++) {
+                let line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                line.setAttribute("x1", c * gridSize);
+                line.setAttribute("y1", 0);
+                line.setAttribute("x2", c * gridSize);
+                line.setAttribute("y2", rows * gridSize);
+                line.setAttribute("class", "grid-line");
+                viewport.appendChild(line);
+
+                if (c < cols) {
+                    let text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                    text.setAttribute("x", (c * gridSize) + (gridSize / 2));
+                    text.setAttribute("y", -8);
+                    text.setAttribute("text-anchor", "middle");
+                    text.setAttribute("class", "coord-label");
+                    text.textContent = c + 1; 
+                    viewport.appendChild(text);
+                }
+            }
+
+            for (let r = 0; r <= rows; r++) {
+                let line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                line.setAttribute("x1", 0);
+                line.setAttribute("y1", r * gridSize);
+                line.setAttribute("x2", cols * gridSize);
+                line.setAttribute("y2", r * gridSize);
+                
+                if (r === rows - 2) {
+                    line.setAttribute("stroke", "#f43f5e");
+                    line.setAttribute("stroke-dasharray", "2,2");
+                } else {
+                    line.setAttribute("class", "grid-line");
+                }
+                viewport.appendChild(line);
+
+                if (r < rows) {
+                    let text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                    text.setAttribute("x", -10);
+                    text.setAttribute("y", (r * gridSize) + (gridSize / 2) + 3);
+                    text.setAttribute("text-anchor", "end");
+                    text.setAttribute("class", "coord-label");
+                    if (r === rows - 2) {
+                        text.setAttribute("fill", "#f43f5e");
+                        text.setAttribute("font-weight", "bold");
+                    }
+                    text.textContent = getRowLabel(r);
+                    viewport.appendChild(text);
+                }
+            }
+
+            // 2. Building Interior Wall Boundary
+            let buildingWall = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+            buildingWall.setAttribute("x", 0);
+            buildingWall.setAttribute("y", 0);
+            buildingWall.setAttribute("width", cols * gridSize);
+            buildingWall.setAttribute("height", rows * gridSize);
+            buildingWall.setAttribute("fill", "none");
+            buildingWall.setAttribute("stroke", "#38bdf8");
+            buildingWall.setAttribute("stroke-width", "2");
+            viewport.appendChild(buildingWall);
+
+            let topLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
+            topLabel.setAttribute("x", 0.5 * gridSize);
+            topLabel.setAttribute("y", -22);
+            topLabel.setAttribute("fill", "#38bdf8");
+            topLabel.setAttribute("font-size", "10px");
+            topLabel.setAttribute("font-weight", "bold");
+            topLabel.textContent = "SOUTH WALL (ROW A TOP) ▲";
+            viewport.appendChild(topLabel);
+
+            let bottomLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
+            bottomLabel.setAttribute("x", 0.5 * gridSize);
+            bottomLabel.setAttribute("y", (rows * gridSize) + 15);
+            bottomLabel.setAttribute("fill", "#38bdf8");
+            bottomLabel.setAttribute("font-size", "10px");
+            bottomLabel.setAttribute("font-weight", "bold");
+            bottomLabel.textContent = "NORTH WALL (ROW N BOTTOM / M.9 NEARBY) ▼";
+            viewport.appendChild(bottomLabel);
+
+            // 3. Render Elements
+            elements.forEach(el => {
+                let g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+
+                if (el.type === 'asset') {
+                    let circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                    let cx = (el.x * gridSize) + (gridSize / 2);
+                    let cy = (el.y * gridSize) + (gridSize / 2);
+                    circle.setAttribute("cx", cx);
+                    circle.setAttribute("cy", cy);
+                    circle.setAttribute("r", 7);
+                    circle.setAttribute("class", `item-shape ${el.id === selectedId ? 'selected' : ''}`);
+                    circle.setAttribute("fill", "#f97316");
+                    circle.setAttribute("stroke", "#fb923c");
+                    circle.setAttribute("stroke-width", "1.5");
+
+                    circle.addEventListener("mousedown", (e) => {
+                        if (currentMode === 'edit') {
+                            e.stopPropagation();
+                            switchTab('asset');
+                            startDragElement(e, el);
+                        }
+                    });
+
+                    let text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                    text.setAttribute("x", cx + 10);
+                    text.setAttribute("y", cy + 4);
+                    text.setAttribute("fill", "#fff");
+                    text.setAttribute("font-size", "10px");
+                    text.setAttribute("font-weight", "bold");
+                    text.style.pointerEvents = "none";
+                    text.textContent = el.name;
+
+                    g.appendChild(circle);
+                    g.appendChild(text);
+
+                } else {
+                    let rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+                    rect.setAttribute("x", el.x * gridSize);
+                    rect.setAttribute("y", el.y * gridSize);
+                    rect.setAttribute("width", el.w * gridSize);
+                    rect.setAttribute("height", el.h * gridSize);
+                    rect.setAttribute("class", `item-shape ${el.id === selectedId ? 'selected' : ''}`);
+
+                    if (el.type === 'racking') {
+                        rect.setAttribute("fill", "#d97706");
+                        rect.setAttribute("fill-opacity", "0.35");
+                        rect.setAttribute("stroke", "#f59e0b");
+                    } else {
+                        rect.setAttribute("fill", "#10b981");
+                        rect.setAttribute("fill-opacity", "0.35");
+                        rect.setAttribute("stroke", "#34d399");
+                    }
+                    rect.setAttribute("stroke-width", "1");
+
+                    rect.addEventListener("mousedown", (e) => {
+                        if (currentMode === 'edit') {
+                            e.stopPropagation();
+                            switchTab('dept');
+                            startDragElement(e, el);
+                        }
+                    });
+
+                    let text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                    text.setAttribute("x", (el.x * gridSize) + 6);
+                    text.setAttribute("y", (el.y * gridSize) + 16);
+                    text.setAttribute("fill", "#fff");
+                    text.setAttribute("font-size", "10px");
+                    text.setAttribute("font-weight", "bold");
+                    text.style.pointerEvents = "none";
+                    text.textContent = el.name;
+
+                    g.appendChild(rect);
+                    g.appendChild(text);
+                }
+
+                viewport.appendChild(g);
+            });
+        }
+
+        container.addEventListener("mousemove", (e) => {
+            let rect = container.getBoundingClientRect();
+            let mouseX = e.clientX - rect.left;
+            let mouseY = e.clientY - rect.top;
+
+            let localX = (mouseX - viewTransform.x) / viewTransform.scale;
+            let localY = (mouseY - viewTransform.y) / viewTransform.scale;
+
+            let colIdx = Math.floor(localX / gridSize);
+            let rowIdx = Math.floor(localY / gridSize);
+
+            let coordDisplay = document.getElementById("coord-display");
+            if (colIdx >= 0 && colIdx < cols && rowIdx >= 0 && rowIdx < rows) {
+                let colNum = colIdx + 1;
+                let rowLabel = getRowLabel(rowIdx);
+                coordDisplay.innerHTML = `Grid: <b>Row ${rowLabel}, Col ${colNum}</b>`;
+            } else {
+                coordDisplay.innerHTML = `Col: -- | Row: --`;
+            }
+
+            if (isPanning) {
+                viewTransform.x = e.clientX - panStart.x;
+                viewTransform.y = e.clientY - panStart.y;
+                render();
+            }
+        });
+
+        container.addEventListener("wheel", (e) => {
+            e.preventDefault();
+            let zoomIntensity = 0.1;
+            let oldScale = viewTransform.scale;
             
-            el.x = Math.max(0, Math.min(cols - (el.w || 1), origX + Math.round(dx / gridSize)));
-            el.y = Math.max(0, Math.min(rows - (el.h || 1), origY + Math.round(dy / gridSize)));
+            if (e.deltaY < 0) {
+                viewTransform.scale = Math.min(viewTransform.scale * (1 + zoomIntensity), 3.0);
+            } else {
+                viewTransform.scale = Math.max(viewTransform.scale * (1 - zoomIntensity), 0.3);
+            }
+
+            let rect = container.getBoundingClientRect();
+            let mouseX = e.clientX - rect.left;
+            let mouseY = e.clientY - rect.top;
+
+            viewTransform.x = mouseX - (mouseX - viewTransform.x) * (viewTransform.scale / oldScale);
+            viewTransform.y = mouseY - (mouseY - viewTransform.y) * (viewTransform.scale / oldScale);
+
+            render();
+        }, { passive: false });
+
+        container.addEventListener("mousedown", (e) => {
+            if (currentMode === 'pan') {
+                isPanning = true;
+                container.classList.add("panning");
+                panStart = { x: e.clientX - viewTransform.x, y: e.clientY - viewTransform.y };
+            } else if (currentMode === 'edit') {
+                selectedId = null;
+                hideInspectors();
+                render();
+            }
+        });
+
+        window.addEventListener("mouseup", () => {
+            if (isPanning) {
+                isPanning = false;
+                container.classList.remove("panning");
+            }
+        });
+
+        function startDragElement(e, el) {
+            selectedId = el.id;
+            isDraggingElement = true;
+            
+            let startX = e.clientX;
+            let startY = e.clientY;
+            let origX = el.x;
+            let origY = el.y;
+
+            function onMouseMove(e) {
+                if (!isDraggingElement) return;
+                let dx = (e.clientX - startX) / viewTransform.scale;
+                let dy = (e.clientY - startY) / viewTransform.scale;
+                
+                el.x = Math.max(0, Math.min(cols - (el.w || 1), origX + Math.round(dx / gridSize)));
+                el.y = Math.max(0, Math.min(rows - (el.h || 1), origY + Math.round(dy / gridSize)));
+                
+                populateInspector(el);
+                render();
+            }
+
+            function onMouseUp() {
+                isDraggingElement = false;
+                window.removeEventListener("mousemove", onMouseMove);
+                window.removeEventListener("mouseup", onMouseUp);
+                saveToFirebase(); // Save to database when dragging stops
+            }
+
+            window.addEventListener("mousemove", onMouseMove);
+            window.addEventListener("mouseup", onMouseUp);
             
             populateInspector(el);
             render();
         }
 
-        function onMouseUp() {
-            isDraggingElement = false;
-            window.removeEventListener("mousemove", onMouseMove);
-            window.removeEventListener("mouseup", onMouseUp);
+        function populateInspector(el) {
+            if (el.type === 'asset') {
+                document.getElementById("inspectorAsset").style.display = "block";
+                document.getElementById("inspectorDept").style.display = "none";
+                document.getElementById("editAssetId").value = el.id;
+                document.getElementById("editAssetName").value = el.name;
+                document.getElementById("editAssetX").value = el.x;
+                document.getElementById("editAssetY").value = el.y;
+            } else {
+                document.getElementById("inspectorDept").style.display = "block";
+                document.getElementById("inspectorAsset").style.display = "none";
+                document.getElementById("editDeptId").value = el.id;
+                document.getElementById("editDeptName").value = el.name;
+                document.getElementById("editDeptX").value = el.x;
+                document.getElementById("editDeptY").value = el.y;
+                document.getElementById("editDeptW").value = el.w;
+                document.getElementById("editDeptH").value = el.h;
+            }
         }
 
-        window.addEventListener("mousemove", onMouseMove);
-        window.addEventListener("mouseup", onMouseUp);
-        
-        populateInspector(el);
-        render();
-    }
-
-    function populateInspector(el) {
-        if (el.type === 'asset') {
-            document.getElementById("inspectorAsset").style.display = "block";
-            document.getElementById("inspectorDept").style.display = "none";
-            document.getElementById("editAssetId").value = el.id;
-            document.getElementById("editAssetName").value = el.name;
-            document.getElementById("editAssetX").value = el.x;
-            document.getElementById("editAssetY").value = el.y;
-        } else {
-            document.getElementById("inspectorDept").style.display = "block";
-            document.getElementById("inspectorAsset").style.display = "none";
-            document.getElementById("editDeptId").value = el.id;
-            document.getElementById("editDeptName").value = el.name;
-            document.getElementById("editDeptX").value = el.x;
-            document.getElementById("editDeptY").value = el.y;
-            document.getElementById("editDeptW").value = el.w;
-            document.getElementById("editDeptH").value = el.h;
+        window.updateSelectedDept = function() {
+            let id = parseInt(document.getElementById("editDeptId").value);
+            let el = elements.find(item => item.id === id);
+            if (el) {
+                el.name = document.getElementById("editDeptName").value;
+                el.x = parseInt(document.getElementById("editDeptX").value) || 0;
+                el.y = parseInt(document.getElementById("editDeptY").value) || 0;
+                el.w = parseInt(document.getElementById("editDeptW").value) || 1;
+                el.h = parseInt(document.getElementById("editDeptH").value) || 1;
+                render();
+                saveToFirebase();
+            }
         }
-    }
 
-    function updateSelectedDept() {
-        let id = parseInt(document.getElementById("editDeptId").value);
-        let el = elements.find(item => item.id === id);
-        if (el) {
-            el.name = document.getElementById("editDeptName").value;
-            el.x = parseInt(document.getElementById("editDeptX").value) || 0;
-            el.y = parseInt(document.getElementById("editDeptY").value) || 0;
-            el.w = parseInt(document.getElementById("editDeptW").value) || 1;
-            el.h = parseInt(document.getElementById("editDeptH").value) || 1;
+        window.updateSelectedAsset = function() {
+            let id = parseInt(document.getElementById("editAssetId").value);
+            let el = elements.find(item => item.id === id);
+            if (el) {
+                el.name = document.getElementById("editAssetName").value;
+                el.x = parseInt(document.getElementById("editAssetX").value) || 0;
+                el.y = parseInt(document.getElementById("editAssetY").value) || 0;
+                render();
+                saveToFirebase();
+            }
+        }
+
+        window.addDepartment = function() {
+            let newEl = {
+                id: Date.now(),
+                name: document.getElementById("newDeptName").value,
+                type: document.getElementById("newDeptType").value,
+                x: parseInt(document.getElementById("newDeptX").value) || 0,
+                y: parseInt(document.getElementById("newDeptY").value) || 0,
+                w: parseInt(document.getElementById("newDeptW").value) || 3,
+                h: parseInt(document.getElementById("newDeptH").value) || 3
+            };
+            elements.push(newEl);
             render();
+            saveToFirebase();
         }
-    }
 
-    function updateSelectedAsset() {
-        let id = parseInt(document.getElementById("editAssetId").value);
-        let el = elements.find(item => item.id === id);
-        if (el) {
-            el.name = document.getElementById("editAssetName").value;
-            el.x = parseInt(document.getElementById("editAssetX").value) || 0;
-            el.y = parseInt(document.getElementById("editAssetY").value) || 0;
+        window.addAsset = function() {
+            let newEl = {
+                id: Date.now(),
+                name: document.getElementById("newAssetName").value,
+                type: "asset",
+                x: parseInt(document.getElementById("newAssetX").value) || 0,
+                y: parseInt(document.getElementById("newAssetY").value) || 0
+            };
+            elements.push(newEl);
             render();
+            saveToFirebase();
         }
-    }
 
-    function addDepartment() {
-        let newEl = {
-            id: Date.now(),
-            name: document.getElementById("newDeptName").value,
-            type: document.getElementById("newDeptType").value,
-            x: parseInt(document.getElementById("newDeptX").value) || 0,
-            y: parseInt(document.getElementById("newDeptY").value) || 0,
-            w: parseInt(document.getElementById("newDeptW").value) || 3,
-            h: parseInt(document.getElementById("newDeptH").value) || 3
-        };
-        elements.push(newEl);
-        render();
-    }
+        window.deleteSelected = function() {
+            let id = parseInt(document.getElementById("editDeptId").value) || parseInt(document.getElementById("editAssetId").value);
+            elements = elements.filter(item => item.id !== id);
+            hideInspectors();
+            selectedId = null;
+            render();
+            saveToFirebase();
+        }
 
-    function addAsset() {
-        let newEl = {
-            id: Date.now(),
-            name: document.getElementById("newAssetName").value,
-            type: "asset",
-            x: parseInt(document.getElementById("newAssetX").value) || 0,
-            y: parseInt(document.getElementById("newAssetY").value) || 0
-        };
-        elements.push(newEl);
-        render();
-    }
-
-    function deleteSelected() {
-        let id = parseInt(document.getElementById("editDeptId").value) || parseInt(document.getElementById("editAssetId").value);
-        elements = elements.filter(item => item.id !== id);
-        hideInspectors();
-        selectedId = null;
-        render();
-    }
-
-    // Initial render
-    render();
-</script>
+        // Initialize connection and fetch map data
+        loadFromFirebase();
+    </script>
 
 </body>
 </html>
