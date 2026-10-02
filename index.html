@@ -122,6 +122,18 @@
             stroke: #fbbf24;
             stroke-width: 3;
         }
+
+        /* HOVER-ONLY ASSET LABELS */
+        .asset-label-text {
+            opacity: 0;
+            transition: opacity 0.2s ease-in-out;
+            pointer-events: none;
+            background: #111b27;
+        }
+        .item-group:hover .asset-label-text {
+            opacity: 1;
+        }
+
         .grid-line {
             stroke: #132235;
             stroke-width: 1;
@@ -346,7 +358,7 @@
         
         <div>
             <p style="font-size: 10px; color: #64748b; margin: 4px 0 0 0;">
-                💡 <b>Tip:</b> Asset dots have been scaled compact ($r=5$) for high-density placement.
+                💡 <b>Tip:</b> Asset names appear automatically when hovering your cursor over the markers.
             </p>
         </div>
     </div>
@@ -847,11 +859,12 @@
                     let circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
                     circle.setAttribute("cx", cx);
                     circle.setAttribute("cy", cy);
-                    circle.setAttribute("r", 5); // <--- UPDATED: Compact radius (down from 12) to prevent overlap in dense layouts
+                    circle.setAttribute("r", 5); // Compact radius for dense placement
                     circle.setAttribute("class", `item-shape ${el.id === selectedId ? 'selected' : ''}`);
                     circle.setAttribute("fill", "#111b27");
                     circle.setAttribute("stroke", catColor);
                     circle.setAttribute("stroke-width", "2");
+
                     let emojiText = document.createElementNS("http://www.w3.org/2000/svg", "text");
                     emojiText.setAttribute("x", cx);
                     emojiText.setAttribute("y", cy + 1);
@@ -860,14 +873,17 @@
                     emojiText.setAttribute("font-size", "9px");
                     emojiText.style.pointerEvents = "none";
                     emojiText.textContent = el.emoji || "📍";
+
+                    // Asset label text hidden by default, pops up on hover via CSS (.asset-label-text)
                     let labelText = document.createElementNS("http://www.w3.org/2000/svg", "text");
                     labelText.setAttribute("x", cx + 10);
                     labelText.setAttribute("y", cy + 3);
                     labelText.setAttribute("fill", "#fff");
                     labelText.setAttribute("font-size", "9px");
                     labelText.setAttribute("font-weight", "bold");
-                    labelText.style.pointerEvents = "none";
+                    labelText.setAttribute("class", "asset-label-text");
                     labelText.textContent = el.name;
+
                     g.appendChild(circle);
                     g.appendChild(emojiText);
                     g.appendChild(labelText);
