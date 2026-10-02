@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Facility Layout Builder - Categories, Emojis & Spreadsheet</title>
+    <title>Facility Layout Builder - Pan/Zoom Inspect & Spreadsheet</title>
     <style>
         body {
             background-color: #0b131d;
@@ -110,12 +110,14 @@
             left: 0;
             transform-origin: 0 0;
         }
-        .item-shape {
+        .item-group {
             cursor: pointer;
             pointer-events: auto;
+        }
+        .item-shape {
             transition: stroke 0.2s;
         }
-        .item-shape:hover { stroke: #fff; }
+        .item-group:hover .item-shape { stroke: #fff; }
         .item-shape.selected {
             stroke: #fbbf24;
             stroke-width: 3;
@@ -291,8 +293,8 @@
         <div>
             <label>Interaction Mode</label>
             <div style="display: flex; gap: 6px; margin-top: 2px;">
-                <button id="modeEditBtn" class="mode-btn active" onclick="setMode('edit')">Edit Layout</button>
-                <button id="modePanBtn" class="mode-btn" onclick="setMode('pan')">Pan / Zoom</button>
+                <button id="modeEditBtn" class="mode-btn active" onclick="setMode('edit')">Edit Layout (Drag)</button>
+                <button id="modePanBtn" class="mode-btn" onclick="setMode('pan')">Pan / Zoom & Inspect</button>
             </div>
         </div>
 
@@ -353,7 +355,7 @@
         
         <div>
             <p style="font-size: 10px; color: #64748b; margin: 4px 0 0 0;">
-                💡 <b>Tip:</b> Click any item on the grid to open its photo gallery, category settings, and custom spreadsheet records.
+                💡 <b>Tip:</b> Switch to <b>Pan / Zoom & Inspect</b> mode, then click any item to open its details, spreadsheet records, and photo gallery.
             </p>
         </div>
     </div>
@@ -679,6 +681,15 @@
 
             visibleElements.forEach(el => {
                 let g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+                g.setAttribute("class", "item-group");
+
+                // Unified click listener for opening modal in pan mode
+                g.addEventListener("click", (e) => {
+                    if (currentMode === 'pan') {
+                        e.stopPropagation();
+                        openModal(el);
+                    }
+                });
 
                 if (el.type === 'asset') {
                     let cx = (el.x * gridSize) + (gridSize / 2);
@@ -693,7 +704,6 @@
                     circle.setAttribute("stroke", "#f97316");
                     circle.setAttribute("stroke-width", "2");
 
-                    // Emoji inside dot
                     let emojiText = document.createElementNS("http://www.w3.org/2000/svg", "text");
                     emojiText.setAttribute("x", cx);
                     emojiText.setAttribute("y", cy + 1);
@@ -703,7 +713,6 @@
                     emojiText.style.pointerEvents = "none";
                     emojiText.textContent = el.emoji || "📍";
 
-                    // Label next to dot
                     let labelText = document.createElementNS("http://www.w3.org/2000/svg", "text");
                     labelText.setAttribute("x", cx + 15);
                     labelText.setAttribute("y", cy + 4);
@@ -716,20 +725,6 @@
                     g.appendChild(circle);
                     g.appendChild(emojiText);
                     g.appendChild(labelText);
-
-                    g.addEventListener("click", (e) => {
-                        if (currentMode === 'edit') {
-                            e.stopPropagation();
-                            openModal(el);
-                        }
-                    });
-                    
-                    g.addEventListener("mousedown", (e) => {
-                        if (currentMode === 'edit') {
-                            e.stopPropagation();
-                            startDragElement(e, el);
-                        }
-                    });
 
                 } else {
                     let rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
@@ -765,21 +760,15 @@
 
                     g.appendChild(rect);
                     g.appendChild(text);
-
-                    g.addEventListener("click", (e) => {
-                        if (currentMode === 'edit') {
-                            e.stopPropagation();
-                            openModal(el);
-                        }
-                    });
-
-                    g.addEventListener("mousedown", (e) => {
-                        if (currentMode === 'edit') {
-                            e.stopPropagation();
-                            startDragElement(e, el);
-                        }
-                    });
                 }
+
+                // Dragging works ONLY in Edit mode
+                g.addEventListener("mousedown", (e) => {
+                    if (currentMode === 'edit') {
+                        e.stopPropagation();
+                        startDragElement(e, el);
+                    }
+                });
 
                 viewport.appendChild(g);
             });
