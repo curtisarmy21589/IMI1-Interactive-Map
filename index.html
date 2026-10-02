@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Facility Layout Builder - Separate Asset Menu</title>
+    <title>Facility Layout Builder - Rotated Racks & Corrected Scale</title>
     <style>
         body {
             background-color: #0b131d;
@@ -153,7 +153,7 @@
                 <label>Add New Department / Racking</label>
                 <input type="text" id="newDeptName" value="RACKING #3">
                 <select id="newDeptType">
-                    <option value="racking">Racking Zone (Rect)</option>
+                    <option value="racking">Racking Zone (Rect - 90 deg)</option>
                     <option value="mezzanine">Mezzanine Floor (Rect)</option>
                 </select>
                 <div style="display: flex; gap: 6px;">
@@ -161,7 +161,7 @@
                     <div style="flex:1;"><label>Y Row</label><input type="number" id="newDeptY" value="10"></div>
                 </div>
                 <div style="display: flex; gap: 6px;">
-                    <div style="flex:1;"><label>Width</label><input type="number" id="newDeptW" value="5"></div>
+                    <div style="flex:1;"><label>Width</label><input type="number" id="newDeptW" value="7"></div>
                     <div style="flex:1;"><label>Height</label><input type="number" id="newDeptH" value="5"></div>
                 </div>
                 <button onclick="addDepartment()" style="margin-top: 6px;">Add Department</button>
@@ -212,7 +212,7 @@
         
         <div>
             <p style="font-size: 10px; color: #64748b; margin: 4px 0 0 0;">
-                💡 <b>Tips:</b> Click elements on the map to inspect/edit them. Switch to Pan/Zoom mode to navigate freely.
+                💡 <b>Scale Note:</b> Row A is at the top (South wall) down to Row N (North wall). Row M.9 is custom-spaced near the bottom wall.
             </p>
         </div>
     </div>
@@ -233,11 +233,11 @@
     let currentMode = 'edit'; // 'edit' or 'pan'
     let currentTab = 'dept'; // 'dept' or 'asset'
 
-    // Elements array containing exact Mezzanine, Racking, and Asset dots
+    // Elements array with updated dimensions/orientations (Racking rotated 90 deg)
     let elements = [
-        { id: 1, name: "MAIN RACKING AREA #1 (Col 9 to 29.25 | Rows 6.25 to 13)", type: "racking", x: 9, y: 6, w: 20, h: 7 },
-        { id: 2, name: "RACKING #2 (Col. 34.5 to 38.8 | Rows 14.8 to 21.8)", type: "racking", x: 34, y: 15, w: 5, h: 7 },
-        { id: 3, name: "MEZZANINE FLOOR (Col 2 to 22 | Rows 21 to 30.8)", type: "mezzanine", x: 2, y: 21, w: 20, h: 10 },
+        { id: 1, name: "MAIN RACKING AREA #1", type: "racking", x: 9, y: 6, w: 7, h: 20 },
+        { id: 2, name: "RACKING #2", type: "racking", x: 34, y: 15, w: 7, h: 5 },
+        { id: 3, name: "MEZZANINE FLOOR", type: "mezzanine", x: 2, y: 21, w: 20, h: 10 },
         { id: 4, name: "Main Distribution Panel MDP-1", type: "asset", x: 12, y: 10 },
         { id: 5, name: "Water Main Shutoff", type: "asset", x: 17, y: 10 }
     ];
@@ -252,13 +252,22 @@
     const svg = document.getElementById("layoutSvg");
     const viewport = document.getElementById("viewport");
 
-    function getRowLetter(rowIndex) {
+    // Custom row label mapper with Row A at top (South) and Row N/O at bottom (North), plus M.9 offset row
+    function getRowLabel(r) {
+        // Let's map rows: top rows are 'A', progressing down towards 'N', with an explicit M.9 marker near the bottom wall
+        if (r === rows - 4) return "M.9";
+        
+        let standardRowsIndex = r;
+        if (standardRowsIndex >= rows - 4) {
+            standardRowsIndex -= 1; // shift for M.9
+        }
+        
         let temp, letter = '';
-        rowIndex += 1;
-        while (rowIndex > 0) {
-            temp = (rowIndex - 1) % 26;
+        let rowNum = standardRowsIndex + 1;
+        while (rowNum > 0) {
+            temp = (rowNum - 1) % 26;
             letter = String.fromCharCode(temp + 65) + letter;
-            rowIndex = (rowIndex - temp - 1) / 26;
+            rowNum = (rowNum - temp - 1) / 26;
         }
         return letter;
     }
@@ -297,7 +306,7 @@
         viewport.innerHTML = "";
         updateTransformString();
 
-        // 1. Grid Lines & Battleship Labels
+        // 1. Grid Lines & Coordinate Labels (Row A at top, M.9 near bottom)
         for (let c = 0; c <= cols; c++) {
             let line = document.createElementNS("http://www.w3.org/2000/svg", "line");
             line.setAttribute("x1", c * gridSize);
@@ -324,7 +333,14 @@
             line.setAttribute("y1", r * gridSize);
             line.setAttribute("x2", cols * gridSize);
             line.setAttribute("y2", r * gridSize);
-            line.setAttribute("class", "grid-line");
+            
+            // Highlight the special M.9 row offset line
+            if (r === rows - 4) {
+                line.setAttribute("stroke", "#f43f5e");
+                line.setAttribute("stroke-dasharray", "2,2");
+            } else {
+                line.setAttribute("class", "grid-line");
+            }
             viewport.appendChild(line);
 
             if (r < rows) {
@@ -333,7 +349,11 @@
                 text.setAttribute("y", (r * gridSize) + (gridSize / 2) + 3);
                 text.setAttribute("text-anchor", "end");
                 text.setAttribute("class", "coord-label");
-                text.textContent = getRowLetter(r);
+                if (r === rows - 4) {
+                    text.setAttribute("fill", "#f43f5e");
+                    text.setAttribute("font-weight", "bold");
+                }
+                text.textContent = getRowLabel(r);
                 viewport.appendChild(text);
             }
         }
@@ -356,7 +376,7 @@
         yardText.setAttribute("fill", "#38bdf8");
         yardText.setAttribute("font-size", "10px");
         yardText.setAttribute("font-weight", "bold");
-        yardText.textContent = "EXTERIOR / YARD ZONE";
+        yardText.textContent = "EXTERIOR / YARD ZONE (SOUTH = ROW A TOP)";
         viewport.appendChild(yardText);
 
         // 3. Building Interior Wall Boundary
@@ -370,22 +390,15 @@
         buildingWall.setAttribute("stroke-width", "1.5");
         viewport.appendChild(buildingWall);
 
-        let accentLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
-        accentLine.setAttribute("x1", 42 * gridSize);
-        accentLine.setAttribute("y1", (rows - 2) * gridSize);
-        accentLine.setAttribute("x2", (cols - 2) * gridSize);
-        accentLine.setAttribute("y2", (rows - 2) * gridSize);
-        accentLine.setAttribute("stroke", "#ec4899");
-        accentLine.setAttribute("stroke-width", "1.5");
-        viewport.appendChild(accentLine);
-
-        let accentText = document.createElementNS("http://www.w3.org/2000/svg", "text");
-        accentText.setAttribute("x", 2.2 * gridSize);
-        accentText.setAttribute("y", (rows - 2.3) * gridSize);
-        accentText.setAttribute("fill", "#ec4899");
-        accentText.setAttribute("font-size", "8px");
-        accentText.textContent = "COLUMNS 6.8 WALL LINE";
-        viewport.appendChild(accentText);
+        // M.9 indicator note inside canvas
+        let m9Note = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        m9Note.setAttribute("x", 2.2 * gridSize);
+        m9Note.setAttribute("y", (rows - 4.3) * gridSize);
+        m9Note.setAttribute("fill", "#f43f5e");
+        m9Note.setAttribute("font-size", "9px");
+        m9Note.setAttribute("font-weight", "bold");
+        m9Note.textContent = "◄ ROW M.9 OFFSET (3 FT FROM NORTH WALL)";
+        viewport.appendChild(m9Note);
 
         // 4. Render Elements
         elements.forEach(el => {
@@ -482,8 +495,8 @@
         let coordDisplay = document.getElementById("coord-display");
         if (colIdx >= 0 && colIdx < cols && rowIdx >= 0 && rowIdx < rows) {
             let colNum = colIdx + 1;
-            let rowLetter = getRowLetter(rowIdx);
-            coordDisplay.innerHTML = `Grid: <b>${rowLetter}-${colNum}</b> (Col ${colNum}, Row ${rowLetter})`;
+            let rowLabel = getRowLabel(rowIdx);
+            coordDisplay.innerHTML = `Grid: <b>${rowLabel}-${colNum}</b> (Col ${colNum}, Row ${rowLabel})`;
         } else {
             coordDisplay.innerHTML = `Col: -- | Row: --`;
         }
