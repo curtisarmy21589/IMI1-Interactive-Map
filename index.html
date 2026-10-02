@@ -112,7 +112,6 @@
         }
         .item-group {
             cursor: pointer;
-            pointer-events: auto;
         }
         .item-shape {
             transition: stroke 0.2s;
@@ -123,14 +122,13 @@
             stroke-width: 3;
         }
 
-        /* HOVER-ONLY ASSET LABELS */
-        .asset-label-text {
+        /* HOVER POPUP BUBBLE STYLES */
+        .asset-popup {
             opacity: 0;
-            transition: opacity 0.2s ease-in-out;
+            transition: opacity 0.15s ease-in-out;
             pointer-events: none;
-            background: #111b27;
         }
-        .item-group:hover .asset-label-text {
+        .item-group:hover .asset-popup {
             opacity: 1;
         }
 
@@ -163,14 +161,17 @@
             margin-top: -4px;
         }
         /* MODAL STYLES */
-        #modal-overlay, #category-modal-overlay {
+        #modal-overlay, #category-modal-overlay, #lightbox-overlay {
             display: none;
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.75);
+            background: rgba(0, 0, 0, 0.85);
             z-index: 1000;
             justify-content: center;
             align-items: center;
+        }
+        #lightbox-overlay {
+            z-index: 2000; /* Stays on top of main modals */
         }
         .modal-content {
             background: #111b27;
@@ -258,11 +259,16 @@
             border-radius: 4px;
             overflow: hidden;
             background: #0b131d;
+            cursor: pointer;
         }
         .photo-thumb-container img {
             width: 100%;
             height: 100%;
             object-fit: cover;
+            transition: transform 0.2s;
+        }
+        .photo-thumb-container:hover img {
+            transform: scale(1.05);
         }
         .delete-photo-btn {
             position: absolute;
@@ -279,6 +285,7 @@
             justify-content: center;
             padding: 0;
             margin: 0;
+            z-index: 5;
         }
     </style>
 </head>
@@ -358,7 +365,7 @@
         
         <div>
             <p style="font-size: 10px; color: #64748b; margin: 4px 0 0 0;">
-                💡 <b>Tip:</b> Asset names appear automatically when hovering your cursor over the markers.
+                💡 <b>Tip:</b> Hover over asset icons to preview names. Click photos to view them full size.
             </p>
         </div>
     </div>
@@ -406,7 +413,7 @@
                     <div style="flex:1;"><label>Height</label><input type="number" id="modalH" step="0.25" oninput="saveModalLiveChanges()"></div>
                 </div>
                 <div>
-                    <label>Location Photos</label>
+                    <label>Location Photos (Click photo to enlarge)</label>
                     <input type="file" id="photoUploadInput" accept="image/*" multiple onchange="handlePhotoUpload(event)">
                     <div class="photo-gallery" id="modalPhotoGallery">
                         <!-- Uploaded photos render here -->
@@ -437,6 +444,16 @@
             </div>
         </div>
     </div>
+
+    <!-- FULL-SIZE PHOTO LIGHTBOX OVERLAY -->
+    <div id="lightbox-overlay" onclick="closeLightbox()">
+        <div style="position: relative; max-width: 90vw; max-height: 90vh; display: flex; flex-direction: column; align-items: center;" onclick="event.stopPropagation()">
+            <button onclick="closeLightbox()" style="position: absolute; top: -35px; right: 0; background: none; border: none; color: #fff; font-size: 24px; cursor: pointer;">×</button>
+            <img id="lightboxImage" src="" style="max-width: 85vw; max-height: 80vh; object-fit: contain; border-radius: 4px; border: 1px solid #38bdf8; box-shadow: 0 10px 30px rgba(0,0,0,0.9);">
+            <div id="lightboxCaption" style="margin-top: 8px; color: #38bdf8; font-size: 13px; font-weight: bold;"></div>
+        </div>
+    </div>
+
     <!-- CATEGORY MANAGER MODAL -->
     <div id="category-modal-overlay">
         <div class="modal-content" style="width: 500px;">
@@ -859,7 +876,7 @@
                     let circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
                     circle.setAttribute("cx", cx);
                     circle.setAttribute("cy", cy);
-                    circle.setAttribute("r", 5); // Compact radius for dense placement
+                    circle.setAttribute("r", 5); 
                     circle.setAttribute("class", `item-shape ${el.id === selectedId ? 'selected' : ''}`);
                     circle.setAttribute("fill", "#111b27");
                     circle.setAttribute("stroke", catColor);
@@ -874,19 +891,37 @@
                     emojiText.style.pointerEvents = "none";
                     emojiText.textContent = el.emoji || "📍";
 
-                    // Asset label text hidden by default, pops up on hover via CSS (.asset-label-text)
-                    let labelText = document.createElementNS("http://www.w3.org/2000/svg", "text");
-                    labelText.setAttribute("x", cx + 10);
-                    labelText.setAttribute("y", cy + 3);
-                    labelText.setAttribute("fill", "#fff");
-                    labelText.setAttribute("font-size", "9px");
-                    labelText.setAttribute("font-weight", "bold");
-                    labelText.setAttribute("class", "asset-label-text");
-                    labelText.textContent = el.name;
+                    // HOVER POPUP BUBBLE
+                    let popupGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
+                    popupGroup.setAttribute("class", "asset-popup");
+
+                    let boxWidth = (el.name.length * 6.5) + 12;
+                    let popupBg = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+                    popupBg.setAttribute("x", cx - (boxWidth / 2));
+                    popupBg.setAttribute("y", cy - 28);
+                    popupBg.setAttribute("width", boxWidth);
+                    popupBg.setAttribute("height", 18);
+                    popupBg.setAttribute("rx", 4);
+                    popupBg.setAttribute("fill", "#0b131d");
+                    popupBg.setAttribute("stroke", catColor);
+                    popupBg.setAttribute("stroke-width", "1.5");
+                    popupBg.setAttribute("filter", "drop-shadow(0px 2px 4px rgba(0,0,0,0.6))");
+
+                    let popupText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                    popupText.setAttribute("x", cx);
+                    popupText.setAttribute("y", cy - 16);
+                    popupText.setAttribute("text-anchor", "middle");
+                    popupText.setAttribute("fill", "#ffffff");
+                    popupText.setAttribute("font-size", "10px");
+                    popupText.setAttribute("font-weight", "bold");
+                    popupText.textContent = el.name;
+
+                    popupGroup.appendChild(popupBg);
+                    popupGroup.appendChild(popupText);
 
                     g.appendChild(circle);
                     g.appendChild(emojiText);
-                    g.appendChild(labelText);
+                    g.appendChild(popupGroup);
                 } else {
                     let rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
                     rect.setAttribute("x", el.x * gridSize);
@@ -1063,7 +1098,7 @@
                 render();
             }
         }
-        // PHOTO UPLOAD HANDLING
+        // PHOTO UPLOAD & LIGHTBOX HANDLING
         window.handlePhotoUpload = function(event) {
             let id = parseInt(document.getElementById("modalElementId").value);
             let el = elements.find(item => item.id === id);
@@ -1087,6 +1122,8 @@
             el.photos.forEach((photoUrl, index) => {
                 let containerDiv = document.createElement("div");
                 containerDiv.className = "photo-thumb-container";
+                containerDiv.title = "Click to enlarge photo";
+                containerDiv.onclick = () => openLightbox(photoUrl, el.name);
                 
                 let img = document.createElement("img");
                 img.src = photoUrl;
@@ -1094,7 +1131,9 @@
                 let delBtn = document.createElement("button");
                 delBtn.className = "delete-photo-btn";
                 delBtn.innerHTML = "×";
-                delBtn.onclick = function() {
+                delBtn.title = "Delete photo";
+                delBtn.onclick = (e) => {
+                    e.stopPropagation(); // Prevent opening lightbox when clicking delete
                     el.photos.splice(index, 1);
                     renderPhotos(el);
                     saveToFirebase();
@@ -1103,6 +1142,14 @@
                 containerDiv.appendChild(delBtn);
                 gallery.appendChild(containerDiv);
             });
+        }
+        window.openLightbox = function(url, itemName) {
+            document.getElementById("lightboxImage").src = url;
+            document.getElementById("lightboxCaption").innerText = itemName || "Photo Preview";
+            document.getElementById("lightbox-overlay").style.display = "flex";
+        }
+        window.closeLightbox = function() {
+            document.getElementById("lightbox-overlay").style.display = "none";
         }
         // SPREADSHEET TABLE HANDLING
         function renderSpreadsheet(el) {
