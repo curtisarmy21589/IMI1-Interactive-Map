@@ -257,12 +257,12 @@
         .delete-photo-btn {
             position: absolute;
             top: 2px; right: 2px;
-            background: rgba(239, 68, 68, 0.8);
+            background: rgba(239, 68, 68, 0.9);
             color: white;
             border: none;
             border-radius: 50%;
-            width: 18px; height: 18px;
-            font-size: 10px;
+            width: 20px; height: 20px;
+            font-size: 11px;
             cursor: pointer;
             display: flex;
             align-items: center;
@@ -683,7 +683,7 @@
                 let g = document.createElementNS("http://www.w3.org/2000/svg", "g");
                 g.setAttribute("class", "item-group");
 
-                // Unified click listener for opening modal in pan mode
+                // Click opens modal ONLY in Pan/Zoom mode
                 g.addEventListener("click", (e) => {
                     if (currentMode === 'pan') {
                         e.stopPropagation();
@@ -1036,8 +1036,11 @@
 
         window.deleteItemFromModal = function() {
             let id = parseInt(document.getElementById("modalElementId").value);
-            elements = elements.filter(item => item.id !== id);
-            closeModal();
+            if (confirm("Are you sure you want to delete this item?")) {
+                elements = elements.filter(item => item.id !== id);
+                closeModal();
+                saveToFirebase();
+            }
         }
 
         // CREATING NEW ITEMS FROM SIDEBAR
