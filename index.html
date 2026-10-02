@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Facility Layout Builder - Multi-Layer & Firebase</title>
+    <title>Facility Layout Builder - Multi-Layer, Photos & Spreadsheet</title>
     <style>
         body {
             background-color: #0b131d;
@@ -27,7 +27,7 @@
         }
         h2, h3 { margin: 0 0 5px 0; color: #38bdf8; font-size: 15px; }
         label { font-size: 11px; color: #94a3b8; }
-        input, select, button {
+        input, select, button, textarea {
             width: 100%;
             padding: 6px 8px;
             background: #0b131d;
@@ -38,6 +38,7 @@
             margin-top: 2px;
             font-size: 12px;
         }
+        textarea { resize: vertical; height: 60px; font-family: sans-serif; }
         button {
             background: #1e293b;
             font-weight: bold;
@@ -145,6 +146,126 @@
             font-weight: bold;
             margin-top: -4px;
         }
+
+        /* MODAL STYLES */
+        #modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.75);
+            z-index: 100;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background: #111b27;
+            border: 1px solid #38bdf8;
+            border-radius: 8px;
+            width: 600px;
+            max-height: 90vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.8);
+            overflow: hidden;
+        }
+        .modal-header {
+            background: #0b131d;
+            padding: 12px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #1f2d3d;
+        }
+        .modal-body {
+            padding: 15px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .modal-footer {
+            background: #0b131d;
+            padding: 10px 15px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+            border-top: 1px solid #1f2d3d;
+        }
+        .close-modal {
+            background: none;
+            border: none;
+            color: #94a3b8;
+            font-size: 18px;
+            cursor: pointer;
+            width: auto;
+            padding: 0;
+            margin: 0;
+        }
+        .close-modal:hover { color: #fff; background: none; }
+        
+        /* SPREADSHEET TABLE */
+        .spreadsheet-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 4px;
+        }
+        .spreadsheet-table th, .spreadsheet-table td {
+            border: 1px solid #1f2d3d;
+            padding: 6px;
+            text-align: left;
+            font-size: 11px;
+        }
+        .spreadsheet-table th {
+            background: #0b131d;
+            color: #38bdf8;
+        }
+        .spreadsheet-table input {
+            background: transparent;
+            border: none;
+            color: #fff;
+            width: 100%;
+            padding: 2px;
+            margin: 0;
+        }
+        .spreadsheet-table input:focus { outline: 1px solid #38bdf8; }
+
+        /* PHOTO GRID */
+        .photo-gallery {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 4px;
+        }
+        .photo-thumb-container {
+            position: relative;
+            width: 90px;
+            height: 90px;
+            border: 1px solid #1f2d3d;
+            border-radius: 4px;
+            overflow: hidden;
+            background: #0b131d;
+        }
+        .photo-thumb-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .delete-photo-btn {
+            position: absolute;
+            top: 2px; right: 2px;
+            background: rgba(239, 68, 68, 0.8);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 18px; height: 18px;
+            font-size: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            margin: 0;
+        }
     </style>
 </head>
 <body>
@@ -202,22 +323,6 @@
                 </div>
                 <button onclick="addDepartment()" style="margin-top: 6px;">Add to Current Layer</button>
             </div>
-
-            <div id="inspectorDept" style="display:none; border-top: 1px solid #1e293b; padding-top: 6px; margin-top: 4px;">
-                <h3>Edit Selected Item</h3>
-                <input type="hidden" id="editDeptId">
-                <label>Name</label>
-                <input type="text" id="editDeptName" oninput="updateSelectedDept()">
-                <div style="display: flex; gap: 6px;">
-                    <div style="flex:1;"><label>X Col</label><input type="number" id="editDeptX" oninput="updateSelectedDept()"></div>
-                    <div style="flex:1;"><label>Y Row</label><input type="number" id="editDeptY" oninput="updateSelectedDept()"></div>
-                </div>
-                <div style="display: flex; gap: 6px;">
-                    <div style="flex:1;"><label>Width</label><input type="number" id="editDeptW" oninput="updateSelectedDept()"></div>
-                    <div style="flex:1;"><label>Height</label><input type="number" id="editDeptH" oninput="updateSelectedDept()"></div>
-                </div>
-                <button class="danger" onclick="deleteSelected()" style="margin-top: 6px;">Delete Item</button>
-            </div>
         </div>
 
         <!-- PANEL 2: ASSETS (DOTS) -->
@@ -232,23 +337,11 @@
                 </div>
                 <button onclick="addAsset()" style="margin-top: 6px;">Add Asset Dot</button>
             </div>
-
-            <div id="inspectorAsset" style="display:none; border-top: 1px solid #1e293b; padding-top: 6px; margin-top: 4px;">
-                <h3>Edit Selected Asset</h3>
-                <input type="hidden" id="editAssetId">
-                <label>Asset Name</label>
-                <input type="text" id="editAssetName" oninput="updateSelectedAsset()">
-                <div style="display: flex; gap: 6px;">
-                    <div style="flex:1;"><label>X Col</label><input type="number" id="editAssetX" oninput="updateSelectedAsset()"></div>
-                    <div style="flex:1;"><label>Y Row</label><input type="number" id="editAssetY" oninput="updateSelectedAsset()"></div>
-                </div>
-                <button class="danger" onclick="deleteSelected()" style="margin-top: 6px;">Remove Asset</button>
-            </div>
         </div>
         
         <div>
             <p style="font-size: 10px; color: #64748b; margin: 4px 0 0 0;">
-                💡 <b>Layers:</b> View Ground Floor, Mezzanine, or Roof independently. Changes auto-save to Firebase.
+                💡 <b>Tip:</b> Click any item on the grid to open its photo gallery and custom spreadsheet records.
             </p>
         </div>
     </div>
@@ -259,6 +352,62 @@
                 <!-- Rendered dynamically -->
             </g>
         </svg>
+    </div>
+
+    <!-- ITEM DETAILS & PHOTO MODAL -->
+    <div id="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle" style="color: #38bdf8; margin: 0;">Item Details</h3>
+                <button class="close-modal" onclick="closeModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="modalElementId">
+                <div>
+                    <label>Item Name / Designation</label>
+                    <input type="text" id="modalName" oninput="saveModalLiveChanges()">
+                </div>
+                <div style="display: flex; gap: 6px;">
+                    <div style="flex:1;"><label>X Col</label><input type="number" id="modalX" oninput="saveModalLiveChanges()"></div>
+                    <div style="flex:1;"><label>Y Row</label><input type="number" id="modalY" oninput="saveModalLiveChanges()"></div>
+                </div>
+                <div id="modalSizeContainer" style="display: flex; gap: 6px;">
+                    <div style="flex:1;"><label>Width</label><input type="number" id="modalW" oninput="saveModalLiveChanges()"></div>
+                    <div style="flex:1;"><label>Height</label><input type="number" id="modalH" oninput="saveModalLiveChanges()"></div>
+                </div>
+
+                <div>
+                    <label>Location Photos</label>
+                    <input type="file" id="photoUploadInput" accept="image/*" multiple onchange="handlePhotoUpload(event)">
+                    <div class="photo-gallery" id="modalPhotoGallery">
+                        <!-- Uploaded photos render here -->
+                    </div>
+                </div>
+
+                <div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
+                        <label>Spreadsheet Details / Custom Records</label>
+                        <button onclick="addSpreadsheetRow()" style="width: auto; padding: 2px 8px; font-size: 10px;">+ Add Row</button>
+                    </div>
+                    <table class="spreadsheet-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 35%;">Parameter / Field</th>
+                                <th style="width: 55%;">Value / Data</th>
+                                <th style="width: 10%;"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="spreadsheetBody">
+                            <!-- Custom rows render here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="danger" onclick="deleteItemFromModal()" style="width: auto; padding: 6px 12px;">Delete Item</button>
+                <button onclick="closeModal()" style="width: auto; padding: 6px 12px; background: #38bdf8; color: #0b131d;">Done / Save</button>
+            </div>
+        </div>
     </div>
 
     <!-- Firebase SDK Imports -->
@@ -285,17 +434,38 @@
 
         let currentMode = 'edit'; 
         let currentTab = 'dept'; 
-        let currentLayer = 'ground'; // 'ground', 'mezzanine', or 'roof'
+        let currentLayer = 'ground'; 
 
-        // Default elements categorized by layer
+        // Elements array storing metadata, photos[] and spreadsheetData[]
         let elements = [
-            { id: 1, layer: "ground", name: "MAIN RACKING AREA #1", type: "racking", x: 4, y: 2, w: 4, h: 8 },
-            { id: 2, layer: "ground", name: "RACKING #2", type: "racking", x: 18, y: 5, w: 4, h: 4 },
-            { id: 3, layer: "ground", name: "MEZZANINE FLOOR", type: "mezzanine", x: 2, y: 9, w: 10, h: 4 },
-            { id: 4, layer: "ground", name: "Main Distribution Panel MDP-1", type: "asset", x: 6, y: 3 },
-            { id: 5, layer: "ground", name: "Water Main Shutoff", type: "asset", x: 9, y: 3 },
-            { id: 6, layer: "mezzanine", name: "Mezzanine Level Office & Storage", type: "mezzanine", x: 2, y: 2, w: 12, h: 10 },
-            { id: 7, layer: "roof", name: "Roof HVAC Unit & Solar Array Zone", type: "general", x: 5, y: 3, w: 8, h: 6 }
+            { 
+                id: 1, layer: "ground", name: "MAIN RACKING AREA #1", type: "racking", x: 4, y: 2, w: 4, h: 8,
+                photos: [], spreadsheetData: [{key: "Bay Count", value: "24 Bays"}, {key: "Weight Capacity", value: "3,500 lbs"}]
+            },
+            { 
+                id: 2, layer: "ground", name: "RACKING #2", type: "racking", x: 18, y: 5, w: 4, h: 4,
+                photos: [], spreadsheetData: [{key: "Bay Count", value: "12 Bays"}, {key: "Weight Capacity", value: "2,000 lbs"}]
+            },
+            { 
+                id: 3, layer: "ground", name: "MEZZANINE FLOOR", type: "mezzanine", x: 2, y: 9, w: 10, h: 4,
+                photos: [], spreadsheetData: [{key: "Level", value: "Ground Footprint"}]
+            },
+            { 
+                id: 4, layer: "ground", name: "Main Distribution Panel MDP-1", type: "asset", x: 6, y: 3,
+                photos: [], spreadsheetData: [{key: "Voltage", value: "480V 3-Phase"}, {key: "Amperage", value: "800A"}]
+            },
+            { 
+                id: 5, layer: "ground", name: "Water Main Shutoff", type: "asset", x: 9, y: 3,
+                photos: [], spreadsheetData: [{key: "Valve Type", value: "Quarter-turn Butterfly"}]
+            },
+            { 
+                id: 6, layer: "mezzanine", name: "Mezzanine Level Office & Storage", type: "mezzanine", x: 2, y: 2, w: 12, h: 10,
+                photos: [], spreadsheetData: [{key: "Occupancy", value: "Max 15 Personnel"}]
+            },
+            { 
+                id: 7, layer: "roof", name: "Roof HVAC Unit & Solar Array Zone", type: "general", x: 5, y: 3, w: 8, h: 6,
+                photos: [], spreadsheetData: [{key: "Unit Model", value: "ICP CA5524VKD3"}]
+            }
         ];
 
         let selectedId = null;
@@ -362,7 +532,6 @@
             document.getElementById("layerMezzBtn").classList.toggle("active", layerName === 'mezzanine');
             document.getElementById("layerRoofBtn").classList.toggle("active", layerName === 'roof');
             selectedId = null;
-            hideInspectors();
             render();
         }
 
@@ -372,7 +541,6 @@
             document.getElementById("modePanBtn").classList.toggle("active", mode === 'pan');
             container.style.cursor = mode === 'pan' ? 'grab' : 'default';
             selectedId = null;
-            hideInspectors();
             render();
         }
 
@@ -382,14 +550,6 @@
             document.getElementById("tabAssetBtn").classList.toggle("active", tab === 'asset');
             document.getElementById("panelDept").classList.toggle("active", tab === 'dept');
             document.getElementById("panelAsset").classList.toggle("active", tab === 'asset');
-            selectedId = null;
-            hideInspectors();
-            render();
-        }
-
-        function hideInspectors() {
-            document.getElementById("inspectorDept").style.display = "none";
-            document.getElementById("inspectorAsset").style.display = "none";
         }
 
         function updateTransformString() {
@@ -400,7 +560,7 @@
             viewport.innerHTML = "";
             updateTransformString();
 
-            // 1. Grid Lines & Coordinate Labels (Cols 1-30, Rows A-N)
+            // 1. Grid Lines & Labels
             for (let c = 0; c <= cols; c++) {
                 let line = document.createElementNS("http://www.w3.org/2000/svg", "line");
                 line.setAttribute("x1", c * gridSize);
@@ -451,7 +611,7 @@
                 }
             }
 
-            // 2. Building Interior Wall Boundary
+            // 2. Building Walls
             let buildingWall = document.createElementNS("http://www.w3.org/2000/svg", "rect");
             buildingWall.setAttribute("x", 0);
             buildingWall.setAttribute("y", 0);
@@ -481,7 +641,7 @@
             bottomLabel.textContent = `NORTH WALL (${layerTitleName} LAYER - ROW N BOTTOM) ▼`;
             viewport.appendChild(bottomLabel);
 
-            // 3. Render Elements matching Current Layer only
+            // 3. Render Elements
             let visibleElements = elements.filter(el => (el.layer || 'ground') === currentLayer);
 
             visibleElements.forEach(el => {
@@ -499,10 +659,16 @@
                     circle.setAttribute("stroke", "#fb923c");
                     circle.setAttribute("stroke-width", "1.5");
 
+                    circle.addEventListener("click", (e) => {
+                        if (currentMode === 'edit') {
+                            e.stopPropagation();
+                            openModal(el);
+                        }
+                    });
+                    
                     circle.addEventListener("mousedown", (e) => {
                         if (currentMode === 'edit') {
                             e.stopPropagation();
-                            switchTab('asset');
                             startDragElement(e, el);
                         }
                     });
@@ -542,10 +708,16 @@
                     }
                     rect.setAttribute("stroke-width", "1");
 
+                    rect.addEventListener("click", (e) => {
+                        if (currentMode === 'edit') {
+                            e.stopPropagation();
+                            openModal(el);
+                        }
+                    });
+
                     rect.addEventListener("mousedown", (e) => {
                         if (currentMode === 'edit') {
                             e.stopPropagation();
-                            switchTab('dept');
                             startDragElement(e, el);
                         }
                     });
@@ -622,7 +794,6 @@
                 panStart = { x: e.clientX - viewTransform.x, y: e.clientY - viewTransform.y };
             } else if (currentMode === 'edit') {
                 selectedId = null;
-                hideInspectors();
                 render();
             }
         });
@@ -651,7 +822,6 @@
                 el.x = Math.max(0, Math.min(cols - (el.w || 1), origX + Math.round(dx / gridSize)));
                 el.y = Math.max(0, Math.min(rows - (el.h || 1), origY + Math.round(dy / gridSize)));
                 
-                populateInspector(el);
                 render();
             }
 
@@ -664,67 +834,181 @@
 
             window.addEventListener("mousemove", onMouseMove);
             window.addEventListener("mouseup", onMouseUp);
-            
-            populateInspector(el);
             render();
         }
 
-        function populateInspector(el) {
+        // MODAL MANAGEMENT FUNCTIONS
+        function openModal(el) {
+            selectedId = el.id;
+            document.getElementById("modalElementId").value = el.id;
+            document.getElementById("modalTitle").innerText = `Edit: ${el.name}`;
+            document.getElementById("modalName").value = el.name;
+            document.getElementById("modalX").value = el.x;
+            document.getElementById("modalY").value = el.y;
+            
             if (el.type === 'asset') {
-                document.getElementById("inspectorAsset").style.display = "block";
-                document.getElementById("inspectorDept").style.display = "none";
-                document.getElementById("editAssetId").value = el.id;
-                document.getElementById("editAssetName").value = el.name;
-                document.getElementById("editAssetX").value = el.x;
-                document.getElementById("editAssetY").value = el.y;
+                document.getElementById("modalSizeContainer").style.display = "none";
             } else {
-                document.getElementById("inspectorDept").style.display = "block";
-                document.getElementById("inspectorAsset").style.display = "none";
-                document.getElementById("editDeptId").value = el.id;
-                document.getElementById("editDeptName").value = el.name;
-                document.getElementById("editDeptX").value = el.x;
-                document.getElementById("editDeptY").value = el.y;
-                document.getElementById("editDeptW").value = el.w;
-                document.getElementById("editDeptH").value = el.h;
+                document.getElementById("modalSizeContainer").style.display = "flex";
+                document.getElementById("modalW").value = el.w;
+                document.getElementById("modalH").value = el.h;
+            }
+
+            renderPhotos(el);
+            renderSpreadsheet(el);
+            document.getElementById("modal-overlay").style.display = "flex";
+            render();
+        }
+
+        window.closeModal = function() {
+            document.getElementById("modal-overlay").style.display = "none";
+            selectedId = null;
+            render();
+            saveToFirebase();
+        }
+
+        window.saveModalLiveChanges = function() {
+            let id = parseInt(document.getElementById("modalElementId").value);
+            let el = elements.find(item => item.id === id);
+            if (el) {
+                el.name = document.getElementById("modalName").value;
+                el.x = parseInt(document.getElementById("modalX").value) || 0;
+                el.y = parseInt(document.getElementById("modalY").value) || 0;
+                if (el.type !== 'asset') {
+                    el.w = parseInt(document.getElementById("modalW").value) || 1;
+                    el.h = parseInt(document.getElementById("modalH").value) || 1;
+                }
+                document.getElementById("modalTitle").innerText = `Edit: ${el.name}`;
+                render();
             }
         }
 
-        window.updateSelectedDept = function() {
-            let id = parseInt(document.getElementById("editDeptId").value);
+        // PHOTO UPLOAD HANDLING
+        window.handlePhotoUpload = function(event) {
+            let id = parseInt(document.getElementById("modalElementId").value);
+            let el = elements.find(item => item.id === id);
+            if (!el) return;
+            if (!el.photos) el.photos = [];
+
+            let files = event.target.files;
+            for (let file of files) {
+                let reader = new FileReader();
+                reader.onload = function(e) {
+                    el.photos.push(e.target.result);
+                    renderPhotos(el);
+                    saveToFirebase();
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function renderPhotos(el) {
+            let gallery = document.getElementById("modalPhotoGallery");
+            gallery.innerHTML = "";
+            if (!el.photos) el.photos = [];
+
+            el.photos.forEach((photoUrl, index) => {
+                let containerDiv = document.createElement("div");
+                containerDiv.className = "photo-thumb-container";
+                
+                let img = document.createElement("img");
+                img.src = photoUrl;
+                
+                let delBtn = document.createElement("button");
+                delBtn.className = "delete-photo-btn";
+                delBtn.innerHTML = "×";
+                delBtn.onclick = function() {
+                    el.photos.splice(index, 1);
+                    renderPhotos(el);
+                    saveToFirebase();
+                };
+
+                containerDiv.appendChild(img);
+                containerDiv.appendChild(delBtn);
+                gallery.appendChild(containerDiv);
+            });
+        }
+
+        // SPREADSHEET TABLE HANDLING
+        function renderSpreadsheet(el) {
+            let tbody = document.getElementById("spreadsheetBody");
+            tbody.innerHTML = "";
+            if (!el.spreadsheetData) el.spreadsheetData = [];
+
+            el.spreadsheetData.forEach((row, index) => {
+                let tr = document.createElement("tr");
+                
+                let tdKey = document.createElement("td");
+                let inputKey = document.createElement("input");
+                inputKey.type = "text";
+                inputKey.value = row.key;
+                inputKey.oninput = function() {
+                    row.key = inputKey.value;
+                    saveToFirebase();
+                };
+                tdKey.appendChild(inputKey);
+
+                let tdVal = document.createElement("td");
+                let inputVal = document.createElement("input");
+                inputVal.type = "text";
+                inputVal.value = row.value;
+                inputVal.oninput = function() {
+                    row.value = inputVal.value;
+                    saveToFirebase();
+                };
+                tdVal.appendChild(inputVal);
+
+                let tdAction = document.createElement("td");
+                tdAction.style.textAlign = "center";
+                let delRowBtn = document.createElement("button");
+                delRowBtn.className = "danger";
+                delRowBtn.style.padding = "2px 6px";
+                delRowBtn.style.fontSize = "10px";
+                delRowBtn.innerText = "X";
+                delRowBtn.onclick = function() {
+                    el.spreadsheetData.splice(index, 1);
+                    renderSpreadsheet(el);
+                    saveToFirebase();
+                };
+                tdAction.appendChild(delRowBtn);
+
+                tr.appendChild(tdKey);
+                tr.appendChild(tdVal);
+                tr.appendChild(tdAction);
+                tbody.appendChild(tr);
+            });
+        }
+
+        window.addSpreadsheetRow = function() {
+            let id = parseInt(document.getElementById("modalElementId").value);
             let el = elements.find(item => item.id === id);
             if (el) {
-                el.name = document.getElementById("editDeptName").value;
-                el.x = parseInt(document.getElementById("editDeptX").value) || 0;
-                el.y = parseInt(document.getElementById("editDeptY").value) || 0;
-                el.w = parseInt(document.getElementById("editDeptW").value) || 1;
-                el.h = parseInt(document.getElementById("editDeptH").value) || 1;
-                render();
+                if (!el.spreadsheetData) el.spreadsheetData = [];
+                el.spreadsheetData.push({ key: "New Field", value: "Value" });
+                renderSpreadsheet(el);
                 saveToFirebase();
             }
         }
 
-        window.updateSelectedAsset = function() {
-            let id = parseInt(document.getElementById("editAssetId").value);
-            let el = elements.find(item => item.id === id);
-            if (el) {
-                el.name = document.getElementById("editAssetName").value;
-                el.x = parseInt(document.getElementById("editAssetX").value) || 0;
-                el.y = parseInt(document.getElementById("editAssetY").value) || 0;
-                render();
-                saveToFirebase();
-            }
+        window.deleteItemFromModal = function() {
+            let id = parseInt(document.getElementById("modalElementId").value);
+            elements = elements.filter(item => item.id !== id);
+            closeModal();
         }
 
+        // CREATING NEW ITEMS FROM SIDEBAR
         window.addDepartment = function() {
             let newEl = {
                 id: Date.now(),
-                layer: currentLayer, // Assign to whatever layer is currently active
+                layer: currentLayer, 
                 name: document.getElementById("newDeptName").value,
                 type: document.getElementById("newDeptType").value,
                 x: parseInt(document.getElementById("newDeptX").value) || 0,
                 y: parseInt(document.getElementById("newDeptY").value) || 0,
                 w: parseInt(document.getElementById("newDeptW").value) || 3,
-                h: parseInt(document.getElementById("newDeptH").value) || 3
+                h: parseInt(document.getElementById("newDeptH").value) || 3,
+                photos: [],
+                spreadsheetData: [{key: "Status", value: "Active"}]
             };
             elements.push(newEl);
             render();
@@ -734,22 +1018,15 @@
         window.addAsset = function() {
             let newEl = {
                 id: Date.now(),
-                layer: currentLayer, // Assign to whatever layer is currently active
+                layer: currentLayer, 
                 name: document.getElementById("newAssetName").value,
                 type: "asset",
                 x: parseInt(document.getElementById("newAssetX").value) || 0,
-                y: parseInt(document.getElementById("newAssetY").value) || 0
+                y: parseInt(document.getElementById("newAssetY").value) || 0,
+                photos: [],
+                spreadsheetData: [{key: "Asset Type", value: "Utility Node"}]
             };
             elements.push(newEl);
-            render();
-            saveToFirebase();
-        }
-
-        window.deleteSelected = function() {
-            let id = parseInt(document.getElementById("editDeptId").value) || parseInt(document.getElementById("editAssetId").value);
-            elements = elements.filter(item => item.id !== id);
-            hideInspectors();
-            selectedId = null;
             render();
             saveToFirebase();
         }
