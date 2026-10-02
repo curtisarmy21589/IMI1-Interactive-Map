@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Facility Layout Builder - Pan/Zoom Inspect & Spreadsheet</title>
+    <title>Facility Layout & Site Builder - Pan/Zoom Inspect & Spreadsheet</title>
     <style>
         body {
             background-color: #0b131d;
@@ -275,7 +275,7 @@
 <body>
 
     <div id="sidebar">
-        <h2>Layout Builder</h2>
+        <h2>Site & Layout Builder</h2>
         
         <div id="coord-display">Col: -- | Row: --</div>
         <div id="sync-status">Connected to Firebase</div>
@@ -302,41 +302,43 @@
 
         <!-- Sidebar Tab Switcher -->
         <div class="tab-bar">
-            <button class="tab-btn active" id="tabDeptBtn" onclick="switchTab('dept')">Departments</button>
+            <button class="tab-btn active" id="tabDeptBtn" onclick="switchTab('dept')">Zones & Yard</button>
             <button class="tab-btn" id="tabAssetBtn" onclick="switchTab('asset')">Assets Menu</button>
         </div>
 
-        <!-- PANEL 1: DEPARTMENTS & RACKING -->
+        <!-- PANEL 1: DEPARTMENTS & ZONES -->
         <div id="panelDept" class="panel active">
-            <h3>Department Management</h3>
+            <h3>Zone / Yard Management</h3>
             <div>
-                <label>Add New Zone / Dept</label>
-                <input type="text" id="newDeptName" value="New Zone">
+                <label>Add New Zone / Yard Area</label>
+                <input type="text" id="newDeptName" value="North Yard Area">
                 <select id="newDeptType">
+                    <option value="yard">External Yard / Grading (Rect)</option>
                     <option value="racking">Racking Zone (Rect)</option>
                     <option value="mezzanine">Mezzanine Floor (Rect)</option>
                     <option value="general">General Dept / Roof Unit</option>
                 </select>
                 <div style="display: flex; gap: 6px;">
-                    <div style="flex:1;"><label>X Col (1-30)</label><input type="number" id="newDeptX" step="0.25" value="5"></div>
-                    <div style="flex:1;"><label>Y Row (A-N)</label><input type="number" id="newDeptY" step="0.25" value="2"></div>
+                    <div style="flex:1;"><label>X Col (-6 to 34)</label><input type="number" id="newDeptX" step="0.5" value="2"></div>
+                    <div style="flex:1;"><label>Y Row (-4 to 18)</label><input type="number" id="newDeptY" step="0.5" value="-4"></div>
                 </div>
                 <div style="display: flex; gap: 6px;">
-                    <div style="flex:1;"><label>Width</label><input type="number" id="newDeptW" step="0.25" value="5"></div>
-                    <div style="flex:1;"><label>Height</label><input type="number" id="newDeptH" step="0.25" value="4"></div>
+                    <div style="flex:1;"><label>Width</label><input type="number" id="newDeptW" step="0.5" value="12"></div>
+                    <div style="flex:1;"><label>Height</label><input type="number" id="newDeptH" step="0.5" value="5"></div>
                 </div>
-                <button onclick="addDepartment()" style="margin-top: 6px;">Add Zone to Layer</button>
+                <button onclick="addDepartment()" style="margin-top: 6px;">Add Zone to Map</button>
             </div>
         </div>
 
         <!-- PANEL 2: ASSETS (DOTS) -->
         <div id="panelAsset" class="panel">
-            <h3>Utility Assets Menu</h3>
+            <h3>Utility & Fire Assets</h3>
             <div>
                 <label>Asset Name</label>
-                <input type="text" id="newAssetName" value="Emergency Shutoff">
+                <input type="text" id="newAssetName" value="Fire Hydrant #1">
                 <label>Category</label>
                 <select id="newAssetCategory">
+                    <option value="Fire Safety">Fire Safety</option>
                     <option value="Electrical">Electrical</option>
                     <option value="Plumbing">Plumbing</option>
                     <option value="Safety">Safety</option>
@@ -344,24 +346,24 @@
                     <option value="General">General Utility</option>
                 </select>
                 <label>Dot Icon (Emoji)</label>
-                <input type="text" id="newAssetEmoji" value="⚡" style="text-align: center; font-size: 16px;">
+                <input type="text" id="newAssetEmoji" value="🧯" style="text-align: center; font-size: 16px;">
                 <div style="display: flex; gap: 6px; margin-top: 4px;">
-                    <div style="flex:1;"><label>X Col (1-30)</label><input type="number" id="newAssetX" step="0.25" value="10"></div>
-                    <div style="flex:1;"><label>Y Row (A-N)</label><input type="number" id="newAssetY" step="0.25" value="5"></div>
+                    <div style="flex:1;"><label>X Col (-6 to 34)</label><input type="number" id="newAssetX" step="0.25" value="5"></div>
+                    <div style="flex:1;"><label>Y Row (-4 to 18)</label><input type="number" id="newAssetY" step="0.25" value="-2"></div>
                 </div>
-                <button onclick="addAsset()" style="margin-top: 6px;">Add Asset Dot</button>
+                <button onclick="addAsset()" style="margin-top: 6px;">Add Fire/Utility Asset</button>
             </div>
         </div>
         
         <div>
             <p style="font-size: 10px; color: #64748b; margin: 4px 0 0 0;">
-                💡 <b>Tip:</b> Switch to <b>Pan / Zoom & Inspect</b> mode, then click any item to open its details, spreadsheet records, and photo gallery.
+                💡 <b>Tip:</b> Place fire hydrants, water mains, and guard posts in the surrounding negative/extended coordinate areas outside the main building walls (0 to 30 on X, 0 to 14 on Y).
             </p>
         </div>
     </div>
 
     <div id="canvas-container">
-        <svg id="layoutSvg" width="1600" height="1000">
+        <svg id="layoutSvg" width="2200" height="1400">
             <g id="viewport">
                 <!-- Rendered dynamically -->
             </g>
@@ -388,6 +390,7 @@
                     <div style="flex: 3;">
                         <label>Asset Category</label>
                         <select id="modalCategory" onchange="saveModalLiveChanges()">
+                            <option value="Fire Safety">Fire Safety</option>
                             <option value="Electrical">Electrical</option>
                             <option value="Plumbing">Plumbing</option>
                             <option value="Safety">Safety</option>
@@ -464,8 +467,13 @@
         const db = getFirestore(app);
 
         const gridSize = 25;
-        const cols = 30; 
-        const rows = 14; 
+        const minCol = -8;
+        const maxCol = 38;
+        const minRow = -6;
+        const maxRow = 20;
+
+        const buildingCols = 30; 
+        const buildingRows = 14; 
 
         let currentMode = 'edit'; 
         let currentTab = 'dept'; 
@@ -473,6 +481,24 @@
 
         // Elements array storing metadata, categories, emojis, photos[] and spreadsheetData[]
         let elements = [
+            // Fire Hydrants & Site Assets outside the building
+            { 
+                id: 101, layer: "ground", name: "North Yard Fire Hydrant #1", type: "asset", category: "Fire Safety", emoji: "🧯", x: 4, y: -3,
+                photos: [], spreadsheetData: [{key: "Flow Rate", value: "1,500 GPM"}, {key: "Inspection", value: "Passed Q2"}]
+            },
+            { 
+                id: 102, layer: "ground", name: "North Yard Fire Hydrant #2", type: "asset", category: "Fire Safety", emoji: "🧯", x: 22, y: -3,
+                photos: [], spreadsheetData: [{key: "Flow Rate", value: "1,500 GPM"}, {key: "Inspection", value: "Passed Q2"}]
+            },
+            { 
+                id: 103, layer: "ground", name: "East Retention Pond #1", type: "yard", x: 31, y: -4, w: 6, h: 6,
+                photos: [], spreadsheetData: [{key: "Capacity", value: "1.2 Million Gal"}]
+            },
+            { 
+                id: 104, layer: "ground", name: "North Truck Yard & Trailer Parking", type: "yard", x: 2, y: -5, w: 26, h: 4,
+                photos: [], spreadsheetData: [{key: "Stall Count", value: "45 Trailer Docks"}]
+            },
+            // Building Interior Elements
             { 
                 id: 1, layer: "ground", name: "MAIN RACKING AREA #1", type: "racking", x: 4, y: 2, w: 4, h: 8,
                 photos: [], spreadsheetData: [{key: "Bay Count", value: "24 Bays"}, {key: "Weight Capacity", value: "3,500 lbs"}]
@@ -507,7 +533,7 @@
         let isDraggingElement = false;
         let isPanning = false;
         let panStart = { x: 0, y: 0 };
-        let viewTransform = { x: 80, y: 80, scale: 1 };
+        let viewTransform = { x: 250, y: 180, scale: 0.9 };
 
         const container = document.getElementById("canvas-container");
         const svg = document.getElementById("layoutSvg");
@@ -553,10 +579,13 @@
         }
 
         function getRowLabel(r) {
-            if (r === rows - 2) return "M.9"; 
+            if (r === buildingRows - 2) return "M.9"; 
             let index = r;
-            if (index > rows - 2) {
+            if (index > buildingRows - 2) {
                 index -= 1;
+            }
+            if (index < 0) {
+                return "N" + Math.abs(index);
             }
             return String.fromCharCode(65 + index); 
         }
@@ -595,35 +624,58 @@
             viewport.innerHTML = "";
             updateTransformString();
 
-            // 1. Grid Lines & Labels
-            for (let c = 0; c <= cols; c++) {
+            // 0. Extended Site Background (Brown Graded Land Surrounding 6500 W Mt Hope Hwy)
+            let siteBackground = document.createElementNS("http://www.w3.org/2000/svg", "g");
+            siteBackground.setAttribute("id", "site-surroundings");
+
+            let earthGrading = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+            earthGrading.setAttribute("x", minCol * gridSize);
+            earthGrading.setAttribute("y", minRow * gridSize);
+            earthGrading.setAttribute("width", (maxCol - minCol) * gridSize);
+            earthGrading.setAttribute("height", (maxRow - minRow) * gridSize);
+            earthGrading.setAttribute("fill", "#18110e");
+            earthGrading.setAttribute("stroke", "#281e17");
+            earthGrading.setAttribute("stroke-width", "2");
+            siteBackground.appendChild(earthGrading);
+
+            let siteLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
+            siteLabel.setAttribute("x", (minCol + 1) * gridSize);
+            siteLabel.setAttribute("y", (minRow + 1) * gridSize);
+            siteLabel.setAttribute("fill", "#854d0e");
+            siteLabel.setAttribute("font-size", "12px");
+            siteLabel.setAttribute("font-weight", "bold");
+            siteLabel.textContent = "▼ 6500 W MT HOPE HWY — SURROUNDING SITE EARTHWORK & FIRE HYDRANT PERIMETER";
+            siteBackground.appendChild(siteLabel);
+
+            viewport.appendChild(siteBackground);
+
+            // 1. Extended Grid Lines & Labels
+            for (let c = minCol; c <= maxCol; c++) {
                 let line = document.createElementNS("http://www.w3.org/2000/svg", "line");
                 line.setAttribute("x1", c * gridSize);
-                line.setAttribute("y1", 0);
+                line.setAttribute("y1", minRow * gridSize);
                 line.setAttribute("x2", c * gridSize);
-                line.setAttribute("y2", rows * gridSize);
+                line.setAttribute("y2", maxRow * gridSize);
                 line.setAttribute("class", "grid-line");
                 viewport.appendChild(line);
 
-                if (c < cols) {
-                    let text = document.createElementNS("http://www.w3.org/2000/svg", "text");
-                    text.setAttribute("x", (c * gridSize) + (gridSize / 2));
-                    text.setAttribute("y", -8);
-                    text.setAttribute("text-anchor", "middle");
-                    text.setAttribute("class", "coord-label");
-                    text.textContent = c + 1; 
-                    viewport.appendChild(text);
-                }
+                let text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                text.setAttribute("x", (c * gridSize) + (gridSize / 2));
+                text.setAttribute("y", (minRow * gridSize) - 8);
+                text.setAttribute("text-anchor", "middle");
+                text.setAttribute("class", "coord-label");
+                text.textContent = c + 1; 
+                viewport.appendChild(text);
             }
 
-            for (let r = 0; r <= rows; r++) {
+            for (let r = minRow; r <= maxRow; r++) {
                 let line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-                line.setAttribute("x1", 0);
+                line.setAttribute("x1", minCol * gridSize);
                 line.setAttribute("y1", r * gridSize);
-                line.setAttribute("x2", cols * gridSize);
+                line.setAttribute("x2", maxCol * gridSize);
                 line.setAttribute("y2", r * gridSize);
                 
-                if (r === rows - 2) {
+                if (r === buildingRows - 2) {
                     line.setAttribute("stroke", "#f43f5e");
                     line.setAttribute("stroke-dasharray", "2,2");
                 } else {
@@ -631,28 +683,27 @@
                 }
                 viewport.appendChild(line);
 
-                if (r < rows) {
-                    let text = document.createElementNS("http://www.w3.org/2000/svg", "text");
-                    text.setAttribute("x", -10);
-                    text.setAttribute("y", (r * gridSize) + (gridSize / 2) + 3);
-                    text.setAttribute("text-anchor", "end");
-                    text.setAttribute("class", "coord-label");
-                    if (r === rows - 2) {
-                        text.setAttribute("fill", "#f43f5e");
-                        text.setAttribute("font-weight", "bold");
-                    }
-                    text.textContent = getRowLabel(r);
-                    viewport.appendChild(text);
+                let text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                text.setAttribute("x", (minCol * gridSize) - 10);
+                text.setAttribute("y", (r * gridSize) + (gridSize / 2) + 3);
+                text.setAttribute("text-anchor", "end");
+                text.setAttribute("class", "coord-label");
+                if (r === buildingRows - 2) {
+                    text.setAttribute("fill", "#f43f5e");
+                    text.setAttribute("font-weight", "bold");
                 }
+                text.textContent = getRowLabel(r);
+                viewport.appendChild(text);
             }
 
-            // 2. Building Walls
+            // 2. Core Building Footprint Walls (0 to buildingCols, 0 to buildingRows)
             let buildingWall = document.createElementNS("http://www.w3.org/2000/svg", "rect");
             buildingWall.setAttribute("x", 0);
             buildingWall.setAttribute("y", 0);
-            buildingWall.setAttribute("width", cols * gridSize);
-            buildingWall.setAttribute("height", rows * gridSize);
-            buildingWall.setAttribute("fill", "none");
+            buildingWall.setAttribute("width", buildingCols * gridSize);
+            buildingWall.setAttribute("height", buildingRows * gridSize);
+            buildingWall.setAttribute("fill", "#0b131d");
+            buildingWall.setAttribute("fill-opacity", "0.6");
             buildingWall.setAttribute("stroke", "#38bdf8");
             buildingWall.setAttribute("stroke-width", "2");
             viewport.appendChild(buildingWall);
@@ -664,16 +715,16 @@
             topLabel.setAttribute("fill", "#38bdf8");
             topLabel.setAttribute("font-size", "10px");
             topLabel.setAttribute("font-weight", "bold");
-            topLabel.textContent = `SOUTH WALL (${layerTitleName} LAYER - ROW A TOP) ▲`;
+            topLabel.textContent = `BUILDING SOUTH WALL (${layerTitleName} LAYER) ▲`;
             viewport.appendChild(topLabel);
 
             let bottomLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
             bottomLabel.setAttribute("x", 0.5 * gridSize);
-            bottomLabel.setAttribute("y", (rows * gridSize) + 15);
+            bottomLabel.setAttribute("y", (buildingRows * gridSize) + 18);
             bottomLabel.setAttribute("fill", "#38bdf8");
             bottomLabel.setAttribute("font-size", "10px");
             bottomLabel.setAttribute("font-weight", "bold");
-            bottomLabel.textContent = `NORTH WALL (${layerTitleName} LAYER - ROW N BOTTOM) ▼`;
+            bottomLabel.textContent = `BUILDING NORTH WALL ▼`;
             viewport.appendChild(bottomLabel);
 
             // 3. Render Elements
@@ -683,7 +734,6 @@
                 let g = document.createElementNS("http://www.w3.org/2000/svg", "g");
                 g.setAttribute("class", "item-group");
 
-                // Click opens modal ONLY in Pan/Zoom mode
                 g.addEventListener("click", (e) => {
                     if (currentMode === 'pan') {
                         e.stopPropagation();
@@ -698,10 +748,10 @@
                     let circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
                     circle.setAttribute("cx", cx);
                     circle.setAttribute("cy", cy);
-                    circle.setAttribute("r", 11);
+                    circle.setAttribute("r", 12);
                     circle.setAttribute("class", `item-shape ${el.id === selectedId ? 'selected' : ''}`);
-                    circle.setAttribute("fill", "#1e293b");
-                    circle.setAttribute("stroke", "#f97316");
+                    circle.setAttribute("fill", el.category === 'Fire Safety' ? '#7f1d1d' : '#1e293b');
+                    circle.setAttribute("stroke", el.category === 'Fire Safety' ? '#ef4444' : '#f97316');
                     circle.setAttribute("stroke-width", "2");
 
                     let emojiText = document.createElementNS("http://www.w3.org/2000/svg", "text");
@@ -714,7 +764,7 @@
                     emojiText.textContent = el.emoji || "📍";
 
                     let labelText = document.createElementNS("http://www.w3.org/2000/svg", "text");
-                    labelText.setAttribute("x", cx + 15);
+                    labelText.setAttribute("x", cx + 16);
                     labelText.setAttribute("y", cy + 4);
                     labelText.setAttribute("fill", "#fff");
                     labelText.setAttribute("font-size", "10px");
@@ -734,7 +784,11 @@
                     rect.setAttribute("height", el.h * gridSize);
                     rect.setAttribute("class", `item-shape ${el.id === selectedId ? 'selected' : ''}`);
 
-                    if (el.type === 'racking') {
+                    if (el.type === 'yard') {
+                        rect.setAttribute("fill", "#b45309");
+                        rect.setAttribute("fill-opacity", "0.3");
+                        rect.setAttribute("stroke", "#d97706");
+                    } else if (el.type === 'racking') {
                         rect.setAttribute("fill", "#d97706");
                         rect.setAttribute("fill-opacity", "0.35");
                         rect.setAttribute("stroke", "#f59e0b");
@@ -762,7 +816,6 @@
                     g.appendChild(text);
                 }
 
-                // Dragging works ONLY in Edit mode
                 g.addEventListener("mousedown", (e) => {
                     if (currentMode === 'edit') {
                         e.stopPropagation();
@@ -783,24 +836,14 @@
             let localY = (mouseY - viewTransform.y) / viewTransform.scale;
 
             let coordDisplay = document.getElementById("coord-display");
-            if (localX >= 0 && localX <= cols * gridSize && localY >= 0 && localY <= rows * gridSize) {
-                // Calculate precise sub-grid positions with decimals (.XX)
-                let exactCol = localX / gridSize;
-                let colIdx = Math.floor(exactCol);
-                let rowIdx = Math.floor(localY / gridSize);
+            let exactCol = localX / gridSize;
+            let colIdx = Math.floor(exactCol);
+            let rowIdx = Math.floor(localY / gridSize);
 
-                if (colIdx < cols && rowIdx < rows) {
-                    let preciseColNum = (exactCol + 1).toFixed(2);
-                    let exactRowProgress = (localY % gridSize) / gridSize;
-                    let rowLabel = getRowLabel(rowIdx);
-                    
-                    coordDisplay.innerHTML = `Grid: <b>Row ${rowLabel}, Col ${preciseColNum}</b>`;
-                } else {
-                    coordDisplay.innerHTML = `Col: -- | Row: --`;
-                }
-            } else {
-                coordDisplay.innerHTML = `Col: -- | Row: --`;
-            }
+            let preciseColNum = (exactCol + 1).toFixed(2);
+            let rowLabel = getRowLabel(rowIdx);
+            
+            coordDisplay.innerHTML = `Grid: <b>Row ${rowLabel}, Col ${preciseColNum}</b>`;
 
             if (isPanning) {
                 viewTransform.x = e.clientX - panStart.x;
@@ -862,8 +905,8 @@
                 let dx = (e.clientX - startX) / viewTransform.scale;
                 let dy = (e.clientY - startY) / viewTransform.scale;
                 
-                el.x = Math.max(0, Math.min(cols - (el.w || 1), parseFloat((origX + (dx / gridSize)).toFixed(2))));
-                el.y = Math.max(0, Math.min(rows - (el.h || 1), parseFloat((origY + (dy / gridSize)).toFixed(2))));
+                el.x = parseFloat((origX + (dx / gridSize)).toFixed(2));
+                el.y = parseFloat((origY + (dy / gridSize)).toFixed(2));
                 
                 render();
             }
@@ -1043,7 +1086,7 @@
         }
 
         window.deleteItemFromModal = function() {
-            let id = parseInt(document.getElementById("modalElementId").value);
+            let id = parseInt(document.getElementById("modalElementId", value));
             if (confirm("Are you sure you want to delete this item?")) {
                 elements = elements.filter(item => item.id !== id);
                 closeModal();
@@ -1060,8 +1103,8 @@
                 type: document.getElementById("newDeptType").value,
                 x: parseFloat(document.getElementById("newDeptX").value) || 0,
                 y: parseFloat(document.getElementById("newDeptY").value) || 0,
-                w: parseFloat(document.getElementById("newDeptW").value) || 3,
-                h: parseFloat(document.getElementById("newDeptH").value) || 3,
+                w: parseFloat(document.getElementById("newDeptW").value) || 5,
+                h: parseFloat(document.getElementById("newDeptH").value) || 5,
                 photos: [],
                 spreadsheetData: [{key: "Status", value: "Active"}]
             };
@@ -1077,11 +1120,11 @@
                 name: document.getElementById("newAssetName").value,
                 type: "asset",
                 category: document.getElementById("newAssetCategory").value,
-                emoji: document.getElementById("newAssetEmoji").value || "📍",
+                emoji: document.getElementById("newAssetEmoji").value || "🧯",
                 x: parseFloat(document.getElementById("newAssetX").value) || 0,
                 y: parseFloat(document.getElementById("newAssetY").value) || 0,
                 photos: [],
-                spreadsheetData: [{key: "Asset Type", value: "Utility Node"}]
+                spreadsheetData: [{key: "Asset Type", value: "Safety/Fire Node"}]
             };
             elements.push(newEl);
             render();
