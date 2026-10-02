@@ -318,12 +318,12 @@
                     <option value="general">General Dept / Roof Unit</option>
                 </select>
                 <div style="display: flex; gap: 6px;">
-                    <div style="flex:1;"><label>X Col (1-30)</label><input type="number" id="newDeptX" value="5"></div>
-                    <div style="flex:1;"><label>Y Row (A-N)</label><input type="number" id="newDeptY" value="2"></div>
+                    <div style="flex:1;"><label>X Col (1-30)</label><input type="number" id="newDeptX" step="0.25" value="5"></div>
+                    <div style="flex:1;"><label>Y Row (A-N)</label><input type="number" id="newDeptY" step="0.25" value="2"></div>
                 </div>
                 <div style="display: flex; gap: 6px;">
-                    <div style="flex:1;"><label>Width</label><input type="number" id="newDeptW" value="5"></div>
-                    <div style="flex:1;"><label>Height</label><input type="number" id="newDeptH" value="4"></div>
+                    <div style="flex:1;"><label>Width</label><input type="number" id="newDeptW" step="0.25" value="5"></div>
+                    <div style="flex:1;"><label>Height</label><input type="number" id="newDeptH" step="0.25" value="4"></div>
                 </div>
                 <button onclick="addDepartment()" style="margin-top: 6px;">Add Zone to Layer</button>
             </div>
@@ -346,8 +346,8 @@
                 <label>Dot Icon (Emoji)</label>
                 <input type="text" id="newAssetEmoji" value="⚡" style="text-align: center; font-size: 16px;">
                 <div style="display: flex; gap: 6px; margin-top: 4px;">
-                    <div style="flex:1;"><label>X Col (1-30)</label><input type="number" id="newAssetX" value="10"></div>
-                    <div style="flex:1;"><label>Y Row (A-N)</label><input type="number" id="newAssetY" value="5"></div>
+                    <div style="flex:1;"><label>X Col (1-30)</label><input type="number" id="newAssetX" step="0.25" value="10"></div>
+                    <div style="flex:1;"><label>Y Row (A-N)</label><input type="number" id="newAssetY" step="0.25" value="5"></div>
                 </div>
                 <button onclick="addAsset()" style="margin-top: 6px;">Add Asset Dot</button>
             </div>
@@ -402,13 +402,13 @@
                 </div>
 
                 <div style="display: flex; gap: 6px;">
-                    <div style="flex:1;"><label>X Col</label><input type="number" id="modalX" oninput="saveModalLiveChanges()"></div>
-                    <div style="flex:1;"><label>Y Row</label><input type="number" id="modalY" oninput="saveModalLiveChanges()"></div>
+                    <div style="flex:1;"><label>X Col</label><input type="number" id="modalX" step="0.25" oninput="saveModalLiveChanges()"></div>
+                    <div style="flex:1;"><label>Y Row</label><input type="number" id="modalY" step="0.25" oninput="saveModalLiveChanges()"></div>
                 </div>
                 
                 <div id="modalSizeContainer" style="display: flex; gap: 6px;">
-                    <div style="flex:1;"><label>Width</label><input type="number" id="modalW" oninput="saveModalLiveChanges()"></div>
-                    <div style="flex:1;"><label>Height</label><input type="number" id="modalH" oninput="saveModalLiveChanges()"></div>
+                    <div style="flex:1;"><label>Width</label><input type="number" id="modalW" step="0.25" oninput="saveModalLiveChanges()"></div>
+                    <div style="flex:1;"><label>Height</label><input type="number" id="modalH" step="0.25" oninput="saveModalLiveChanges()"></div>
                 </div>
 
                 <div>
@@ -854,8 +854,8 @@
                 let dx = (e.clientX - startX) / viewTransform.scale;
                 let dy = (e.clientY - startY) / viewTransform.scale;
                 
-                el.x = Math.max(0, Math.min(cols - (el.w || 1), origX + Math.round(dx / gridSize)));
-                el.y = Math.max(0, Math.min(rows - (el.h || 1), origY + Math.round(dy / gridSize)));
+                el.x = Math.max(0, Math.min(cols - (el.w || 1), parseFloat((origX + (dx / gridSize)).toFixed(2))));
+                el.y = Math.max(0, Math.min(rows - (el.h || 1), parseFloat((origY + (dy / gridSize)).toFixed(2))));
                 
                 render();
             }
@@ -911,15 +911,15 @@
             let el = elements.find(item => item.id === id);
             if (el) {
                 el.name = document.getElementById("modalName").value;
-                el.x = parseInt(document.getElementById("modalX").value) || 0;
-                el.y = parseInt(document.getElementById("modalY").value) || 0;
+                el.x = parseFloat(document.getElementById("modalX").value) || 0;
+                el.y = parseFloat(document.getElementById("modalY").value) || 0;
                 
                 if (el.type === 'asset') {
                     el.category = document.getElementById("modalCategory").value;
                     el.emoji = document.getElementById("modalEmoji").value || "📍";
                 } else {
-                    el.w = parseInt(document.getElementById("modalW").value) || 1;
-                    el.h = parseInt(document.getElementById("modalH").value) || 1;
+                    el.w = parseFloat(document.getElementById("modalW").value) || 1;
+                    el.h = parseFloat(document.getElementById("modalH").value) || 1;
                 }
                 
                 document.getElementById("modalTitle").innerText = `Edit: ${el.name}`;
@@ -1050,10 +1050,10 @@
                 layer: currentLayer, 
                 name: document.getElementById("newDeptName").value,
                 type: document.getElementById("newDeptType").value,
-                x: parseInt(document.getElementById("newDeptX").value) || 0,
-                y: parseInt(document.getElementById("newDeptY").value) || 0,
-                w: parseInt(document.getElementById("newDeptW").value) || 3,
-                h: parseInt(document.getElementById("newDeptH").value) || 3,
+                x: parseFloat(document.getElementById("newDeptX").value) || 0,
+                y: parseFloat(document.getElementById("newDeptY").value) || 0,
+                w: parseFloat(document.getElementById("newDeptW").value) || 3,
+                h: parseFloat(document.getElementById("newDeptH").value) || 3,
                 photos: [],
                 spreadsheetData: [{key: "Status", value: "Active"}]
             };
@@ -1070,8 +1070,8 @@
                 type: "asset",
                 category: document.getElementById("newAssetCategory").value,
                 emoji: document.getElementById("newAssetEmoji").value || "📍",
-                x: parseInt(document.getElementById("newAssetX").value) || 0,
-                y: parseInt(document.getElementById("newAssetY").value) || 0,
+                x: parseFloat(document.getElementById("newAssetX").value) || 0,
+                y: parseFloat(document.getElementById("newAssetY").value) || 0,
                 photos: [],
                 spreadsheetData: [{key: "Asset Type", value: "Utility Node"}]
             };
