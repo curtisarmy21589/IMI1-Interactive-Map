@@ -123,18 +123,13 @@
             stroke-width: 3;
         }
 
-        /* HOVER-ONLY ASSET LABELS RENDERED ON TOP */
-        .asset-label-bg {
-            opacity: 0;
-            transition: opacity 0.2s ease-in-out;
-            pointer-events: none;
-        }
+        /* HOVER-ONLY ASSET LABELS */
         .asset-label-text {
             opacity: 0;
             transition: opacity 0.2s ease-in-out;
             pointer-events: none;
+            background: #111b27;
         }
-        .item-group:hover .asset-label-bg,
         .item-group:hover .asset-label-text {
             opacity: 1;
         }
@@ -363,7 +358,7 @@
         
         <div>
             <p style="font-size: 10px; color: #64748b; margin: 4px 0 0 0;">
-                💡 <b>Tip:</b> Hovering over any asset pops up its name dynamically on top of everything else.
+                💡 <b>Tip:</b> Asset names appear automatically when hovering your cursor over the markers.
             </p>
         </div>
     </div>
@@ -850,12 +845,6 @@
             visibleElements.forEach(el => {
                 let g = document.createElementNS("http://www.w3.org/2000/svg", "g");
                 g.setAttribute("class", "item-group");
-                
-                // Force hovered item to the very top of the SVG stacking context automatically
-                g.addEventListener("mouseenter", () => {
-                    viewport.appendChild(g);
-                });
-
                 g.addEventListener("click", (e) => {
                     if (currentMode === 'pan') {
                         e.stopPropagation();
@@ -870,7 +859,7 @@
                     let circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
                     circle.setAttribute("cx", cx);
                     circle.setAttribute("cy", cy);
-                    circle.setAttribute("r", 5); 
+                    circle.setAttribute("r", 5); // Compact radius for dense placement
                     circle.setAttribute("class", `item-shape ${el.id === selectedId ? 'selected' : ''}`);
                     circle.setAttribute("fill", "#111b27");
                     circle.setAttribute("stroke", catColor);
@@ -885,22 +874,10 @@
                     emojiText.style.pointerEvents = "none";
                     emojiText.textContent = el.emoji || "📍";
 
-                    // Background panel for readability over map elements
-                    let textBg = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-                    textBg.setAttribute("x", cx + 8);
-                    textBg.setAttribute("y", cy - 7);
-                    textBg.setAttribute("width", (el.name.length * 6) + 6);
-                    textBg.setAttribute("height", 14);
-                    textBg.setAttribute("rx", 3);
-                    textBg.setAttribute("fill", "#0b131d");
-                    textBg.setAttribute("stroke", catColor);
-                    textBg.setAttribute("stroke-width", "1");
-                    textBg.setAttribute("class", "asset-label-bg");
-
-                    // Asset label text pops up on hover on top of everything
+                    // Asset label text hidden by default, pops up on hover via CSS (.asset-label-text)
                     let labelText = document.createElementNS("http://www.w3.org/2000/svg", "text");
-                    labelText.setAttribute("x", cx + 11);
-                    labelText.setAttribute("y", cy + 2);
+                    labelText.setAttribute("x", cx + 10);
+                    labelText.setAttribute("y", cy + 3);
                     labelText.setAttribute("fill", "#fff");
                     labelText.setAttribute("font-size", "9px");
                     labelText.setAttribute("font-weight", "bold");
@@ -909,7 +886,6 @@
 
                     g.appendChild(circle);
                     g.appendChild(emojiText);
-                    g.appendChild(textBg);
                     g.appendChild(labelText);
                 } else {
                     let rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
