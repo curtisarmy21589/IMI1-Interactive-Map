@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Facility Layout Builder - Rotated Racks & Corrected Scale</title>
+    <title>Facility Layout Builder - A to N Rows, 1 to 30 Cols</title>
     <style>
         body {
             background-color: #0b131d;
@@ -157,12 +157,12 @@
                     <option value="mezzanine">Mezzanine Floor (Rect)</option>
                 </select>
                 <div style="display: flex; gap: 6px;">
-                    <div style="flex:1;"><label>X Col</label><input type="number" id="newDeptX" value="10"></div>
-                    <div style="flex:1;"><label>Y Row</label><input type="number" id="newDeptY" value="10"></div>
+                    <div style="flex:1;"><label>X Col (1-30)</label><input type="number" id="newDeptX" value="5"></div>
+                    <div style="flex:1;"><label>Y Row (A-N)</label><input type="number" id="newDeptY" value="2"></div>
                 </div>
                 <div style="display: flex; gap: 6px;">
-                    <div style="flex:1;"><label>Width</label><input type="number" id="newDeptW" value="7"></div>
-                    <div style="flex:1;"><label>Height</label><input type="number" id="newDeptH" value="5"></div>
+                    <div style="flex:1;"><label>Width</label><input type="number" id="newDeptW" value="5"></div>
+                    <div style="flex:1;"><label>Height</label><input type="number" id="newDeptH" value="4"></div>
                 </div>
                 <button onclick="addDepartment()" style="margin-top: 6px;">Add Department</button>
             </div>
@@ -191,8 +191,8 @@
                 <label>Add New Asset</label>
                 <input type="text" id="newAssetName" value="Emergency Shutoff">
                 <div style="display: flex; gap: 6px;">
-                    <div style="flex:1;"><label>X Col</label><input type="number" id="newAssetX" value="12"></div>
-                    <div style="flex:1;"><label>Y Row</label><input type="number" id="newAssetY" value="12"></div>
+                    <div style="flex:1;"><label>X Col (1-30)</label><input type="number" id="newAssetX" value="10"></div>
+                    <div style="flex:1;"><label>Y Row (A-N)</label><input type="number" id="newAssetY" value="5"></div>
                 </div>
                 <button onclick="addAsset()" style="margin-top: 6px;">Add Asset Dot</button>
             </div>
@@ -212,7 +212,7 @@
         
         <div>
             <p style="font-size: 10px; color: #64748b; margin: 4px 0 0 0;">
-                💡 <b>Scale Note:</b> Row A is at the top (South wall) down to Row N (North wall). Row M.9 is custom-spaced near the bottom wall.
+                💡 <b>Grid Range:</b> Columns 1 to 30, Rows A (Top/South) to N (Bottom/North) with M.9 near the bottom wall.
             </p>
         </div>
     </div>
@@ -226,50 +226,41 @@
     </div>
 
 <script>
-    const gridSize = 20;
-    const cols = 65;
-    const rows = 45;
+    const gridSize = 25;
+    const cols = 30; // Exactly columns 1 to 30
+    const rows = 14; // Exactly rows A to N (14 rows total)
 
     let currentMode = 'edit'; // 'edit' or 'pan'
     let currentTab = 'dept'; // 'dept' or 'asset'
 
-    // Elements array with updated dimensions/orientations (Racking rotated 90 deg)
+    // Scaled elements fit within 1-30 cols and A-N rows
     let elements = [
-        { id: 1, name: "MAIN RACKING AREA #1", type: "racking", x: 9, y: 6, w: 7, h: 20 },
-        { id: 2, name: "RACKING #2", type: "racking", x: 34, y: 15, w: 7, h: 5 },
-        { id: 3, name: "MEZZANINE FLOOR", type: "mezzanine", x: 2, y: 21, w: 20, h: 10 },
-        { id: 4, name: "Main Distribution Panel MDP-1", type: "asset", x: 12, y: 10 },
-        { id: 5, name: "Water Main Shutoff", type: "asset", x: 17, y: 10 }
+        { id: 1, name: "MAIN RACKING AREA #1", type: "racking", x: 4, y: 2, w: 4, h: 8 },
+        { id: 2, name: "RACKING #2", type: "racking", x: 18, y: 5, w: 4, h: 4 },
+        { id: 3, name: "MEZZANINE FLOOR", type: "mezzanine", x: 2, y: 9, w: 10, h: 4 },
+        { id: 4, name: "Main Distribution Panel MDP-1", type: "asset", x: 6, y: 3 },
+        { id: 5, name: "Water Main Shutoff", type: "asset", x: 9, y: 3 }
     ];
 
     let selectedId = null;
     let isDraggingElement = false;
     let isPanning = false;
     let panStart = { x: 0, y: 0 };
-    let viewTransform = { x: 50, y: 50, scale: 1 };
+    let viewTransform = { x: 80, y: 80, scale: 1 };
 
     const container = document.getElementById("canvas-container");
     const svg = document.getElementById("layoutSvg");
     const viewport = document.getElementById("viewport");
 
-    // Custom row label mapper with Row A at top (South) and Row N/O at bottom (North), plus M.9 offset row
+    // Row mapping: 0 = 'A' (Top/South), index 11/12 handles 'M.9' custom offset, index 13 = 'N' (Bottom/North)
     function getRowLabel(r) {
-        // Let's map rows: top rows are 'A', progressing down towards 'N', with an explicit M.9 marker near the bottom wall
-        if (r === rows - 4) return "M.9";
+        if (r === rows - 2) return "M.9"; // Special row near the bottom wall
         
-        let standardRowsIndex = r;
-        if (standardRowsIndex >= rows - 4) {
-            standardRowsIndex -= 1; // shift for M.9
+        let index = r;
+        if (index > rows - 2) {
+            index -= 1;
         }
-        
-        let temp, letter = '';
-        let rowNum = standardRowsIndex + 1;
-        while (rowNum > 0) {
-            temp = (rowNum - 1) % 26;
-            letter = String.fromCharCode(temp + 65) + letter;
-            rowNum = (rowNum - temp - 1) / 26;
-        }
-        return letter;
+        return String.fromCharCode(65 + index); // A to N
     }
 
     function setMode(mode) {
@@ -306,7 +297,7 @@
         viewport.innerHTML = "";
         updateTransformString();
 
-        // 1. Grid Lines & Coordinate Labels (Row A at top, M.9 near bottom)
+        // 1. Grid Lines & Coordinate Labels (Cols 1-30, Rows A-N)
         for (let c = 0; c <= cols; c++) {
             let line = document.createElementNS("http://www.w3.org/2000/svg", "line");
             line.setAttribute("x1", c * gridSize);
@@ -319,10 +310,10 @@
             if (c < cols) {
                 let text = document.createElementNS("http://www.w3.org/2000/svg", "text");
                 text.setAttribute("x", (c * gridSize) + (gridSize / 2));
-                text.setAttribute("y", -6);
+                text.setAttribute("y", -8);
                 text.setAttribute("text-anchor", "middle");
                 text.setAttribute("class", "coord-label");
-                text.textContent = c + 1;
+                text.textContent = c + 1; // 1 to 30
                 viewport.appendChild(text);
             }
         }
@@ -334,8 +325,8 @@
             line.setAttribute("x2", cols * gridSize);
             line.setAttribute("y2", r * gridSize);
             
-            // Highlight the special M.9 row offset line
-            if (r === rows - 4) {
+            // Highlight M.9 row offset line
+            if (r === rows - 2) {
                 line.setAttribute("stroke", "#f43f5e");
                 line.setAttribute("stroke-dasharray", "2,2");
             } else {
@@ -345,11 +336,11 @@
 
             if (r < rows) {
                 let text = document.createElementNS("http://www.w3.org/2000/svg", "text");
-                text.setAttribute("x", -8);
+                text.setAttribute("x", -10);
                 text.setAttribute("y", (r * gridSize) + (gridSize / 2) + 3);
                 text.setAttribute("text-anchor", "end");
                 text.setAttribute("class", "coord-label");
-                if (r === rows - 4) {
+                if (r === rows - 2) {
                     text.setAttribute("fill", "#f43f5e");
                     text.setAttribute("font-weight", "bold");
                 }
@@ -358,49 +349,37 @@
             }
         }
 
-        // 2. Exterior / Yard Zone Border
-        let yardBorder = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-        yardBorder.setAttribute("x", 0.5 * gridSize);
-        yardBorder.setAttribute("y", 0.5 * gridSize);
-        yardBorder.setAttribute("width", (cols - 1) * gridSize);
-        yardBorder.setAttribute("height", (rows - 1) * gridSize);
-        yardBorder.setAttribute("fill", "none");
-        yardBorder.setAttribute("stroke", "#38bdf8");
-        yardBorder.setAttribute("stroke-width", "1.5");
-        yardBorder.setAttribute("stroke-dasharray", "6,4");
-        viewport.appendChild(yardBorder);
-
-        let yardText = document.createElementNS("http://www.w3.org/2000/svg", "text");
-        yardText.setAttribute("x", 1 * gridSize);
-        yardText.setAttribute("y", 1.8 * gridSize);
-        yardText.setAttribute("fill", "#38bdf8");
-        yardText.setAttribute("font-size", "10px");
-        yardText.setAttribute("font-weight", "bold");
-        yardText.textContent = "EXTERIOR / YARD ZONE (SOUTH = ROW A TOP)";
-        viewport.appendChild(yardText);
-
-        // 3. Building Interior Wall Boundary
+        // 2. Building Interior Wall Boundary (Col 1 to 30, Row A to N)
         let buildingWall = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-        buildingWall.setAttribute("x", 2 * gridSize);
-        buildingWall.setAttribute("y", 4 * gridSize);
-        buildingWall.setAttribute("width", (cols - 4) * gridSize);
-        buildingWall.setAttribute("height", (rows - 6) * gridSize);
+        buildingWall.setAttribute("x", 0);
+        buildingWall.setAttribute("y", 0);
+        buildingWall.setAttribute("width", cols * gridSize);
+        buildingWall.setAttribute("height", rows * gridSize);
         buildingWall.setAttribute("fill", "none");
         buildingWall.setAttribute("stroke", "#38bdf8");
-        buildingWall.setAttribute("stroke-width", "1.5");
+        buildingWall.setAttribute("stroke-width", "2");
         viewport.appendChild(buildingWall);
 
-        // M.9 indicator note inside canvas
-        let m9Note = document.createElementNS("http://www.w3.org/2000/svg", "text");
-        m9Note.setAttribute("x", 2.2 * gridSize);
-        m9Note.setAttribute("y", (rows - 4.3) * gridSize);
-        m9Note.setAttribute("fill", "#f43f5e");
-        m9Note.setAttribute("font-size", "9px");
-        m9Note.setAttribute("font-weight", "bold");
-        m9Note.textContent = "◄ ROW M.9 OFFSET (3 FT FROM NORTH WALL)";
-        viewport.appendChild(m9Note);
+        // Wall Labels indicator
+        let topLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        topLabel.setAttribute("x", 0.5 * gridSize);
+        topLabel.setAttribute("y", -22);
+        topLabel.setAttribute("fill", "#38bdf8");
+        topLabel.setAttribute("font-size", "10px");
+        topLabel.setAttribute("font-weight", "bold");
+        topLabel.textContent = "SOUTH WALL (ROW A TOP) ▲";
+        viewport.appendChild(topLabel);
 
-        // 4. Render Elements
+        let bottomLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        bottomLabel.setAttribute("x", 0.5 * gridSize);
+        bottomLabel.setAttribute("y", (rows * gridSize) + 15);
+        bottomLabel.setAttribute("fill", "#38bdf8");
+        bottomLabel.setAttribute("font-size", "10px");
+        bottomLabel.setAttribute("font-weight", "bold");
+        bottomLabel.textContent = "NORTH WALL (ROW N BOTTOM / M.9 NEARBY) ▼";
+        viewport.appendChild(bottomLabel);
+
+        // 3. Render Elements
         elements.forEach(el => {
             let g = document.createElementNS("http://www.w3.org/2000/svg", "g");
 
@@ -496,7 +475,7 @@
         if (colIdx >= 0 && colIdx < cols && rowIdx >= 0 && rowIdx < rows) {
             let colNum = colIdx + 1;
             let rowLabel = getRowLabel(rowIdx);
-            coordDisplay.innerHTML = `Grid: <b>${rowLabel}-${colNum}</b> (Col ${colNum}, Row ${rowLabel})`;
+            coordDisplay.innerHTML = `Grid: <b>Row ${rowLabel}, Col ${colNum}</b>`;
         } else {
             coordDisplay.innerHTML = `Col: -- | Row: --`;
         }
@@ -632,10 +611,10 @@
             id: Date.now(),
             name: document.getElementById("newDeptName").value,
             type: document.getElementById("newDeptType").value,
-            x: parseInt(document.getElementById("newDeptX").value),
-            y: parseInt(document.getElementById("newDeptY").value),
-            w: parseInt(document.getElementById("newDeptW").value) || 4,
-            h: parseInt(document.getElementById("newDeptH").value) || 4
+            x: parseInt(document.getElementById("newDeptX").value) || 0,
+            y: parseInt(document.getElementById("newDeptY").value) || 0,
+            w: parseInt(document.getElementById("newDeptW").value) || 3,
+            h: parseInt(document.getElementById("newDeptH").value) || 3
         };
         elements.push(newEl);
         render();
@@ -646,8 +625,8 @@
             id: Date.now(),
             name: document.getElementById("newAssetName").value,
             type: "asset",
-            x: parseInt(document.getElementById("newAssetX").value),
-            y: parseInt(document.getElementById("newAssetY").value)
+            x: parseInt(document.getElementById("newAssetX").value) || 0,
+            y: parseInt(document.getElementById("newAssetY").value) || 0
         };
         elements.push(newEl);
         render();
