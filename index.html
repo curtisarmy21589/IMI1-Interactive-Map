@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Facility Layout Builder - Multi-Layer, Photos & Spreadsheet</title>
+    <title>Facility Layout Builder - Categories, Emojis & Spreadsheet</title>
     <style>
         body {
             background-color: #0b131d;
@@ -112,6 +112,7 @@
         }
         .item-shape {
             cursor: pointer;
+            pointer-events: auto;
             transition: stroke 0.2s;
         }
         .item-shape:hover { stroke: #fff; }
@@ -122,6 +123,7 @@
         .grid-line {
             stroke: #132235;
             stroke-width: 1;
+            pointer-events: none;
         }
         .coord-label {
             fill: #64748b;
@@ -306,7 +308,7 @@
         <div id="panelDept" class="panel active">
             <h3>Department Management</h3>
             <div>
-                <label>Add New Item to Current Layer</label>
+                <label>Add New Zone / Dept</label>
                 <input type="text" id="newDeptName" value="New Zone">
                 <select id="newDeptType">
                     <option value="racking">Racking Zone (Rect)</option>
@@ -321,17 +323,27 @@
                     <div style="flex:1;"><label>Width</label><input type="number" id="newDeptW" value="5"></div>
                     <div style="flex:1;"><label>Height</label><input type="number" id="newDeptH" value="4"></div>
                 </div>
-                <button onclick="addDepartment()" style="margin-top: 6px;">Add to Current Layer</button>
+                <button onclick="addDepartment()" style="margin-top: 6px;">Add Zone to Layer</button>
             </div>
         </div>
 
         <!-- PANEL 2: ASSETS (DOTS) -->
         <div id="panelAsset" class="panel">
-            <h3>Utility Assets Menu (Dots)</h3>
+            <h3>Utility Assets Menu</h3>
             <div>
-                <label>Add Asset to Current Layer</label>
+                <label>Asset Name</label>
                 <input type="text" id="newAssetName" value="Emergency Shutoff">
-                <div style="display: flex; gap: 6px;">
+                <label>Category</label>
+                <select id="newAssetCategory">
+                    <option value="Electrical">Electrical</option>
+                    <option value="Plumbing">Plumbing</option>
+                    <option value="Safety">Safety</option>
+                    <option value="HVAC">HVAC</option>
+                    <option value="General">General Utility</option>
+                </select>
+                <label>Dot Icon (Emoji)</label>
+                <input type="text" id="newAssetEmoji" value="⚡" style="text-align: center; font-size: 16px;">
+                <div style="display: flex; gap: 6px; margin-top: 4px;">
                     <div style="flex:1;"><label>X Col (1-30)</label><input type="number" id="newAssetX" value="10"></div>
                     <div style="flex:1;"><label>Y Row (A-N)</label><input type="number" id="newAssetY" value="5"></div>
                 </div>
@@ -341,7 +353,7 @@
         
         <div>
             <p style="font-size: 10px; color: #64748b; margin: 4px 0 0 0;">
-                💡 <b>Tip:</b> Click any item on the grid to open its photo gallery and custom spreadsheet records.
+                💡 <b>Tip:</b> Click any item on the grid to open its photo gallery, category settings, and custom spreadsheet records.
             </p>
         </div>
     </div>
@@ -363,14 +375,35 @@
             </div>
             <div class="modal-body">
                 <input type="hidden" id="modalElementId">
+                
                 <div>
                     <label>Item Name / Designation</label>
                     <input type="text" id="modalName" oninput="saveModalLiveChanges()">
                 </div>
+
+                <!-- Asset-Specific Fields (Category & Emoji) -->
+                <div id="modalAssetFields" style="display: flex; gap: 6px;">
+                    <div style="flex: 3;">
+                        <label>Asset Category</label>
+                        <select id="modalCategory" onchange="saveModalLiveChanges()">
+                            <option value="Electrical">Electrical</option>
+                            <option value="Plumbing">Plumbing</option>
+                            <option value="Safety">Safety</option>
+                            <option value="HVAC">HVAC</option>
+                            <option value="General">General Utility</option>
+                        </select>
+                    </div>
+                    <div style="flex: 1;">
+                        <label>Dot Emoji</label>
+                        <input type="text" id="modalEmoji" oninput="saveModalLiveChanges()" style="text-align: center; font-size: 16px;">
+                    </div>
+                </div>
+
                 <div style="display: flex; gap: 6px;">
                     <div style="flex:1;"><label>X Col</label><input type="number" id="modalX" oninput="saveModalLiveChanges()"></div>
                     <div style="flex:1;"><label>Y Row</label><input type="number" id="modalY" oninput="saveModalLiveChanges()"></div>
                 </div>
+                
                 <div id="modalSizeContainer" style="display: flex; gap: 6px;">
                     <div style="flex:1;"><label>Width</label><input type="number" id="modalW" oninput="saveModalLiveChanges()"></div>
                     <div style="flex:1;"><label>Height</label><input type="number" id="modalH" oninput="saveModalLiveChanges()"></div>
@@ -436,7 +469,7 @@
         let currentTab = 'dept'; 
         let currentLayer = 'ground'; 
 
-        // Elements array storing metadata, photos[] and spreadsheetData[]
+        // Elements array storing metadata, categories, emojis, photos[] and spreadsheetData[]
         let elements = [
             { 
                 id: 1, layer: "ground", name: "MAIN RACKING AREA #1", type: "racking", x: 4, y: 2, w: 4, h: 8,
@@ -451,11 +484,11 @@
                 photos: [], spreadsheetData: [{key: "Level", value: "Ground Footprint"}]
             },
             { 
-                id: 4, layer: "ground", name: "Main Distribution Panel MDP-1", type: "asset", x: 6, y: 3,
+                id: 4, layer: "ground", name: "Main Distribution Panel MDP-1", type: "asset", category: "Electrical", emoji: "⚡", x: 6, y: 3,
                 photos: [], spreadsheetData: [{key: "Voltage", value: "480V 3-Phase"}, {key: "Amperage", value: "800A"}]
             },
             { 
-                id: 5, layer: "ground", name: "Water Main Shutoff", type: "asset", x: 9, y: 3,
+                id: 5, layer: "ground", name: "Water Main Shutoff", type: "asset", category: "Plumbing", emoji: "🚰", x: 9, y: 3,
                 photos: [], spreadsheetData: [{key: "Valve Type", value: "Quarter-turn Butterfly"}]
             },
             { 
@@ -648,42 +681,55 @@
                 let g = document.createElementNS("http://www.w3.org/2000/svg", "g");
 
                 if (el.type === 'asset') {
-                    let circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
                     let cx = (el.x * gridSize) + (gridSize / 2);
                     let cy = (el.y * gridSize) + (gridSize / 2);
+                    
+                    let circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
                     circle.setAttribute("cx", cx);
                     circle.setAttribute("cy", cy);
-                    circle.setAttribute("r", 7);
+                    circle.setAttribute("r", 11);
                     circle.setAttribute("class", `item-shape ${el.id === selectedId ? 'selected' : ''}`);
-                    circle.setAttribute("fill", "#f97316");
-                    circle.setAttribute("stroke", "#fb923c");
-                    circle.setAttribute("stroke-width", "1.5");
+                    circle.setAttribute("fill", "#1e293b");
+                    circle.setAttribute("stroke", "#f97316");
+                    circle.setAttribute("stroke-width", "2");
 
-                    circle.addEventListener("click", (e) => {
+                    // Emoji inside dot
+                    let emojiText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                    emojiText.setAttribute("x", cx);
+                    emojiText.setAttribute("y", cy + 1);
+                    emojiText.setAttribute("text-anchor", "middle");
+                    emojiText.setAttribute("dominant-baseline", "central");
+                    emojiText.setAttribute("font-size", "11px");
+                    emojiText.style.pointerEvents = "none";
+                    emojiText.textContent = el.emoji || "📍";
+
+                    // Label next to dot
+                    let labelText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                    labelText.setAttribute("x", cx + 15);
+                    labelText.setAttribute("y", cy + 4);
+                    labelText.setAttribute("fill", "#fff");
+                    labelText.setAttribute("font-size", "10px");
+                    labelText.setAttribute("font-weight", "bold");
+                    labelText.style.pointerEvents = "none";
+                    labelText.textContent = el.name;
+
+                    g.appendChild(circle);
+                    g.appendChild(emojiText);
+                    g.appendChild(labelText);
+
+                    g.addEventListener("click", (e) => {
                         if (currentMode === 'edit') {
                             e.stopPropagation();
                             openModal(el);
                         }
                     });
                     
-                    circle.addEventListener("mousedown", (e) => {
+                    g.addEventListener("mousedown", (e) => {
                         if (currentMode === 'edit') {
                             e.stopPropagation();
                             startDragElement(e, el);
                         }
                     });
-
-                    let text = document.createElementNS("http://www.w3.org/2000/svg", "text");
-                    text.setAttribute("x", cx + 10);
-                    text.setAttribute("y", cy + 4);
-                    text.setAttribute("fill", "#fff");
-                    text.setAttribute("font-size", "10px");
-                    text.setAttribute("font-weight", "bold");
-                    text.style.pointerEvents = "none";
-                    text.textContent = el.name;
-
-                    g.appendChild(circle);
-                    g.appendChild(text);
 
                 } else {
                     let rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
@@ -708,20 +754,6 @@
                     }
                     rect.setAttribute("stroke-width", "1");
 
-                    rect.addEventListener("click", (e) => {
-                        if (currentMode === 'edit') {
-                            e.stopPropagation();
-                            openModal(el);
-                        }
-                    });
-
-                    rect.addEventListener("mousedown", (e) => {
-                        if (currentMode === 'edit') {
-                            e.stopPropagation();
-                            startDragElement(e, el);
-                        }
-                    });
-
                     let text = document.createElementNS("http://www.w3.org/2000/svg", "text");
                     text.setAttribute("x", (el.x * gridSize) + 6);
                     text.setAttribute("y", (el.y * gridSize) + 16);
@@ -733,6 +765,20 @@
 
                     g.appendChild(rect);
                     g.appendChild(text);
+
+                    g.addEventListener("click", (e) => {
+                        if (currentMode === 'edit') {
+                            e.stopPropagation();
+                            openModal(el);
+                        }
+                    });
+
+                    g.addEventListener("mousedown", (e) => {
+                        if (currentMode === 'edit') {
+                            e.stopPropagation();
+                            startDragElement(e, el);
+                        }
+                    });
                 }
 
                 viewport.appendChild(g);
@@ -848,8 +894,12 @@
             
             if (el.type === 'asset') {
                 document.getElementById("modalSizeContainer").style.display = "none";
+                document.getElementById("modalAssetFields").style.display = "flex";
+                document.getElementById("modalCategory").value = el.category || "General";
+                document.getElementById("modalEmoji").value = el.emoji || "📍";
             } else {
                 document.getElementById("modalSizeContainer").style.display = "flex";
+                document.getElementById("modalAssetFields").style.display = "none";
                 document.getElementById("modalW").value = el.w;
                 document.getElementById("modalH").value = el.h;
             }
@@ -874,10 +924,15 @@
                 el.name = document.getElementById("modalName").value;
                 el.x = parseInt(document.getElementById("modalX").value) || 0;
                 el.y = parseInt(document.getElementById("modalY").value) || 0;
-                if (el.type !== 'asset') {
+                
+                if (el.type === 'asset') {
+                    el.category = document.getElementById("modalCategory").value;
+                    el.emoji = document.getElementById("modalEmoji").value || "📍";
+                } else {
                     el.w = parseInt(document.getElementById("modalW").value) || 1;
                     el.h = parseInt(document.getElementById("modalH").value) || 1;
                 }
+                
                 document.getElementById("modalTitle").innerText = `Edit: ${el.name}`;
                 render();
             }
@@ -1021,6 +1076,8 @@
                 layer: currentLayer, 
                 name: document.getElementById("newAssetName").value,
                 type: "asset",
+                category: document.getElementById("newAssetCategory").value,
+                emoji: document.getElementById("newAssetEmoji").value || "📍",
                 x: parseInt(document.getElementById("newAssetX").value) || 0,
                 y: parseInt(document.getElementById("newAssetY").value) || 0,
                 photos: [],
