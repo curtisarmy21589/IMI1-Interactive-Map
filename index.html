@@ -80,14 +80,6 @@
         const endX = 1140;
         const colWidth = (endX - startX) / (totalColumns - 1);
 
-        // Example assets array - asset dots are kept tiny (radius 3px) to prevent overlap
-        const assets = [
-            { id: 'Asset 1', x: startX + (2 * colWidth), y: rowCoordinates['M.9'].y, type: 'standard' },
-            { id: 'Asset 2', x: startX + (3 * colWidth), y: rowCoordinates['M.9'].y, type: 'standard' },
-            { id: 'Asset 3', x: startX + (2.5 * colWidth), y: rowCoordinates['M'].y, type: 'priority' },
-            { id: 'Asset 4', x: startX + (5 * colWidth), y: rowCoordinates['N'].y, type: 'wall' }
-        ];
-
         function drawMap() {
             // Clear canvas
             ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -139,25 +131,6 @@
                 ctx.font = 'bold 12px Arial';
                 ctx.textAlign = 'right';
                 ctx.fillText(config.label, startX - 35, config.y + 4);
-            });
-
-            // Draw Assets with small, non-overlapping indicator dots (Radius: 3px)
-            assets.forEach(asset => {
-                ctx.beginPath();
-                ctx.arc(asset.x, asset.y, 3, 0, Math.PI * 2); // Radius set to 3 for compact layout
-                
-                if (asset.type === 'priority') {
-                    ctx.fillStyle = '#00ffcc';
-                } else if (asset.type === 'wall') {
-                    ctx.fillStyle = '#ff4444';
-                } else {
-                    ctx.fillStyle = '#3399ff';
-                }
-                
-                ctx.fill();
-                ctx.lineWidth = 1;
-                ctx.strokeStyle = '#ffffff';
-                ctx.stroke();
             });
         }
 
