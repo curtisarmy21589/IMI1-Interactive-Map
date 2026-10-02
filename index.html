@@ -2,148 +2,1301 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Facility Map Layout - Interactive</title>
+    <title>Facility Layout & Site Builder - Pan/Zoom Inspect & Spreadsheet</title>
     <style>
         body {
+            background-color: #0b131d;
+            color: #e0e1dd;
+            font-family: sans-serif;
             margin: 0;
-            padding: 20px;
-            background-color: #1a1a1a;
-            color: #ffffff;
-            font-family: Arial, sans-serif;
             display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-        h1 {
-            font-size: 1.5rem;
-            margin-bottom: 10px;
-        }
-        #canvas-container {
-            position: relative;
-            border: 2px solid #444;
-            background-color: #111;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+            height: 100vh;
             overflow: hidden;
         }
-        canvas {
-            display: block;
-            cursor: crosshair;
-        }
-        .controls {
-            margin-top: 15px;
+        #sidebar {
+            width: 340px;
+            background-color: #111b27;
+            padding: 15px;
             display: flex;
-            gap: 15px;
-            font-size: 0.9rem;
-            color: #aaa;
+            flex-direction: column;
+            gap: 12px;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.7);
+            z-index: 10;
+            overflow-y: auto;
+            border-right: 1px solid #1f2d3d;
+        }
+        h2, h3 { margin: 0 0 5px 0; color: #38bdf8; font-size: 15px; }
+        label { font-size: 11px; color: #94a3b8; }
+        input, select, button, textarea {
+            width: 100%;
+            padding: 6px 8px;
+            background: #0b131d;
+            border: 1px solid #38bdf8;
+            color: #fff;
+            border-radius: 4px;
+            box-sizing: border-box;
+            margin-top: 2px;
+            font-size: 12px;
+        }
+        textarea { resize: vertical; height: 60px; font-family: sans-serif; }
+        button {
+            background: #1e293b;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        button:hover { background: #38bdf8; color: #0b131d; }
+        .mode-btn {
+            background: #070d14;
+            border: 2px solid #1e293b;
+        }
+        .mode-btn.active {
+            background: #38bdf8;
+            color: #0b131d;
+            border-color: #fff;
+        }
+        .layer-btn {
+            flex: 1;
+            padding: 6px 4px;
+            background: #070d14;
+            border: 1px solid #1e293b;
+            color: #94a3b8;
+            font-size: 10px;
+            cursor: pointer;
+            border-radius: 4px;
+            text-align: center;
+        }
+        .layer-btn.active {
+            background: #0284c7;
+            color: #fff;
+            border-color: #38bdf8;
+            font-weight: bold;
+        }
+        .danger { background: #7f1d1d; border-color: #ef4444; }
+        .danger:hover { background: #ef4444; color: #fff; }
+        .tab-bar {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 5px;
+        }
+        .tab-btn {
+            flex: 1;
+            padding: 6px;
+            background: #070d14;
+            border: 1px solid #1e293b;
+            color: #94a3b8;
+            font-size: 11px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        .tab-btn.active {
+            background: #1e293b;
+            color: #38bdf8;
+            border-color: #38bdf8;
+        }
+        .panel { display: none; }
+        .panel.active { display: flex; flex-direction: column; gap: 8px; }
+        #canvas-container {
+            flex-grow: 1;
+            position: relative;
+            background-color: #070d14;
+            overflow: hidden;
+            cursor: grab;
+        }
+        #canvas-container.panning { cursor: grabbing; }
+        svg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            transform-origin: 0 0;
+        }
+        .item-group {
+            cursor: pointer;
+            pointer-events: auto;
+        }
+        .item-shape {
+            transition: stroke 0.2s;
+        }
+        .item-group:hover .item-shape { stroke: #fff; }
+        .item-shape.selected {
+            stroke: #fbbf24;
+            stroke-width: 3;
+        }
+        .grid-line {
+            stroke: #132235;
+            stroke-width: 1;
+            pointer-events: none;
+        }
+        .coord-label {
+            fill: #64748b;
+            font-size: 9px;
+            font-family: monospace;
+            pointer-events: none;
+        }
+        #coord-display {
+            background: #070d14;
+            border: 1px solid #1e293b;
+            padding: 6px;
+            border-radius: 4px;
+            font-family: monospace;
+            color: #38bdf8;
+            font-size: 12px;
+            text-align: center;
+        }
+        #sync-status {
+            font-size: 10px;
+            text-align: center;
+            color: #10b981;
+            font-weight: bold;
+            margin-top: -4px;
+        }
+
+        /* MODAL STYLES */
+        #modal-overlay, #category-modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.75);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background: #111b27;
+            border: 1px solid #38bdf8;
+            border-radius: 8px;
+            width: 600px;
+            max-height: 90vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.8);
+            overflow: hidden;
+        }
+        .modal-header {
+            background: #0b131d;
+            padding: 12px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #1f2d3d;
+        }
+        .modal-body {
+            padding: 15px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .modal-footer {
+            background: #0b131d;
+            padding: 10px 15px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+            border-top: 1px solid #1f2d3d;
+        }
+        .close-modal {
+            background: none;
+            border: none;
+            color: #94a3b8;
+            font-size: 18px;
+            cursor: pointer;
+            width: auto;
+            padding: 0;
+            margin: 0;
+        }
+        .close-modal:hover { color: #fff; background: none; }
+        
+        /* SPREADSHEET TABLE */
+        .spreadsheet-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 4px;
+        }
+        .spreadsheet-table th, .spreadsheet-table td {
+            border: 1px solid #1f2d3d;
+            padding: 6px;
+            text-align: left;
+            font-size: 11px;
+        }
+        .spreadsheet-table th {
+            background: #0b131d;
+            color: #38bdf8;
+        }
+        .spreadsheet-table input, .spreadsheet-table select {
+            background: transparent;
+            border: none;
+            color: #fff;
+            width: 100%;
+            padding: 2px;
+            margin: 0;
+        }
+        .spreadsheet-table input:focus, .spreadsheet-table select:focus { outline: 1px solid #38bdf8; }
+
+        /* PHOTO GRID */
+        .photo-gallery {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 4px;
+        }
+        .photo-thumb-container {
+            position: relative;
+            width: 90px;
+            height: 90px;
+            border: 1px solid #1f2d3d;
+            border-radius: 4px;
+            overflow: hidden;
+            background: #0b131d;
+        }
+        .photo-thumb-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .delete-photo-btn {
+            position: absolute;
+            top: 2px; right: 2px;
+            background: rgba(239, 68, 68, 0.9);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 20px; height: 20px;
+            font-size: 11px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            margin: 0;
         }
     </style>
 </head>
 <body>
 
-    <h1>Facility Interactive Map</h1>
+    <div id="sidebar">
+        <h2>Site & Layout Builder</h2>
+        
+        <div id="coord-display">Col: -- | Row: --</div>
+        <div id="sync-status">Connected to Firebase</div>
+
+        <!-- LAYER SELECTION MENU -->
+        <div>
+            <label>Active View Layer</label>
+            <div style="display: flex; gap: 4px; margin-top: 2px;">
+                <button class="layer-btn active" id="layerGroundBtn" onclick="switchLayer('ground')">Ground Floor</button>
+                <button class="layer-btn" id="layerMezzBtn" onclick="switchLayer('mezzanine')">Mezz Floor</button>
+                <button class="layer-btn" id="layerRoofBtn" onclick="switchLayer('roof')">Roof Layer</button>
+            </div>
+        </div>
+
+        <div>
+            <label>Interaction Mode</label>
+            <div style="display: flex; gap: 6px; margin-top: 2px;">
+                <button id="modeEditBtn" class="mode-btn active" onclick="setMode('edit')">Edit Layout (Drag)</button>
+                <button id="modePanBtn" class="mode-btn" onclick="setMode('pan')">Pan / Zoom & Inspect</button>
+            </div>
+        </div>
+
+        <hr style="border-color: #1e293b; margin: 4px 0;">
+
+        <!-- Sidebar Tab Switcher -->
+        <div class="tab-bar">
+            <button class="tab-btn active" id="tabDeptBtn" onclick="switchTab('dept')">Zones & Yard</button>
+            <button class="tab-btn" id="tabAssetBtn" onclick="switchTab('asset')">Assets Menu</button>
+        </div>
+
+        <!-- PANEL 1: DEPARTMENTS & ZONES -->
+        <div id="panelDept" class="panel active">
+            <h3>Zone / Yard Management</h3>
+            <div>
+                <label>Add New Zone / Yard Area</label>
+                <input type="text" id="newDeptName" value="North Yard Area">
+                <select id="newDeptType">
+                    <option value="yard">External Yard / Grading (Rect)</option>
+                    <option value="racking">Racking Zone (Rect)</option>
+                    <option value="mezzanine">Mezzanine Floor (Rect)</option>
+                    <option value="general">General Dept / Roof Unit</option>
+                </select>
+                <div style="display: flex; gap: 6px;">
+                    <div style="flex:1;"><label>X Col (-6 to 34)</label><input type="number" id="newDeptX" step="0.5" value="2"></div>
+                    <div style="flex:1;"><label>Y Row (-4 to 18)</label><input type="number" id="newDeptY" step="0.5" value="-4"></div>
+                </div>
+                <div style="display: flex; gap: 6px;">
+                    <div style="flex:1;"><label>Width</label><input type="number" id="newDeptW" step="0.5" value="12"></div>
+                    <div style="flex:1;"><label>Height</label><input type="number" id="newDeptH" step="0.5" value="5"></div>
+                </div>
+                <button onclick="addDepartment()" style="margin-top: 6px;">Add Zone to Map</button>
+            </div>
+        </div>
+
+        <!-- PANEL 2: ASSETS (DOTS) -->
+        <div id="panelAsset" class="panel">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Utility & Fire Assets</h3>
+                <button onclick="openCategoryModal()" style="width: auto; padding: 2px 6px; font-size: 10px; background: #1e293b; color: #38bdf8;">⚙️ Categories</button>
+            </div>
+            <div>
+                <label>Asset Name</label>
+                <input type="text" id="newAssetName" value="Fire Hydrant #1">
+                <label>Category</label>
+                <select id="newAssetCategory">
+                    <!-- Populated dynamically -->
+                </select>
+                <label>Dot Icon (Emoji)</label>
+                <input type="text" id="newAssetEmoji" value="🧯" style="text-align: center; font-size: 16px;">
+                <div style="display: flex; gap: 6px; margin-top: 4px;">
+                    <div style="flex:1;"><label>X Col (-6 to 34)</label><input type="number" id="newAssetX" step="0.25" value="5"></div>
+                    <div style="flex:1;"><label>Y Row (-4 to 18)</label><input type="number" id="newAssetY" step="0.25" value="-2"></div>
+                </div>
+                <button onclick="addAsset()" style="margin-top: 6px;">Add Fire/Utility Asset</button>
+            </div>
+        </div>
+        
+        <div>
+            <p style="font-size: 10px; color: #64748b; margin: 4px 0 0 0;">
+                💡 <b>Tip:</b> Place fire hydrants, water mains, and guard posts in negative/extended coordinate areas outside main building walls.
+            </p>
+        </div>
+    </div>
+
     <div id="canvas-container">
-        <canvas id="mapCanvas" width="1200" height="1200"></canvas>
-    </div>
-    <div class="controls">
-        <span id="coordDisplay">Mouse Coordinates: X: 0, Y: 0</span>
-        <span>Columns: 1–30 | Rows: A–N (with M.9 offset)</span>
+        <svg id="layoutSvg" width="2200" height="1400">
+            <g id="viewport">
+                <!-- Rendered dynamically -->
+            </g>
+        </svg>
     </div>
 
-    <script>
-        const canvas = document.getElementById('mapCanvas');
-        const ctx = canvas.getContext('2d');
-        const coordDisplay = document.getElementById('coordDisplay');
+    <!-- ITEM DETAILS & PHOTO MODAL -->
+    <div id="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle" style="color: #38bdf8; margin: 0;">Item Details</h3>
+                <button class="close-modal" onclick="closeModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="modalElementId">
+                
+                <div>
+                    <label>Item Name / Designation</label>
+                    <input type="text" id="modalName" oninput="saveModalLiveChanges()">
+                </div>
 
-        // Row Y-coordinates configuration reflecting the M -> M.9 -> N layout near the bottom wall
-        const rowCoordinates = {
-            'A': { y: 150, label: 'Row A' },
-            'B': { y: 220, label: 'Row B' },
-            'C': { y: 290, label: 'Row C' },
-            'D': { y: 360, label: 'Row D' },
-            'E': { y: 430, label: 'Row E' },
-            'F': { y: 500, label: 'Row F' },
-            'G': { y: 570, label: 'Row G' },
-            'H': { y: 640, label: 'Row H' },
-            'I': { y: 710, label: 'Row I' },
-            'J': { y: 780, label: 'Row J' },
-            'K': { y: 850, label: 'Row K' },
-            'L': { y: 920, label: 'Row L' },
-            'M': { y: 990, label: 'Row M' },
-            'M.9': { y: 1035, label: 'Row M.9' }, // Placed directly after M
-            'N': { y: 1080, label: 'Row N (Bottom Wall)' }  // Short distance away, acting as the bottom wall boundary
+                <!-- Asset-Specific Fields (Category & Emoji) -->
+                <div id="modalAssetFields" style="display: flex; gap: 6px;">
+                    <div style="flex: 3;">
+                        <label>Asset Category</label>
+                        <select id="modalCategory" onchange="saveModalLiveChanges()">
+                            <!-- Populated dynamically -->
+                        </select>
+                    </div>
+                    <div style="flex: 1;">
+                        <label>Dot Emoji</label>
+                        <input type="text" id="modalEmoji" oninput="saveModalLiveChanges()" style="text-align: center; font-size: 16px;">
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 6px;">
+                    <div style="flex:1;"><label>X Col</label><input type="number" id="modalX" step="0.25" oninput="saveModalLiveChanges()"></div>
+                    <div style="flex:1;"><label>Y Row</label><input type="number" id="modalY" step="0.25" oninput="saveModalLiveChanges()"></div>
+                </div>
+                
+                <div id="modalSizeContainer" style="display: flex; gap: 6px;">
+                    <div style="flex:1;"><label>Width</label><input type="number" id="modalW" step="0.25" oninput="saveModalLiveChanges()"></div>
+                    <div style="flex:1;"><label>Height</label><input type="number" id="modalH" step="0.25" oninput="saveModalLiveChanges()"></div>
+                </div>
+
+                <div>
+                    <label>Location Photos</label>
+                    <input type="file" id="photoUploadInput" accept="image/*" multiple onchange="handlePhotoUpload(event)">
+                    <div class="photo-gallery" id="modalPhotoGallery">
+                        <!-- Uploaded photos render here -->
+                    </div>
+                </div>
+
+                <div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
+                        <label>Spreadsheet Details / Custom Records</label>
+                        <button onclick="addSpreadsheetRow()" style="width: auto; padding: 2px 8px; font-size: 10px;">+ Add Row</button>
+                    </div>
+                    <table class="spreadsheet-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 35%;">Parameter / Field</th>
+                                <th style="width: 55%;">Value / Data</th>
+                                <th style="width: 10%;"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="spreadsheetBody">
+                            <!-- Custom rows render here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="danger" onclick="deleteItemFromModal()" style="width: auto; padding: 6px 12px;">Delete Item</button>
+                <button onclick="closeModal()" style="width: auto; padding: 6px 12px; background: #38bdf8; color: #0b131d;">Done / Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- CATEGORY MANAGER MODAL -->
+    <div id="category-modal-overlay">
+        <div class="modal-content" style="width: 500px;">
+            <div class="modal-header">
+                <h3 style="color: #38bdf8; margin: 0;">Manage Asset Categories</h3>
+                <button class="close-modal" onclick="closeCategoryModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <div>
+                    <label>Add New Category</label>
+                    <div style="display: flex; gap: 6px; margin-top: 4px;">
+                        <input type="text" id="newCatName" placeholder="Category Name (e.g. Water Main)" style="flex: 2;">
+                        <input type="color" id="newCatColor" value="#38bdf8" style="flex: 0.5; height: 30px; padding: 0; cursor: pointer;">
+                        <button onclick="addCategory()" style="flex: 1; margin-top: 0;">Add Category</button>
+                    </div>
+                </div>
+
+                <div style="margin-top: 8px;">
+                    <label>Existing Categories & Accent Colors</label>
+                    <table class="spreadsheet-table" style="margin-top: 6px;">
+                        <thead>
+                            <tr>
+                                <th>Category Name</th>
+                                <th style="width: 70px; text-align: center;">Color</th>
+                                <th style="width: 50px; text-align: center;">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="categoryTableBody">
+                            <!-- Populated dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button onclick="closeCategoryModal()" style="width: auto; padding: 6px 12px; background: #38bdf8; color: #0b131d;">Save & Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK Imports -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCrKAut8_5nHWTWtYqZZr5HOENGd8mqZxE",
+            authDomain: "imi1-interactive-map-8d929.firebaseapp.com",
+            projectId: "imi1-interactive-map-8d929",
+            storageBucket: "imi1-interactive-map-8d929.firebasestorage.app",
+            messagingSenderId: "613133090515",
+            appId: "1:613133090515:web:f8f9be365f484a3a5c5e26",
+            measurementId: "G-4QR2RSSTN1"
         };
 
-        // Column settings (Columns 1 through 30)
-        const totalColumns = 30;
-        const startX = 120;
-        const endX = 1140;
-        const colWidth = (endX - startX) / (totalColumns - 1);
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
 
-        function drawMap() {
-            // Clear canvas
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        const gridSize = 25;
+        const minCol = -8;
+        const maxCol = 38;
+        const minRow = -6;
+        const maxRow = 20;
 
-            // Draw Background Grid / Floor Bounds
-            ctx.fillStyle = '#161616';
-            ctx.fillRect(startX - 40, 100, (endX - startX) + 80, 1030);
+        const buildingCols = 30; 
+        const buildingRows = 14; 
 
-            // Draw Columns (Vertical Lines 1 to 30)
-            for (let i = 1; i <= totalColumns; i++) {
-                const x = startX + (i - 1) * colWidth;
-                
-                ctx.beginPath();
-                ctx.moveTo(x, 120);
-                ctx.lineTo(x, 1100);
-                ctx.strokeStyle = '#2a2a2a';
-                ctx.lineWidth = 1;
-                ctx.stroke();
+        let currentMode = 'edit'; 
+        let currentTab = 'dept'; 
+        let currentLayer = 'ground'; 
 
-                // Column Labels on top and bottom
-                ctx.fillStyle = '#777';
-                ctx.font = '10px Arial';
-                ctx.textAlign = 'center';
-                ctx.fillText(i, x, 115);
-                ctx.fillText(i, x, 1115);
+        // Default categories with custom accent colors
+        let categories = [
+            { name: "Fire Safety", color: "#ef4444" },
+            { name: "Electrical", color: "#f97316" },
+            { name: "Plumbing", color: "#38bdf8" },
+            { name: "Safety", color: "#fbbf24" },
+            { name: "HVAC", color: "#34d399" },
+            { name: "General", color: "#94a3b8" }
+        ];
+
+        let elements = [
+            { 
+                id: 101, layer: "ground", name: "North Yard Fire Hydrant #1", type: "asset", category: "Fire Safety", emoji: "🧯", x: 4, y: -3,
+                photos: [], spreadsheetData: [{key: "Flow Rate", value: "1,500 GPM"}, {key: "Inspection", value: "Passed Q2"}]
+            },
+            { 
+                id: 102, layer: "ground", name: "North Yard Fire Hydrant #2", type: "asset", category: "Fire Safety", emoji: "🧯", x: 22, y: -3,
+                photos: [], spreadsheetData: [{key: "Flow Rate", value: "1,500 GPM"}, {key: "Inspection", value: "Passed Q2"}]
+            },
+            { 
+                id: 103, layer: "ground", name: "East Retention Pond #1", type: "yard", x: 31, y: -4, w: 6, h: 6,
+                photos: [], spreadsheetData: [{key: "Capacity", value: "1.2 Million Gal"}]
+            },
+            { 
+                id: 104, layer: "ground", name: "North Truck Yard & Trailer Parking", type: "yard", x: 2, y: -5, w: 26, h: 4,
+                photos: [], spreadsheetData: [{key: "Stall Count", value: "45 Trailer Docks"}]
+            },
+            { 
+                id: 1, layer: "ground", name: "MAIN RACKING AREA #1", type: "racking", x: 4, y: 2, w: 4, h: 8,
+                photos: [], spreadsheetData: [{key: "Bay Count", value: "24 Bays"}, {key: "Weight Capacity", value: "3,500 lbs"}]
+            },
+            { 
+                id: 2, layer: "ground", name: "RACKING #2", type: "racking", x: 18, y: 5, w: 4, h: 4,
+                photos: [], spreadsheetData: [{key: "Bay Count", value: "12 Bays"}, {key: "Weight Capacity", value: "2,000 lbs"}]
+            },
+            { 
+                id: 3, layer: "ground", name: "MEZZANINE FLOOR", type: "mezzanine", x: 2, y: 9, w: 10, h: 4,
+                photos: [], spreadsheetData: [{key: "Level", value: "Ground Footprint"}]
+            },
+            { 
+                id: 4, layer: "ground", name: "Main Distribution Panel MDP-1", type: "asset", category: "Electrical", emoji: "⚡", x: 6, y: 3,
+                photos: [], spreadsheetData: [{key: "Voltage", value: "480V 3-Phase"}, {key: "Amperage", value: "800A"}]
+            },
+            { 
+                id: 5, layer: "ground", name: "Water Main Shutoff", type: "asset", category: "Plumbing", emoji: "🚰", x: 9, y: 3,
+                photos: [], spreadsheetData: [{key: "Valve Type", value: "Quarter-turn Butterfly"}]
+            },
+            { 
+                id: 6, layer: "mezzanine", name: "Mezzanine Level Office & Storage", type: "mezzanine", x: 2, y: 2, w: 12, h: 10,
+                photos: [], spreadsheetData: [{key: "Occupancy", value: "Max 15 Personnel"}]
+            },
+            { 
+                id: 7, layer: "roof", name: "Roof HVAC Unit & Solar Array Zone", type: "general", x: 5, y: 3, w: 8, h: 6,
+                photos: [], spreadsheetData: [{key: "Unit Model", value: "ICP CA5524VKD3"}]
             }
+        ];
 
-            // Draw Rows (Horizontal Lines with updated M.9 positioning)
-            Object.entries(rowCoordinates).forEach(([rowKey, config]) => {
-                ctx.beginPath();
-                ctx.moveTo(startX - 20, config.y);
-                ctx.lineTo(endX + 20, config.y);
-                
-                // Highlight Row M.9 and Bottom Wall Row N distinctly
-                if (rowKey === 'M.9') {
-                    ctx.strokeStyle = '#ff9900';
-                    ctx.lineWidth = 2;
-                } else if (rowKey === 'N') {
-                    ctx.strokeStyle = '#ff4444'; // Bottom wall indicator
-                    ctx.lineWidth = 3;
+        let selectedId = null;
+        let isDraggingElement = false;
+        let isPanning = false;
+        let panStart = { x: 0, y: 0 };
+        let viewTransform = { x: 250, y: 180, scale: 0.9 };
+
+        const container = document.getElementById("canvas-container");
+        const svg = document.getElementById("layoutSvg");
+        const viewport = document.getElementById("viewport");
+        const syncStatus = document.getElementById("sync-status");
+
+        async function loadFromFirebase() {
+            try {
+                const docRef = doc(db, "layouts", "facility_main");
+                const docSnap = await getDoc(docRef);
+                if (docSnap.exists()) {
+                    let data = docSnap.data();
+                    if (data.elements) elements = data.elements;
+                    if (data.categories) categories = data.categories;
+                    syncStatus.innerText = "Loaded from Firebase";
                 } else {
-                    ctx.strokeStyle = '#3a3a3a';
-                    ctx.lineWidth = 1.5;
+                    await saveToFirebase();
                 }
-                ctx.stroke();
+                populateCategoryDropdowns();
+                render();
+            } catch (error) {
+                console.error("Error loading layout:", error);
+                syncStatus.innerText = "Error Loading Database";
+                syncStatus.style.color = "#ef4444";
+                populateCategoryDropdowns();
+                render();
+            }
+        }
 
-                // Row Labels on the left edge
-                ctx.fillStyle = rowKey === 'M.9' ? '#ff9900' : (rowKey === 'N' ? '#ff4444' : '#ffffff');
-                ctx.font = 'bold 12px Arial';
-                ctx.textAlign = 'right';
-                ctx.fillText(config.label, startX - 35, config.y + 4);
+        async function saveToFirebase() {
+            try {
+                syncStatus.innerText = "Saving...";
+                syncStatus.style.color = "#fbbf24";
+                
+                await setDoc(doc(db, "layouts", "facility_main"), {
+                    elements: elements,
+                    categories: categories,
+                    updatedAt: new Date().toISOString()
+                });
+                
+                syncStatus.innerText = "Synced to Firebase";
+                syncStatus.style.color = "#10b981";
+            } catch (error) {
+                console.error("Error saving layout:", error);
+                syncStatus.innerText = "Sync Failed";
+                syncStatus.style.color = "#ef4444";
+            }
+        }
+
+        function populateCategoryDropdowns(selectedVal1 = null, selectedVal2 = null) {
+            let select1 = document.getElementById("newAssetCategory");
+            let select2 = document.getElementById("modalCategory");
+            
+            let val1 = selectedVal1 || select1.value;
+            let val2 = selectedVal2 || select2.value;
+
+            select1.innerHTML = "";
+            select2.innerHTML = "";
+
+            categories.forEach(cat => {
+                let opt1 = document.createElement("option");
+                opt1.value = cat.name;
+                opt1.textContent = cat.name;
+                select1.appendChild(opt1);
+
+                let opt2 = document.createElement("option");
+                opt2.value = cat.name;
+                opt2.textContent = cat.name;
+                select2.appendChild(opt2);
+            });
+
+            if (val1 && categories.some(c => c.name === val1)) select1.value = val1;
+            if (val2 && categories.some(c => c.name === val2)) select2.value = val2;
+        }
+
+        function getCategoryColor(catName) {
+            let found = categories.find(c => c.name === catName);
+            return found ? found.color : "#38bdf8";
+        }
+
+        window.openCategoryModal = function() {
+            renderCategoryTable();
+            document.getElementById("category-modal-overlay").style.display = "flex";
+        }
+
+        window.closeCategoryModal = function() {
+            document.getElementById("category-modal-overlay").style.display = "none";
+            populateCategoryDropdowns();
+            render();
+            saveToFirebase();
+        }
+
+        function renderCategoryTable() {
+            let tbody = document.getElementById("categoryTableBody");
+            tbody.innerHTML = "";
+
+            categories.forEach((cat, index) => {
+                let tr = document.createElement("tr");
+
+                let tdName = document.createElement("td");
+                let inputName = document.createElement("input");
+                inputName.type = "text";
+                inputName.value = cat.name;
+                inputName.oninput = function() {
+                    cat.name = inputName.value;
+                    populateCategoryDropdowns();
+                };
+                tdName.appendChild(inputName);
+
+                let tdColor = document.createElement("td");
+                tdColor.style.textAlign = "center";
+                let inputColor = document.createElement("input");
+                inputColor.type = "color";
+                inputColor.value = cat.color;
+                inputColor.style.width = "40px";
+                inputColor.style.height = "24px";
+                inputColor.style.padding = "0";
+                inputColor.style.border = "none";
+                inputColor.style.cursor = "pointer";
+                inputColor.oninput = function() {
+                    cat.color = inputColor.value;
+                };
+                tdColor.appendChild(inputColor);
+
+                let tdAction = document.createElement("td");
+                tdAction.style.textAlign = "center";
+                let delBtn = document.createElement("button");
+                delBtn.className = "danger";
+                delBtn.style.padding = "2px 6px";
+                delBtn.style.fontSize = "10px";
+                delBtn.innerText = "X";
+                delBtn.onclick = function() {
+                    if (categories.length <= 1) {
+                        alert("You must keep at least one category.");
+                        return;
+                    }
+                    categories.splice(index, 1);
+                    renderCategoryTable();
+                    populateCategoryDropdowns();
+                };
+                tdAction.appendChild(delBtn);
+
+                tr.appendChild(tdName);
+                tr.appendChild(tdColor);
+                tr.appendChild(tdAction);
+                tbody.appendChild(tr);
             });
         }
 
-        // Track mouse coordinates for easy layout debugging
-        canvas.addEventListener('mousemove', (e) => {
-            const rect = canvas.getBoundingClientRect();
-            const mouseX = Math.round(e.clientX - rect.left);
-            const mouseY = Math.round(e.clientY - rect.top);
-            coordDisplay.textContent = `Mouse Coordinates: X: ${mouseX}, Y: ${mouseY}`;
+        window.addCategory = function() {
+            let nameInput = document.getElementById("newCatName");
+            let colorInput = document.getElementById("newCatColor");
+            let name = nameInput.value.trim();
+            
+            if (!name) {
+                alert("Please enter a category name.");
+                return;
+            }
+            if (categories.some(c => c.name.toLowerCase() === name.toLowerCase())) {
+                alert("Category already exists.");
+                return;
+            }
+
+            categories.push({ name: name, color: colorInput.value });
+            nameInput.value = "";
+            renderCategoryTable();
+            populateCategoryDropdowns();
+        }
+
+        function getRowLabel(r) {
+            if (r === buildingRows - 2) return "M.9"; 
+            let index = r;
+            if (index > buildingRows - 2) {
+                index -= 1;
+            }
+            if (index < 0) {
+                return "N" + Math.abs(index);
+            }
+            return String.fromCharCode(65 + index); 
+        }
+
+        window.switchLayer = function(layerName) {
+            currentLayer = layerName;
+            document.getElementById("layerGroundBtn").classList.toggle("active", layerName === 'ground');
+            document.getElementById("layerMezzBtn").classList.toggle("active", layerName === 'mezzanine');
+            document.getElementById("layerRoofBtn").classList.toggle("active", layerName === 'roof');
+            selectedId = null;
+            render();
+        }
+
+        window.setMode = function(mode) {
+            currentMode = mode;
+            document.getElementById("modeEditBtn").classList.toggle("active", mode === 'edit');
+            document.getElementById("modePanBtn").classList.toggle("active", mode === 'pan');
+            container.style.cursor = mode === 'pan' ? 'grab' : 'default';
+            selectedId = null;
+            render();
+        }
+
+        window.switchTab = function(tab) {
+            currentTab = tab;
+            document.getElementById("tabDeptBtn").classList.toggle("active", tab === 'dept');
+            document.getElementById("tabAssetBtn").classList.toggle("active", tab === 'asset');
+            document.getElementById("panelDept").classList.toggle("active", tab === 'dept');
+            document.getElementById("panelAsset").classList.toggle("active", tab === 'asset');
+        }
+
+        function updateTransformString() {
+            viewport.setAttribute("transform", `translate(${viewTransform.x}, ${viewTransform.y}) scale(${viewTransform.scale})`);
+        }
+
+        function render() {
+            viewport.innerHTML = "";
+            updateTransformString();
+
+            // 0. Extended Site Background (Brown Graded Land Surrounding 6500 W Mt Hope Hwy)
+            let siteBackground = document.createElementNS("http://www.w3.org/2000/svg", "g");
+            siteBackground.setAttribute("id", "site-surroundings");
+
+            let earthGrading = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+            earthGrading.setAttribute("x", minCol * gridSize);
+            earthGrading.setAttribute("y", minRow * gridSize);
+            earthGrading.setAttribute("width", (maxCol - minCol) * gridSize);
+            earthGrading.setAttribute("height", (maxRow - minRow) * gridSize);
+            earthGrading.setAttribute("fill", "#18110e");
+            earthGrading.setAttribute("stroke", "#281e17");
+            earthGrading.setAttribute("stroke-width", "2");
+            siteBackground.appendChild(earthGrading);
+
+            let siteLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
+            siteLabel.setAttribute("x", (minCol + 1) * gridSize);
+            siteLabel.setAttribute("y", (minRow + 1) * gridSize);
+            siteLabel.setAttribute("fill", "#854d0e");
+            siteLabel.setAttribute("font-size", "12px");
+            siteLabel.setAttribute("font-weight", "bold");
+            siteLabel.textContent = "▼ 6500 W MT HOPE HWY — SURROUNDING SITE EARTHWORK & FIRE HYDRANT PERIMETER";
+            siteBackground.appendChild(siteLabel);
+
+            viewport.appendChild(siteBackground);
+
+            // 1. Extended Grid Lines & Labels
+            for (let c = minCol; c <= maxCol; c++) {
+                let line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                line.setAttribute("x1", c * gridSize);
+                line.setAttribute("y1", minRow * gridSize);
+                line.setAttribute("x2", c * gridSize);
+                line.setAttribute("y2", maxRow * gridSize);
+                line.setAttribute("class", "grid-line");
+                viewport.appendChild(line);
+
+                let text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                text.setAttribute("x", (c * gridSize) + (gridSize / 2));
+                text.setAttribute("y", (minRow * gridSize) - 8);
+                text.setAttribute("text-anchor", "middle");
+                text.setAttribute("class", "coord-label");
+                text.textContent = c + 1; 
+                viewport.appendChild(text);
+            }
+
+            for (let r = minRow; r <= maxRow; r++) {
+                let line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                line.setAttribute("x1", minCol * gridSize);
+                line.setAttribute("y1", r * gridSize);
+                line.setAttribute("x2", maxCol * gridSize);
+                line.setAttribute("y2", r * gridSize);
+                
+                if (r === buildingRows - 2) {
+                    line.setAttribute("stroke", "#f43f5e");
+                    line.setAttribute("stroke-dasharray", "2,2");
+                } else {
+                    line.setAttribute("class", "grid-line");
+                }
+                viewport.appendChild(line);
+
+                let text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                text.setAttribute("x", (minCol * gridSize) - 10);
+                text.setAttribute("y", (r * gridSize) + (gridSize / 2) + 3);
+                text.setAttribute("text-anchor", "end");
+                text.setAttribute("class", "coord-label");
+                if (r === buildingRows - 2) {
+                    text.setAttribute("fill", "#f43f5e");
+                    text.setAttribute("font-weight", "bold");
+                }
+                text.textContent = getRowLabel(r);
+                viewport.appendChild(text);
+            }
+
+            // 2. Core Building Footprint Walls
+            let buildingWall = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+            buildingWall.setAttribute("x", 0);
+            buildingWall.setAttribute("y", 0);
+            buildingWall.setAttribute("width", buildingCols * gridSize);
+            buildingWall.setAttribute("height", buildingRows * gridSize);
+            buildingWall.setAttribute("fill", "#0b131d");
+            buildingWall.setAttribute("fill-opacity", "0.6");
+            buildingWall.setAttribute("stroke", "#38bdf8");
+            buildingWall.setAttribute("stroke-width", "2");
+            viewport.appendChild(buildingWall);
+
+            let layerTitleName = currentLayer.toUpperCase();
+            let topLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
+            topLabel.setAttribute("x", 0.5 * gridSize);
+            topLabel.setAttribute("y", -22);
+            topLabel.setAttribute("fill", "#38bdf8");
+            topLabel.setAttribute("font-size", "10px");
+            topLabel.setAttribute("font-weight", "bold");
+            topLabel.textContent = `BUILDING SOUTH WALL (${layerTitleName} LAYER) ▲`;
+            viewport.appendChild(topLabel);
+
+            let bottomLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
+            bottomLabel.setAttribute("x", 0.5 * gridSize);
+            bottomLabel.setAttribute("y", (buildingRows * gridSize) + 18);
+            bottomLabel.setAttribute("fill", "#38bdf8");
+            bottomLabel.setAttribute("font-size", "10px");
+            bottomLabel.setAttribute("font-weight", "bold");
+            bottomLabel.textContent = `BUILDING NORTH WALL ▼`;
+            viewport.appendChild(bottomLabel);
+
+            // 3. Render Elements
+            let visibleElements = elements.filter(el => (el.layer || 'ground') === currentLayer);
+
+            visibleElements.forEach(el => {
+                let g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+                g.setAttribute("class", "item-group");
+
+                g.addEventListener("click", (e) => {
+                    if (currentMode === 'pan') {
+                        e.stopPropagation();
+                        openModal(el);
+                    }
+                });
+
+                if (el.type === 'asset') {
+                    let cx = (el.x * gridSize) + (gridSize / 2);
+                    let cy = (el.y * gridSize) + (gridSize / 2);
+                    let catColor = getCategoryColor(el.category);
+                    
+                    let circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                    circle.setAttribute("cx", cx);
+                    circle.setAttribute("cy", cy);
+                    circle.setAttribute("r", 12);
+                    circle.setAttribute("class", `item-shape ${el.id === selectedId ? 'selected' : ''}`);
+                    circle.setAttribute("fill", "#111b27");
+                    circle.setAttribute("stroke", catColor);
+                    circle.setAttribute("stroke-width", "2.5");
+
+                    let emojiText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                    emojiText.setAttribute("x", cx);
+                    emojiText.setAttribute("y", cy + 1);
+                    emojiText.setAttribute("text-anchor", "middle");
+                    emojiText.setAttribute("dominant-baseline", "central");
+                    emojiText.setAttribute("font-size", "11px");
+                    emojiText.style.pointerEvents = "none";
+                    emojiText.textContent = el.emoji || "📍";
+
+                    let labelText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                    labelText.setAttribute("x", cx + 16);
+                    labelText.setAttribute("y", cy + 4);
+                    labelText.setAttribute("fill", "#fff");
+                    labelText.setAttribute("font-size", "10px");
+                    labelText.setAttribute("font-weight", "bold");
+                    labelText.style.pointerEvents = "none";
+                    labelText.textContent = el.name;
+
+                    g.appendChild(circle);
+                    g.appendChild(emojiText);
+                    g.appendChild(labelText);
+
+                } else {
+                    let rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+                    rect.setAttribute("x", el.x * gridSize);
+                    rect.setAttribute("y", el.y * gridSize);
+                    rect.setAttribute("width", el.w * gridSize);
+                    rect.setAttribute("height", el.h * gridSize);
+                    rect.setAttribute("class", `item-shape ${el.id === selectedId ? 'selected' : ''}`);
+
+                    if (el.type === 'yard') {
+                        rect.setAttribute("fill", "#b45309");
+                        rect.setAttribute("fill-opacity", "0.3");
+                        rect.setAttribute("stroke", "#d97706");
+                    } else if (el.type === 'racking') {
+                        rect.setAttribute("fill", "#d97706");
+                        rect.setAttribute("fill-opacity", "0.35");
+                        rect.setAttribute("stroke", "#f59e0b");
+                    } else if (el.type === 'mezzanine') {
+                        rect.setAttribute("fill", "#10b981");
+                        rect.setAttribute("fill-opacity", "0.35");
+                        rect.setAttribute("stroke", "#34d399");
+                    } else {
+                        rect.setAttribute("fill", "#0284c7");
+                        rect.setAttribute("fill-opacity", "0.35");
+                        rect.setAttribute("stroke", "#38bdf8");
+                    }
+                    rect.setAttribute("stroke-width", "1");
+
+                    let text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                    text.setAttribute("x", (el.x * gridSize) + 6);
+                    text.setAttribute("y", (el.y * gridSize) + 16);
+                    text.setAttribute("fill", "#fff");
+                    text.setAttribute("font-size", "10px");
+                    text.setAttribute("font-weight", "bold");
+                    text.style.pointerEvents = "none";
+                    text.textContent = el.name;
+
+                    g.appendChild(rect);
+                    g.appendChild(text);
+                }
+
+                g.addEventListener("mousedown", (e) => {
+                    if (currentMode === 'edit') {
+                        e.stopPropagation();
+                        startDragElement(e, el);
+                    }
+                });
+
+                viewport.appendChild(g);
+            });
+        }
+
+        container.addEventListener("mousemove", (e) => {
+            let rect = container.getBoundingClientRect();
+            let mouseX = e.clientX - rect.left;
+            let mouseY = e.clientY - rect.top;
+
+            let localX = (mouseX - viewTransform.x) / viewTransform.scale;
+            let localY = (mouseY - viewTransform.y) / viewTransform.scale;
+
+            let coordDisplay = document.getElementById("coord-display");
+            let exactCol = localX / gridSize;
+            let rowIdx = Math.floor(localY / gridSize);
+
+            let preciseColNum = (exactCol + 1).toFixed(2);
+            let rowLabel = getRowLabel(rowIdx);
+            
+            coordDisplay.innerHTML = `Grid: <b>Row ${rowLabel}, Col ${preciseColNum}</b>`;
+
+            if (isPanning) {
+                viewTransform.x = e.clientX - panStart.x;
+                viewTransform.y = e.clientY - panStart.y;
+                render();
+            }
         });
 
-        // Initial render execution
-        drawMap();
+        container.addEventListener("wheel", (e) => {
+            e.preventDefault();
+            let zoomIntensity = 0.1;
+            let oldScale = viewTransform.scale;
+            
+            if (e.deltaY < 0) {
+                viewTransform.scale = Math.min(viewTransform.scale * (1 + zoomIntensity), 3.0);
+            } else {
+                viewTransform.scale = Math.max(viewTransform.scale * (1 - zoomIntensity), 0.3);
+            }
+
+            let rect = container.getBoundingClientRect();
+            let mouseX = e.clientX - rect.left;
+            let mouseY = e.clientY - rect.top;
+
+            viewTransform.x = mouseX - (mouseX - viewTransform.x) * (viewTransform.scale / oldScale);
+            viewTransform.y = mouseY - (mouseY - viewTransform.y) * (viewTransform.scale / oldScale);
+
+            render();
+        }, { passive: false });
+
+        container.addEventListener("mousedown", (e) => {
+            if (currentMode === 'pan') {
+                isPanning = true;
+                container.classList.add("panning");
+                panStart = { x: e.clientX - viewTransform.x, y: e.clientY - viewTransform.y };
+            } else if (currentMode === 'edit') {
+                selectedId = null;
+                render();
+            }
+        });
+
+        window.addEventListener("mouseup", () => {
+            if (isPanning) {
+                isPanning = false;
+                container.classList.remove("panning");
+            }
+        });
+
+        function startDragElement(e, el) {
+            selectedId = el.id;
+            isDraggingElement = true;
+            
+            let startX = e.clientX;
+            let startY = e.clientY;
+            let origX = el.x;
+            let origY = el.y;
+
+            function onMouseMove(e) {
+                if (!isDraggingElement) return;
+                let dx = (e.clientX - startX) / viewTransform.scale;
+                let dy = (e.clientY - startY) / viewTransform.scale;
+                
+                el.x = parseFloat((origX + (dx / gridSize)).toFixed(2));
+                el.y = parseFloat((origY + (dy / gridSize)).toFixed(2));
+                
+                render();
+            }
+
+            function onMouseUp() {
+                isDraggingElement = false;
+                window.removeEventListener("mousemove", onMouseMove);
+                window.removeEventListener("mouseup", onMouseUp);
+                saveToFirebase(); 
+            }
+
+            window.addEventListener("mousemove", onMouseMove);
+            window.addEventListener("mouseup", onMouseUp);
+            render();
+        }
+
+        // MODAL MANAGEMENT FUNCTIONS
+        function openModal(el) {
+            selectedId = el.id;
+            document.getElementById("modalElementId").value = el.id;
+            document.getElementById("modalTitle").innerText = `Edit: ${el.name}`;
+            document.getElementById("modalName").value = el.name;
+            document.getElementById("modalX").value = el.x;
+            document.getElementById("modalY").value = el.y;
+            
+            if (el.type === 'asset') {
+                document.getElementById("modalSizeContainer").style.display = "none";
+                document.getElementById("modalAssetFields").style.display = "flex";
+                populateCategoryDropdowns(null, el.category);
+                document.getElementById("modalEmoji").value = el.emoji || "📍";
+            } else {
+                document.getElementById("modalSizeContainer").style.display = "flex";
+                document.getElementById("modalAssetFields").style.display = "none";
+                document.getElementById("modalW").value = el.w;
+                document.getElementById("modalH").value = el.h;
+            }
+
+            renderPhotos(el);
+            renderSpreadsheet(el);
+            document.getElementById("modal-overlay").style.display = "flex";
+            render();
+        }
+
+        window.closeModal = function() {
+            document.getElementById("modal-overlay").style.display = "none";
+            selectedId = null;
+            render();
+            saveToFirebase();
+        }
+
+        window.saveModalLiveChanges = function() {
+            let id = parseInt(document.getElementById("modalElementId").value);
+            let el = elements.find(item => item.id === id);
+            if (el) {
+                el.name = document.getElementById("modalName").value;
+                el.x = parseFloat(document.getElementById("modalX").value) || 0;
+                el.y = parseFloat(document.getElementById("modalY").value) || 0;
+                
+                if (el.type === 'asset') {
+                    el.category = document.getElementById("modalCategory").value;
+                    el.emoji = document.getElementById("modalEmoji").value || "📍";
+                } else {
+                    el.w = parseFloat(document.getElementById("modalW").value) || 1;
+                    el.h = parseFloat(document.getElementById("modalH").value) || 1;
+                }
+                
+                document.getElementById("modalTitle").innerText = `Edit: ${el.name}`;
+                render();
+            }
+        }
+
+        // PHOTO UPLOAD HANDLING
+        window.handlePhotoUpload = function(event) {
+            let id = parseInt(document.getElementById("modalElementId").value);
+            let el = elements.find(item => item.id === id);
+            if (!el) return;
+            if (!el.photos) el.photos = [];
+
+            let files = event.target.files;
+            for (let file of files) {
+                let reader = new FileReader();
+                reader.onload = function(e) {
+                    el.photos.push(e.target.result);
+                    renderPhotos(el);
+                    saveToFirebase();
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function renderPhotos(el) {
+            let gallery = document.getElementById("modalPhotoGallery");
+            gallery.innerHTML = "";
+            if (!el.photos) el.photos = [];
+
+            el.photos.forEach((photoUrl, index) => {
+                let containerDiv = document.createElement("div");
+                containerDiv.className = "photo-thumb-container";
+                
+                let img = document.createElement("img");
+                img.src = photoUrl;
+                
+                let delBtn = document.createElement("button");
+                delBtn.className = "delete-photo-btn";
+                delBtn.innerHTML = "×";
+                delBtn.onclick = function() {
+                    el.photos.splice(index, 1);
+                    renderPhotos(el);
+                    saveToFirebase();
+                };
+
+                containerDiv.appendChild(img);
+                containerDiv.appendChild(delBtn);
+                gallery.appendChild(containerDiv);
+            });
+        }
+
+        // SPREADSHEET TABLE HANDLING
+        function renderSpreadsheet(el) {
+            let tbody = document.getElementById("spreadsheetBody");
+            tbody.innerHTML = "";
+            if (!el.spreadsheetData) el.spreadsheetData = [];
+
+            el.spreadsheetData.forEach((row, index) => {
+                let tr = document.createElement("tr");
+                
+                let tdKey = document.createElement("td");
+                let inputKey = document.createElement("input");
+                inputKey.type = "text";
+                inputKey.value = row.key;
+                inputKey.oninput = function() {
+                    row.key = inputKey.value;
+                    saveToFirebase();
+                };
+                tdKey.appendChild(inputKey);
+
+                let tdVal = document.createElement("td");
+                let inputVal = document.createElement("input");
+                inputVal.type = "text";
+                inputVal.value = row.value;
+                inputVal.oninput = function() {
+                    row.value = inputVal.value;
+                    saveToFirebase();
+                };
+                tdVal.appendChild(inputVal);
+
+                let tdAction = document.createElement("td");
+                tdAction.style.textAlign = "center";
+                let delRowBtn = document.createElement("button");
+                delRowBtn.className = "danger";
+                delRowBtn.style.padding = "2px 6px";
+                delRowBtn.style.fontSize = "10px";
+                delRowBtn.innerText = "X";
+                delRowBtn.onclick = function() {
+                    el.spreadsheetData.splice(index, 1);
+                    renderSpreadsheet(el);
+                    saveToFirebase();
+                };
+                tdAction.appendChild(delRowBtn);
+
+                tr.appendChild(tdKey);
+                tr.appendChild(tdVal);
+                tr.appendChild(tdAction);
+                tbody.appendChild(tr);
+            });
+        }
+
+        window.addSpreadsheetRow = function() {
+            let id = parseInt(document.getElementById("modalElementId").value);
+            let el = elements.find(item => item.id === id);
+            if (el) {
+                if (!el.spreadsheetData) el.spreadsheetData = [];
+                el.spreadsheetData.push({ key: "New Field", value: "Value" });
+                renderSpreadsheet(el);
+                saveToFirebase();
+            }
+        }
+
+        window.deleteItemFromModal = function() {
+            let id = parseInt(document.getElementById("modalElementId").value);
+            if (confirm("Are you sure you want to delete this item?")) {
+                elements = elements.filter(item => item.id !== id);
+                closeModal();
+                saveToFirebase();
+            }
+        }
+
+        // CREATING NEW ITEMS FROM SIDEBAR
+        window.addDepartment = function() {
+            let newEl = {
+                id: Date.now(),
+                layer: currentLayer, 
+                name: document.getElementById("newDeptName").value,
+                type: document.getElementById("newDeptType").value,
+                x: parseFloat(document.getElementById("newDeptX").value) || 0,
+                y: parseFloat(document.getElementById("newDeptY").value) || 0,
+                w: parseFloat(document.getElementById("newDeptW").value) || 5,
+                h: parseFloat(document.getElementById("newDeptH").value) || 5,
+                photos: [],
+                spreadsheetData: [{key: "Status", value: "Active"}]
+            };
+            elements.push(newEl);
+            render();
+            saveToFirebase();
+        }
+
+        window.addAsset = function() {
+            let newEl = {
+                id: Date.now(),
+                layer: currentLayer, 
+                name: document.getElementById("newAssetName").value,
+                type: "asset",
+                category: document.getElementById("newAssetCategory").value,
+                emoji: document.getElementById("newAssetEmoji").value || "🧯",
+                x: parseFloat(document.getElementById("newAssetX").value) || 0,
+                y: parseFloat(document.getElementById("newAssetY").value) || 0,
+                photos: [],
+                spreadsheetData: [{key: "Asset Type", value: "Safety/Fire Node"}]
+            };
+            elements.push(newEl);
+            render();
+            saveToFirebase();
+        }
+
+        loadFromFirebase();
     </script>
+
 </body>
 </html>
