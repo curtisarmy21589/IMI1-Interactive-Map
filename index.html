@@ -152,7 +152,7 @@
         }
 
         /* MODAL STYLES */
-        #modal-overlay {
+        #modal-overlay, #category-modal-overlay {
             display: none;
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -223,7 +223,7 @@
             background: #0b131d;
             color: #38bdf8;
         }
-        .spreadsheet-table input {
+        .spreadsheet-table input, .spreadsheet-table select {
             background: transparent;
             border: none;
             color: #fff;
@@ -231,7 +231,7 @@
             padding: 2px;
             margin: 0;
         }
-        .spreadsheet-table input:focus { outline: 1px solid #38bdf8; }
+        .spreadsheet-table input:focus, .spreadsheet-table select:focus { outline: 1px solid #38bdf8; }
 
         /* PHOTO GRID */
         .photo-gallery {
@@ -332,18 +332,16 @@
 
         <!-- PANEL 2: ASSETS (DOTS) -->
         <div id="panelAsset" class="panel">
-            <h3>Utility & Fire Assets</h3>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Utility & Fire Assets</h3>
+                <button onclick="openCategoryModal()" style="width: auto; padding: 2px 6px; font-size: 10px; background: #1e293b; color: #38bdf8;">⚙️ Categories</button>
+            </div>
             <div>
                 <label>Asset Name</label>
                 <input type="text" id="newAssetName" value="Fire Hydrant #1">
                 <label>Category</label>
                 <select id="newAssetCategory">
-                    <option value="Fire Safety">Fire Safety</option>
-                    <option value="Electrical">Electrical</option>
-                    <option value="Plumbing">Plumbing</option>
-                    <option value="Safety">Safety</option>
-                    <option value="HVAC">HVAC</option>
-                    <option value="General">General Utility</option>
+                    <!-- Populated dynamically -->
                 </select>
                 <label>Dot Icon (Emoji)</label>
                 <input type="text" id="newAssetEmoji" value="🧯" style="text-align: center; font-size: 16px;">
@@ -357,7 +355,7 @@
         
         <div>
             <p style="font-size: 10px; color: #64748b; margin: 4px 0 0 0;">
-                💡 <b>Tip:</b> Place fire hydrants, water mains, and guard posts in the surrounding negative/extended coordinate areas outside the main building walls (0 to 30 on X, 0 to 14 on Y).
+                💡 <b>Tip:</b> Place fire hydrants, water mains, and guard posts in negative/extended coordinate areas outside main building walls.
             </p>
         </div>
     </div>
@@ -390,12 +388,7 @@
                     <div style="flex: 3;">
                         <label>Asset Category</label>
                         <select id="modalCategory" onchange="saveModalLiveChanges()">
-                            <option value="Fire Safety">Fire Safety</option>
-                            <option value="Electrical">Electrical</option>
-                            <option value="Plumbing">Plumbing</option>
-                            <option value="Safety">Safety</option>
-                            <option value="HVAC">HVAC</option>
-                            <option value="General">General Utility</option>
+                            <!-- Populated dynamically -->
                         </select>
                     </div>
                     <div style="flex: 1;">
@@ -448,6 +441,45 @@
         </div>
     </div>
 
+    <!-- CATEGORY MANAGER MODAL -->
+    <div id="category-modal-overlay">
+        <div class="modal-content" style="width: 500px;">
+            <div class="modal-header">
+                <h3 style="color: #38bdf8; margin: 0;">Manage Asset Categories</h3>
+                <button class="close-modal" onclick="closeCategoryModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <div>
+                    <label>Add New Category</label>
+                    <div style="display: flex; gap: 6px; margin-top: 4px;">
+                        <input type="text" id="newCatName" placeholder="Category Name (e.g. Water Main)" style="flex: 2;">
+                        <input type="color" id="newCatColor" value="#38bdf8" style="flex: 0.5; height: 30px; padding: 0; cursor: pointer;">
+                        <button onclick="addCategory()" style="flex: 1; margin-top: 0;">Add Category</button>
+                    </div>
+                </div>
+
+                <div style="margin-top: 8px;">
+                    <label>Existing Categories & Accent Colors</label>
+                    <table class="spreadsheet-table" style="margin-top: 6px;">
+                        <thead>
+                            <tr>
+                                <th>Category Name</th>
+                                <th style="width: 70px; text-align: center;">Color</th>
+                                <th style="width: 50px; text-align: center;">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="categoryTableBody">
+                            <!-- Populated dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button onclick="closeCategoryModal()" style="width: auto; padding: 6px 12px; background: #38bdf8; color: #0b131d;">Save & Close</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Firebase SDK Imports -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -479,9 +511,17 @@
         let currentTab = 'dept'; 
         let currentLayer = 'ground'; 
 
-        // Elements array storing metadata, categories, emojis, photos[] and spreadsheetData[]
+        // Default categories with custom accent colors
+        let categories = [
+            { name: "Fire Safety", color: "#ef4444" },
+            { name: "Electrical", color: "#f97316" },
+            { name: "Plumbing", color: "#38bdf8" },
+            { name: "Safety", color: "#fbbf24" },
+            { name: "HVAC", color: "#34d399" },
+            { name: "General", color: "#94a3b8" }
+        ];
+
         let elements = [
-            // Fire Hydrants & Site Assets outside the building
             { 
                 id: 101, layer: "ground", name: "North Yard Fire Hydrant #1", type: "asset", category: "Fire Safety", emoji: "🧯", x: 4, y: -3,
                 photos: [], spreadsheetData: [{key: "Flow Rate", value: "1,500 GPM"}, {key: "Inspection", value: "Passed Q2"}]
@@ -498,7 +538,6 @@
                 id: 104, layer: "ground", name: "North Truck Yard & Trailer Parking", type: "yard", x: 2, y: -5, w: 26, h: 4,
                 photos: [], spreadsheetData: [{key: "Stall Count", value: "45 Trailer Docks"}]
             },
-            // Building Interior Elements
             { 
                 id: 1, layer: "ground", name: "MAIN RACKING AREA #1", type: "racking", x: 4, y: 2, w: 4, h: 8,
                 photos: [], spreadsheetData: [{key: "Bay Count", value: "24 Bays"}, {key: "Weight Capacity", value: "3,500 lbs"}]
@@ -544,17 +583,21 @@
             try {
                 const docRef = doc(db, "layouts", "facility_main");
                 const docSnap = await getDoc(docRef);
-                if (docSnap.exists() && docSnap.data().elements) {
-                    elements = docSnap.data().elements;
+                if (docSnap.exists()) {
+                    let data = docSnap.data();
+                    if (data.elements) elements = data.elements;
+                    if (data.categories) categories = data.categories;
                     syncStatus.innerText = "Loaded from Firebase";
                 } else {
                     await saveToFirebase();
                 }
+                populateCategoryDropdowns();
                 render();
             } catch (error) {
                 console.error("Error loading layout:", error);
                 syncStatus.innerText = "Error Loading Database";
                 syncStatus.style.color = "#ef4444";
+                populateCategoryDropdowns();
                 render();
             }
         }
@@ -566,6 +609,7 @@
                 
                 await setDoc(doc(db, "layouts", "facility_main"), {
                     elements: elements,
+                    categories: categories,
                     updatedAt: new Date().toISOString()
                 });
                 
@@ -576,6 +620,126 @@
                 syncStatus.innerText = "Sync Failed";
                 syncStatus.style.color = "#ef4444";
             }
+        }
+
+        function populateCategoryDropdowns(selectedVal1 = null, selectedVal2 = null) {
+            let select1 = document.getElementById("newAssetCategory");
+            let select2 = document.getElementById("modalCategory");
+            
+            let val1 = selectedVal1 || select1.value;
+            let val2 = selectedVal2 || select2.value;
+
+            select1.innerHTML = "";
+            select2.innerHTML = "";
+
+            categories.forEach(cat => {
+                let opt1 = document.createElement("option");
+                opt1.value = cat.name;
+                opt1.textContent = cat.name;
+                select1.appendChild(opt1);
+
+                let opt2 = document.createElement("option");
+                opt2.value = cat.name;
+                opt2.textContent = cat.name;
+                select2.appendChild(opt2);
+            });
+
+            if (val1 && categories.some(c => c.name === val1)) select1.value = val1;
+            if (val2 && categories.some(c => c.name === val2)) select2.value = val2;
+        }
+
+        function getCategoryColor(catName) {
+            let found = categories.find(c => c.name === catName);
+            return found ? found.color : "#38bdf8";
+        }
+
+        window.openCategoryModal = function() {
+            renderCategoryTable();
+            document.getElementById("category-modal-overlay").style.display = "flex";
+        }
+
+        window.closeCategoryModal = function() {
+            document.getElementById("category-modal-overlay").style.display = "none";
+            populateCategoryDropdowns();
+            render();
+            saveToFirebase();
+        }
+
+        function renderCategoryTable() {
+            let tbody = document.getElementById("categoryTableBody");
+            tbody.innerHTML = "";
+
+            categories.forEach((cat, index) => {
+                let tr = document.createElement("tr");
+
+                let tdName = document.createElement("td");
+                let inputName = document.createElement("input");
+                inputName.type = "text";
+                inputName.value = cat.name;
+                inputName.oninput = function() {
+                    cat.name = inputName.value;
+                    populateCategoryDropdowns();
+                };
+                tdName.appendChild(inputName);
+
+                let tdColor = document.createElement("td");
+                tdColor.style.textAlign = "center";
+                let inputColor = document.createElement("input");
+                inputColor.type = "color";
+                inputColor.value = cat.color;
+                inputColor.style.width = "40px";
+                inputColor.style.height = "24px";
+                inputColor.style.padding = "0";
+                inputColor.style.border = "none";
+                inputColor.style.cursor = "pointer";
+                inputColor.oninput = function() {
+                    cat.color = inputColor.value;
+                };
+                tdColor.appendChild(inputColor);
+
+                let tdAction = document.createElement("td");
+                tdAction.style.textAlign = "center";
+                let delBtn = document.createElement("button");
+                delBtn.className = "danger";
+                delBtn.style.padding = "2px 6px";
+                delBtn.style.fontSize = "10px";
+                delBtn.innerText = "X";
+                delBtn.onclick = function() {
+                    if (categories.length <= 1) {
+                        alert("You must keep at least one category.");
+                        return;
+                    }
+                    categories.splice(index, 1);
+                    renderCategoryTable();
+                    populateCategoryDropdowns();
+                };
+                tdAction.appendChild(delBtn);
+
+                tr.appendChild(tdName);
+                tr.appendChild(tdColor);
+                tr.appendChild(tdAction);
+                tbody.appendChild(tr);
+            });
+        }
+
+        window.addCategory = function() {
+            let nameInput = document.getElementById("newCatName");
+            let colorInput = document.getElementById("newCatColor");
+            let name = nameInput.value.trim();
+            
+            if (!name) {
+                alert("Please enter a category name.");
+                return;
+            }
+            if (categories.some(c => c.name.toLowerCase() === name.toLowerCase())) {
+                alert("Category already exists.");
+                return;
+            }
+
+            categories.push({ name: name, color: colorInput.value });
+            nameInput.value = "";
+            renderCategoryTable();
+            populateCategoryDropdowns();
         }
 
         function getRowLabel(r) {
@@ -696,7 +860,7 @@
                 viewport.appendChild(text);
             }
 
-            // 2. Core Building Footprint Walls (0 to buildingCols, 0 to buildingRows)
+            // 2. Core Building Footprint Walls
             let buildingWall = document.createElementNS("http://www.w3.org/2000/svg", "rect");
             buildingWall.setAttribute("x", 0);
             buildingWall.setAttribute("y", 0);
@@ -744,15 +908,16 @@
                 if (el.type === 'asset') {
                     let cx = (el.x * gridSize) + (gridSize / 2);
                     let cy = (el.y * gridSize) + (gridSize / 2);
+                    let catColor = getCategoryColor(el.category);
                     
                     let circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
                     circle.setAttribute("cx", cx);
                     circle.setAttribute("cy", cy);
                     circle.setAttribute("r", 12);
                     circle.setAttribute("class", `item-shape ${el.id === selectedId ? 'selected' : ''}`);
-                    circle.setAttribute("fill", el.category === 'Fire Safety' ? '#7f1d1d' : '#1e293b');
-                    circle.setAttribute("stroke", el.category === 'Fire Safety' ? '#ef4444' : '#f97316');
-                    circle.setAttribute("stroke-width", "2");
+                    circle.setAttribute("fill", "#111b27");
+                    circle.setAttribute("stroke", catColor);
+                    circle.setAttribute("stroke-width", "2.5");
 
                     let emojiText = document.createElementNS("http://www.w3.org/2000/svg", "text");
                     emojiText.setAttribute("x", cx);
@@ -837,7 +1002,6 @@
 
             let coordDisplay = document.getElementById("coord-display");
             let exactCol = localX / gridSize;
-            let colIdx = Math.floor(exactCol);
             let rowIdx = Math.floor(localY / gridSize);
 
             let preciseColNum = (exactCol + 1).toFixed(2);
@@ -935,7 +1099,7 @@
             if (el.type === 'asset') {
                 document.getElementById("modalSizeContainer").style.display = "none";
                 document.getElementById("modalAssetFields").style.display = "flex";
-                document.getElementById("modalCategory").value = el.category || "General";
+                populateCategoryDropdowns(null, el.category);
                 document.getElementById("modalEmoji").value = el.emoji || "📍";
             } else {
                 document.getElementById("modalSizeContainer").style.display = "flex";
@@ -1086,7 +1250,7 @@
         }
 
         window.deleteItemFromModal = function() {
-            let id = parseInt(document.getElementById("modalElementId", value));
+            let id = parseInt(document.getElementById("modalElementId").value);
             if (confirm("Are you sure you want to delete this item?")) {
                 elements = elements.filter(item => item.id !== id);
                 closeModal();
