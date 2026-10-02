@@ -782,14 +782,22 @@
             let localX = (mouseX - viewTransform.x) / viewTransform.scale;
             let localY = (mouseY - viewTransform.y) / viewTransform.scale;
 
-            let colIdx = Math.floor(localX / gridSize);
-            let rowIdx = Math.floor(localY / gridSize);
-
             let coordDisplay = document.getElementById("coord-display");
-            if (colIdx >= 0 && colIdx < cols && rowIdx >= 0 && rowIdx < rows) {
-                let colNum = colIdx + 1;
-                let rowLabel = getRowLabel(rowIdx);
-                coordDisplay.innerHTML = `Grid: <b>Row ${rowLabel}, Col ${colNum}</b>`;
+            if (localX >= 0 && localX <= cols * gridSize && localY >= 0 && localY <= rows * gridSize) {
+                // Calculate precise sub-grid positions with decimals (.XX)
+                let exactCol = localX / gridSize;
+                let colIdx = Math.floor(exactCol);
+                let rowIdx = Math.floor(localY / gridSize);
+
+                if (colIdx < cols && rowIdx < rows) {
+                    let preciseColNum = (exactCol + 1).toFixed(2);
+                    let exactRowProgress = (localY % gridSize) / gridSize;
+                    let rowLabel = getRowLabel(rowIdx);
+                    
+                    coordDisplay.innerHTML = `Grid: <b>Row ${rowLabel}, Col ${preciseColNum}</b>`;
+                } else {
+                    coordDisplay.innerHTML = `Col: -- | Row: --`;
+                }
             } else {
                 coordDisplay.innerHTML = `Col: -- | Row: --`;
             }
