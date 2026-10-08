@@ -303,6 +303,11 @@
                 <button class="layer-btn" id="layerMezzBtn" onclick="switchLayer('mezzanine')">Mezz Floor</button>
                 <button class="layer-btn" id="layerRoofBtn" onclick="switchLayer('roof')">Roof Layer</button>
             </div>
+            <div style="display: flex; gap: 4px; margin-top: 4px;">
+                <button class="layer-btn" id="layerSprinklerBtn" onclick="switchLayer('sprinkler')">Sprinkler Shutoffs</button>
+                <button class="layer-btn" id="layerWaterBtn" onclick="switchLayer('water')">Water Shutoffs</button>
+                <button class="layer-btn" id="layerGasBtn" onclick="switchLayer('gas')">Gas Shutoffs</button>
+            </div>
         </div>
         <div>
             <label>Interaction Mode</label>
@@ -741,6 +746,9 @@
             document.getElementById("layerGroundBtn").classList.toggle("active", layerName === 'ground');
             document.getElementById("layerMezzBtn").classList.toggle("active", layerName === 'mezzanine');
             document.getElementById("layerRoofBtn").classList.toggle("active", layerName === 'roof');
+            document.getElementById("layerSprinklerBtn").classList.toggle("active", layerName === 'sprinkler');
+            document.getElementById("layerWaterBtn").classList.toggle("active", layerName === 'water');
+            document.getElementById("layerGasBtn").classList.toggle("active", layerName === 'gas');
             selectedId = null;
             render();
         }
