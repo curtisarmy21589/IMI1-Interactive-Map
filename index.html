@@ -121,7 +121,6 @@
             stroke: #fbbf24;
             stroke-width: 3;
         }
-
         /* HOVER POPUP BUBBLE STYLES */
         .asset-popup {
             opacity: 0;
@@ -131,7 +130,6 @@
         .item-group:hover .asset-popup {
             opacity: 1;
         }
-
         .grid-line {
             stroke: #132235;
             stroke-width: 1;
@@ -449,7 +447,6 @@
             </div>
         </div>
     </div>
-
     <!-- FULL-SIZE PHOTO LIGHTBOX OVERLAY -->
     <div id="lightbox-overlay" onclick="closeLightbox()">
         <div style="position: relative; max-width: 90vw; max-height: 90vh; display: flex; flex-direction: column; align-items: center;" onclick="event.stopPropagation()">
@@ -458,7 +455,6 @@
             <div id="lightboxCaption" style="margin-top: 8px; color: #38bdf8; font-size: 13px; font-weight: bold;"></div>
         </div>
     </div>
-
     <!-- CATEGORY MANAGER MODAL -->
     <div id="category-modal-overlay">
         <div class="modal-content" style="width: 500px;">
@@ -496,10 +492,26 @@
             </div>
         </div>
     </div>
-    <!-- Firebase SDK Imports -->
+    <!-- Firebase SDK & AWS S3 SDK Imports -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { S3Client, PutObjectCommand, DeleteObjectCommand } from "https://esm.sh/@aws-sdk/client-s3";
+
+        // Cloudflare R2 S3 Configuration
+        const r2Client = new S3Client({
+            region: "auto",
+            endpoint: "https://28bc76feec153204e3819a57fd06bbf2.r2.cloudflarestorage.com",
+            credentials: {
+                accessKeyId: "YOUR_R2_ACCESS_KEY_ID",      // Replace with your R2 Access Key ID
+                secretAccessKey: "YOUR_R2_SECRET_ACCESS_KEY" // Replace with your R2 Secret Access Key
+            }
+        });
+        const r2BucketName = "imi1mapphotostorage";
+        // If you attached a custom public domain to your bucket (e.g., https://images.yourdomain.com), put it here.
+        // Otherwise, leave empty to load directly through the API endpoint path.
+        const r2PublicDomain = ""; 
+
         const firebaseConfig = {
             apiKey: "AIzaSyCrKAut8_5nHWTWtYqZZr5HOENGd8mqZxE",
             authDomain: "imi1-interactive-map-8d929.firebaseapp.com",
@@ -532,7 +544,7 @@
         ];
         let elements = [
             { 
-                id: 101, layer: "ground", name: "North Yard Fire Hydrant #1", type: "asset", category: "Fire Safety", emoji: "🧯", x: 4, y: -3,
+                id: 101, layer: "ground", name: "North Yard Fire Hydrant #1", type: "asset", category: "Fire Safety", emoji: "", x: 4, y: -3,
                 photos: [], spreadsheetData: [{key: "Flow Rate", value: "1,500 GPM"}, {key: "Inspection", value: "Passed Q2"}]
             },
             { 
@@ -889,7 +901,6 @@
                     circle.setAttribute("fill", "#111b27");
                     circle.setAttribute("stroke", catColor);
                     circle.setAttribute("stroke-width", "2");
-
                     let emojiText = document.createElementNS("http://www.w3.org/2000/svg", "text");
                     emojiText.setAttribute("x", cx);
                     emojiText.setAttribute("y", cy + 1);
@@ -898,11 +909,9 @@
                     emojiText.setAttribute("font-size", "9px");
                     emojiText.style.pointerEvents = "none";
                     emojiText.textContent = el.emoji || "📍";
-
                     // HOVER POPUP BUBBLE
                     let popupGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
                     popupGroup.setAttribute("class", "asset-popup");
-
                     let boxWidth = (el.name.length * 6.5) + 12;
                     let popupBg = document.createElementNS("http://www.w3.org/2000/svg", "rect");
                     popupBg.setAttribute("x", cx - (boxWidth / 2));
@@ -914,7 +923,6 @@
                     popupBg.setAttribute("stroke", catColor);
                     popupBg.setAttribute("stroke-width", "1.5");
                     popupBg.setAttribute("filter", "drop-shadow(0px 2px 4px rgba(0,0,0,0.6))");
-
                     let popupText = document.createElementNS("http://www.w3.org/2000/svg", "text");
                     popupText.setAttribute("x", cx);
                     popupText.setAttribute("y", cy - 16);
@@ -923,10 +931,8 @@
                     popupText.setAttribute("font-size", "10px");
                     popupText.setAttribute("font-weight", "bold");
                     popupText.textContent = el.name;
-
                     popupGroup.appendChild(popupBg);
                     popupGroup.appendChild(popupText);
-
                     g.appendChild(circle);
                     g.appendChild(emojiText);
                     g.appendChild(popupGroup);
@@ -1106,22 +1112,41 @@
                 render();
             }
         }
-        // PHOTO UPLOAD & LIGHTBOX HANDLING
-        window.handlePhotoUpload = function(event) {
+        // CLOUDFLARE R2 PHOTO UPLOAD & LIGHTBOX HANDLING
+        window.handlePhotoUpload = async function(event) {
             let id = parseInt(document.getElementById("modalElementId").value);
             let el = elements.find(item => item.id === id);
             if (!el) return;
             if (!el.photos) el.photos = [];
+            
             let files = event.target.files;
             for (let file of files) {
-                let reader = new FileReader();
-                reader.onload = function(e) {
-                    el.photos.push(e.target.result);
+                try {
+                    let fileKey = `photos/${Date.now()}-${file.name.replace(/\s+/g, '_')}`;
+                    
+                    // Upload directly to Cloudflare R2 using S3 API
+                    await r2Client.send(new PutObjectCommand({
+                        Bucket: r2BucketName,
+                        Key: fileKey,
+                        Body: file,
+                        ContentType: file.type
+                    }));
+                    
+                    // Construct final retrieval URL
+                    let fileUrl = r2PublicDomain 
+                        ? `${r2PublicDomain}/${fileKey}` 
+                        : `https://28bc76feec153204e3819a57fd06bbf2.r2.cloudflarestorage.com/${r2BucketName}/${fileKey}`;
+                    
+                    el.photos.push(fileUrl);
                     renderPhotos(el);
                     saveToFirebase();
-                };
-                reader.readAsDataURL(file);
+                } catch (error) {
+                    console.error("R2 Upload Error:", error);
+                    alert("Failed to upload image to Cloudflare R2.");
+                }
             }
+            // Clear file input selection so the same file can be uploaded again if needed
+            event.target.value = "";
         }
         function renderPhotos(el) {
             let gallery = document.getElementById("modalPhotoGallery");
@@ -1140,8 +1165,22 @@
                 delBtn.className = "delete-photo-btn";
                 delBtn.innerHTML = "×";
                 delBtn.title = "Delete photo";
-                delBtn.onclick = (e) => {
+                delBtn.onclick = async (e) => {
                     e.stopPropagation(); // Prevent opening lightbox when clicking delete
+                    try {
+                        // Optional: Extract file key to delete from R2 bucket directly
+                        let urlParts = photoUrl.split(`${r2BucketName}/`);
+                        if (urlParts.length > 1) {
+                            let fileKey = urlParts[1];
+                            await r2Client.send(new DeleteObjectCommand({
+                                Bucket: r2BucketName,
+                                Key: fileKey
+                            }));
+                        }
+                    } catch (err) {
+                        console.error("Error deleting file from R2:", err);
+                    }
+                    
                     el.photos.splice(index, 1);
                     renderPhotos(el);
                     saveToFirebase();
@@ -1153,111 +1192,3 @@
         }
         window.openLightbox = function(url, itemName) {
             document.getElementById("lightboxImage").src = url;
-            document.getElementById("lightboxCaption").innerText = itemName || "Photo Preview";
-            document.getElementById("lightbox-overlay").style.display = "flex";
-        }
-        window.closeLightbox = function() {
-            document.getElementById("lightbox-overlay").style.display = "none";
-        }
-        // SPREADSHEET TABLE HANDLING
-        function renderSpreadsheet(el) {
-            let tbody = document.getElementById("spreadsheetBody");
-            tbody.innerHTML = "";
-            if (!el.spreadsheetData) el.spreadsheetData = [];
-            el.spreadsheetData.forEach((row, index) => {
-                let tr = document.createElement("tr");
-                
-                let tdKey = document.createElement("td");
-                let inputKey = document.createElement("input");
-                inputKey.type = "text";
-                inputKey.value = row.key;
-                inputKey.oninput = function() {
-                    row.key = inputKey.value;
-                    saveToFirebase();
-                };
-                tdKey.appendChild(inputKey);
-                let tdVal = document.createElement("td");
-                let inputVal = document.createElement("input");
-                inputVal.type = "text";
-                inputVal.value = row.value;
-                inputVal.oninput = function() {
-                    row.value = inputVal.value;
-                    saveToFirebase();
-                };
-                tdVal.appendChild(inputVal);
-                let tdAction = document.createElement("td");
-                tdAction.style.textAlign = "center";
-                let delRowBtn = document.createElement("button");
-                delRowBtn.className = "danger";
-                delRowBtn.style.padding = "2px 6px";
-                delRowBtn.style.fontSize = "10px";
-                delRowBtn.innerText = "X";
-                delRowBtn.onclick = function() {
-                    el.spreadsheetData.splice(index, 1);
-                    renderSpreadsheet(el);
-                    saveToFirebase();
-                };
-                tdAction.appendChild(delRowBtn);
-                tr.appendChild(tdKey);
-                tr.appendChild(tdVal);
-                tr.appendChild(tdAction);
-                tbody.appendChild(tr);
-            });
-        }
-        window.addSpreadsheetRow = function() {
-            let id = parseInt(document.getElementById("modalElementId").value);
-            let el = elements.find(item => item.id === id);
-            if (el) {
-                if (!el.spreadsheetData) el.spreadsheetData = [];
-                el.spreadsheetData.push({ key: "New Field", value: "Value" });
-                renderSpreadsheet(el);
-                saveToFirebase();
-            }
-        }
-        window.deleteItemFromModal = function() {
-            let id = parseInt(document.getElementById("modalElementId").value);
-            if (confirm("Are you sure you want to delete this item?")) {
-                elements = elements.filter(item => item.id !== id);
-                closeModal();
-                saveToFirebase();
-            }
-        }
-        // CREATING NEW ITEMS FROM SIDEBAR
-        window.addDepartment = function() {
-            let newEl = {
-                id: Date.now(),
-                layer: currentLayer, 
-                name: document.getElementById("newDeptName").value,
-                type: document.getElementById("newDeptType").value,
-                x: parseFloat(document.getElementById("newDeptX").value) || 0,
-                y: parseFloat(document.getElementById("newDeptY").value) || 0,
-                w: parseFloat(document.getElementById("newDeptW").value) || 5,
-                h: parseFloat(document.getElementById("newDeptH").value) || 5,
-                photos: [],
-                spreadsheetData: [{key: "Status", value: "Active"}]
-            };
-            elements.push(newEl);
-            render();
-            saveToFirebase();
-        }
-        window.addAsset = function() {
-            let newEl = {
-                id: Date.now(),
-                layer: currentLayer, 
-                name: document.getElementById("newAssetName").value,
-                type: "asset",
-                category: document.getElementById("newAssetCategory").value,
-                emoji: document.getElementById("newAssetEmoji").value || "🧯",
-                x: parseFloat(document.getElementById("newAssetX").value) || 0,
-                y: parseFloat(document.getElementById("newAssetY").value) || 0,
-                photos: [],
-                spreadsheetData: [{key: "Asset Type", value: "Safety/Fire Node"}]
-            };
-            elements.push(newEl);
-            render();
-            saveToFirebase();
-        }
-        loadFromFirebase();
-    </script>
-</body>
-</html>
