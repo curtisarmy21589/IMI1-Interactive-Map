@@ -121,7 +121,6 @@
             stroke: #fbbf24;
             stroke-width: 3;
         }
-
         /* HOVER POPUP BUBBLE STYLES */
         .asset-popup {
             opacity: 0;
@@ -131,7 +130,6 @@
         .item-group:hover .asset-popup {
             opacity: 1;
         }
-
         .grid-line {
             stroke: #132235;
             stroke-width: 1;
@@ -171,7 +169,7 @@
             align-items: center;
         }
         #lightbox-overlay {
-            z-index: 2000; /* Stays on top of main modals */
+            z-index: 2000;
         }
         .modal-content {
             background: #111b27;
@@ -418,7 +416,7 @@
                     <div style="flex:1;"><label>Height</label><input type="number" id="modalH" step="0.25" oninput="saveModalLiveChanges()"></div>
                 </div>
                 <div>
-                    <label>Location Photos (Click photo to enlarge)</label>
+                    <label>Location Photos (Click photo to enlarge) <span id="upload-status" style="color: #38bdf8; font-weight: normal;"></span></label>
                     <input type="file" id="photoUploadInput" accept="image/*" multiple onchange="handlePhotoUpload(event)">
                     <div class="photo-gallery" id="modalPhotoGallery">
                         <!-- Uploaded photos render here -->
@@ -449,7 +447,6 @@
             </div>
         </div>
     </div>
-
     <!-- FULL-SIZE PHOTO LIGHTBOX OVERLAY -->
     <div id="lightbox-overlay" onclick="closeLightbox()">
         <div style="position: relative; max-width: 90vw; max-height: 90vh; display: flex; flex-direction: column; align-items: center;" onclick="event.stopPropagation()">
@@ -458,7 +455,6 @@
             <div id="lightboxCaption" style="margin-top: 8px; color: #38bdf8; font-size: 13px; font-weight: bold;"></div>
         </div>
     </div>
-
     <!-- CATEGORY MANAGER MODAL -->
     <div id="category-modal-overlay">
         <div class="modal-content" style="width: 500px;">
@@ -889,7 +885,6 @@
                     circle.setAttribute("fill", "#111b27");
                     circle.setAttribute("stroke", catColor);
                     circle.setAttribute("stroke-width", "2");
-
                     let emojiText = document.createElementNS("http://www.w3.org/2000/svg", "text");
                     emojiText.setAttribute("x", cx);
                     emojiText.setAttribute("y", cy + 1);
@@ -898,11 +893,9 @@
                     emojiText.setAttribute("font-size", "9px");
                     emojiText.style.pointerEvents = "none";
                     emojiText.textContent = el.emoji || "📍";
-
                     // HOVER POPUP BUBBLE
                     let popupGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
                     popupGroup.setAttribute("class", "asset-popup");
-
                     let boxWidth = (el.name.length * 6.5) + 12;
                     let popupBg = document.createElementNS("http://www.w3.org/2000/svg", "rect");
                     popupBg.setAttribute("x", cx - (boxWidth / 2));
@@ -914,7 +907,6 @@
                     popupBg.setAttribute("stroke", catColor);
                     popupBg.setAttribute("stroke-width", "1.5");
                     popupBg.setAttribute("filter", "drop-shadow(0px 2px 4px rgba(0,0,0,0.6))");
-
                     let popupText = document.createElementNS("http://www.w3.org/2000/svg", "text");
                     popupText.setAttribute("x", cx);
                     popupText.setAttribute("y", cy - 16);
@@ -923,10 +915,8 @@
                     popupText.setAttribute("font-size", "10px");
                     popupText.setAttribute("font-weight", "bold");
                     popupText.textContent = el.name;
-
                     popupGroup.appendChild(popupBg);
                     popupGroup.appendChild(popupText);
-
                     g.appendChild(circle);
                     g.appendChild(emojiText);
                     g.appendChild(popupGroup);
@@ -1106,22 +1096,50 @@
                 render();
             }
         }
-        // PHOTO UPLOAD & LIGHTBOX HANDLING
-        window.handlePhotoUpload = function(event) {
+        // CLOUDFLARE R2 PHOTO UPLOAD & LIGHTBOX HANDLING
+        window.handlePhotoUpload = async function(event) {
             let id = parseInt(document.getElementById("modalElementId").value);
             let el = elements.find(item => item.id === id);
             if (!el) return;
             if (!el.photos) el.photos = [];
+            
             let files = event.target.files;
+            let statusSpan = document.getElementById("upload-status");
+            
             for (let file of files) {
-                let reader = new FileReader();
-                reader.onload = function(e) {
-                    el.photos.push(e.target.result);
-                    renderPhotos(el);
-                    saveToFirebase();
-                };
-                reader.readAsDataURL(file);
+                try {
+                    statusSpan.innerText = `(Uploading ${file.name} to R2...)`;
+                    let formData = new FormData();
+                    formData.append("file", file);
+                    
+                    let response = await fetch("https://imi1-map-uploader.curtisarmy21589.workers.dev", {
+                        method: "POST",
+                        body: formData
+                    });
+                    
+                    if (!response.ok) throw new Error("Upload failed");
+                    
+                    let result = await response.json();
+                    let photoUrl = result.url || result.fileUrl || (typeof result === 'string' ? result : null);
+                    
+                    if (!photoUrl) {
+                        // Fallback if response is plain text
+                        let textRes = await response.text();
+                        photoUrl = textRes;
+                    }
+                    
+                    if (photoUrl) {
+                        el.photos.push(photoUrl);
+                        renderPhotos(el);
+                        saveToFirebase();
+                    }
+                } catch (error) {
+                    console.error("Error uploading to Cloudflare R2:", error);
+                    alert("Failed to upload photo to Cloudflare R2.");
+                }
             }
+            statusSpan.innerText = "";
+            event.target.value = ""; // Reset file input
         }
         function renderPhotos(el) {
             let gallery = document.getElementById("modalPhotoGallery");
