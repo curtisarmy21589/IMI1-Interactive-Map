@@ -497,8 +497,6 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-        const r2BaseEndpoint = "https://28bc76feec153204e3819a57fd06bbf2.r2.cloudflarestorage.com/imi1mapphotostorage";
-
         const firebaseConfig = {
             apiKey: "AIzaSyCrKAut8_5nHWTWtYqZZr5HOENGd8mqZxE",
             authDomain: "imi1-interactive-map-8d929.firebaseapp.com",
@@ -1099,8 +1097,8 @@
                 render();
             }
         }
-        // CLOUDFLARE R2 DIRECT PHOTO UPLOAD & LIGHTBOX HANDLING
-        window.handlePhotoUpload = async function(event) {
+        // PHOTO UPLOAD & FIREBASE BACKUP
+        window.handlePhotoUpload = function(event) {
             let id = parseInt(document.getElementById("modalElementId").value);
             let el = elements.find(item => item.id === id);
             if (!el) return;
@@ -1108,33 +1106,15 @@
             
             let files = event.target.files;
             for (let file of files) {
-                let fileName = `photos/${Date.now()}-${file.name.replace(/\s+/g, '_')}`;
-                let uploadUrl = `${r2BaseEndpoint}/${fileName}`;
-
-                try {
-                    // Upload directly to Cloudflare R2 API storage endpoint via PUT request
-                    let response = await fetch(uploadUrl, {
-                        method: "PUT",
-                        headers: {
-                            "Content-Type": file.type || "application/octet-stream"
-                        },
-                        body: file
-                    });
-
-                    if (response.ok) {
-                        el.photos.push(uploadUrl);
-                        renderPhotos(el);
-                        saveToFirebase();
-                    } else {
-                        console.error("R2 Upload Failed:", response.statusText);
-                        alert("Failed to upload photo to Cloudflare R2 storage.");
-                    }
-                } catch (error) {
-                    console.error("Network error uploading to R2:", error);
-                    alert("Network error while connecting to Cloudflare R2.");
-                }
+                let reader = new FileReader();
+                reader.onload = function(e) {
+                    el.photos.push(e.target.result);
+                    renderPhotos(el);
+                    saveToFirebase();
+                };
+                reader.readAsDataURL(file);
             }
-            event.target.value = ""; // Reset input
+            event.target.value = "";
         }
 
         function renderPhotos(el) {
@@ -1154,13 +1134,8 @@
                 delBtn.className = "delete-photo-btn";
                 delBtn.innerHTML = "×";
                 delBtn.title = "Delete photo";
-                delBtn.onclick = async (e) => {
+                delBtn.onclick = (e) => {
                     e.stopPropagation(); // Prevent opening lightbox when clicking delete
-                    try {
-                        await fetch(photoUrl, { method: "DELETE" });
-                    } catch (err) {
-                        console.error("Error deleting file from R2:", err);
-                    }
                     el.photos.splice(index, 1);
                     renderPhotos(el);
                     saveToFirebase();
@@ -1262,21 +1237,4 @@
         window.addAsset = function() {
             let newEl = {
                 id: Date.now(),
-                layer: currentLayer, 
-                name: document.getElementById("newAssetName").value,
-                type: "asset",
-                category: document.getElementById("newAssetCategory").value,
-                emoji: document.getElementById("newAssetEmoji").value || "🧯",
-                x: parseFloat(document.getElementById("newAssetX").value) || 0,
-                y: parseFloat(document.getElementById("newAssetY").value) || 0,
-                photos: [],
-                spreadsheetData: [{key: "Asset Type", value: "Safety/Fire Node"}]
-            };
-            elements.push(newEl);
-            render();
-            saveToFirebase();
-        }
-        loadFromFirebase();
-    </script>
-</body>
-</html>
+                layer
