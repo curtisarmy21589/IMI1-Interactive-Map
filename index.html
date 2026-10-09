@@ -292,7 +292,7 @@
         <h2>Site & Layout Builder</h2>
         
         <div id="coord-display">Col: -- | Row: --</div>
-        <div id="sync-status">Connected to Firebase</div>
+        <div id="sync-status">Local Active Mode</div>
         <!-- LAYER SELECTION MENU -->
         <div>
             <label>Active View Layer</label>
@@ -492,25 +492,9 @@
             </div>
         </div>
     </div>
-    <!-- Firebase SDK Imports -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-        const firebaseConfig = {
-            apiKey: "AIzaSyCrKAut8_5nHWTWtYqZZr5HOENGd8mqZxE",
-            authDomain: "imi1-interactive-map-8d929.firebaseapp.com",
-            projectId: "imi1-interactive-map-8d929",
-            storageBucket: "imi1-interactive-map-8d929.firebasestorage.app",
-            messagingSenderId: "613133090515",
-            appId: "1:613133090515:web:f8f9be365f484a3a5c5e26",
-            measurementId: "G-4QR2RSSTN1"
-        };
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-        
-        // Cloudflare Worker Uploader Endpoint
-        const workerUploadUrl = "https://imi1-map-uploader.curtisarmy21589.workers.dev";
 
+    <!-- Application Script (Fully Responsive Local State Engine) -->
+    <script>
         const gridSize = 25;
         const minCol = -8;
         const maxCol = 38;
@@ -521,6 +505,7 @@
         let currentMode = 'edit'; 
         let currentTab = 'dept'; 
         let currentLayer = 'ground'; 
+
         // Default categories with custom accent colors
         let categories = [
             { name: "Fire Safety", color: "#ef4444" },
@@ -530,6 +515,7 @@
             { name: "HVAC", color: "#34d399" },
             { name: "General", color: "#94a3b8" }
         ];
+
         let elements = [
             { 
                 id: 101, layer: "ground", name: "North Yard Fire Hydrant #1", type: "asset", category: "Fire Safety", emoji: "", x: 4, y: -3,
@@ -576,6 +562,7 @@
                 photos: [], spreadsheetData: [{key: "Unit Model", value: "ICP CA5524VKD3"}]
             }
         ];
+
         let selectedId = null;
         let isDraggingElement = false;
         let isPanning = false;
@@ -585,51 +572,17 @@
         const svg = document.getElementById("layoutSvg");
         const viewport = document.getElementById("viewport");
         const syncStatus = document.getElementById("sync-status");
-        
-        async function loadFromFirebase() {
-            try {
-                const docRef = doc(db, "layouts", "facility_main");
-                const docSnap = await getDoc(docRef);
-                if (docSnap.exists()) {
-                    let data = docSnap.data();
-                    if (data.elements && data.elements.length > 0) elements = data.elements;
-                    if (data.categories && data.categories.length > 0) categories = data.categories;
-                    syncStatus.innerText = "Loaded from Firebase";
-                } else {
-                    await saveToFirebase();
-                }
-                populateCategoryDropdowns();
-                render();
-            } catch (error) {
-                console.error("Error loading layout:", error);
-                syncStatus.innerText = "Loaded Local Defaults";
-                syncStatus.style.color = "#fbbf24";
-                populateCategoryDropdowns();
-                render();
-            }
+
+        // Load local state immediately so map never hangs
+        function initApp() {
+            populateCategoryDropdowns();
+            render();
         }
-        async function saveToFirebase() {
-            try {
-                syncStatus.innerText = "Saving...";
-                syncStatus.style.color = "#fbbf24";
-                
-                await setDoc(doc(db, "layouts", "facility_main"), {
-                    elements: elements,
-                    categories: categories,
-                    updatedAt: new Date().toISOString()
-                });
-                
-                syncStatus.innerText = "Synced to Firebase";
-                syncStatus.style.color = "#10b981";
-            } catch (error) {
-                console.error("Error saving layout:", error);
-                syncStatus.innerText = "Sync Failed";
-                syncStatus.style.color = "#ef4444";
-            }
-        }
+
         function populateCategoryDropdowns(selectedVal1 = null, selectedVal2 = null) {
             let select1 = document.getElementById("newAssetCategory");
             let select2 = document.getElementById("modalCategory");
+            if (!select1 || !select2) return;
             
             let val1 = selectedVal1 || select1.value;
             let val2 = selectedVal2 || select2.value;
@@ -648,20 +601,23 @@
             if (val1 && categories.some(c => c.name === val1)) select1.value = val1;
             if (val2 && categories.some(c => c.name === val2)) select2.value = val2;
         }
+
         function getCategoryColor(catName) {
             let found = categories.find(c => c.name === catName);
             return found ? found.color : "#38bdf8";
         }
+
         window.openCategoryModal = function() {
             renderCategoryTable();
             document.getElementById("category-modal-overlay").style.display = "flex";
         }
+
         window.closeCategoryModal = function() {
             document.getElementById("category-modal-overlay").style.display = "none";
             populateCategoryDropdowns();
             render();
-            saveToFirebase();
         }
+
         function renderCategoryTable() {
             let tbody = document.getElementById("categoryTableBody");
             tbody.innerHTML = "";
@@ -713,6 +669,7 @@
                 tbody.appendChild(tr);
             });
         }
+
         window.addCategory = function() {
             let nameInput = document.getElementById("newCatName");
             let colorInput = document.getElementById("newCatColor");
@@ -731,6 +688,7 @@
             renderCategoryTable();
             populateCategoryDropdowns();
         }
+
         function getRowLabel(r) {
             if (r === buildingRows - 2) return "M.9"; 
             let index = r;
@@ -742,6 +700,7 @@
             }
             return String.fromCharCode(65 + index); 
         }
+
         window.switchLayer = function(layerName) {
             currentLayer = layerName;
             document.getElementById("layerGroundBtn").classList.toggle("active", layerName === 'ground');
@@ -753,6 +712,7 @@
             selectedId = null;
             render();
         }
+
         window.setMode = function(mode) {
             currentMode = mode;
             document.getElementById("modeEditBtn").classList.toggle("active", mode === 'edit');
@@ -761,6 +721,7 @@
             selectedId = null;
             render();
         }
+
         window.switchTab = function(tab) {
             currentTab = tab;
             document.getElementById("tabDeptBtn").classList.toggle("active", tab === 'dept');
@@ -768,12 +729,15 @@
             document.getElementById("panelDept").classList.toggle("active", tab === 'dept');
             document.getElementById("panelAsset").classList.toggle("active", tab === 'asset');
         }
+
         function updateTransformString() {
             viewport.setAttribute("transform", `translate(${viewTransform.x}, ${viewTransform.y}) scale(${viewTransform.scale})`);
         }
+
         function render() {
             viewport.innerHTML = "";
             updateTransformString();
+            
             // 0. Extended Site Background
             let siteBackground = document.createElementNS("http://www.w3.org/2000/svg", "g");
             siteBackground.setAttribute("id", "site-surroundings");
@@ -795,6 +759,7 @@
             siteLabel.textContent = "▼ 6500 W MT HOPE HWY — SURROUNDING SITE EARTHWORK & FIRE HYDRANT PERIMETER";
             siteBackground.appendChild(siteLabel);
             viewport.appendChild(siteBackground);
+
             // 1. Extended Grid Lines & Labels
             for (let c = minCol; c <= maxCol; c++) {
                 let line = document.createElementNS("http://www.w3.org/2000/svg", "line");
@@ -838,6 +803,7 @@
                 text.textContent = getRowLabel(r);
                 viewport.appendChild(text);
             }
+
             // 2. Core Building Footprint Walls
             let buildingWall = document.createElementNS("http://www.w3.org/2000/svg", "rect");
             buildingWall.setAttribute("x", 0);
@@ -849,6 +815,7 @@
             buildingWall.setAttribute("stroke", "#38bdf8");
             buildingWall.setAttribute("stroke-width", "2");
             viewport.appendChild(buildingWall);
+            
             let layerTitleName = currentLayer.toUpperCase();
             let topLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
             topLabel.setAttribute("x", 0.5 * gridSize);
@@ -858,6 +825,7 @@
             topLabel.setAttribute("font-weight", "bold");
             topLabel.textContent = `BUILDING SOUTH WALL (${layerTitleName} LAYER) ▲`;
             viewport.appendChild(topLabel);
+            
             let bottomLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
             bottomLabel.setAttribute("x", 0.5 * gridSize);
             bottomLabel.setAttribute("y", (buildingRows * gridSize) + 18);
@@ -866,6 +834,7 @@
             bottomLabel.setAttribute("font-weight", "bold");
             bottomLabel.textContent = `BUILDING NORTH WALL ▼`;
             viewport.appendChild(bottomLabel);
+
             // 3. Render Elements
             let visibleElements = elements.filter(el => (el.layer || 'ground') === currentLayer);
             visibleElements.forEach(el => {
@@ -890,6 +859,7 @@
                     circle.setAttribute("fill", "#111b27");
                     circle.setAttribute("stroke", catColor);
                     circle.setAttribute("stroke-width", "2");
+                    
                     let emojiText = document.createElementNS("http://www.w3.org/2000/svg", "text");
                     emojiText.setAttribute("x", cx);
                     emojiText.setAttribute("y", cy + 1);
@@ -898,6 +868,7 @@
                     emojiText.setAttribute("font-size", "9px");
                     emojiText.style.pointerEvents = "none";
                     emojiText.textContent = el.emoji || "📍";
+                    
                     // HOVER POPUP BUBBLE
                     let popupGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
                     popupGroup.setAttribute("class", "asset-popup");
@@ -912,6 +883,7 @@
                     popupBg.setAttribute("stroke", catColor);
                     popupBg.setAttribute("stroke-width", "1.5");
                     popupBg.setAttribute("filter", "drop-shadow(0px 2px 4px rgba(0,0,0,0.6))");
+                    
                     let popupText = document.createElementNS("http://www.w3.org/2000/svg", "text");
                     popupText.setAttribute("x", cx);
                     popupText.setAttribute("y", cy - 16);
@@ -920,6 +892,7 @@
                     popupText.setAttribute("font-size", "10px");
                     popupText.setAttribute("font-weight", "bold");
                     popupText.textContent = el.name;
+                    
                     popupGroup.appendChild(popupBg);
                     popupGroup.appendChild(popupText);
                     g.appendChild(circle);
@@ -950,6 +923,7 @@
                         rect.setAttribute("stroke", "#38bdf8");
                     }
                     rect.setAttribute("stroke-width", "1");
+                    
                     let text = document.createElementNS("http://www.w3.org/2000/svg", "text");
                     text.setAttribute("x", (el.x * gridSize) + 6);
                     text.setAttribute("y", (el.y * gridSize) + 16);
@@ -970,6 +944,7 @@
                 viewport.appendChild(g);
             });
         }
+
         container.addEventListener("mousemove", (e) => {
             let rect = container.getBoundingClientRect();
             let mouseX = e.clientX - rect.left;
@@ -989,6 +964,7 @@
                 render();
             }
         });
+
         container.addEventListener("wheel", (e) => {
             e.preventDefault();
             let zoomIntensity = 0.1;
@@ -1006,6 +982,7 @@
             viewTransform.y = mouseY - (mouseY - viewTransform.y) * (viewTransform.scale / oldScale);
             render();
         }, { passive: false });
+
         container.addEventListener("mousedown", (e) => {
             if (currentMode === 'pan') {
                 isPanning = true;
@@ -1016,12 +993,14 @@
                 render();
             }
         });
+
         window.addEventListener("mouseup", () => {
             if (isPanning) {
                 isPanning = false;
                 container.classList.remove("panning");
             }
         });
+
         function startDragElement(e, el) {
             selectedId = el.id;
             isDraggingElement = true;
@@ -1030,6 +1009,7 @@
             let startY = e.clientY;
             let origX = el.x;
             let origY = el.y;
+            
             function onMouseMove(e) {
                 if (!isDraggingElement) return;
                 let dx = (e.clientX - startX) / viewTransform.scale;
@@ -1037,19 +1017,20 @@
                 
                 el.x = parseFloat((origX + (dx / gridSize)).toFixed(2));
                 el.y = parseFloat((origY + (dy / gridSize)).toFixed(2));
-                
                 render();
             }
+            
             function onMouseUp() {
                 isDraggingElement = false;
                 window.removeEventListener("mousemove", onMouseMove);
                 window.removeEventListener("mouseup", onMouseUp);
-                saveToFirebase(); 
             }
+            
             window.addEventListener("mousemove", onMouseMove);
             window.addEventListener("mouseup", onMouseUp);
             render();
         }
+
         // MODAL MANAGEMENT FUNCTIONS
         function openModal(el) {
             selectedId = el.id;
@@ -1075,12 +1056,13 @@
             document.getElementById("modal-overlay").style.display = "flex";
             render();
         }
+
         window.closeModal = function() {
             document.getElementById("modal-overlay").style.display = "none";
             selectedId = null;
             render();
-            saveToFirebase();
         }
+
         window.saveModalLiveChanges = function() {
             let id = parseInt(document.getElementById("modalElementId").value);
             let el = elements.find(item => item.id === id);
@@ -1092,197 +1074,4 @@
                 if (el.type === 'asset') {
                     el.category = document.getElementById("modalCategory").value;
                     el.emoji = document.getElementById("modalEmoji").value || "📍";
-                } else {
-                    el.w = parseFloat(document.getElementById("modalW").value) || 1;
-                    el.h = parseFloat(document.getElementById("modalH").value) || 1;
-                }
-                
-                document.getElementById("modalTitle").innerText = `Edit: ${el.name}`;
-                render();
-            }
-        }
-        
-        // CLOUDFLARE R2 WORKER PHOTO UPLOAD & HANDLING
-        window.handlePhotoUpload = async function(event) {
-            let id = parseInt(document.getElementById("modalElementId").value);
-            let el = elements.find(item => item.id === id);
-            if (!el) return;
-            if (!el.photos) el.photos = [];
-            
-            let files = event.target.files;
-            for (let file of files) {
-                let fileName = `photos/${Date.now()}-${file.name.replace(/\s+/g, '_')}`;
-                let targetUrl = `${workerUploadUrl}/${fileName}`;
-
-                try {
-                    let response = await fetch(targetUrl, {
-                        method: "PUT",
-                        headers: {
-                            "Content-Type": file.type || "application/octet-stream"
-                        },
-                        body: file
-                    });
-
-                    let data = await response.json();
-                    if (response.ok && data.success) {
-                        let photoUrl = `${workerUploadUrl}/${fileName}`;
-                        el.photos.push(photoUrl);
-                        renderPhotos(el);
-                        saveToFirebase();
-                    } else {
-                        alert("Failed to upload photo to Cloudflare R2.");
-                    }
-                } catch (error) {
-                    console.error("Upload error:", error);
-                    alert("Network error while uploading photo.");
-                }
-            }
-            event.target.value = "";
-        }
-
-        function renderPhotos(el) {
-            let gallery = document.getElementById("modalPhotoGallery");
-            gallery.innerHTML = "";
-            if (!el.photos) el.photos = [];
-            el.photos.forEach((photoUrl, index) => {
-                let containerDiv = document.createElement("div");
-                containerDiv.className = "photo-thumb-container";
-                containerDiv.title = "Click to enlarge photo";
-                containerDiv.onclick = () => openLightbox(photoUrl, el.name);
-                
-                let img = document.createElement("img");
-                img.src = photoUrl;
-                
-                let delBtn = document.createElement("button");
-                delBtn.className = "delete-photo-btn";
-                delBtn.innerHTML = "×";
-                delBtn.title = "Delete photo";
-                delBtn.onclick = async (e) => {
-                    e.stopPropagation();
-                    if (confirm("Delete this photo?")) {
-                        try {
-                            await fetch(photoUrl, { method: "DELETE" });
-                        } catch (err) {
-                            console.error("Error deleting from R2:", err);
-                        }
-                        el.photos.splice(index, 1);
-                        renderPhotos(el);
-                        saveToFirebase();
-                    }
-                };
-                containerDiv.appendChild(img);
-                containerDiv.appendChild(delBtn);
-                gallery.appendChild(containerDiv);
-            });
-        }
-
-        window.openLightbox = function(url, itemName) {
-            document.getElementById("lightboxImage").src = url;
-            document.getElementById("lightboxCaption").innerText = itemName || "Photo Preview";
-            document.getElementById("lightbox-overlay").style.display = "flex";
-        }
-        window.closeLightbox = function() {
-            document.getElementById("lightbox-overlay").style.display = "none";
-        }
-        // SPREADSHEET TABLE HANDLING
-        function renderSpreadsheet(el) {
-            let tbody = document.getElementById("spreadsheetBody");
-            tbody.innerHTML = "";
-            if (!el.spreadsheetData) el.spreadsheetData = [];
-            el.spreadsheetData.forEach((row, index) => {
-                let tr = document.createElement("tr");
-                
-                let tdKey = document.createElement("td");
-                let inputKey = document.createElement("input");
-                inputKey.type = "text";
-                inputKey.value = row.key;
-                inputKey.oninput = function() {
-                    row.key = inputKey.value;
-                    saveToFirebase();
-                };
-                tdKey.appendChild(inputKey);
-                let tdVal = document.createElement("td");
-                let inputVal = document.createElement("input");
-                inputVal.type = "text";
-                inputVal.value = row.value;
-                inputVal.oninput = function() {
-                    row.value = inputVal.value;
-                    saveToFirebase();
-                };
-                tdVal.appendChild(inputVal);
-                let tdAction = document.createElement("td");
-                tdAction.style.textAlign = "center";
-                let delRowBtn = document.createElement("button");
-                delRowBtn.className = "danger";
-                delRowBtn.style.padding = "2px 6px";
-                delRowBtn.style.fontSize = "10px";
-                delRowBtn.innerText = "X";
-                delRowBtn.onclick = function() {
-                    el.spreadsheetData.splice(index, 1);
-                    renderSpreadsheet(el);
-                    saveToFirebase();
-                };
-                tdAction.appendChild(delRowBtn);
-                tr.appendChild(tdKey);
-                tr.appendChild(tdVal);
-                tr.appendChild(tdAction);
-                tbody.appendChild(tr);
-            });
-        }
-        window.addSpreadsheetRow = function() {
-            let id = parseInt(document.getElementById("modalElementId").value);
-            let el = elements.find(item => item.id === id);
-            if (el) {
-                if (!el.spreadsheetData) el.spreadsheetData = [];
-                el.spreadsheetData.push({ key: "New Field", value: "Value" });
-                renderSpreadsheet(el);
-                saveToFirebase();
-            }
-        }
-        window.deleteItemFromModal = function() {
-            let id = parseInt(document.getElementById("modalElementId").value);
-            if (confirm("Are you sure you want to delete this item?")) {
-                elements = elements.filter(item => item.id !== id);
-                closeModal();
-                saveToFirebase();
-            }
-        }
-        // CREATING NEW ITEMS FROM SIDEBAR
-        window.addDepartment = function() {
-            let newEl = {
-                id: Date.now(),
-                layer: currentLayer, 
-                name: document.getElementById("newDeptName").value,
-                type: document.getElementById("newDeptType").value,
-                x: parseFloat(document.getElementById("newDeptX").value) || 0,
-                y: parseFloat(document.getElementById("newDeptY").value) || 0,
-                w: parseFloat(document.getElementById("newDeptW").value) || 5,
-                h: parseFloat(document.getElementById("newDeptH").value) || 5,
-                photos: [],
-                spreadsheetData: [{key: "Status", value: "Active"}]
-            };
-            elements.push(newEl);
-            render();
-            saveToFirebase();
-        }
-        window.addAsset = function() {
-            let newEl = {
-                id: Date.now(),
-                layer: currentLayer, 
-                name: document.getElementById("newAssetName").value,
-                type: "asset",
-                category: document.getElementById("newAssetCategory").value,
-                emoji: document.getElementById("newAssetEmoji").value || "🧯",
-                x: parseFloat(document.getElementById("newAssetX").value) || 0,
-                y: parseFloat(document.getElementById("newAssetY").value) || 0,
-                photos: [],
-                spreadsheetData: [{key: "Asset Type", value: "Safety/Fire Node"}]
-            };
-            elements.push(newEl);
-            render();
-            saveToFirebase();
-        }
-        loadFromFirebase();
-    </script>
-</body>
-</html>
+                } else
