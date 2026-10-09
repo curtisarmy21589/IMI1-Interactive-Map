@@ -169,7 +169,7 @@
             align-items: center;
         }
         #lightbox-overlay {
-            z-index: 2000; /* Stays on top of main modals */
+            z-index: 2000;
         }
         .modal-content {
             background: #111b27;
@@ -585,14 +585,15 @@
         const svg = document.getElementById("layoutSvg");
         const viewport = document.getElementById("viewport");
         const syncStatus = document.getElementById("sync-status");
+        
         async function loadFromFirebase() {
             try {
                 const docRef = doc(db, "layouts", "facility_main");
                 const docSnap = await getDoc(docRef);
                 if (docSnap.exists()) {
                     let data = docSnap.data();
-                    if (data.elements) elements = data.elements;
-                    if (data.categories) categories = data.categories;
+                    if (data.elements && data.elements.length > 0) elements = data.elements;
+                    if (data.categories && data.categories.length > 0) categories = data.categories;
                     syncStatus.innerText = "Loaded from Firebase";
                 } else {
                     await saveToFirebase();
@@ -601,8 +602,8 @@
                 render();
             } catch (error) {
                 console.error("Error loading layout:", error);
-                syncStatus.innerText = "Error Loading Database";
-                syncStatus.style.color = "#ef4444";
+                syncStatus.innerText = "Loaded Local Defaults";
+                syncStatus.style.color = "#fbbf24";
                 populateCategoryDropdowns();
                 render();
             }
@@ -1127,7 +1128,7 @@
                         let photoUrl = `${workerUploadUrl}/${fileName}`;
                         el.photos.push(photoUrl);
                         renderPhotos(el);
-                        saveToFirebase(); // Firebase keeps your layout and database sync protected
+                        saveToFirebase();
                     } else {
                         alert("Failed to upload photo to Cloudflare R2.");
                     }
@@ -1149,4 +1150,139 @@
                 containerDiv.title = "Click to enlarge photo";
                 containerDiv.onclick = () => openLightbox(photoUrl, el.name);
                 
-                let
+                let img = document.createElement("img");
+                img.src = photoUrl;
+                
+                let delBtn = document.createElement("button");
+                delBtn.className = "delete-photo-btn";
+                delBtn.innerHTML = "×";
+                delBtn.title = "Delete photo";
+                delBtn.onclick = async (e) => {
+                    e.stopPropagation();
+                    if (confirm("Delete this photo?")) {
+                        try {
+                            await fetch(photoUrl, { method: "DELETE" });
+                        } catch (err) {
+                            console.error("Error deleting from R2:", err);
+                        }
+                        el.photos.splice(index, 1);
+                        renderPhotos(el);
+                        saveToFirebase();
+                    }
+                };
+                containerDiv.appendChild(img);
+                containerDiv.appendChild(delBtn);
+                gallery.appendChild(containerDiv);
+            });
+        }
+
+        window.openLightbox = function(url, itemName) {
+            document.getElementById("lightboxImage").src = url;
+            document.getElementById("lightboxCaption").innerText = itemName || "Photo Preview";
+            document.getElementById("lightbox-overlay").style.display = "flex";
+        }
+        window.closeLightbox = function() {
+            document.getElementById("lightbox-overlay").style.display = "none";
+        }
+        // SPREADSHEET TABLE HANDLING
+        function renderSpreadsheet(el) {
+            let tbody = document.getElementById("spreadsheetBody");
+            tbody.innerHTML = "";
+            if (!el.spreadsheetData) el.spreadsheetData = [];
+            el.spreadsheetData.forEach((row, index) => {
+                let tr = document.createElement("tr");
+                
+                let tdKey = document.createElement("td");
+                let inputKey = document.createElement("input");
+                inputKey.type = "text";
+                inputKey.value = row.key;
+                inputKey.oninput = function() {
+                    row.key = inputKey.value;
+                    saveToFirebase();
+                };
+                tdKey.appendChild(inputKey);
+                let tdVal = document.createElement("td");
+                let inputVal = document.createElement("input");
+                inputVal.type = "text";
+                inputVal.value = row.value;
+                inputVal.oninput = function() {
+                    row.value = inputVal.value;
+                    saveToFirebase();
+                };
+                tdVal.appendChild(inputVal);
+                let tdAction = document.createElement("td");
+                tdAction.style.textAlign = "center";
+                let delRowBtn = document.createElement("button");
+                delRowBtn.className = "danger";
+                delRowBtn.style.padding = "2px 6px";
+                delRowBtn.style.fontSize = "10px";
+                delRowBtn.innerText = "X";
+                delRowBtn.onclick = function() {
+                    el.spreadsheetData.splice(index, 1);
+                    renderSpreadsheet(el);
+                    saveToFirebase();
+                };
+                tdAction.appendChild(delRowBtn);
+                tr.appendChild(tdKey);
+                tr.appendChild(tdVal);
+                tr.appendChild(tdAction);
+                tbody.appendChild(tr);
+            });
+        }
+        window.addSpreadsheetRow = function() {
+            let id = parseInt(document.getElementById("modalElementId").value);
+            let el = elements.find(item => item.id === id);
+            if (el) {
+                if (!el.spreadsheetData) el.spreadsheetData = [];
+                el.spreadsheetData.push({ key: "New Field", value: "Value" });
+                renderSpreadsheet(el);
+                saveToFirebase();
+            }
+        }
+        window.deleteItemFromModal = function() {
+            let id = parseInt(document.getElementById("modalElementId").value);
+            if (confirm("Are you sure you want to delete this item?")) {
+                elements = elements.filter(item => item.id !== id);
+                closeModal();
+                saveToFirebase();
+            }
+        }
+        // CREATING NEW ITEMS FROM SIDEBAR
+        window.addDepartment = function() {
+            let newEl = {
+                id: Date.now(),
+                layer: currentLayer, 
+                name: document.getElementById("newDeptName").value,
+                type: document.getElementById("newDeptType").value,
+                x: parseFloat(document.getElementById("newDeptX").value) || 0,
+                y: parseFloat(document.getElementById("newDeptY").value) || 0,
+                w: parseFloat(document.getElementById("newDeptW").value) || 5,
+                h: parseFloat(document.getElementById("newDeptH").value) || 5,
+                photos: [],
+                spreadsheetData: [{key: "Status", value: "Active"}]
+            };
+            elements.push(newEl);
+            render();
+            saveToFirebase();
+        }
+        window.addAsset = function() {
+            let newEl = {
+                id: Date.now(),
+                layer: currentLayer, 
+                name: document.getElementById("newAssetName").value,
+                type: "asset",
+                category: document.getElementById("newAssetCategory").value,
+                emoji: document.getElementById("newAssetEmoji").value || "🧯",
+                x: parseFloat(document.getElementById("newAssetX").value) || 0,
+                y: parseFloat(document.getElementById("newAssetY").value) || 0,
+                photos: [],
+                spreadsheetData: [{key: "Asset Type", value: "Safety/Fire Node"}]
+            };
+            elements.push(newEl);
+            render();
+            saveToFirebase();
+        }
+        loadFromFirebase();
+    </script>
+</body>
+</html>
