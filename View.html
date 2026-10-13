@@ -260,7 +260,7 @@
 
         <div>
             <p style="font-size: 10px; color: #64748b; margin: 10px 0 0 0;">
-                💡 <b>Tip:</b> Click any asset or zone on the map to inspect its info, custom parameters, and photos[cite: 2]. Use your mouse to pan and zoom.
+                💡 <b>Tip:</b> Click any asset or zone on the map to inspect its info, custom parameters, and photos. Use your mouse to pan and zoom.
             </p>
         </div>
     </div>
@@ -335,8 +335,6 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
         
-        const isViewOnly = true; // Permanently set to view-only mode
-
         const firebaseConfig = {
             apiKey: "AIzaSyCrKAut8_5nHWTWtYqZZr5HOENGd8mqZxE",
             authDomain: "imi1-interactive-map-8d929.firebaseapp.com",
@@ -348,7 +346,414 @@
         };
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
+        
         const gridSize = 25;
         const minCol = -8;
         const maxCol = 38;
-        const minRow
+        const minRow = -6;
+        const maxRow = 20;
+        const buildingCols = 30; 
+        const buildingRows = 14; 
+        let currentLayer = 'ground'; 
+        let categories = [
+            { name: "Fire Safety", color: "#ef4444" },
+            { name: "Electrical", color: "#f97316" },
+            { name: "Plumbing", color: "#38bdf8" },
+            { name: "Safety", color: "#fbbf24" },
+            { name: "HVAC", color: "#34d399" },
+            { name: "General", color: "#94a3b8" }
+        ];
+        let elements = [];
+        let selectedId = null;
+        let isPanning = false;
+        let panStart = { x: 0, y: 0 };
+        let viewTransform = { x: 250, y: 180, scale: 0.9 };
+        const container = document.getElementById("canvas-container");
+        const svg = document.getElementById("layoutSvg");
+        const viewport = document.getElementById("viewport");
+        const syncStatus = document.getElementById("sync-status");
+
+        async function loadFromFirebase() {
+            try {
+                const docRef = doc(db, "layouts", "facility_main");
+                const docSnap = await getDoc(docRef);
+                if (docSnap.exists()) {
+                    let data = docSnap.data();
+                    if (data.elements) elements = data.elements;
+                    if (data.categories) categories = data.categories;
+                    syncStatus.innerText = "Connected (View Only)";
+                } else {
+                    syncStatus.innerText = "No Data Found";
+                }
+                render();
+            } catch (error) {
+                console.error("Error loading layout:", error);
+                syncStatus.innerText = "Error Loading Database";
+                syncStatus.style.color = "#ef4444";
+                render();
+            }
+        }
+
+        function getCategoryColor(catName) {
+            let found = categories.find(c => c.name === catName);
+            return found ? found.color : "#38bdf8";
+        }
+
+        function getRowLabel(r) {
+            if (r === buildingRows - 2) return "M.9"; 
+            let index = r;
+            if (index > buildingRows - 2) {
+                index -= 1;
+            }
+            if (index < 0) {
+                return "N" + Math.abs(index);
+            }
+            return String.fromCharCode(65 + index); 
+        }
+
+        window.switchLayer = function(layerName) {
+            currentLayer = layerName;
+            document.getElementById("layerGroundBtn").classList.toggle("active", layerName === 'ground');
+            document.getElementById("layerMezzBtn").classList.toggle("active", layerName === 'mezzanine');
+            document.getElementById("layerRoofBtn").classList.toggle("active", layerName === 'roof');
+            document.getElementById("layerSprinklerBtn").classList.toggle("active", layerName === 'sprinkler');
+            document.getElementById("layerWaterBtn").classList.toggle("active", layerName === 'water');
+            document.getElementById("layerGasBtn").classList.toggle("active", layerName === 'gas');
+            document.getElementById("layerDockDoorsBtn").classList.toggle("active", layerName === 'dock_doors');
+            document.getElementById("layerUnderMezzSprinklersBtn").classList.toggle("active", layerName === 'under_mezz_sprinklers');
+            selectedId = null;
+            render();
+        }
+
+        function updateTransformString() {
+            viewport.setAttribute("transform", `translate(${viewTransform.x}, ${viewTransform.y}) scale(${viewTransform.scale})`);
+        }
+
+        function render() {
+            viewport.innerHTML = "";
+            updateTransformString();
+            
+            // Site Background
+            let siteBackground = document.createElementNS("http://www.w3.org/2000/svg", "g");
+            let earthGrading = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+            earthGrading.setAttribute("x", minCol * gridSize);
+            earthGrading.setAttribute("y", minRow * gridSize);
+            earthGrading.setAttribute("width", (maxCol - minCol) * gridSize);
+            earthGrading.setAttribute("height", (maxRow - minRow) * gridSize);
+            earthGrading.setAttribute("fill", "#18110e");
+            earthGrading.setAttribute("stroke", "#281e17");
+            earthGrading.setAttribute("stroke-width", "2");
+            siteBackground.appendChild(earthGrading);
+            let siteLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
+            siteLabel.setAttribute("x", (minCol + 1) * gridSize);
+            siteLabel.setAttribute("y", (minRow + 1) * gridSize);
+            siteLabel.setAttribute("fill", "#854d0e");
+            siteLabel.setAttribute("font-size", "12px");
+            siteLabel.setAttribute("font-weight", "bold");
+            siteLabel.textContent = "▼ 6500 W MT HOPE HWY — SURROUNDING SITE EARTHWORK & FIRE HYDRANT PERIMETER";
+            siteBackground.appendChild(siteLabel);
+            viewport.appendChild(siteBackground);
+
+            // Grid Lines & Labels
+            for (let c = minCol; c <= maxCol; c++) {
+                let line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                line.setAttribute("x1", c * gridSize);
+                line.setAttribute("y1", minRow * gridSize);
+                line.setAttribute("x2", c * gridSize);
+                line.setAttribute("y2", maxRow * gridSize);
+                line.setAttribute("class", "grid-line");
+                viewport.appendChild(line);
+                let text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                text.setAttribute("x", (c * gridSize) + (gridSize / 2));
+                text.setAttribute("y", (minRow * gridSize) - 8);
+                text.setAttribute("text-anchor", "middle");
+                text.setAttribute("class", "coord-label");
+                text.textContent = c + 1; 
+                viewport.appendChild(text);
+            }
+            for (let r = minRow; r <= maxRow; r++) {
+                let line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                line.setAttribute("x1", minCol * gridSize);
+                line.setAttribute("y1", r * gridSize);
+                line.setAttribute("x2", maxCol * gridSize);
+                line.setAttribute("y2", r * gridSize);
+                if (r === buildingRows - 2) {
+                    line.setAttribute("stroke", "#f43f5e");
+                    line.setAttribute("stroke-dasharray", "2,2");
+                } else {
+                    line.setAttribute("class", "grid-line");
+                }
+                viewport.appendChild(line);
+                let text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                text.setAttribute("x", (minCol * gridSize) - 10);
+                text.setAttribute("y", (r * gridSize) + (gridSize / 2) + 3);
+                text.setAttribute("text-anchor", "end");
+                text.setAttribute("class", "coord-label");
+                if (r === buildingRows - 2) {
+                    text.setAttribute("fill", "#f43f5e");
+                    text.setAttribute("font-weight", "bold");
+                }
+                text.textContent = getRowLabel(r);
+                viewport.appendChild(text);
+            }
+
+            // Building Footprint
+            let buildingWall = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+            buildingWall.setAttribute("x", 0);
+            buildingWall.setAttribute("y", 0);
+            buildingWall.setAttribute("width", buildingCols * gridSize);
+            buildingWall.setAttribute("height", buildingRows * gridSize);
+            buildingWall.setAttribute("fill", "#0b131d");
+            buildingWall.setAttribute("fill-opacity", "0.6");
+            buildingWall.setAttribute("stroke", "#38bdf8");
+            buildingWall.setAttribute("stroke-width", "2");
+            viewport.appendChild(buildingWall);
+            let layerTitleName = currentLayer.toUpperCase();
+            let topLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
+            topLabel.setAttribute("x", 0.5 * gridSize);
+            topLabel.setAttribute("y", -22);
+            topLabel.setAttribute("fill", "#38bdf8");
+            topLabel.setAttribute("font-size", "10px");
+            topLabel.setAttribute("font-weight", "bold");
+            topLabel.textContent = `BUILDING SOUTH WALL (${layerTitleName} LAYER) ▲`;
+            viewport.appendChild(topLabel);
+            let bottomLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
+            bottomLabel.setAttribute("x", 0.5 * gridSize);
+            bottomLabel.setAttribute("y", (buildingRows * gridSize) + 18);
+            bottomLabel.setAttribute("fill", "#38bdf8");
+            bottomLabel.setAttribute("font-size", "10px");
+            bottomLabel.setAttribute("font-weight", "bold");
+            bottomLabel.textContent = `BUILDING NORTH WALL ▼`;
+            viewport.appendChild(bottomLabel);
+
+            // Render Elements
+            let visibleElements = elements.filter(el => (el.layer || 'ground') === currentLayer);
+            visibleElements.forEach(el => {
+                let g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+                g.setAttribute("class", "item-group");
+                g.addEventListener("click", (e) => {
+                    e.stopPropagation();
+                    openModal(el);
+                });
+
+                if (el.type === 'asset') {
+                    let cx = (el.x * gridSize) + (gridSize / 2);
+                    let cy = (el.y * gridSize) + (gridSize / 2);
+                    let catColor = getCategoryColor(el.category);
+                    
+                    let circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                    circle.setAttribute("cx", cx);
+                    circle.setAttribute("cy", cy);
+                    circle.setAttribute("r", 5); 
+                    circle.setAttribute("fill", "#111b27");
+                    circle.setAttribute("stroke", catColor);
+                    circle.setAttribute("stroke-width", "2");
+                    
+                    let emojiText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                    emojiText.setAttribute("x", cx);
+                    emojiText.setAttribute("y", cy + 1);
+                    emojiText.setAttribute("text-anchor", "middle");
+                    emojiText.setAttribute("dominant-baseline", "central");
+                    emojiText.setAttribute("font-size", "9px");
+                    emojiText.style.pointerEvents = "none";
+                    emojiText.textContent = el.emoji || "📍";
+
+                    // Popup Bubble
+                    let popupGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
+                    popupGroup.setAttribute("class", "asset-popup");
+                    let boxWidth = (el.name.length * 6.5) + 12;
+                    let popupBg = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+                    popupBg.setAttribute("x", cx - (boxWidth / 2));
+                    popupBg.setAttribute("y", cy - 28);
+                    popupBg.setAttribute("width", boxWidth);
+                    popupBg.setAttribute("height", 18);
+                    popupBg.setAttribute("rx", 4);
+                    popupBg.setAttribute("fill", "#0b131d");
+                    popupBg.setAttribute("stroke", catColor);
+                    popupBg.setAttribute("stroke-width", "1.5");
+                    
+                    let popupText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                    popupText.setAttribute("x", cx);
+                    popupText.setAttribute("y", cy - 16);
+                    popupText.setAttribute("text-anchor", "middle");
+                    popupText.setAttribute("fill", "#ffffff");
+                    popupText.setAttribute("font-size", "10px");
+                    popupText.setAttribute("font-weight", "bold");
+                    popupText.textContent = el.name;
+                    
+                    popupGroup.appendChild(popupBg);
+                    popupGroup.appendChild(popupText);
+                    g.appendChild(circle);
+                    g.appendChild(emojiText);
+                    g.appendChild(popupGroup);
+                } else {
+                    let rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+                    rect.setAttribute("x", el.x * gridSize);
+                    rect.setAttribute("y", el.y * gridSize);
+                    rect.setAttribute("width", el.w * gridSize);
+                    rect.setAttribute("height", el.h * gridSize);
+                    
+                    if (el.type === 'yard') {
+                        rect.setAttribute("fill", "#b45309");
+                        rect.setAttribute("fill-opacity", "0.3");
+                        rect.setAttribute("stroke", "#d97706");
+                    } else if (el.type === 'racking') {
+                        rect.setAttribute("fill", "#d97706");
+                        rect.setAttribute("fill-opacity", "0.35");
+                        rect.setAttribute("stroke", "#f59e0b");
+                    } else if (el.type === 'mezzanine') {
+                        rect.setAttribute("fill", "#10b981");
+                        rect.setAttribute("fill-opacity", "0.35");
+                        rect.setAttribute("stroke", "#34d399");
+                    } else {
+                        rect.setAttribute("fill", "#0284c7");
+                        rect.setAttribute("fill-opacity", "0.35");
+                        rect.setAttribute("stroke", "#38bdf8");
+                    }
+                    rect.setAttribute("stroke-width", "1");
+                    
+                    let text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                    text.setAttribute("x", (el.x * gridSize) + 6);
+                    text.setAttribute("y", (el.y * gridSize) + 16);
+                    text.setAttribute("fill", "#fff");
+                    text.setAttribute("font-size", "10px");
+                    text.setAttribute("font-weight", "bold");
+                    text.style.pointerEvents = "none";
+                    text.textContent = el.name;
+                    
+                    g.appendChild(rect);
+                    g.appendChild(text);
+                }
+                viewport.appendChild(g);
+            });
+        }
+
+        container.addEventListener("mousemove", (e) => {
+            let rect = container.getBoundingClientRect();
+            let mouseX = e.clientX - rect.left;
+            let mouseY = e.clientY - rect.top;
+            let localX = (mouseX - viewTransform.x) / viewTransform.scale;
+            let localY = (mouseY - viewTransform.y) / viewTransform.scale;
+            let coordDisplay = document.getElementById("coord-display");
+            let exactCol = localX / gridSize;
+            let rowIdx = Math.floor(localY / gridSize);
+            let preciseColNum = (exactCol + 1).toFixed(2);
+            let rowLabel = getRowLabel(rowIdx);
+            
+            coordDisplay.innerHTML = `Grid: <b>Row ${rowLabel}, Col ${preciseColNum}</b>`;
+            if (isPanning) {
+                viewTransform.x = e.clientX - panStart.x;
+                viewTransform.y = e.clientY - panStart.y;
+                render();
+            }
+        });
+
+        container.addEventListener("wheel", (e) => {
+            e.preventDefault();
+            let zoomIntensity = 0.1;
+            let oldScale = viewTransform.scale;
+            
+            if (e.deltaY < 0) {
+                viewTransform.scale = Math.min(viewTransform.scale * (1 + zoomIntensity), 3.0);
+            } else {
+                viewTransform.scale = Math.max(viewTransform.scale * (1 - zoomIntensity), 0.3);
+            }
+            let rect = container.getBoundingClientRect();
+            let mouseX = e.clientX - rect.left;
+            let mouseY = e.clientY - rect.top;
+            viewTransform.x = mouseX - (mouseX - viewTransform.x) * (viewTransform.scale / oldScale);
+            viewTransform.y = mouseY - (mouseY - viewTransform.y) * (viewTransform.scale / oldScale);
+            render();
+        }, { passive: false });
+
+        container.addEventListener("mousedown", (e) => {
+            isPanning = true;
+            container.classList.add("panning");
+            panStart = { x: e.clientX - viewTransform.x, y: e.clientY - viewTransform.y };
+        });
+
+        window.addEventListener("mouseup", () => {
+            if (isPanning) {
+                isPanning = false;
+                container.classList.remove("panning");
+            }
+        });
+
+        function openModal(el) {
+            selectedId = el.id;
+            document.getElementById("modalElementId").value = el.id;
+            document.getElementById("modalTitle").innerText = `Details: ${el.name}`;
+            document.getElementById("modalName").value = el.name;
+            document.getElementById("modalX").value = el.x;
+            document.getElementById("modalY").value = el.y;
+            
+            renderPhotos(el);
+            renderSpreadsheet(el);
+            document.getElementById("modal-overlay").style.display = "flex";
+        }
+
+        window.closeModal = function() {
+            document.getElementById("modal-overlay").style.display = "none";
+            selectedId = null;
+        }
+
+        function renderPhotos(el) {
+            let gallery = document.getElementById("modalPhotoGallery");
+            gallery.innerHTML = "";
+            if (!el.photos) el.photos = [];
+            el.photos.forEach((photoUrl) => {
+                let containerDiv = document.createElement("div");
+                containerDiv.className = "photo-thumb-container";
+                containerDiv.title = "Click to enlarge photo";
+                containerDiv.onclick = () => openLightbox(photoUrl, el.name);
+                
+                let img = document.createElement("img");
+                img.src = photoUrl;
+                
+                containerDiv.appendChild(img);
+                gallery.appendChild(containerDiv);
+            });
+        }
+
+        window.openLightbox = function(url, itemName) {
+            document.getElementById("lightboxImage").src = url;
+            document.getElementById("lightboxCaption").innerText = itemName || "Photo Preview";
+            document.getElementById("lightbox-overlay").style.display = "flex";
+        }
+
+        window.closeLightbox = function() {
+            document.getElementById("lightbox-overlay").style.display = "none";
+        }
+
+        function renderSpreadsheet(el) {
+            let tbody = document.getElementById("spreadsheetBody");
+            tbody.innerHTML = "";
+            if (!el.spreadsheetData) el.spreadsheetData = [];
+            el.spreadsheetData.rows.forEach?.((row) => {}) || el.spreadsheetData.forEach((row) => {
+                let tr = document.createElement("tr");
+                
+                let tdKey = document.createElement("td");
+                let inputKey = document.createElement("input");
+                inputKey.type = "text";
+                inputKey.value = row.key;
+                inputKey.disabled = true;
+                tdKey.appendChild(inputKey);
+
+                let tdVal = document.createElement("td");
+                let inputVal = document.createElement("input");
+                inputVal.type = "text";
+                inputVal.value = row.value;
+                inputVal.disabled = true;
+                tdVal.appendChild(inputVal);
+
+                tr.appendChild(tdKey);
+                tr.appendChild(tdVal);
+                tbody.appendChild(tr);
+            });
+        }
+
+        // Initialize and pull data from Firebase immediately
+        loadFromFirebase();
+    </script>
+</body>
+</html>
