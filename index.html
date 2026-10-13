@@ -306,10 +306,6 @@
                 <button class="layer-btn" id="layerWaterBtn" onclick="switchLayer('water')">Water Shutoffs</button>
                 <button class="layer-btn" id="layerGasBtn" onclick="switchLayer('gas')">Gas Shutoffs</button>
             </div>
-            <div style="display: flex; gap: 4px; margin-top: 4px;">
-                <button class="layer-btn" id="layerDockDoorsBtn" onclick="switchLayer('dock_doors')" style="background: #0f172a; border-color: #38bdf8; color: #38bdf8;">Dock Doors</button>
-                <button class="layer-btn" id="layerUnderMezzSprinklerBtn" onclick="switchLayer('under_mezz_sprinkler')" style="background: #0f172a; border-color: #38bdf8; color: #38bdf8;">Under Mezz Sprinkler</button>
-            </div>
         </div>
         <div>
             <label>Interaction Mode</label>
@@ -585,7 +581,6 @@
         const svg = document.getElementById("layoutSvg");
         const viewport = document.getElementById("viewport");
         const syncStatus = document.getElementById("sync-status");
-        
         async function loadFromFirebase() {
             try {
                 const docRef = doc(db, "layouts", "facility_main");
@@ -731,39 +726,6 @@
             renderCategoryTable();
             populateCategoryDropdowns();
         }
-
-        // Layer Switching Function updated to support dock_doors and under_mezz_sprinkler
-        window.switchLayer = function(layerName) {
-            currentLayer = layerName;
-            document.querySelectorAll(".layer-btn").forEach(btn => btn.classList.remove("active"));
-            
-            if (layerName === 'ground') document.getElementById("layerGroundBtn").classList.add("active");
-            if (layerName === 'mezzanine') document.getElementById("layerMezzBtn").classList.add("active");
-            if (layerName === 'roof') document.getElementById("layerRoofBtn").classList.add("active");
-            if (layerName === 'sprinkler') document.getElementById("layerSprinklerBtn").classList.add("active");
-            if (layerName === 'water') document.getElementById("layerWaterBtn").classList.add("active");
-            if (layerName === 'gas') document.getElementById("layerGasBtn").classList.add("active");
-            if (layerName === 'dock_doors') document.getElementById("layerDockDoorsBtn").classList.add("active");
-            if (layerName === 'under_mezz_sprinkler') document.getElementById("layerUnderMezzSprinklerBtn").classList.add("active");
-            
-            render();
-        }
-
-        window.setMode = function(mode) {
-            currentMode = mode;
-            document.getElementById("modeEditBtn").classList.toggle("active", mode === 'edit');
-            document.getElementById("modePanBtn").classList.toggle("active", mode === 'pan');
-            container.classList.toggle("panning", mode === 'pan');
-        }
-
-        window.switchTab = function(tab) {
-            currentTab = tab;
-            document.getElementById("tabDeptBtn").classList.toggle("active", tab === 'dept');
-            document.getElementById("tabAssetBtn").classList.toggle("active", tab === 'asset');
-            document.getElementById("panelDept").classList.toggle("active", tab === 'dept');
-            document.getElementById("panelAsset").classList.toggle("active", tab === 'asset');
-        }
-
         function getRowLabel(r) {
             if (r === buildingRows - 2) return "M.9"; 
             let index = r;
@@ -773,426 +735,546 @@
             if (index < 0) {
                 return "N" + Math.abs(index);
             }
-            return String.fromCharCode(65 + index);
+            return String.fromCharCode(65 + index); 
         }
-
+        window.switchLayer = function(layerName) {
+            currentLayer = layerName;
+            document.getElementById("layerGroundBtn").classList.toggle("active", layerName === 'ground');
+            document.getElementById("layerMezzBtn").classList.toggle("active", layerName === 'mezzanine');
+            document.getElementById("layerRoofBtn").classList.toggle("active", layerName === 'roof');
+            document.getElementById("layerSprinklerBtn").classList.toggle("active", layerName === 'sprinkler');
+            document.getElementById("layerWaterBtn").classList.toggle("active", layerName === 'water');
+            document.getElementById("layerGasBtn").classList.toggle("active", layerName === 'gas');
+            selectedId = null;
+            render();
+        }
+        window.setMode = function(mode) {
+            currentMode = mode;
+            document.getElementById("modeEditBtn").classList.toggle("active", mode === 'edit');
+            document.getElementById("modePanBtn").classList.toggle("active", mode === 'pan');
+            container.style.cursor = mode === 'pan' ? 'grab' : 'default';
+            selectedId = null;
+            render();
+        }
+        window.switchTab = function(tab) {
+            currentTab = tab;
+            document.getElementById("tabDeptBtn").classList.toggle("active", tab === 'dept');
+            document.getElementById("tabAssetBtn").classList.toggle("active", tab === 'asset');
+            document.getElementById("panelDept").classList.toggle("active", tab === 'dept');
+            document.getElementById("panelAsset").classList.toggle("active", tab === 'asset');
+        }
+        function updateTransformString() {
+            viewport.setAttribute("transform", `translate(${viewTransform.x}, ${viewTransform.y}) scale(${viewTransform.scale})`);
+        }
         function render() {
             viewport.innerHTML = "";
-            
-            // Render Grid Lines
+            updateTransformString();
+            // 0. Extended Site Background
+            let siteBackground = document.createElementNS("http://www.w3.org/2000/svg", "g");
+            siteBackground.setAttribute("id", "site-surroundings");
+            let earthGrading = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+            earthGrading.setAttribute("x", minCol * gridSize);
+            earthGrading.setAttribute("y", minRow * gridSize);
+            earthGrading.setAttribute("width", (maxCol - minCol) * gridSize);
+            earthGrading.setAttribute("height", (maxRow - minRow) * gridSize);
+            earthGrading.setAttribute("fill", "#18110e");
+            earthGrading.setAttribute("stroke", "#281e17");
+            earthGrading.setAttribute("stroke-width", "2");
+            siteBackground.appendChild(earthGrading);
+            let siteLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
+            siteLabel.setAttribute("x", (minCol + 1) * gridSize);
+            siteLabel.setAttribute("y", (minRow + 1) * gridSize);
+            siteLabel.setAttribute("fill", "#854d0e");
+            siteLabel.setAttribute("font-size", "12px");
+            siteLabel.setAttribute("font-weight", "bold");
+            siteLabel.textContent = "▼ 6500 W MT HOPE HWY — SURROUNDING SITE EARTHWORK & FIRE HYDRANT PERIMETER";
+            siteBackground.appendChild(siteLabel);
+            viewport.appendChild(siteBackground);
+            // 1. Extended Grid Lines & Labels
             for (let c = minCol; c <= maxCol; c++) {
-                let x1 = c * gridSize;
                 let line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-                line.setAttribute("x1", x1);
+                line.setAttribute("x1", c * gridSize);
                 line.setAttribute("y1", minRow * gridSize);
-                line.setAttribute("x2", x1);
+                line.setAttribute("x2", c * gridSize);
                 line.setAttribute("y2", maxRow * gridSize);
                 line.setAttribute("class", "grid-line");
                 viewport.appendChild(line);
-
                 let text = document.createElementNS("http://www.w3.org/2000/svg", "text");
-                text.setAttribute("x", x1 + 4);
-                text.setAttribute("y", minRow * gridSize + 12);
+                text.setAttribute("x", (c * gridSize) + (gridSize / 2));
+                text.setAttribute("y", (minRow * gridSize) - 8);
+                text.setAttribute("text-anchor", "middle");
                 text.setAttribute("class", "coord-label");
-                text.textContent = c;
+                text.textContent = c + 1; 
                 viewport.appendChild(text);
             }
-
             for (let r = minRow; r <= maxRow; r++) {
-                let y1 = r * gridSize;
                 let line = document.createElementNS("http://www.w3.org/2000/svg", "line");
                 line.setAttribute("x1", minCol * gridSize);
-                line.setAttribute("y1", y1);
+                line.setAttribute("y1", r * gridSize);
                 line.setAttribute("x2", maxCol * gridSize);
-                line.setAttribute("y2", y1);
-                line.setAttribute("class", "grid-line");
+                line.setAttribute("y2", r * gridSize);
+                
+                if (r === buildingRows - 2) {
+                    line.setAttribute("stroke", "#f43f5e");
+                    line.setAttribute("stroke-dasharray", "2,2");
+                } else {
+                    line.setAttribute("class", "grid-line");
+                }
                 viewport.appendChild(line);
-
                 let text = document.createElementNS("http://www.w3.org/2000/svg", "text");
-                text.setAttribute("x", minCol * gridSize + 4);
-                text.setAttribute("y", y1 + 14);
+                text.setAttribute("x", (minCol * gridSize) - 10);
+                text.setAttribute("y", (r * gridSize) + (gridSize / 2) + 3);
+                text.setAttribute("text-anchor", "end");
                 text.setAttribute("class", "coord-label");
+                if (r === buildingRows - 2) {
+                    text.setAttribute("fill", "#f43f5e");
+                    text.setAttribute("font-weight", "bold");
+                }
                 text.textContent = getRowLabel(r);
                 viewport.appendChild(text);
             }
-
-            // Render Elements for Current Layer
-            elements.filter(el => el.layer === currentLayer).forEach(el => {
+            // 2. Core Building Footprint Walls
+            let buildingWall = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+            buildingWall.setAttribute("x", 0);
+            buildingWall.setAttribute("y", 0);
+            buildingWall.setAttribute("width", buildingCols * gridSize);
+            buildingWall.setAttribute("height", buildingRows * gridSize);
+            buildingWall.setAttribute("fill", "#0b131d");
+            buildingWall.setAttribute("fill-opacity", "0.6");
+            buildingWall.setAttribute("stroke", "#38bdf8");
+            buildingWall.setAttribute("stroke-width", "2");
+            viewport.appendChild(buildingWall);
+            let layerTitleName = currentLayer.toUpperCase();
+            let topLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
+            topLabel.setAttribute("x", 0.5 * gridSize);
+            topLabel.setAttribute("y", -22);
+            topLabel.setAttribute("fill", "#38bdf8");
+            topLabel.setAttribute("font-size", "10px");
+            topLabel.setAttribute("font-weight", "bold");
+            topLabel.textContent = `BUILDING SOUTH WALL (${layerTitleName} LAYER) ▲`;
+            viewport.appendChild(topLabel);
+            let bottomLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
+            bottomLabel.setAttribute("x", 0.5 * gridSize);
+            bottomLabel.setAttribute("y", (buildingRows * gridSize) + 18);
+            bottomLabel.setAttribute("fill", "#38bdf8");
+            bottomLabel.setAttribute("font-size", "10px");
+            bottomLabel.setAttribute("font-weight", "bold");
+            bottomLabel.textContent = `BUILDING NORTH WALL ▼`;
+            viewport.appendChild(bottomLabel);
+            // 3. Render Elements
+            let visibleElements = elements.filter(el => (el.layer || 'ground') === currentLayer);
+            visibleElements.forEach(el => {
                 let g = document.createElementNS("http://www.w3.org/2000/svg", "g");
                 g.setAttribute("class", "item-group");
-                g.setAttribute("transform", `translate(${el.x * gridSize}, ${el.y * gridSize})`);
-
+                g.addEventListener("click", (e) => {
+                    if (currentMode === 'pan') {
+                        e.stopPropagation();
+                        openModal(el);
+                    }
+                });
                 if (el.type === 'asset') {
-                    let rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-                    rect.setAttribute("width", gridSize);
-                    rect.setAttribute("height", gridSize);
-                    rect.setAttribute("rx", "6");
+                    let cx = (el.x * gridSize) + (gridSize / 2);
+                    let cy = (el.y * gridSize) + (gridSize / 2);
                     let catColor = getCategoryColor(el.category);
-                    rect.setAttribute("fill", catColor);
-                    rect.setAttribute("class", "item-shape" + (el.id === selectedId ? " selected" : ""));
-                    g.appendChild(rect);
-
-                    let text = document.createElementNS("http://www.w3.org/2000/svg", "text");
-                    text.setAttribute("x", gridSize / 2);
-                    text.setAttribute("y", gridSize / 2 + 5);
-                    text.setAttribute("text-anchor", "middle");
-                    text.setAttribute("font-size", "12px");
-                    text.textContent = el.emoji || "📍";
-                    g.appendChild(text);
-
-                    // Hover Popup
+                    
+                    let circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                    circle.setAttribute("cx", cx);
+                    circle.setAttribute("cy", cy);
+                    circle.setAttribute("r", 5); 
+                    circle.setAttribute("class", `item-shape ${el.id === selectedId ? 'selected' : ''}`);
+                    circle.setAttribute("fill", "#111b27");
+                    circle.setAttribute("stroke", catColor);
+                    circle.setAttribute("stroke-width", "2");
+                    let emojiText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                    emojiText.setAttribute("x", cx);
+                    emojiText.setAttribute("y", cy + 1);
+                    emojiText.setAttribute("text-anchor", "middle");
+                    emojiText.setAttribute("dominant-baseline", "central");
+                    emojiText.setAttribute("font-size", "9px");
+                    emojiText.style.pointerEvents = "none";
+                    emojiText.textContent = el.emoji || "📍";
+                    // HOVER POPUP BUBBLE
                     let popupGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
                     popupGroup.setAttribute("class", "asset-popup");
-                    popupGroup.setAttribute("transform", `translate(${gridSize / 2}, -8)`);
-
-                    let bgRect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-                    bgRect.setAttribute("rx", "4");
-                    bgRect.setAttribute("fill", "#0b131d");
-                    bgRect.setAttribute("stroke", catColor);
-                    bgRect.setAttribute("stroke-width", "1");
-                    
-                    let pText = document.createElementNS("http://www.w3.org/2000/svg", "text");
-                    pText.setAttribute("x", "0");
-                    pText.setAttribute("y", "-6");
-                    pText.setAttribute("text-anchor", "middle");
-                    pText.setAttribute("fill", "#fff");
-                    pText.setAttribute("font-size", "10px");
-                    pText.setAttribute("font-weight", "bold");
-                    pText.textContent = el.name;
-                    
-                    popupGroup.appendChild(bgRect);
-                    popupGroup.appendChild(pText);
+                    let boxWidth = (el.name.length * 6.5) + 12;
+                    let popupBg = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+                    popupBg.setAttribute("x", cx - (boxWidth / 2));
+                    popupBg.setAttribute("y", cy - 28);
+                    popupBg.setAttribute("width", boxWidth);
+                    popupBg.setAttribute("height", 18);
+                    popupBg.setAttribute("rx", 4);
+                    popupBg.setAttribute("fill", "#0b131d");
+                    popupBg.setAttribute("stroke", catColor);
+                    popupBg.setAttribute("stroke-width", "1.5");
+                    popupBg.setAttribute("filter", "drop-shadow(0px 2px 4px rgba(0,0,0,0.6))");
+                    let popupText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                    popupText.setAttribute("x", cx);
+                    popupText.setAttribute("y", cy - 16);
+                    popupText.setAttribute("text-anchor", "middle");
+                    popupText.setAttribute("fill", "#ffffff");
+                    popupText.setAttribute("font-size", "10px");
+                    popupText.setAttribute("font-weight", "bold");
+                    popupText.textContent = el.name;
+                    popupGroup.appendChild(popupBg);
+                    popupGroup.appendChild(popupText);
+                    g.appendChild(circle);
+                    g.appendChild(emojiText);
                     g.appendChild(popupGroup);
                 } else {
-                    // Rectangular Zones / Departments
                     let rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+                    rect.setAttribute("x", el.x * gridSize);
+                    rect.setAttribute("y", el.y * gridSize);
                     rect.setAttribute("width", el.w * gridSize);
                     rect.setAttribute("height", el.h * gridSize);
-                    rect.setAttribute("rx", "4");
-                    rect.setAttribute("fill", el.type === 'yard' ? "#1e293b" : "#0f172a");
-                    rect.setAttribute("fill-opacity", "0.6");
-                    rect.setAttribute("stroke", el.type === 'yard' ? "#64748b" : "#38bdf8");
-                    rect.setAttribute("stroke-width", "1.5");
-                    rect.setAttribute("class", "item-shape" + (el.id === selectedId ? " selected" : ""));
-                    g.appendChild(rect);
-
+                    rect.setAttribute("class", `item-shape ${el.id === selectedId ? 'selected' : ''}`);
+                    if (el.type === 'yard') {
+                        rect.setAttribute("fill", "#b45309");
+                        rect.setAttribute("fill-opacity", "0.3");
+                        rect.setAttribute("stroke", "#d97706");
+                    } else if (el.type === 'racking') {
+                        rect.setAttribute("fill", "#d97706");
+                        rect.setAttribute("fill-opacity", "0.35");
+                        rect.setAttribute("stroke", "#f59e0b");
+                    } else if (el.type === 'mezzanine') {
+                        rect.setAttribute("fill", "#10b981");
+                        rect.setAttribute("fill-opacity", "0.35");
+                        rect.setAttribute("stroke", "#34d399");
+                    } else {
+                        rect.setAttribute("fill", "#0284c7");
+                        rect.setAttribute("fill-opacity", "0.35");
+                        rect.setAttribute("stroke", "#38bdf8");
+                    }
+                    rect.setAttribute("stroke-width", "1");
                     let text = document.createElementNS("http://www.w3.org/2000/svg", "text");
-                    text.setAttribute("x", "8");
-                    text.setAttribute("y", "18");
-                    text.setAttribute("fill", "#38bdf8");
-                    text.setAttribute("font-size", "11px");
+                    text.setAttribute("x", (el.x * gridSize) + 6);
+                    text.setAttribute("y", (el.y * gridSize) + 16);
+                    text.setAttribute("fill", "#fff");
+                    text.setAttribute("font-size", "10px");
                     text.setAttribute("font-weight", "bold");
+                    text.style.pointerEvents = "none";
                     text.textContent = el.name;
+                    g.appendChild(rect);
                     g.appendChild(text);
                 }
-
-                // Interaction handlers
-                g.onmousedown = (e) => {
+                g.addEventListener("mousedown", (e) => {
                     if (currentMode === 'edit') {
-                        selectedId = el.id;
-                        isDraggingElement = true;
                         e.stopPropagation();
+                        startDragElement(e, el);
                     }
-                };
-
-                g.ondblclick = (e) => {
-                    openModal(el.id);
-                    e.stopPropagation();
-                };
-
+                });
                 viewport.appendChild(g);
             });
-
-            viewport.setAttribute("transform", `translate(${viewTransform.x}, ${viewTransform.y}) scale(${viewTransform.scale})`);
         }
-
-        // Canvas Pan & Drag interactions
-        container.onmousedown = (e) => {
-            if (currentMode === 'pan' || e.target === container || e.target === svg) {
-                isPanning = true;
-                panStart = { x: e.clientX - viewTransform.x, y: e.clientY - viewTransform.y };
-                container.classList.add("panning");
-            }
-        };
-
-        window.onmousemove = (e) => {
+        container.addEventListener("mousemove", (e) => {
+            let rect = container.getBoundingClientRect();
+            let mouseX = e.clientX - rect.left;
+            let mouseY = e.clientY - rect.top;
+            let localX = (mouseX - viewTransform.x) / viewTransform.scale;
+            let localY = (mouseY - viewTransform.y) / viewTransform.scale;
+            let coordDisplay = document.getElementById("coord-display");
+            let exactCol = localX / gridSize;
+            let rowIdx = Math.floor(localY / gridSize);
+            let preciseColNum = (exactCol + 1).toFixed(2);
+            let rowLabel = getRowLabel(rowIdx);
+            
+            coordDisplay.innerHTML = `Grid: <b>Row ${rowLabel}, Col ${preciseColNum}</b>`;
             if (isPanning) {
                 viewTransform.x = e.clientX - panStart.x;
                 viewTransform.y = e.clientY - panStart.y;
                 render();
-            } else if (isDraggingElement && selectedId !== null) {
-                let rect = svg.getBoundingClientRect();
-                let mouseX = (e.clientX - rect.left - viewTransform.x) / viewTransform.scale;
-                let mouseY = (e.clientY - rect.top - viewTransform.y) / viewTransform.scale;
-                
-                let el = elements.find(item => item.id === selectedId);
-                if (el) {
-                    el.x = Math.round((mouseX / gridSize) * 4) / 4;
-                    el.y = Math.round((mouseY / gridSize) * 4) / 4;
-                    render();
-                }
             }
-        };
-
-        window.onmouseup = () => {
-            if (isDraggingElement) {
-                isDraggingElement = false;
-                saveToFirebase();
+        });
+        container.addEventListener("wheel", (e) => {
+            e.preventDefault();
+            let zoomIntensity = 0.1;
+            let oldScale = viewTransform.scale;
+            
+            if (e.deltaY < 0) {
+                viewTransform.scale = Math.min(viewTransform.scale * (1 + zoomIntensity), 3.0);
+            } else {
+                viewTransform.scale = Math.max(viewTransform.scale * (1 - zoomIntensity), 0.3);
             }
+            let rect = container.getBoundingClientRect();
+            let mouseX = e.clientX - rect.left;
+            let mouseY = e.clientY - rect.top;
+            viewTransform.x = mouseX - (mouseX - viewTransform.x) * (viewTransform.scale / oldScale);
+            viewTransform.y = mouseY - (mouseY - viewTransform.y) * (viewTransform.scale / oldScale);
+            render();
+        }, { passive: false });
+        container.addEventListener("mousedown", (e) => {
+            if (currentMode === 'pan') {
+                isPanning = true;
+                container.classList.add("panning");
+                panStart = { x: e.clientX - viewTransform.x, y: e.clientY - viewTransform.y };
+            } else if (currentMode === 'edit') {
+                selectedId = null;
+                render();
+            }
+        });
+        window.addEventListener("mouseup", () => {
             if (isPanning) {
                 isPanning = false;
                 container.classList.remove("panning");
             }
-        };
-
-        container.onwheel = (e) => {
-            e.preventDefault();
-            let zoomFactor = e.deltaY < 0 ? 1.1 : 0.9;
-            let newScale = Math.max(0.3, Math.min(3.0, viewTransform.scale * zoomFactor));
+        });
+        function startDragElement(e, el) {
+            selectedId = el.id;
+            isDraggingElement = true;
             
-            let rect = container.getBoundingClientRect();
-            let mouseX = e.clientX - rect.left;
-            let mouseY = e.clientY - rect.top;
-
-            viewTransform.x = mouseX - (mouseX - viewTransform.x) * (newScale / viewTransform.scale);
-            viewTransform.y = mouseY - (mouseY - viewTransform.y) * (newScale / viewTransform.scale);
-            viewTransform.scale = newScale;
+            let startX = e.clientX;
+            let startY = e.clientY;
+            let origX = el.x;
+            let origY = el.y;
+            function onMouseMove(e) {
+                if (!isDraggingElement) return;
+                let dx = (e.clientX - startX) / viewTransform.scale;
+                let dy = (e.clientY - startY) / viewTransform.scale;
+                
+                el.x = parseFloat((origX + (dx / gridSize)).toFixed(2));
+                el.y = parseFloat((origY + (dy / gridSize)).toFixed(2));
+                
+                render();
+            }
+            function onMouseUp() {
+                isDraggingElement = false;
+                window.removeEventListener("mousemove", onMouseMove);
+                window.removeEventListener("mouseup", onMouseUp);
+                saveToFirebase(); 
+            }
+            window.addEventListener("mousemove", onMouseMove);
+            window.addEventListener("mouseup", onMouseUp);
             render();
-        };
-
-        // Add Zone / Dept
-        window.addDepartment = function() {
-            let name = document.getElementById("newDeptName").value;
-            let type = document.getElementById("newDeptType").value;
-            let x = parseFloat(document.getElementById("newDeptX").value);
-            let y = parseFloat(document.getElementById("newDeptY").value);
-            let w = parseFloat(document.getElementById("newDeptW").value);
-            let h = parseFloat(document.getElementById("newDeptH").value);
-
-            let newEl = {
-                id: Date.now(),
-                layer: currentLayer,
-                name: name,
-                type: type,
-                x: x, y: y, w: w, h: h,
-                photos: [],
-                spreadsheetData: []
-            };
-
-            elements.push(newEl);
-            saveToFirebase();
-            render();
-        };
-
-        // Add Asset
-        window.addAsset = function() {
-            let name = document.getElementById("newAssetName").value;
-            let category = document.getElementById("newAssetCategory").value;
-            let emoji = document.getElementById("newAssetEmoji").value;
-            let x = parseFloat(document.getElementById("newAssetX").value);
-            let y = parseFloat(document.getElementById("newAssetY").value);
-
-            let newEl = {
-                id: Date.now(),
-                layer: currentLayer,
-                name: name,
-                type: 'asset',
-                category: category,
-                emoji: emoji,
-                x: x, y: y,
-                photos: [],
-                spreadsheetData: []
-            };
-
-            elements.push(newEl);
-            saveToFirebase();
-            render();
-        };
-
-        // Modal Controls
-        function openModal(id) {
-            let el = elements.find(item => item.id === id);
-            if (!el) return;
-
-            selectedId = id;
+        }
+        // MODAL MANAGEMENT FUNCTIONS
+        function openModal(el) {
+            selectedId = el.id;
             document.getElementById("modalElementId").value = el.id;
+            document.getElementById("modalTitle").innerText = `Edit: ${el.name}`;
             document.getElementById("modalName").value = el.name;
             document.getElementById("modalX").value = el.x;
             document.getElementById("modalY").value = el.y;
-
-            let isAsset = el.type === 'asset';
-            document.getElementById("modalAssetFields").style.display = isAsset ? "flex" : "none";
-            document.getElementById("modalSizeContainer").style.display = isAsset ? "none" : "flex";
-
-            if (isAsset) {
+            
+            if (el.type === 'asset') {
+                document.getElementById("modalSizeContainer").style.display = "none";
+                document.getElementById("modalAssetFields").style.display = "flex";
                 populateCategoryDropdowns(null, el.category);
-                document.getElementById("modalEmoji").value = el.emoji || "";
+                document.getElementById("modalEmoji").value = el.emoji || "📍";
             } else {
-                document.getElementById("modalW").value = el.w || 4;
-                document.getElementById("modalH").value = el.h || 4;
+                document.getElementById("modalSizeContainer").style.display = "flex";
+                document.getElementById("modalAssetFields").style.display = "none";
+                document.getElementById("modalW").value = el.w;
+                document.getElementById("modalH").value = el.h;
             }
-
-            renderModalPhotos(el.photos || []);
-            renderSpreadsheetTable(el.spreadsheetData || []);
+            renderPhotos(el);
+            renderSpreadsheet(el);
             document.getElementById("modal-overlay").style.display = "flex";
+            render();
         }
-
         window.closeModal = function() {
             document.getElementById("modal-overlay").style.display = "none";
-            saveToFirebase();
+            selectedId = null;
             render();
+            saveToFirebase();
         }
-
         window.saveModalLiveChanges = function() {
-            let id = Number(document.getElementById("modalElementId").value);
+            let id = parseInt(document.getElementById("modalElementId").value);
             let el = elements.find(item => item.id === id);
-            if (!el) return;
-
-            el.name = document.getElementById("modalName").value;
-            el.x = parseFloat(document.getElementById("modalX").value) || 0;
-            el.y = parseFloat(document.getElementById("modalY").value) || 0;
-
-            if (el.type === 'asset') {
-                el.category = document.getElementById("modalCategory").value;
-                el.emoji = document.getElementById("modalEmoji").value;
-            } else {
-                el.w = parseFloat(document.getElementById("modalW").value) || 2;
-                el.h = parseFloat(document.getElementById("modalH").value) || 2;
-            }
-            render();
-        }
-
-        // Spreadsheet Table Inside Modal
-        function renderSpreadsheetTable(data) {
-            let tbody = document.getElementById("spreadsheetBody");
-            tbody.innerHTML = "";
-            data.forEach((row, index) => {
-                let tr = document.createElement("tr");
-                tr.innerHTML = `
-                    <td><input type="text" value="${row.key}" oninput="updateSpreadsheetRow(${index}, 'key', this.value)"></td>
-                    <td><input type="text" value="${row.value}" oninput="updateSpreadsheetRow(${index}, 'value', this.value)"></td>
-                    <td style="text-align: center;"><button class="danger" style="padding: 2px 6px; font-size: 10px;" onclick="deleteSpreadsheetRow(${index})">X</button></td>
-                `;
-                tbody.appendChild(tr);
-            });
-        }
-
-        window.addSpreadsheetRow = function() {
-            let id = Number(document.getElementById("modalElementId").value);
-            let el = elements.find(item => item.id === id);
-            if (!el) return;
-            if (!el.spreadsheetData) el.spreadsheetData = [];
-            el.spreadsheetData.push({ key: "New Parameter", value: "Data Value" });
-            renderSpreadsheetTable(el.spreadsheetData);
-        }
-
-        window.updateSpreadsheetRow = function(index, field, val) {
-            let id = Number(document.getElementById("modalElementId").value);
-            let el = elements.find(item => item.id === id);
-            if (el && el.spreadsheetData[index]) {
-                el.spreadsheetData[index][field] = val;
-            }
-        }
-
-        window.deleteSpreadsheetRow = function(index) {
-            let id = Number(document.getElementById("modalElementId").value);
-            let el = elements.find(item => item.id === id);
-            if (el && el.spreadsheetData) {
-                el.spreadsheetData.splice(index, 1);
-                renderSpreadsheetTable(el.spreadsheetData);
-            }
-        }
-
-        // Cloudflare R2 Worker Photo Upload Handler
-        window.handlePhotoUpload = async function(event) {
-            let files = event.target.files;
-            if (!files.length) return;
-
-            let id = Number(document.getElementById("modalElementId").value);
-            let el = elements.find(item => item.id === id);
-            if (!el) return;
-            if (!el.photos) el.photos = [];
-
-            let statusSpan = document.getElementById("upload-status");
-
-            for (let file of files) {
-                statusSpan.innerText = `(Uploading ${file.name} to R2...)`;
-                let formData = new FormData();
-                formData.append("file", file);
-
-                try {
-                    // Replace with your actual Cloudflare Worker URL
-                    let response = await fetch("https://imi1-map-uploader.curtisarmy21589.workers.dev/", {
-                        method: "POST",
-                        body: formData
-                    });
-
-                    let result = await response.json();
-                    if (result.url) {
-                        el.photos.push(result.url);
-                    } else {
-                        alert(`Upload failed: ${result.error || 'Unknown error'}`);
-                    }
-                } catch (err) {
-                    console.error("R2 Upload Error:", err);
-                    alert("Error uploading to Cloudflare R2: " + err.message);
+            if (el) {
+                el.name = document.getElementById("modalName").value;
+                el.x = parseFloat(document.getElementById("modalX").value) || 0;
+                el.y = parseFloat(document.getElementById("modalY").value) || 0;
+                
+                if (el.type === 'asset') {
+                    el.category = document.getElementById("modalCategory").value;
+                    el.emoji = document.getElementById("modalEmoji").value || "📍";
+                } else {
+                    el.w = parseFloat(document.getElementById("modalW").value) || 1;
+                    el.h = parseFloat(document.getElementById("modalH").value) || 1;
                 }
-            }
-
-            statusSpan.innerText = "";
-            document.getElementById("photoUploadInput").value = "";
-            renderModalPhotos(el.photos);
-            saveToFirebase();
-        }
-
-        function renderModalPhotos(photos) {
-            let gallery = document.getElementById("modalPhotoGallery");
-            gallery.innerHTML = "";
-            photos.forEach((url, index) => {
-                let containerDiv = document.createElement("div");
-                containerDiv.className = "photo-thumb-container";
-                containerDiv.onclick = () => openLightbox(url);
-
-                let img = document.createElement("img");
-                img.src = url;
-                containerDiv.appendChild(img);
-
-                let delBtn = document.createElement("button");
-                delBtn.className = "delete-photo-btn";
-                delBtn.innerHTML = "×";
-                delBtn.onclick = (e) => {
-                    e.stopPropagation();
-                    photos.splice(index, 1);
-                    renderModalPhotos(photos);
-                    saveToFirebase();
-                };
-                containerDiv.appendChild(delBtn);
-
-                gallery.appendChild(containerDiv);
-            });
-        }
-
-        window.openLightbox = function(url) {
-            document.getElementById("lightboxImage").src = url;
-            document.getElementById("lightboxCaption").innerText = url;
-            document.getElementById("lightbox-overlay").style.display = "flex";
-        }
-
-        window.closeLightbox = function() {
-            document.getElementById("lightbox-overlay").style.display = "none";
-        }
-
-        window.deleteItemFromModal = function() {
-            if (confirm("Are you sure you want to delete this map item?")) {
-                let id = Number(document.getElementById("modalElementId").value);
-                elements = elements.filter(item => item.id !== id);
-                closeModal();
-                saveToFirebase();
+                
+                document.getElementById("modalTitle").innerText = `Edit: ${el.name}`;
                 render();
             }
         }
-
-        // Initialize App on Load
+        // CLOUDFLARE R2 PHOTO UPLOAD & LIGHTBOX HANDLING
+        window.handlePhotoUpload = async function(event) {
+            let id = parseInt(document.getElementById("modalElementId").value);
+            let el = elements.find(item => item.id === id);
+            if (!el) return;
+            if (!el.photos) el.photos = [];
+            
+            let files = event.target.files;
+            let statusSpan = document.getElementById("upload-status");
+            
+            for (let file of files) {
+                try {
+                    statusSpan.innerText = `(Uploading ${file.name} to R2...)`;
+                    let formData = new FormData();
+                    formData.append("file", file);
+                    
+                    let response = await fetch("https://imi1-map-uploader.curtisarmy21589.workers.dev", {
+                        method: "POST",
+                        body: formData
+                    });
+                    
+                    if (!response.ok) throw new Error("Upload failed");
+                    
+                    let result = await response.json();
+                    let photoUrl = result.url || result.fileUrl || (typeof result === 'string' ? result : null);
+                    
+                    if (!photoUrl) {
+                        // Fallback if response is plain text
+                        let textRes = await response.text();
+                        photoUrl = textRes;
+                    }
+                    
+                    if (photoUrl) {
+                        el.photos.push(photoUrl);
+                        renderPhotos(el);
+                        saveToFirebase();
+                    }
+                } catch (error) {
+                    console.error("Error uploading to Cloudflare R2:", error);
+                    alert("Failed to upload photo to Cloudflare R2.");
+                }
+            }
+            statusSpan.innerText = "";
+            event.target.value = ""; // Reset file input
+        }
+        function renderPhotos(el) {
+            let gallery = document.getElementById("modalPhotoGallery");
+            gallery.innerHTML = "";
+            if (!el.photos) el.photos = [];
+            el.photos.forEach((photoUrl, index) => {
+                let containerDiv = document.createElement("div");
+                containerDiv.className = "photo-thumb-container";
+                containerDiv.title = "Click to enlarge photo";
+                containerDiv.onclick = () => openLightbox(photoUrl, el.name);
+                
+                let img = document.createElement("img");
+                img.src = photoUrl;
+                
+                let delBtn = document.createElement("button");
+                delBtn.className = "delete-photo-btn";
+                delBtn.innerHTML = "×";
+                delBtn.title = "Delete photo";
+                delBtn.onclick = (e) => {
+                    e.stopPropagation(); // Prevent opening lightbox when clicking delete
+                    el.photos.splice(index, 1);
+                    renderPhotos(el);
+                    saveToFirebase();
+                };
+                containerDiv.appendChild(img);
+                containerDiv.appendChild(delBtn);
+                gallery.appendChild(containerDiv);
+            });
+        }
+        window.openLightbox = function(url, itemName) {
+            document.getElementById("lightboxImage").src = url;
+            document.getElementById("lightboxCaption").innerText = itemName || "Photo Preview";
+            document.getElementById("lightbox-overlay").style.display = "flex";
+        }
+        window.closeLightbox = function() {
+            document.getElementById("lightbox-overlay").style.display = "none";
+        }
+        // SPREADSHEET TABLE HANDLING
+        function renderSpreadsheet(el) {
+            let tbody = document.getElementById("spreadsheetBody");
+            tbody.innerHTML = "";
+            if (!el.spreadsheetData) el.spreadsheetData = [];
+            el.spreadsheetData.forEach((row, index) => {
+                let tr = document.createElement("tr");
+                
+                let tdKey = document.createElement("td");
+                let inputKey = document.createElement("input");
+                inputKey.type = "text";
+                inputKey.value = row.key;
+                inputKey.oninput = function() {
+                    row.key = inputKey.value;
+                    saveToFirebase();
+                };
+                tdKey.appendChild(inputKey);
+                let tdVal = document.createElement("td");
+                let inputVal = document.createElement("input");
+                inputVal.type = "text";
+                inputVal.value = row.value;
+                inputVal.oninput = function() {
+                    row.value = inputVal.value;
+                    saveToFirebase();
+                };
+                tdVal.appendChild(inputVal);
+                let tdAction = document.createElement("td");
+                tdAction.style.textAlign = "center";
+                let delRowBtn = document.createElement("button");
+                delRowBtn.className = "danger";
+                delRowBtn.style.padding = "2px 6px";
+                delRowBtn.style.fontSize = "10px";
+                delRowBtn.innerText = "X";
+                delRowBtn.onclick = function() {
+                    el.spreadsheetData.splice(index, 1);
+                    renderSpreadsheet(el);
+                    saveToFirebase();
+                };
+                tdAction.appendChild(delRowBtn);
+                tr.appendChild(tdKey);
+                tr.appendChild(tdVal);
+                tr.appendChild(tdAction);
+                tbody.appendChild(tr);
+            });
+        }
+        window.addSpreadsheetRow = function() {
+            let id = parseInt(document.getElementById("modalElementId").value);
+            let el = elements.find(item => item.id === id);
+            if (el) {
+                if (!el.spreadsheetData) el.spreadsheetData = [];
+                el.spreadsheetData.push({ key: "New Field", value: "Value" });
+                renderSpreadsheet(el);
+                saveToFirebase();
+            }
+        }
+        window.deleteItemFromModal = function() {
+            let id = parseInt(document.getElementById("modalElementId").value);
+            if (confirm("Are you sure you want to delete this item?")) {
+                elements = elements.filter(item => item.id !== id);
+                closeModal();
+                saveToFirebase();
+            }
+        }
+        // CREATING NEW ITEMS FROM SIDEBAR
+        window.addDepartment = function() {
+            let newEl = {
+                id: Date.now(),
+                layer: currentLayer, 
+                name: document.getElementById("newDeptName").value,
+                type: document.getElementById("newDeptType").value,
+                x: parseFloat(document.getElementById("newDeptX").value) || 0,
+                y: parseFloat(document.getElementById("newDeptY").value) || 0,
+                w: parseFloat(document.getElementById("newDeptW").value) || 5,
+                h: parseFloat(document.getElementById("newDeptH").value) || 5,
+                photos: [],
+                spreadsheetData: [{key: "Status", value: "Active"}]
+            };
+            elements.push(newEl);
+            render();
+            saveToFirebase();
+        }
+        window.addAsset = function() {
+            let newEl = {
+                id: Date.now(),
+                layer: currentLayer, 
+                name: document.getElementById("newAssetName").value,
+                type: "asset",
+                category: document.getElementById("newAssetCategory").value,
+                emoji: document.getElementById("newAssetEmoji").value || "🧯",
+                x: parseFloat(document.getElementById("newAssetX").value) || 0,
+                y: parseFloat(document.getElementById("newAssetY").value) || 0,
+                photos: [],
+                spreadsheetData: [{key: "Asset Type", value: "Safety/Fire Node"}]
+            };
+            elements.push(newEl);
+            render();
+            saveToFirebase();
+        }
         loadFromFirebase();
     </script>
 </body>
