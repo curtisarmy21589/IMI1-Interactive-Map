@@ -531,6 +531,8 @@
             visibleElements.forEach(el => {
                 let g = document.createElementNS("http://www.w3.org/2000/svg", "g");
                 g.setAttribute("class", "item-group");
+                
+                // Clicking any asset or zone opens the inspect modal
                 g.addEventListener("click", (e) => {
                     e.stopPropagation();
                     openModal(el);
@@ -545,6 +547,7 @@
                     circle.setAttribute("cx", cx);
                     circle.setAttribute("cy", cy);
                     circle.setAttribute("r", 5); 
+                    circle.setAttribute("class", `item-shape ${el.id === selectedId ? 'selected' : ''}`);
                     circle.setAttribute("fill", "#111b27");
                     circle.setAttribute("stroke", catColor);
                     circle.setAttribute("stroke-width", "2");
@@ -729,7 +732,7 @@
             let tbody = document.getElementById("spreadsheetBody");
             tbody.innerHTML = "";
             if (!el.spreadsheetData) el.spreadsheetData = [];
-            el.spreadsheetData.rows.forEach?.((row) => {}) || el.spreadsheetData.forEach((row) => {
+            el.spreadsheetData.forEach((row) => {
                 let tr = document.createElement("tr");
                 
                 let tdKey = document.createElement("td");
@@ -752,7 +755,6 @@
             });
         }
 
-        // Initialize and pull data from Firebase immediately
         loadFromFirebase();
     </script>
 </body>
