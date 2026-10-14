@@ -382,7 +382,11 @@
             if (r < 0) {
                 return "N" + Math.abs(r);
             }
-            return String.fromCharCode(65 + r); 
+            let adjustedIndex = r;
+            if (adjustedIndex >= 8) {
+                adjustedIndex += 1; // skips 'I' (index 8)
+            }
+            return String.fromCharCode(65 + adjustedIndex); 
         }
         window.switchLayer = function(layerName) {
             currentLayer = layerName;
