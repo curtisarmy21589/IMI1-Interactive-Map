@@ -379,15 +379,10 @@
             return found ? found.color : "#38bdf8";
         }
         function getRowLabel(r) {
-            if (r === buildingRows - 2) return "M.9"; 
-            let index = r;
-            if (index > buildingRows - 2) {
-                index -= 1;
+            if (r < 0) {
+                return "N" + Math.abs(r);
             }
-            if (index < 0) {
-                return "N" + Math.abs(index);
-            }
-            return String.fromCharCode(65 + index); 
+            return String.fromCharCode(65 + r); 
         }
         window.switchLayer = function(layerName) {
             currentLayer = layerName;
@@ -451,22 +446,13 @@
                 line.setAttribute("y1", r * gridSize);
                 line.setAttribute("x2", maxCol * gridSize);
                 line.setAttribute("y2", r * gridSize);
-                if (r === buildingRows - 2) {
-                    line.setAttribute("stroke", "#f43f5e");
-                    line.setAttribute("stroke-dasharray", "2,2");
-                } else {
-                    line.setAttribute("class", "grid-line");
-                }
+                line.setAttribute("class", "grid-line");
                 viewport.appendChild(line);
                 let text = document.createElementNS("http://www.w3.org/2000/svg", "text");
                 text.setAttribute("x", (minCol * gridSize) - 10);
                 text.setAttribute("y", (r * gridSize) + (gridSize / 2) + 3);
                 text.setAttribute("text-anchor", "end");
                 text.setAttribute("class", "coord-label");
-                if (r === buildingRows - 2) {
-                    text.setAttribute("fill", "#f43f5e");
-                    text.setAttribute("font-weight", "bold");
-                }
                 text.textContent = getRowLabel(r);
                 viewport.appendChild(text);
             }
