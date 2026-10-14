@@ -334,7 +334,7 @@
         const minRow = -6;
         const maxRow = 20;
         const buildingCols = 30; 
-        const buildingRows = 14; 
+        const buildingRows = 13; // Set to 13 rows total (A-H, J-N)
         let currentLayer = 'ground'; 
         let categories = [
             { name: "Fire Safety", color: "#ef4444" },
@@ -444,16 +444,16 @@
                 text.textContent = c + 1; 
                 viewport.appendChild(text);
             }
-            for (let r = minRow; r <= maxRow; r++) {
+            for (let r = 0; r < buildingRows; r++) {
                 let line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-                line.setAttribute("x1", minCol * gridSize);
+                line.setAttribute("x1", 0);
                 line.setAttribute("y1", r * gridSize);
-                line.setAttribute("x2", maxCol * gridSize);
+                line.setAttribute("x2", buildingCols * gridSize);
                 line.setAttribute("y2", r * gridSize);
                 line.setAttribute("class", "grid-line");
                 viewport.appendChild(line);
                 let text = document.createElementNS("http://www.w3.org/2000/svg", "text");
-                text.setAttribute("x", (minCol * gridSize) - 10);
+                text.setAttribute("x", -10);
                 text.setAttribute("y", (r * gridSize) + (gridSize / 2) + 3);
                 text.setAttribute("text-anchor", "end");
                 text.setAttribute("class", "coord-label");
@@ -473,11 +473,11 @@
             let layerTitleName = currentLayer.toUpperCase();
             let topLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
             topLabel.setAttribute("x", 0.5 * gridSize);
-            topLabel.setAttribute("y", -22);
+            topLabel.setAttribute("y", -8);
             topLabel.setAttribute("fill", "#38bdf8");
             topLabel.setAttribute("font-size", "10px");
             topLabel.setAttribute("font-weight", "bold");
-            topLabel.textContent = `BUILDING SOUTH WALL (${layerTitleName} LAYER) ▲`;
+            topLabel.textContent = `SOUTH WALL - ROW A (${layerTitleName} LAYER) ▲`;
             viewport.appendChild(topLabel);
             let bottomLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
             bottomLabel.setAttribute("x", 0.5 * gridSize);
@@ -485,7 +485,7 @@
             bottomLabel.setAttribute("fill", "#38bdf8");
             bottomLabel.setAttribute("font-size", "10px");
             bottomLabel.setAttribute("font-weight", "bold");
-            bottomLabel.textContent = `BUILDING NORTH WALL ▼`;
+            bottomLabel.textContent = `NORTH WALL - ROW N ▼`;
             viewport.appendChild(bottomLabel);
 
             let visibleElements = elements.filter(el => (el.layer || 'ground') === currentLayer);
