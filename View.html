@@ -3,6 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <title>Facility Layout Viewer - View Only</title>
+
+    <!-- Mobile PWA & App Manifest Settings -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#0b131d">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="FacilityMap">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="https://img.icons8.com/color/512/map-marker.png">
+
     <style>
         body {
             background-color: #0b131d;
@@ -12,6 +22,7 @@
             display: flex;
             height: 100vh;
             overflow: hidden;
+            touch-action: none; /* Prevents default browser drag-to-refresh on mobile */
         }
         #sidebar {
             width: 340px;
@@ -69,6 +80,7 @@
             background-color: #070d14;
             overflow: hidden;
             cursor: grab;
+            touch-action: none;
         }
         #canvas-container.panning { cursor: grabbing; }
         svg {
@@ -137,6 +149,7 @@
             border: 1px solid #38bdf8;
             border-radius: 8px;
             width: 600px;
+            max-width: 92vw;
             max-height: 90vh;
             display: flex;
             flex-direction: column;
@@ -225,6 +238,19 @@
         .photo-thumb-container:hover img {
             transform: scale(1.05);
         }
+
+        /* Mobile specific adjustments */
+        @media (max-width: 768px) {
+            body { flex-direction: column; }
+            #sidebar {
+                width: 100%;
+                height: auto;
+                max-height: 35vh;
+                padding: 10px;
+                box-sizing: border-box;
+            }
+            #canvas-container { height: 65vh; }
+        }
     </style>
 </head>
 <body>
@@ -256,7 +282,7 @@
 
         <div>
             <p style="font-size: 10px; color: #64748b; margin: 10px 0 0 0;">
-                💡 <b>Tip:</b> Click any asset or zone on the map to inspect its info, custom parameters, and photos. Use your mouse to pan and zoom.
+                💡 <b>Tip:</b> Tap any asset or zone on the map to inspect parameters and photos. Use touch gestures to drag and pinch to zoom.
             </p>
         </div>
     </div>
@@ -284,7 +310,7 @@
                     <div style="flex:1;"><label>Y Row</label><input type="number" id="modalY" disabled></div>
                 </div>
                 <div>
-                    <label>Location Photos (Click photo to enlarge)</label>
+                    <label>Location Photos (Tap photo to enlarge)</label>
                     <div class="photo-gallery" id="modalPhotoGallery"></div>
                 </div>
                 <div>
@@ -579,10 +605,20 @@
                 viewport.appendChild(g);
             });
         }
-        container.addEventListener("mousemove", (e) => {
+
+        // Handle Touch and Pointer Events for Panning & Mobile Interaction
+        function getPointerPos(e) {
+            let clientX = e.clientX || (e.touches && e.touches[0].clientX);
+            let clientY = e.clientY || (e.touches && e.touches[0].clientY);
+            return { x: clientX, y: clientY };
+        }
+
+        function handleMove(e) {
+            let pos = getPointerPos(e);
+            if (!pos.x || !pos.y) return;
             let rect = container.getBoundingClientRect();
-            let mouseX = e.clientX - rect.left;
-            let mouseY = e.clientY - rect.top;
+            let mouseX = pos.x - rect.left;
+            let mouseY = pos.y - rect.top;
             let localX = (mouseX - viewTransform.x) / viewTransform.scale;
             let localY = (mouseY - viewTransform.y) / viewTransform.scale;
             let coordDisplay = document.getElementById("coord-display");
@@ -592,11 +628,15 @@
             let rowLabel = getRowLabel(rowIdx);
             coordDisplay.innerHTML = `Grid: <b>Row ${rowLabel}, Col ${preciseColNum}</b>`;
             if (isPanning) {
-                viewTransform.x = e.clientX - panStart.x;
-                viewTransform.y = e.clientY - panStart.y;
+                viewTransform.x = pos.x - panStart.x;
+                viewTransform.y = pos.y - panStart.y;
                 render();
             }
-        });
+        }
+
+        container.addEventListener("mousemove", handleMove);
+        container.addEventListener("touchmove", handleMove, { passive: true });
+
         container.addEventListener("wheel", (e) => {
             e.preventDefault();
             let zoomIntensity = 0.1;
@@ -613,17 +653,28 @@
             viewTransform.y = mouseY - (mouseY - viewTransform.y) * (viewTransform.scale / oldScale);
             render();
         }, { passive: false });
-        container.addEventListener("mousedown", (e) => {
+
+        function handleStart(e) {
+            let pos = getPointerPos(e);
+            if (!pos.x || !pos.y) return;
             isPanning = true;
             container.classList.add("panning");
-            panStart = { x: e.clientX - viewTransform.x, y: e.clientY - viewTransform.y };
-        });
-        window.addEventListener("mouseup", () => {
+            panStart = { x: pos.x - viewTransform.x, y: pos.y - viewTransform.y };
+        }
+
+        container.addEventListener("mousedown", handleStart);
+        container.addEventListener("touchstart", handleStart, { passive: true });
+
+        function handleEnd() {
             if (isPanning) {
                 isPanning = false;
                 container.classList.remove("panning");
             }
-        });
+        }
+
+        window.addEventListener("mouseup", handleEnd);
+        window.addEventListener("touchend", handleEnd);
+
         function openModal(el) {
             selectedId = el.id;
             document.getElementById("modalElementId").value = el.id;
@@ -646,7 +697,7 @@
             el.photos.forEach((photoUrl) => {
                 let containerDiv = document.createElement("div");
                 containerDiv.className = "photo-thumb-container";
-                containerDiv.title = "Click to enlarge photo";
+                containerDiv.title = "Tap to enlarge photo";
                 containerDiv.onclick = () => openLightbox(photoUrl, el.name);
                 let img = document.createElement("img");
                 img.src = photoUrl;
