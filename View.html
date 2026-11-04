@@ -1,345 +1,4 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Facility Layout Viewer - View Only</title>
-
-    <!-- Mobile PWA & App Manifest Settings -->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="theme-color" content="#0b131d">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="FacilityMap">
-    <link rel="manifest" href="manifest.json">
-    <link rel="apple-touch-icon" href="https://img.icons8.com/color/512/map-marker.png">
-
-    <style>
-        body {
-            background-color: #0b131d;
-            color: #e0e1dd;
-            font-family: sans-serif;
-            margin: 0;
-            display: flex;
-            height: 100vh;
-            overflow: hidden;
-            touch-action: none;
-        }
-        #sidebar {
-            width: 340px;
-            background-color: #111b27;
-            padding: 15px;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            box-shadow: 2px 0 10px rgba(0,0,0,0.7);
-            z-index: 10;
-            overflow-y: auto;
-            border-right: 1px solid #1f2d3d;
-        }
-        h2, h3 { margin: 0 0 5px 0; color: #38bdf8; font-size: 15px; }
-        label { font-size: 11px; color: #94a3b8; }
-        input, select, button, textarea {
-            width: 100%;
-            padding: 6px 8px;
-            background: #0b131d;
-            border: 1px solid #38bdf8;
-            color: #fff;
-            border-radius: 4px;
-            box-sizing: border-box;
-            margin-top: 2px;
-            font-size: 12px;
-        }
-        textarea { resize: vertical; height: 60px; font-family: sans-serif; }
-        button {
-            background: #1e293b;
-            font-weight: bold;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-        button:hover { background: #38bdf8; color: #0b131d; }
-        .layer-btn {
-            flex: 1;
-            padding: 6px 4px;
-            background: #070d14;
-            border: 1px solid #1e293b;
-            color: #94a3b8;
-            font-size: 10px;
-            cursor: pointer;
-            border-radius: 4px;
-            text-align: center;
-        }
-        .layer-btn.active {
-            background: #0284c7;
-            color: #fff;
-            border-color: #38bdf8;
-            font-weight: bold;
-        }
-        #canvas-container {
-            flex-grow: 1;
-            position: relative;
-            background-color: #070d14;
-            overflow: hidden;
-            cursor: grab;
-            touch-action: none;
-        }
-        #canvas-container.panning { cursor: grabbing; }
-        svg {
-            position: absolute;
-            top: 0;
-            left: 0;
-            transform-origin: 0 0;
-        }
-        .item-group {
-            cursor: pointer;
-        }
-        .item-shape {
-            transition: stroke 0.2s;
-        }
-        .item-group:hover .item-shape { stroke: #fff; }
-        .asset-popup {
-            opacity: 0;
-            transition: opacity 0.15s ease-in-out;
-            pointer-events: none;
-        }
-        .item-group:hover .asset-popup {
-            opacity: 1;
-        }
-        .grid-line {
-            stroke: #132235;
-            stroke-width: 1;
-            pointer-events: none;
-        }
-        .coord-label {
-            fill: #64748b;
-            font-size: 9px;
-            font-family: monospace;
-            pointer-events: none;
-        }
-        #coord-display {
-            background: #070d14;
-            border: 1px solid #1e293b;
-            padding: 6px;
-            border-radius: 4px;
-            font-family: monospace;
-            color: #38bdf8;
-            font-size: 12px;
-            text-align: center;
-        }
-        #sync-status {
-            font-size: 10px;
-            text-align: center;
-            color: #10b981;
-            font-weight: bold;
-            margin-top: -4px;
-        }
-        #modal-overlay, #lightbox-overlay {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.85);
-            z-index: 1000;
-            justify-content: center;
-            align-items: center;
-        }
-        #lightbox-overlay {
-            z-index: 2000;
-        }
-        .modal-content {
-            background: #111b27;
-            border: 1px solid #38bdf8;
-            border-radius: 8px;
-            width: 600px;
-            max-width: 92vw;
-            max-height: 90vh;
-            display: flex;
-            flex-direction: column;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.8);
-            overflow: hidden;
-        }
-        .modal-header {
-            background: #0b131d;
-            padding: 12px 15px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid #1f2d3d;
-        }
-        .modal-body {
-            padding: 15px;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-        .modal-footer {
-            background: #0b131d;
-            padding: 10px 15px;
-            display: flex;
-            justify-content: flex-end;
-            gap: 8px;
-            border-top: 1px solid #1f2d3d;
-        }
-        .close-modal {
-            background: none;
-            border: none;
-            color: #94a3b8;
-            font-size: 18px;
-            cursor: pointer;
-            width: auto;
-            padding: 0;
-            margin: 0;
-        }
-        .close-modal:hover { color: #fff; background: none; }
-        .spreadsheet-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 4px;
-        }
-        .spreadsheet-table th, .spreadsheet-table td {
-            border: 1px solid #1f2d3d;
-            padding: 6px;
-            text-align: left;
-            font-size: 11px;
-        }
-        .spreadsheet-table th {
-            background: #0b131d;
-            color: #38bdf8;
-        }
-        .spreadsheet-table input {
-            background: transparent;
-            border: none;
-            color: #fff;
-            width: 100%;
-            padding: 2px;
-            margin: 0;
-        }
-        .photo-gallery {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-            margin-top: 4px;
-        }
-        .photo-thumb-container {
-            position: relative;
-            width: 90px;
-            height: 90px;
-            border: 1px solid #1f2d3d;
-            border-radius: 4px;
-            overflow: hidden;
-            background: #0b131d;
-            cursor: pointer;
-        }
-        .photo-thumb-container img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            transition: transform 0.2s;
-        }
-        .photo-thumb-container:hover img {
-            transform: scale(1.05);
-        }
-
-        @media (max-width: 768px) {
-            body { flex-direction: column; }
-            #sidebar {
-                width: 100%;
-                height: auto;
-                max-height: 35vh;
-                padding: 10px;
-                box-sizing: border-box;
-            }
-            #canvas-container { height: 65vh; }
-        }
-    </style>
-</head>
-<body>
-    <div id="sidebar">
-        <h2>Facility Viewer (View Only)</h2>
-        
-        <div id="coord-display">Col: -- | Row: --</div>
-        <div id="sync-status">Connected (View Only)</div>
-        
-        <!-- LAYER SELECTION MENU -->
-        <div>
-            <label>Active View Layer</label>
-            <div style="display: flex; gap: 4px; margin-top: 2px;">
-                <button class="layer-btn active" id="layerGroundBtn" onclick="switchLayer('ground')">Ground Floor</button>
-                <button class="layer-btn" id="layerMezzBtn" onclick="switchLayer('mezzanine')">Mezz Floor</button>
-                <button class="layer-btn" id="layerRoofBtn" onclick="switchLayer('roof')">Roof Layer</button>
-            </div>
-            <div style="display: flex; gap: 4px; margin-top: 4px;">
-                <button class="layer-btn" id="layerSprinklerBtn" onclick="switchLayer('sprinkler')">Sprinkler Shutoffs</button>
-                <button class="layer-btn" id="layerWaterBtn" onclick="switchLayer('water')">Water Shutoffs</button>
-                <button class="layer-btn" id="layerGasBtn" onclick="switchLayer('gas')">Gas Shutoffs</button>
-            </div>
-            <div style="display: flex; gap: 4px; margin-top: 4px;">
-                <button class="layer-btn" id="layerDockDoorsBtn" onclick="switchLayer('dock_doors')">Dock Doors</button>
-                <button class="layer-btn" id="layerUnderMezzSprinklersBtn" onclick="switchLayer('under_mezz_sprinklers')">Under Mezz Sprinklers</button>
-                <button class="layer-btn" id="layerHvacBtn" onclick="switchLayer('hvac')">HVAC</button>
-            </div>
-        </div>
-
-        <div>
-            <p style="font-size: 10px; color: #64748b; margin: 10px 0 0 0;">
-                💡 <b>Tip:</b> Tap any asset or zone on the map to inspect parameters and photos. Use touch gestures to drag and pinch to zoom.
-            </p>
-        </div>
-    </div>
-
-    <div id="canvas-container">
-        <svg id="layoutSvg" width="2200" height="1400">
-            <g id="viewport"></g>
-        </svg>
-    </div>
-
-    <div id="modal-overlay">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 id="modalTitle" style="color: #38bdf8; margin: 0;">Item Details</h3>
-                <button class="close-modal" onclick="closeModal()">×</button>
-            </div>
-            <div class="modal-body">
-                <input type="hidden" id="modalElementId">
-                <div>
-                    <label>Item Name / Designation</label>
-                    <input type="text" id="modalName" disabled>
-                </div>
-                <div style="display: flex; gap: 6px;">
-                    <div style="flex:1;"><label>X Col</label><input type="number" id="modalX" disabled></div>
-                    <div style="flex:1;"><label>Y Row</label><input type="number" id="modalY" disabled></div>
-                </div>
-                <div>
-                    <label>Location Photos (Tap photo to enlarge)</label>
-                    <div class="photo-gallery" id="modalPhotoGallery"></div>
-                </div>
-                <div>
-                    <label>Spreadsheet Details / Custom Records</label>
-                    <table class="spreadsheet-table">
-                        <thead>
-                            <tr>
-                                <th style="width: 40%;">Parameter / Field</th>
-                                <th style="width: 60%;">Value / Data</th>
-                            </tr>
-                        </thead>
-                        <tbody id="spreadsheetBody"></tbody>
-                    </table>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button onclick="closeModal()" style="width: auto; padding: 6px 12px; background: #38bdf8; color: #0b131d;">Close</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="lightbox-overlay" onclick="closeLightbox()">
-        <div style="position: relative; max-width: 90vw; max-height: 90vh; display: flex; flex-direction: column; align-items: center;" onclick="event.stopPropagation()">
-            <button onclick="closeLightbox()" style="position: absolute; top: -35px; right: 0; background: none; border: none; color: #fff; font-size: 24px; cursor: pointer;">×</button>
-            <img id="lightboxImage" src="" style="max-width: 85vw; max-height: 80vh; object-fit: contain; border-radius: 4px; border: 1px solid #38bdf8; box-shadow: 0 10px 30px rgba(0,0,0,0.9);">
-            <div id="lightboxCaption" style="margin-top: 8px; color: #38bdf8; font-size: 13px; font-weight: bold;"></div>
-        </div>
-    </div>
-
-    <script type="module">
+<script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
         
@@ -375,12 +34,9 @@
         let elements = [];
         let selectedId = null;
 
-        // Viewport & Gesture States
         let isPanning = false;
         let panStart = { x: 0, y: 0 };
         let viewTransform = { x: 250, y: 180, scale: 0.9 };
-        let initialPinchDistance = null;
-        let initialScale = 0.9;
 
         const container = document.getElementById("canvas-container");
         const viewport = document.getElementById("viewport");
@@ -415,21 +71,22 @@
         function getRowLabel(r) {
             if (r < 0) return "N" + Math.abs(r);
             let adjustedIndex = r;
-            if (adjustedIndex >= 8) adjustedIndex += 1; // skips 'I'
+            if (adjustedIndex >= 8) adjustedIndex += 1;
             return String.fromCharCode(65 + adjustedIndex); 
         }
 
         window.switchLayer = function(layerName) {
             currentLayer = layerName;
-            document.getElementById("layerGroundBtn").classList.toggle("active", layerName === 'ground');
-            document.getElementById("layerMezzBtn").classList.toggle("active", layerName === 'mezzanine');
-            document.getElementById("layerRoofBtn").classList.toggle("active", layerName === 'roof');
-            document.getElementById("layerSprinklerBtn").classList.toggle("active", layerName === 'sprinkler');
-            document.getElementById("layerWaterBtn").classList.toggle("active", layerName === 'water');
-            document.getElementById("layerGasBtn").classList.toggle("active", layerName === 'gas');
-            document.getElementById("layerDockDoorsBtn").classList.toggle("active", layerName === 'dock_doors');
-            document.getElementById("layerUnderMezzSprinklersBtn").classList.toggle("active", layerName === 'under_mezz_sprinklers');
-            document.getElementById("layerHvacBtn").classList.toggle("active", layerName === 'hvac');
+            document.querySelectorAll(".layer-btn").forEach(btn => btn.classList.remove("active"));
+            
+            const btnMap = {
+                'ground': 'layerGroundBtn', 'mezzanine': 'layerMezzBtn', 'roof': 'layerRoofBtn',
+                'sprinkler': 'layerSprinklerBtn', 'water': 'layerWaterBtn', 'gas': 'layerGasBtn',
+                'dock_doors': 'layerDockDoorsBtn', 'under_mezz_sprinklers': 'layerUnderMezzSprinklersBtn', 'hvac': 'layerHvacBtn'
+            };
+            if (btnMap[layerName] && document.getElementById(btnMap[layerName])) {
+                document.getElementById(btnMap[layerName]).classList.add("active");
+            }
             selectedId = null;
             render();
         }
@@ -510,30 +167,11 @@
             buildingWall.setAttribute("stroke-width", "2");
             viewport.appendChild(buildingWall);
 
-            let layerTitleName = currentLayer.toUpperCase();
-            let topLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
-            topLabel.setAttribute("x", 0.5 * gridSize);
-            topLabel.setAttribute("y", -8);
-            topLabel.setAttribute("fill", "#38bdf8");
-            topLabel.setAttribute("font-size", "10px");
-            topLabel.setAttribute("font-weight", "bold");
-            topLabel.textContent = `SOUTH WALL - ROW A (${layerTitleName} LAYER) ▲`;
-            viewport.appendChild(topLabel);
-
-            let bottomLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
-            bottomLabel.setAttribute("x", 0.5 * gridSize);
-            bottomLabel.setAttribute("y", (buildingRows * gridSize) + 18);
-            bottomLabel.setAttribute("fill", "#38bdf8");
-            bottomLabel.setAttribute("font-size", "10px");
-            bottomLabel.setAttribute("font-weight", "bold");
-            bottomLabel.textContent = `NORTH WALL - ROW N ▼`;
-            viewport.appendChild(bottomLabel);
-
             let visibleElements = elements.filter(el => (el.layer || 'ground') === currentLayer);
             visibleElements.forEach(el => {
                 let g = document.createElementNS("http://www.w3.org/2000/svg", "g");
                 g.setAttribute("class", "item-group");
-                g.addEventListener("pointerdown", (e) => {
+                g.addEventListener("click", (e) => {
                     e.stopPropagation();
                     openModal(el);
                 });
@@ -546,7 +184,7 @@
                     let circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
                     circle.setAttribute("cx", cx);
                     circle.setAttribute("cy", cy);
-                    circle.setAttribute("r", 8); 
+                    circle.setAttribute("r", 5); 
                     circle.setAttribute("class", `item-shape ${el.id === selectedId ? 'selected' : ''}`);
                     circle.setAttribute("fill", "#111b27");
                     circle.setAttribute("stroke", catColor);
@@ -561,56 +199,17 @@
                     emojiText.style.pointerEvents = "none";
                     emojiText.textContent = el.emoji || "📍";
 
-                    let popupGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
-                    popupGroup.setAttribute("class", "asset-popup");
-                    let boxWidth = (el.name.length * 6.5) + 12;
-                    let popupBg = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-                    popupBg.setAttribute("x", cx - (boxWidth / 2));
-                    popupBg.setAttribute("y", cy - 28);
-                    popupBg.setAttribute("width", boxWidth);
-                    popupBg.setAttribute("height", 18);
-                    popupBg.setAttribute("rx", 4);
-                    popupBg.setAttribute("fill", "#0b131d");
-                    popupBg.setAttribute("stroke", catColor);
-                    popupBg.setAttribute("stroke-width", "1.5");
-
-                    let popupText = document.createElementNS("http://www.w3.org/2000/svg", "text");
-                    popupText.setAttribute("x", cx);
-                    popupText.setAttribute("y", cy - 16);
-                    popupText.setAttribute("text-anchor", "middle");
-                    popupText.setAttribute("fill", "#ffffff");
-                    popupText.setAttribute("font-size", "10px");
-                    popupText.setAttribute("font-weight", "bold");
-                    popupText.textContent = el.name;
-
-                    popupGroup.appendChild(popupBg);
-                    popupGroup.appendChild(popupText);
                     g.appendChild(circle);
                     g.appendChild(emojiText);
-                    g.appendChild(popupGroup);
                 } else {
                     let rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
                     rect.setAttribute("x", el.x * gridSize);
                     rect.setAttribute("y", el.y * gridSize);
                     rect.setAttribute("width", el.w * gridSize);
                     rect.setAttribute("height", el.h * gridSize);
-                    if (el.type === 'yard') {
-                        rect.setAttribute("fill", "#b45309");
-                        rect.setAttribute("fill-opacity", "0.3");
-                        rect.setAttribute("stroke", "#d97706");
-                    } else if (el.type === 'racking') {
-                        rect.setAttribute("fill", "#d97706");
-                        rect.setAttribute("fill-opacity", "0.35");
-                        rect.setAttribute("stroke", "#f59e0b");
-                    } else if (el.type === 'mezzanine') {
-                        rect.setAttribute("fill", "#10b981");
-                        rect.setAttribute("fill-opacity", "0.35");
-                        rect.setAttribute("stroke", "#34d399");
-                    } else {
-                        rect.setAttribute("fill", "#0284c7");
-                        rect.setAttribute("fill-opacity", "0.35");
-                        rect.setAttribute("stroke", "#38bdf8");
-                    }
+                    rect.setAttribute("fill", "#0284c7");
+                    rect.setAttribute("fill-opacity", "0.35");
+                    rect.setAttribute("stroke", "#38bdf8");
                     rect.setAttribute("stroke-width", "1");
 
                     let text = document.createElementNS("http://www.w3.org/2000/svg", "text");
@@ -629,56 +228,134 @@
             });
         }
 
-        // --- UNIFIED MOUSE & TOUCH EVENT HANDLERS ---
-        function getDistance(touches) {
-            return Math.hypot(
-                touches[0].clientX - touches[1].clientX,
-                touches[0].clientY - touches[1].clientY
-            );
+        // Clean Mouse & Touch Pan Handling
+        function getPointerPos(e) {
+            let clientX = e.clientX || (e.touches && e.touches[0].clientX);
+            let clientY = e.clientY || (e.touches && e.touches[0].clientY);
+            return { x: clientX, y: clientY };
         }
 
-        container.addEventListener("pointerdown", (e) => {
-            if (e.pointerType === 'mouse' || e.isPrimary) {
-                isPanning = true;
-                container.classList.add("panning");
-                panStart = { x: e.clientX - viewTransform.x, y: e.clientY - viewTransform.y };
-            }
-        });
-
-        container.addEventListener("pointermove", (e) => {
+        function handleMove(e) {
+            let pos = getPointerPos(e);
+            if (!pos.x || !pos.y) return;
             let rect = container.getBoundingClientRect();
-            let mouseX = e.clientX - rect.left;
-            let mouseY = e.clientY - rect.top;
-
+            let mouseX = pos.x - rect.left;
+            let mouseY = pos.y - rect.top;
             let localX = (mouseX - viewTransform.x) / viewTransform.scale;
             let localY = (mouseY - viewTransform.y) / viewTransform.scale;
-
+            
             let exactCol = localX / gridSize;
             let rowIdx = Math.floor(localY / gridSize);
             document.getElementById("coord-display").innerHTML = `Grid: <b>Row ${getRowLabel(rowIdx)}, Col ${(exactCol + 1).toFixed(2)}</b>`;
 
             if (isPanning) {
-                viewTransform.x = e.clientX - panStart.x;
-                viewTransform.y = e.clientY - panStart.y;
+                viewTransform.x = pos.x - panStart.x;
+                viewTransform.y = pos.y - panStart.y;
                 render();
             }
-        });
+        }
 
-        const endPan = () => {
-            isPanning = false;
-            container.classList.remove("panning");
-        };
-        container.addEventListener("pointerup", endPan);
-        container.addEventListener("pointercancel", endPan);
+        container.addEventListener("mousemove", handleMove);
+        container.addEventListener("touchmove", handleMove, { passive: true });
 
-        // Mobile Pinch-to-Zoom Support
-        container.addEventListener("touchstart", (e) => {
-            if (e.touches.length === 2) {
-                isPanning = false;
-                initialPinchDistance = getDistance(e.touches);
-                initialScale = viewTransform.scale;
+        container.addEventListener("wheel", (e) => {
+            e.preventDefault();
+            let zoomIntensity = 0.1;
+            let oldScale = viewTransform.scale;
+            if (e.deltaY < 0) {
+                viewTransform.scale = Math.min(viewTransform.scale * (1 + zoomIntensity), 3.0);
+            } else {
+                viewTransform.scale = Math.max(viewTransform.scale * (1 - zoomIntensity), 0.3);
             }
-        }, { passive: true });
+            let rect = container.getBoundingClientRect();
+            let mouseX = e.clientX - rect.left;
+            let mouseY = e.clientY - rect.top;
+            viewTransform.x = mouseX - (mouseX - viewTransform.x) * (viewTransform.scale / oldScale);
+            viewTransform.y = mouseY - (mouseY - viewTransform.y) * (viewTransform.scale / oldScale);
+            render();
+        }, { passive: false });
 
-        container.addEventListener("touchmove", (e) => {
-            if (e.touches.length ===
+        function handleStart(e) {
+            let pos = getPointerPos(e);
+            if (!pos.x || !pos.y) return;
+            isPanning = true;
+            container.classList.add("panning");
+            panStart = { x: pos.x - viewTransform.x, y: pos.y - viewTransform.y };
+        }
+
+        container.addEventListener("mousedown", handleStart);
+        container.addEventListener("touchstart", handleStart, { passive: true });
+
+        function handleEnd() {
+            if (isPanning) {
+                isPanning = false;
+                container.classList.remove("panning");
+            }
+        }
+
+        window.addEventListener("mouseup", handleEnd);
+        window.addEventListener("touchend", handleEnd);
+
+        // Modal Helpers
+        function openModal(el) {
+            selectedId = el.id;
+            document.getElementById("modalElementId").value = el.id;
+            document.getElementById("modalTitle").innerText = `Details: ${el.name}`;
+            document.getElementById("modalName").value = el.name;
+            document.getElementById("modalX").value = el.x;
+            document.getElementById("modalY").value = el.y;
+            renderPhotos(el);
+            renderSpreadsheet(el);
+            document.getElementById("modal-overlay").style.display = "flex";
+        }
+        window.closeModal = function() {
+            document.getElementById("modal-overlay").style.display = "none";
+            selectedId = null;
+        }
+        function renderPhotos(el) {
+            let gallery = document.getElementById("modalPhotoGallery");
+            gallery.innerHTML = "";
+            if (!el.photos) el.photos = [];
+            el.photos.forEach((photoUrl) => {
+                let containerDiv = document.createElement("div");
+                containerDiv.className = "photo-thumb-container";
+                containerDiv.onclick = () => openLightbox(photoUrl, el.name);
+                let img = document.createElement("img");
+                img.src = photoUrl;
+                containerDiv.appendChild(img);
+                gallery.appendChild(containerDiv);
+            });
+        }
+        window.openLightbox = function(url, itemName) {
+            document.getElementById("lightboxImage").src = url;
+            document.getElementById("lightboxCaption").innerText = itemName || "Photo Preview";
+            document.getElementById("lightbox-overlay").style.display = "flex";
+        }
+        window.closeLightbox = function() {
+            document.getElementById("lightbox-overlay").style.display = "none";
+        }
+        function renderSpreadsheet(el) {
+            let tbody = document.getElementById("spreadsheetBody");
+            tbody.innerHTML = "";
+            if (!el.spreadsheetData) el.spreadsheetData = [];
+            el.spreadsheetData.forEach((row) => {
+                let tr = document.createElement("tr");
+                let tdKey = document.createElement("td");
+                let inputKey = document.createElement("input");
+                inputKey.type = "text";
+                inputKey.value = row.key;
+                inputKey.disabled = true;
+                tdKey.appendChild(inputKey);
+                let tdVal = document.createElement("td");
+                let inputVal = document.createElement("input");
+                inputVal.type = "text";
+                inputVal.value = row.value;
+                inputVal.disabled = true;
+                tdVal.appendChild(inputVal);
+                tr.appendChild(tdKey);
+                tr.appendChild(tdVal);
+                tbody.appendChild(tr);
+            });
+        }
+        loadFromFirebase();
+    </script>
