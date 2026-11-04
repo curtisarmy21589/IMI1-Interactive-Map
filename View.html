@@ -339,12 +339,10 @@
         </div>
     </div>
 
-    <!-- Service Worker Registration Script for Mobile App Installation -->
-   
-
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        
         const firebaseConfig = {
             apiKey: "AIzaSyCrKAut8_5nHWTWtYqZZr5HOENGd8mqZxE",
             authDomain: "imi1-interactive-map-8d929.firebaseapp.com",
@@ -356,13 +354,15 @@
         };
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
+
         const gridSize = 25;
         const minCol = -8;
         const maxCol = 38;
         const minRow = -6;
         const maxRow = 20;
         const buildingCols = 30; 
-        const buildingRows = 13; // Set to 13 rows total (A-H, J-N)
+        const buildingRows = 13;
+        
         let currentLayer = 'ground'; 
         let categories = [
             { name: "Fire Safety", color: "#ef4444" },
@@ -374,11 +374,15 @@
         ];
         let elements = [];
         let selectedId = null;
+
+        // Viewport & Gesture States
         let isPanning = false;
         let panStart = { x: 0, y: 0 };
         let viewTransform = { x: 250, y: 180, scale: 0.9 };
+        let initialPinchDistance = null;
+        let initialScale = 0.9;
+
         const container = document.getElementById("canvas-container");
-        const svg = document.getElementById("layoutSvg");
         const viewport = document.getElementById("viewport");
         const syncStatus = document.getElementById("sync-status");
 
@@ -402,20 +406,19 @@
                 render();
             }
         }
+
         function getCategoryColor(catName) {
             let found = categories.find(c => c.name === catName);
             return found ? found.color : "#38bdf8";
         }
+
         function getRowLabel(r) {
-            if (r < 0) {
-                return "N" + Math.abs(r);
-            }
+            if (r < 0) return "N" + Math.abs(r);
             let adjustedIndex = r;
-            if (adjustedIndex >= 8) {
-                adjustedIndex += 1; // skips 'I' (index 8)
-            }
+            if (adjustedIndex >= 8) adjustedIndex += 1; // skips 'I'
             return String.fromCharCode(65 + adjustedIndex); 
         }
+
         window.switchLayer = function(layerName) {
             currentLayer = layerName;
             document.getElementById("layerGroundBtn").classList.toggle("active", layerName === 'ground');
@@ -430,12 +433,15 @@
             selectedId = null;
             render();
         }
+
         function updateTransformString() {
             viewport.setAttribute("transform", `translate(${viewTransform.x}, ${viewTransform.y}) scale(${viewTransform.scale})`);
         }
+
         function render() {
             viewport.innerHTML = "";
             updateTransformString();
+
             let siteBackground = document.createElementNS("http://www.w3.org/2000/svg", "g");
             let earthGrading = document.createElementNS("http://www.w3.org/2000/svg", "rect");
             earthGrading.setAttribute("x", minCol * gridSize);
@@ -446,6 +452,7 @@
             earthGrading.setAttribute("stroke", "#281e17");
             earthGrading.setAttribute("stroke-width", "2");
             siteBackground.appendChild(earthGrading);
+
             let siteLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
             siteLabel.setAttribute("x", (minCol + 1) * gridSize);
             siteLabel.setAttribute("y", (minRow + 1) * gridSize);
@@ -464,6 +471,7 @@
                 line.setAttribute("y2", maxRow * gridSize);
                 line.setAttribute("class", "grid-line");
                 viewport.appendChild(line);
+
                 let text = document.createElementNS("http://www.w3.org/2000/svg", "text");
                 text.setAttribute("x", (c * gridSize) + (gridSize / 2));
                 text.setAttribute("y", (minRow * gridSize) - 8);
@@ -472,6 +480,7 @@
                 text.textContent = c + 1; 
                 viewport.appendChild(text);
             }
+
             for (let r = 0; r < buildingRows; r++) {
                 let line = document.createElementNS("http://www.w3.org/2000/svg", "line");
                 line.setAttribute("x1", 0);
@@ -480,6 +489,7 @@
                 line.setAttribute("y2", r * gridSize);
                 line.setAttribute("class", "grid-line");
                 viewport.appendChild(line);
+
                 let text = document.createElementNS("http://www.w3.org/2000/svg", "text");
                 text.setAttribute("x", -10);
                 text.setAttribute("y", (r * gridSize) + (gridSize / 2) + 3);
@@ -488,6 +498,7 @@
                 text.textContent = getRowLabel(r);
                 viewport.appendChild(text);
             }
+
             let buildingWall = document.createElementNS("http://www.w3.org/2000/svg", "rect");
             buildingWall.setAttribute("x", 0);
             buildingWall.setAttribute("y", 0);
@@ -498,6 +509,7 @@
             buildingWall.setAttribute("stroke", "#38bdf8");
             buildingWall.setAttribute("stroke-width", "2");
             viewport.appendChild(buildingWall);
+
             let layerTitleName = currentLayer.toUpperCase();
             let topLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
             topLabel.setAttribute("x", 0.5 * gridSize);
@@ -507,6 +519,7 @@
             topLabel.setAttribute("font-weight", "bold");
             topLabel.textContent = `SOUTH WALL - ROW A (${layerTitleName} LAYER) ▲`;
             viewport.appendChild(topLabel);
+
             let bottomLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
             bottomLabel.setAttribute("x", 0.5 * gridSize);
             bottomLabel.setAttribute("y", (buildingRows * gridSize) + 18);
@@ -520,22 +533,25 @@
             visibleElements.forEach(el => {
                 let g = document.createElementNS("http://www.w3.org/2000/svg", "g");
                 g.setAttribute("class", "item-group");
-                g.addEventListener("click", (e) => {
+                g.addEventListener("pointerdown", (e) => {
                     e.stopPropagation();
                     openModal(el);
                 });
+
                 if (el.type === 'asset') {
                     let cx = (el.x * gridSize) + (gridSize / 2);
                     let cy = (el.y * gridSize) + (gridSize / 2);
                     let catColor = getCategoryColor(el.category);
+
                     let circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
                     circle.setAttribute("cx", cx);
                     circle.setAttribute("cy", cy);
-                    circle.setAttribute("r", 5); 
+                    circle.setAttribute("r", 8); 
                     circle.setAttribute("class", `item-shape ${el.id === selectedId ? 'selected' : ''}`);
                     circle.setAttribute("fill", "#111b27");
                     circle.setAttribute("stroke", catColor);
                     circle.setAttribute("stroke-width", "2");
+
                     let emojiText = document.createElementNS("http://www.w3.org/2000/svg", "text");
                     emojiText.setAttribute("x", cx);
                     emojiText.setAttribute("y", cy + 1);
@@ -544,6 +560,7 @@
                     emojiText.setAttribute("font-size", "9px");
                     emojiText.style.pointerEvents = "none";
                     emojiText.textContent = el.emoji || "📍";
+
                     let popupGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
                     popupGroup.setAttribute("class", "asset-popup");
                     let boxWidth = (el.name.length * 6.5) + 12;
@@ -556,6 +573,7 @@
                     popupBg.setAttribute("fill", "#0b131d");
                     popupBg.setAttribute("stroke", catColor);
                     popupBg.setAttribute("stroke-width", "1.5");
+
                     let popupText = document.createElementNS("http://www.w3.org/2000/svg", "text");
                     popupText.setAttribute("x", cx);
                     popupText.setAttribute("y", cy - 16);
@@ -564,6 +582,7 @@
                     popupText.setAttribute("font-size", "10px");
                     popupText.setAttribute("font-weight", "bold");
                     popupText.textContent = el.name;
+
                     popupGroup.appendChild(popupBg);
                     popupGroup.appendChild(popupText);
                     g.appendChild(circle);
@@ -593,6 +612,7 @@
                         rect.setAttribute("stroke", "#38bdf8");
                     }
                     rect.setAttribute("stroke-width", "1");
+
                     let text = document.createElementNS("http://www.w3.org/2000/svg", "text");
                     text.setAttribute("x", (el.x * gridSize) + 6);
                     text.setAttribute("y", (el.y * gridSize) + 16);
@@ -601,6 +621,7 @@
                     text.setAttribute("font-weight", "bold");
                     text.style.pointerEvents = "none";
                     text.textContent = el.name;
+
                     g.appendChild(rect);
                     g.appendChild(text);
                 }
@@ -608,136 +629,56 @@
             });
         }
 
-        function getPointerPos(e) {
-            let clientX = e.clientX || (e.touches && e.touches[0].clientX);
-            let clientY = e.clientY || (e.touches && e.touches[0].clientY);
-            return { x: clientX, y: clientY };
+        // --- UNIFIED MOUSE & TOUCH EVENT HANDLERS ---
+        function getDistance(touches) {
+            return Math.hypot(
+                touches[0].clientX - touches[1].clientX,
+                touches[0].clientY - touches[1].clientY
+            );
         }
 
-        function handleMove(e) {
-            let pos = getPointerPos(e);
-            if (!pos.x || !pos.y) return;
-            let rect = container.getBoundingClientRect();
-            let mouseX = pos.x - rect.left;
-            let mouseY = pos.y - rect.top;
-            let localX = (mouseX - viewTransform.x) / viewTransform.scale;
-            let localY = (mouseY - viewTransform.y) / viewTransform.scale;
-            let coordDisplay = document.getElementById("coord-display");
-            let exactCol = localX / gridSize;
-            let rowIdx = Math.floor(localY / gridSize);
-            let preciseColNum = (exactCol + 1).toFixed(2);
-            let rowLabel = getRowLabel(rowIdx);
-            coordDisplay.innerHTML = `Grid: <b>Row ${rowLabel}, Col ${preciseColNum}</b>`;
-            if (isPanning) {
-                viewTransform.x = pos.x - panStart.x;
-                viewTransform.y = pos.y - panStart.y;
-                render();
+        container.addEventListener("pointerdown", (e) => {
+            if (e.pointerType === 'mouse' || e.isPrimary) {
+                isPanning = true;
+                container.classList.add("panning");
+                panStart = { x: e.clientX - viewTransform.x, y: e.clientY - viewTransform.y };
             }
-        }
+        });
 
-        container.addEventListener("mousemove", handleMove);
-        container.addEventListener("touchmove", handleMove, { passive: true });
-
-        container.addEventListener("wheel", (e) => {
-            e.preventDefault();
-            let zoomIntensity = 0.1;
-            let oldScale = viewTransform.scale;
-            if (e.deltaY < 0) {
-                viewTransform.scale = Math.min(viewTransform.scale * (1 + zoomIntensity), 3.0);
-            } else {
-                viewTransform.scale = Math.max(viewTransform.scale * (1 - zoomIntensity), 0.3);
-            }
+        container.addEventListener("pointermove", (e) => {
             let rect = container.getBoundingClientRect();
             let mouseX = e.clientX - rect.left;
             let mouseY = e.clientY - rect.top;
-            viewTransform.x = mouseX - (mouseX - viewTransform.x) * (viewTransform.scale / oldScale);
-            viewTransform.y = mouseY - (mouseY - viewTransform.y) * (viewTransform.scale / oldScale);
-            render();
-        }, { passive: false });
 
-        function handleStart(e) {
-            let pos = getPointerPos(e);
-            if (!pos.x || !pos.y) return;
-            isPanning = true;
-            container.classList.add("panning");
-            panStart = { x: pos.x - viewTransform.x, y: pos.y - viewTransform.y };
-        }
+            let localX = (mouseX - viewTransform.x) / viewTransform.scale;
+            let localY = (mouseY - viewTransform.y) / viewTransform.scale;
 
-        container.addEventListener("mousedown", handleStart);
-        container.addEventListener("touchstart", handleStart, { passive: true });
+            let exactCol = localX / gridSize;
+            let rowIdx = Math.floor(localY / gridSize);
+            document.getElementById("coord-display").innerHTML = `Grid: <b>Row ${getRowLabel(rowIdx)}, Col ${(exactCol + 1).toFixed(2)}</b>`;
 
-        function handleEnd() {
             if (isPanning) {
-                isPanning = false;
-                container.classList.remove("panning");
+                viewTransform.x = e.clientX - panStart.x;
+                viewTransform.y = e.clientY - panStart.y;
+                render();
             }
-        }
+        });
 
-        window.addEventListener("mouseup", handleEnd);
-        window.addEventListener("touchend", handleEnd);
+        const endPan = () => {
+            isPanning = false;
+            container.classList.remove("panning");
+        };
+        container.addEventListener("pointerup", endPan);
+        container.addEventListener("pointercancel", endPan);
 
-        function openModal(el) {
-            selectedId = el.id;
-            document.getElementById("modalElementId").value = el.id;
-            document.getElementById("modalTitle").innerText = `Details: ${el.name}`;
-            document.getElementById("modalName").value = el.name;
-            document.getElementById("modalX").value = el.x;
-            document.getElementById("modalY").value = el.y;
-            renderPhotos(el);
-            renderSpreadsheet(el);
-            document.getElementById("modal-overlay").style.display = "flex";
-        }
-        window.closeModal = function() {
-            document.getElementById("modal-overlay").style.display = "none";
-            selectedId = null;
-        }
-        function renderPhotos(el) {
-            let gallery = document.getElementById("modalPhotoGallery");
-            gallery.innerHTML = "";
-            if (!el.photos) el.photos = [];
-            el.photos.forEach((photoUrl) => {
-                let containerDiv = document.createElement("div");
-                containerDiv.className = "photo-thumb-container";
-                containerDiv.title = "Tap to enlarge photo";
-                containerDiv.onclick = () => openLightbox(photoUrl, el.name);
-                let img = document.createElement("img");
-                img.src = photoUrl;
-                containerDiv.appendChild(img);
-                gallery.appendChild(containerDiv);
-            });
-        }
-        window.openLightbox = function(url, itemName) {
-            document.getElementById("lightboxImage").src = url;
-            document.getElementById("lightboxCaption").innerText = itemName || "Photo Preview";
-            document.getElementById("lightbox-overlay").style.display = "flex";
-        }
-        window.closeLightbox = function() {
-            document.getElementById("lightbox-overlay").style.display = "none";
-        }
-        function renderSpreadsheet(el) {
-            let tbody = document.getElementById("spreadsheetBody");
-            tbody.innerHTML = "";
-            if (!el.spreadsheetData) el.spreadsheetData = [];
-            el.spreadsheetData.forEach((row) => {
-                let tr = document.createElement("tr");
-                let tdKey = document.createElement("td");
-                let inputKey = document.createElement("input");
-                inputKey.type = "text";
-                inputKey.value = row.key;
-                inputKey.disabled = true;
-                tdKey.appendChild(inputKey);
-                let tdVal = document.createElement("td");
-                let inputVal = document.createElement("input");
-                inputVal.type = "text";
-                inputVal.value = row.value;
-                inputVal.disabled = true;
-                tdVal.appendChild(inputVal);
-                tr.appendChild(tdKey);
-                tr.appendChild(tdVal);
-                tbody.appendChild(tr);
-            });
-        }
-        loadFromFirebase();
-    </script>
-</body>
-</html>
+        // Mobile Pinch-to-Zoom Support
+        container.addEventListener("touchstart", (e) => {
+            if (e.touches.length === 2) {
+                isPanning = false;
+                initialPinchDistance = getDistance(e.touches);
+                initialScale = viewTransform.scale;
+            }
+        }, { passive: true });
+
+        container.addEventListener("touchmove", (e) => {
+            if (e.touches.length ===
