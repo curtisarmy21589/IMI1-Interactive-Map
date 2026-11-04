@@ -340,15 +340,7 @@
     </div>
 
     <!-- Service Worker Registration Script for Mobile App Installation -->
-    <script>
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js')
-                    .then(() => console.log("Service Worker registered successfully!"))
-                    .catch((err) => console.log("Service Worker registration failed: ", err));
-            });
-        }
-    </script>
+   
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
