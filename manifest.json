@@ -1,7 +1,8 @@
 {
   "name": "Facility Layout Viewer",
   "short_name": "FacilityMap",
-  "start_url": "/YOUR-REPOSITORY-NAME/view.html",
+  "start_url": "/IMI1-Interactive-Map
+/view.html",
   "display": "standalone",
   "background_color": "#0b131d",
   "theme_color": "#0b131d",
