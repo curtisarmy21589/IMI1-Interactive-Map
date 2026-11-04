@@ -1,7 +1,7 @@
 {
   "name": "Facility Layout Viewer",
   "short_name": "FacilityMap",
-  "start_url": "view.html",
+  "start_url": "/YOUR-REPOSITORY-NAME/view.html",
   "display": "standalone",
   "background_color": "#0b131d",
   "theme_color": "#0b131d",
@@ -10,7 +10,8 @@
     {
       "src": "https://img.icons8.com/color/512/map-marker.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     }
   ]
 }
