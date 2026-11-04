@@ -23,8 +23,6 @@
             height: 100vh;
             overflow: hidden;
             touch-action: none;
-            -webkit-user-select: none;
-            user-select: none;
         }
         #sidebar {
             width: 340px;
@@ -37,21 +35,19 @@
             z-index: 10;
             overflow-y: auto;
             border-right: 1px solid #1f2d3d;
-            touch-action: pan-y;
-            -webkit-overflow-scrolling: touch;
         }
         h2, h3 { margin: 0 0 5px 0; color: #38bdf8; font-size: 15px; }
         label { font-size: 11px; color: #94a3b8; }
         input, select, button, textarea {
             width: 100%;
-            padding: 8px;
+            padding: 6px 8px;
             background: #0b131d;
             border: 1px solid #38bdf8;
             color: #fff;
             border-radius: 4px;
             box-sizing: border-box;
             margin-top: 2px;
-            font-size: 13px;
+            font-size: 12px;
         }
         textarea { resize: vertical; height: 60px; font-family: sans-serif; }
         button {
@@ -59,17 +55,15 @@
             font-weight: bold;
             cursor: pointer;
             transition: background 0.2s;
-            touch-action: manipulation;
-            padding: 10px;
         }
         button:hover { background: #38bdf8; color: #0b131d; }
         .layer-btn {
             flex: 1;
-            padding: 8px 4px;
+            padding: 6px 4px;
             background: #070d14;
             border: 1px solid #1e293b;
             color: #94a3b8;
-            font-size: 11px;
+            font-size: 10px;
             cursor: pointer;
             border-radius: 4px;
             text-align: center;
@@ -94,11 +88,9 @@
             top: 0;
             left: 0;
             transform-origin: 0 0;
-            touch-action: none;
         }
         .item-group {
             cursor: pointer;
-            touch-action: none;
         }
         .item-shape {
             transition: stroke 0.2s;
@@ -130,15 +122,15 @@
         #coord-display {
             background: #070d14;
             border: 1px solid #1e293b;
-            padding: 8px;
+            padding: 6px;
             border-radius: 4px;
             font-family: monospace;
             color: #38bdf8;
-            font-size: 13px;
+            font-size: 12px;
             text-align: center;
         }
         #sync-status {
-            font-size: 11px;
+            font-size: 10px;
             text-align: center;
             color: #10b981;
             font-weight: bold;
@@ -152,7 +144,6 @@
             z-index: 1000;
             justify-content: center;
             align-items: center;
-            touch-action: auto;
         }
         #lightbox-overlay {
             z-index: 2000;
@@ -161,14 +152,13 @@
             background: #111b27;
             border: 1px solid #38bdf8;
             border-radius: 8px;
-            width: 90%;
-            max-width: 600px;
+            width: 600px;
+            max-width: 92vw;
             max-height: 90vh;
             display: flex;
             flex-direction: column;
             box-shadow: 0 10px 25px rgba(0,0,0,0.8);
             overflow: hidden;
-            touch-action: pan-y;
         }
         .modal-header {
             background: #0b131d;
@@ -184,7 +174,6 @@
             display: flex;
             flex-direction: column;
             gap: 12px;
-            touch-action: pan-y;
         }
         .modal-footer {
             background: #0b131d;
@@ -198,10 +187,10 @@
             background: none;
             border: none;
             color: #94a3b8;
-            font-size: 22px;
+            font-size: 18px;
             cursor: pointer;
             width: auto;
-            padding: 5px;
+            padding: 0;
             margin: 0;
         }
         .close-modal:hover { color: #fff; background: none; }
@@ -214,7 +203,7 @@
             border: 1px solid #1f2d3d;
             padding: 6px;
             text-align: left;
-            font-size: 12px;
+            font-size: 11px;
         }
         .spreadsheet-table th {
             background: #0b131d;
@@ -225,7 +214,7 @@
             border: none;
             color: #fff;
             width: 100%;
-            padding: 4px;
+            padding: 2px;
             margin: 0;
         }
         .photo-gallery {
@@ -295,8 +284,8 @@
         </div>
 
         <div>
-            <p style="font-size: 11px; color: #64748b; margin: 10px 0 0 0;">
-                💡 <b>Tip:</b> Tap any asset or zone to inspect specs and photos. Use one finger to drag/pan and two fingers to pinch-to-zoom.
+            <p style="font-size: 10px; color: #64748b; margin: 10px 0 0 0;">
+                💡 <b>Tip:</b> Tap any asset or zone on the map to inspect parameters and photos. Use touch gestures to drag and pinch to zoom.
             </p>
         </div>
     </div>
@@ -341,7 +330,7 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button onclick="closeModal()" style="width: auto; padding: 8px 14px; background: #38bdf8; color: #0b131d;">Close</button>
+                <button onclick="closeModal()" style="width: auto; padding: 6px 12px; background: #38bdf8; color: #0b131d;">Close</button>
             </div>
         </div>
     </div>
@@ -374,7 +363,7 @@
         const minRow = -6;
         const maxRow = 20;
         const buildingCols = 30; 
-        const buildingRows =[cite: 2] 13; 
+        const buildingRows = 13; // 13 total rows (A-H, J-N) matching index[cite: 1]
         let currentLayer = 'ground'; 
         let categories = [
             { name: "Fire Safety", color: "#ef4444" },
@@ -384,63 +373,11 @@
             { name: "HVAC", color: "#34d399" },
             { name: "General", color: "#94a3b8" }
         ];
-        let elements = [
-            { 
-                id: 101, layer: "ground", name: "North Yard Fire Hydrant #1", type: "asset", category: "Fire Safety", emoji: "", x: 4, y: -3,
-                photos: [], spreadsheetData: [{key: "Flow Rate", value: "1,500 GPM"}, {key: "Inspection", value: "Passed Q2"}]
-            },
-            { 
-                id: 102, layer: "ground", name: "North Yard Fire Hydrant #2", type: "asset", category: "Fire Safety", emoji: "🧯", x: 22, y: -3,
-                photos: [], spreadsheetData: [{key: "Flow Rate", value: "1,500 GPM"}, {key: "Inspection", value: "Passed Q2"}]
-            },
-            { 
-                id: 103, layer: "ground", name: "East Retention Pond #1", type: "yard", x: 31, y: -4, w: 6, h: 6,
-                photos: [], spreadsheetData: [{key: "Capacity", value: "1.2 Million Gal"}]
-            },
-            { 
-                id: 104, layer: "ground", name: "North Truck Yard & Trailer Parking", type: "yard", x: 2, y: -5, w: 26, h: 4,
-                photos: [], spreadsheetData: [{key: "Stall Count", value: "45 Trailer Docks"}]
-            },
-            { 
-                id: 1, layer: "ground", name: "MAIN RACKING AREA #1", type: "racking", x: 4, y: 2, w: 4, h: 8,
-                photos: [], spreadsheetData: [{key: "Bay Count", value: "24 Bays"}, {key: "Weight Capacity", value: "3,500 lbs"}]
-            },
-            { 
-                id: 2, layer: "ground", name: "RACKING #2", type: "racking", x: 18, y: 5, w: 4, h: 4,
-                photos: [], spreadsheetData: [{key: "Bay Count", value: "12 Bays"}, {key: "Weight Capacity", value: "2,000 lbs"}]
-            },
-            { 
-                id: 3, layer: "ground", name: "MEZZANINE FLOOR", type: "mezzanine", x: 2, y: 9, w: 10, h: 4,
-                photos: [], spreadsheetData: [{key: "Level", value: "Ground Footprint"}]
-            },
-            { 
-                id: 4, layer: "ground", name: "Main Distribution Panel MDP-1", type: "asset", category: "Electrical", emoji: "⚡", x: 6, y: 3,
-                photos: [], spreadsheetData: [{key: "Voltage", value: "480V 3-Phase"}, {key: "Amperage", value: "800A"}]
-            },
-            { 
-                id: 5, layer: "ground", name: "Water Main Shutoff", type: "asset", category: "Plumbing", emoji: "🚰", x: 9, y: 3,
-                photos: [], spreadsheetData: [{key: "Valve Type", value: "Quarter-turn Butterfly"}]
-            },
-            { 
-                id: 6, layer: "mezzanine", name: "Mezzanine Level Office & Storage", type: "mezzanine", x: 2, y: 2, w: 12, h: 10,
-                photos: [], spreadsheetData: [{key: "Occupancy", value: "Max 15 Personnel"}]
-            },
-            { 
-                id: 7, layer: "roof", name: "Roof HVAC Unit & Solar Array Zone", type: "general", x: 5, y: 3, w: 8, h: 6,
-                photos: [], spreadsheetData: [{key: "Unit Model", value: "ICP CA5524VKD3"}]
-            }
-        ];
+        let elements = [];
         let selectedId = null;
         let isPanning = false;
         let panStart = { x: 0, y: 0 };
         let viewTransform = { x: 250, y: 180, scale: 0.9 };
-
-        let activePointers = new Map();
-        let initialPinchDistance = null;
-        let initialPinchScale = 1;
-        let initialPinchCenter = { x: 0, y: 0 };
-        let initialTransform = { x: 0, y: 0 };
-
         const container = document.getElementById("canvas-container");
         const svg = document.getElementById("layoutSvg");
         const viewport = document.getElementById("viewport");
@@ -456,13 +393,13 @@
                     if (data.categories) categories = data.categories;
                     syncStatus.innerText = "Connected (View Only)";
                 } else {
-                    syncStatus.innerText = "No Remote Data - Showing Default";
+                    syncStatus.innerText = "No Data Found";
                 }
                 render();
             } catch (error) {
                 console.error("Error loading layout:", error);
-                syncStatus.innerText = "Loaded Offline Fallback";
-                syncStatus.style.color = "#fbbf24";
+                syncStatus.innerText = "Error Loading Database";
+                syncStatus.style.color = "#ef4444";
                 render();
             }
         }
@@ -476,7 +413,7 @@
             }
             let adjustedIndex = r;
             if (adjustedIndex >= 8) {
-                adjustedIndex += 1; 
+                adjustedIndex += 1; // skips 'I' (index 8) matching index[cite: 1]
             }
             return String.fromCharCode(65 + adjustedIndex); 
         }
@@ -584,12 +521,10 @@
             visibleElements.forEach(el => {
                 let g = document.createElementNS("http://www.w3.org/2000/svg", "g");
                 g.setAttribute("class", "item-group");
-                
-                g.addEventListener("pointerdown", (e) => {
+                g.addEventListener("click", (e) => {
                     e.stopPropagation();
                     openModal(el);
                 });
-
                 if (el.type === 'asset') {
                     let cx = (el.x * gridSize) + (gridSize / 2);
                     let cy = (el.y * gridSize) + (gridSize / 2);
@@ -597,7 +532,7 @@
                     let circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
                     circle.setAttribute("cx", cx);
                     circle.setAttribute("cy", cy);
-                    circle.setAttribute("r", 6); 
+                    circle.setAttribute("r", 5); 
                     circle.setAttribute("class", `item-shape ${el.id === selectedId ? 'selected' : ''}`);
                     circle.setAttribute("fill", "#111b27");
                     circle.setAttribute("stroke", catColor);
@@ -607,7 +542,7 @@
                     emojiText.setAttribute("y", cy + 1);
                     emojiText.setAttribute("text-anchor", "middle");
                     emojiText.setAttribute("dominant-baseline", "central");
-                    emojiText.setAttribute("font-size", "10px");
+                    emojiText.setAttribute("font-size", "9px");
                     emojiText.style.pointerEvents = "none";
                     emojiText.textContent = el.emoji || "📍";
                     let popupGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
@@ -675,23 +610,18 @@
             });
         }
 
-        function getPinchDistance(p1, p2) {
-            let dx = p1.clientX - p2.clientX;
-            let dy = p1.clientY - p2.clientY;
-            return Math.sqrt(dx * dx + dy * dy);
+        function getPointerPos(e) {
+            let clientX = e.clientX || (e.touches && e.touches[0].clientX);
+            let clientY = e.clientY || (e.touches && e.touches[0].clientY);
+            return { x: clientX, y: clientY };
         }
 
-        function getPinchCenter(p1, p2) {
-            return {
-                x: (p1.clientX + p2.clientX) / 2,
-                y: (p1.clientY + p2.clientY) / 2
-            };
-        }
-
-        function updateCoordinates(clientX, clientY) {
+        function handleMove(e) {
+            let pos = getPointerPos(e);
+            if (!pos.x || !pos.y) return;
             let rect = container.getBoundingClientRect();
-            let mouseX = clientX - rect.left;
-            let mouseY = clientY - rect.top;
+            let mouseX = pos.x - rect.left;
+            let mouseY = pos.y - rect.top;
             let localX = (mouseX - viewTransform.x) / viewTransform.scale;
             let localY = (mouseY - viewTransform.y) / viewTransform.scale;
             let coordDisplay = document.getElementById("coord-display");
@@ -700,82 +630,24 @@
             let preciseColNum = (exactCol + 1).toFixed(2);
             let rowLabel = getRowLabel(rowIdx);
             coordDisplay.innerHTML = `Grid: <b>Row ${rowLabel}, Col ${preciseColNum}</b>`;
-        }
-
-        container.addEventListener("pointerdown", (e) => {
-            activePointers.set(e.pointerId, e);
-
-            if (activePointers.size === 1) {
-                isPanning = true;
-                container.classList.add("panning");
-                panStart = { x: e.clientX - viewTransform.x, y: e.clientY - viewTransform.y };
-            } else if (activePointers.size === 2) {
-                isPanning = false;
-                container.classList.remove("panning");
-                let points = Array.from(activePointers.values());
-                initialPinchDistance = getPinchDistance(points[0], points[1]);
-                initialPinchScale = viewTransform.scale;
-                initialPinchCenter = getPinchCenter(points[0], points[1]);
-                initialTransform = { x: viewTransform.x, y: viewTransform.y };
-            }
-        });
-
-        container.addEventListener("pointermove", (e) => {
-            if (activePointers.has(e.pointerId)) {
-                activePointers.set(e.pointerId, e);
-            }
-
-            if (activePointers.size === 1) {
-                updateCoordinates(e.clientX, e.clientY);
-                if (isPanning) {
-                    viewTransform.x = e.clientX - panStart.x;
-                    viewTransform.y = e.clientY - panStart.y;
-                    render();
-                }
-            } else if (activePointers.size === 2 && initialPinchDistance) {
-                let points = Array.from(activePointers.values());
-                let currentDistance = getPinchDistance(points[0], points[1]);
-                let currentCenter = getPinchCenter(points[0], points[1]);
-                
-                let scaleFactor = currentDistance / initialPinchDistance;
-                let targetScale = Math.min(Math.max(initialPinchScale * scaleFactor, 0.25), 4.0);
-                
-                let rect = container.getBoundingClientRect();
-                let centerX = initialPinchCenter.x - rect.left;
-                let centerY = initialPinchCenter.y - rect.top;
-
-                viewTransform.scale = targetScale;
-                viewTransform.x = currentCenter.x - rect.left - (centerX - initialTransform.x) * (targetScale / initialPinchScale);
-                viewTransform.y = currentCenter.y - rect.top - (centerY - initialTransform.y) * (targetScale / initialPinchScale);
+            if (isPanning) {
+                viewTransform.x = pos.x - panStart.x;
+                viewTransform.y = pos.y - panStart.y;
                 render();
             }
-        });
+        }
 
-        const handlePointerEnd = (e) => {
-            activePointers.delete(e.pointerId);
-            if (activePointers.size < 2) {
-                initialPinchDistance = null;
-            }
-            if (activePointers.size === 0) {
-                if (isPanning) {
-                    isPanning = false;
-                    container.classList.remove("panning");
-                }
-            }
-        };
-
-        container.addEventListener("pointerup", handlePointerEnd);
-        container.addEventListener("pointercancel", handlePointerEnd);
-        container.addEventListener("pointerleave", handlePointerEnd);
+        container.addEventListener("mousemove", handleMove);
+        container.addEventListener("touchmove", handleMove, { passive: true });
 
         container.addEventListener("wheel", (e) => {
             e.preventDefault();
             let zoomIntensity = 0.1;
             let oldScale = viewTransform.scale;
             if (e.deltaY < 0) {
-                viewTransform.scale = Math.min(viewTransform.scale * (1 + zoomIntensity), 4.0);
+                viewTransform.scale = Math.min(viewTransform.scale * (1 + zoomIntensity), 3.0);
             } else {
-                viewTransform.scale = Math.max(viewTransform.scale * (1 - zoomIntensity), 0.25);
+                viewTransform.scale = Math.max(viewTransform.scale * (1 - zoomIntensity), 0.3);
             }
             let rect = container.getBoundingClientRect();
             let mouseX = e.clientX - rect.left;
@@ -784,6 +656,27 @@
             viewTransform.y = mouseY - (mouseY - viewTransform.y) * (viewTransform.scale / oldScale);
             render();
         }, { passive: false });
+
+        function handleStart(e) {
+            let pos = getPointerPos(e);
+            if (!pos.x || !pos.y) return;
+            isPanning = true;
+            container.classList.add("panning");
+            panStart = { x: pos.x - viewTransform.x, y: pos.y - viewTransform.y };
+        }
+
+        container.addEventListener("mousedown", handleStart);
+        container.addEventListener("touchstart", handleStart, { passive: true });
+
+        function handleEnd() {
+            if (isPanning) {
+                isPanning = false;
+                container.classList.remove("panning");
+            }
+        }
+
+        window.addEventListener("mouseup", handleEnd);
+        window.addEventListener("touchend", handleEnd);
 
         function openModal(el) {
             selectedId = el.id;
