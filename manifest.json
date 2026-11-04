@@ -1,7 +1,7 @@
 {
   "name": "Facility Layout Viewer",
   "short_name": "FacilityMap",
-  "start_url": "view.html",
+  "start_url": "./view.html",
   "scope": "./",
   "display": "standalone",
   "background_color": "#0b131d",
