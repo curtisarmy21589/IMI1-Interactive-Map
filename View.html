@@ -7,11 +7,6 @@
     <!-- Mobile PWA & App Manifest Settings -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="theme-color" content="#0b131d">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="FacilityMap">
-    <link rel="manifest" href="manifest.json">
-    <link rel="apple-touch-icon" href="https://img.icons8.com/color/512/map-marker.png">
 
     <style>
         body {
@@ -23,6 +18,8 @@
             height: 100vh;
             overflow: hidden;
             touch-action: none;
+            -webkit-user-select: none;
+            user-select: none;
         }
         #sidebar {
             width: 340px;
@@ -35,19 +32,21 @@
             z-index: 10;
             overflow-y: auto;
             border-right: 1px solid #1f2d3d;
+            touch-action: pan-y;
+            -webkit-overflow-scrolling: touch;
         }
         h2, h3 { margin: 0 0 5px 0; color: #38bdf8; font-size: 15px; }
         label { font-size: 11px; color: #94a3b8; }
         input, select, button, textarea {
             width: 100%;
-            padding: 6px 8px;
+            padding: 8px;
             background: #0b131d;
             border: 1px solid #38bdf8;
             color: #fff;
             border-radius: 4px;
             box-sizing: border-box;
             margin-top: 2px;
-            font-size: 12px;
+            font-size: 13px;
         }
         textarea { resize: vertical; height: 60px; font-family: sans-serif; }
         button {
@@ -55,15 +54,17 @@
             font-weight: bold;
             cursor: pointer;
             transition: background 0.2s;
+            touch-action: manipulation;
+            padding: 10px;
         }
         button:hover { background: #38bdf8; color: #0b131d; }
         .layer-btn {
             flex: 1;
-            padding: 6px 4px;
+            padding: 8px 4px;
             background: #070d14;
             border: 1px solid #1e293b;
             color: #94a3b8;
-            font-size: 10px;
+            font-size: 11px;
             cursor: pointer;
             border-radius: 4px;
             text-align: center;
@@ -88,9 +89,11 @@
             top: 0;
             left: 0;
             transform-origin: 0 0;
+            touch-action: none;
         }
         .item-group {
             cursor: pointer;
+            touch-action: none;
         }
         .item-shape {
             transition: stroke 0.2s;
@@ -122,15 +125,15 @@
         #coord-display {
             background: #070d14;
             border: 1px solid #1e293b;
-            padding: 6px;
+            padding: 8px;
             border-radius: 4px;
             font-family: monospace;
             color: #38bdf8;
-            font-size: 12px;
+            font-size: 13px;
             text-align: center;
         }
         #sync-status {
-            font-size: 10px;
+            font-size: 11px;
             text-align: center;
             color: #10b981;
             font-weight: bold;
@@ -144,6 +147,7 @@
             z-index: 1000;
             justify-content: center;
             align-items: center;
+            touch-action: auto;
         }
         #lightbox-overlay {
             z-index: 2000;
@@ -152,13 +156,14 @@
             background: #111b27;
             border: 1px solid #38bdf8;
             border-radius: 8px;
-            width: 600px;
-            max-width: 92vw;
+            width: 90%;
+            max-width: 600px;
             max-height: 90vh;
             display: flex;
             flex-direction: column;
             box-shadow: 0 10px 25px rgba(0,0,0,0.8);
             overflow: hidden;
+            touch-action: pan-y;
         }
         .modal-header {
             background: #0b131d;
@@ -174,6 +179,7 @@
             display: flex;
             flex-direction: column;
             gap: 12px;
+            touch-action: pan-y;
         }
         .modal-footer {
             background: #0b131d;
@@ -187,13 +193,14 @@
             background: none;
             border: none;
             color: #94a3b8;
-            font-size: 18px;
+            font-size: 22px;
             cursor: pointer;
             width: auto;
-            padding: 0;
+            padding: 5px;
             margin: 0;
         }
         .close-modal:hover { color: #fff; background: none; }
+        
         .spreadsheet-table {
             width: 100%;
             border-collapse: collapse;
@@ -203,7 +210,7 @@
             border: 1px solid #1f2d3d;
             padding: 6px;
             text-align: left;
-            font-size: 11px;
+            font-size: 12px;
         }
         .spreadsheet-table th {
             background: #0b131d;
@@ -214,7 +221,7 @@
             border: none;
             color: #fff;
             width: 100%;
-            padding: 2px;
+            padding: 4px;
             margin: 0;
         }
         .photo-gallery {
@@ -279,23 +286,22 @@
             <div style="display: flex; gap: 4px; margin-top: 4px;">
                 <button class="layer-btn" id="layerDockDoorsBtn" onclick="switchLayer('dock_doors')">Dock Doors</button>
                 <button class="layer-btn" id="layerUnderMezzSprinklersBtn" onclick="switchLayer('under_mezz_sprinklers')">Under Mezz Sprinklers</button>
-                <button class="layer-btn" id="layerHvacBtn" onclick="switchLayer('hvac')">HVAC</button>
             </div>
         </div>
-
         <div>
-            <p style="font-size: 10px; color: #64748b; margin: 10px 0 0 0;">
-                💡 <b>Tip:</b> Tap any asset or zone on the map to inspect parameters and photos. Use touch gestures to drag and pinch to zoom.
+            <p style="font-size: 11px; color: #64748b; margin: 10px 0 0 0;">
+                💡 <b>Tip:</b> Tap any asset or zone to inspect info and photos. Drag with one finger to pan, use two fingers to pinch-to-zoom.
             </p>
         </div>
     </div>
-
     <div id="canvas-container">
         <svg id="layoutSvg" width="2200" height="1400">
-            <g id="viewport"></g>
+            <g id="viewport">
+                <!-- Rendered dynamically -->
+            </g>
         </svg>
     </div>
-
+    <!-- ITEM DETAILS & PHOTO MODAL -->
     <div id="modal-overlay">
         <div class="modal-content">
             <div class="modal-header">
@@ -304,17 +310,22 @@
             </div>
             <div class="modal-body">
                 <input type="hidden" id="modalElementId">
+                
                 <div>
                     <label>Item Name / Designation</label>
                     <input type="text" id="modalName" disabled>
                 </div>
+                
                 <div style="display: flex; gap: 6px;">
                     <div style="flex:1;"><label>X Col</label><input type="number" id="modalX" disabled></div>
                     <div style="flex:1;"><label>Y Row</label><input type="number" id="modalY" disabled></div>
                 </div>
+                
                 <div>
                     <label>Location Photos (Tap photo to enlarge)</label>
-                    <div class="photo-gallery" id="modalPhotoGallery"></div>
+                    <div class="photo-gallery" id="modalPhotoGallery">
+                        <!-- Photos render here -->
+                    </div>
                 </div>
                 <div>
                     <label>Spreadsheet Details / Custom Records</label>
@@ -325,16 +336,18 @@
                                 <th style="width: 60%;">Value / Data</th>
                             </tr>
                         </thead>
-                        <tbody id="spreadsheetBody"></tbody>
+                        <tbody id="spreadsheetBody">
+                            <!-- Records render here -->
+                        </tbody>
                     </table>
                 </div>
             </div>
             <div class="modal-footer">
-                <button onclick="closeModal()" style="width: auto; padding: 6px 12px; background: #38bdf8; color: #0b131d;">Close</button>
+                <button onclick="closeModal()" style="width: auto; padding: 8px 14px; background: #38bdf8; color: #0b131d;">Close</button>
             </div>
         </div>
     </div>
-
+    <!-- FULL-SIZE PHOTO LIGHTBOX OVERLAY -->
     <div id="lightbox-overlay" onclick="closeLightbox()">
         <div style="position: relative; max-width: 90vw; max-height: 90vh; display: flex; flex-direction: column; align-items: center;" onclick="event.stopPropagation()">
             <button onclick="closeLightbox()" style="position: absolute; top: -35px; right: 0; background: none; border: none; color: #fff; font-size: 24px; cursor: pointer;">×</button>
@@ -342,10 +355,11 @@
             <div id="lightboxCaption" style="margin-top: 8px; color: #38bdf8; font-size: 13px; font-weight: bold;"></div>
         </div>
     </div>
-
+    <!-- Firebase SDK Imports -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        
         const firebaseConfig = {
             apiKey: "AIzaSyCrKAut8_5nHWTWtYqZZr5HOENGd8mqZxE",
             authDomain: "imi1-interactive-map-8d929.firebaseapp.com",
@@ -357,13 +371,14 @@
         };
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
+        
         const gridSize = 25;
         const minCol = -8;
         const maxCol = 38;
         const minRow = -6;
         const maxRow = 20;
         const buildingCols = 30; 
-        const buildingRows = 13; // 13 total rows (A-H, J-N) matching index[cite: 1]
+        const buildingRows = 14; 
         let currentLayer = 'ground'; 
         let categories = [
             { name: "Fire Safety", color: "#ef4444" },
@@ -378,6 +393,14 @@
         let isPanning = false;
         let panStart = { x: 0, y: 0 };
         let viewTransform = { x: 250, y: 180, scale: 0.9 };
+
+        // Multi-touch tracking variables
+        let activePointers = new Map();
+        let initialPinchDistance = null;
+        let initialPinchScale = 1;
+        let initialPinchCenter = { x: 0, y: 0 };
+        let initialTransform = { x: 0, y: 0 };
+
         const container = document.getElementById("canvas-container");
         const svg = document.getElementById("layoutSvg");
         const viewport = document.getElementById("viewport");
@@ -408,14 +431,15 @@
             return found ? found.color : "#38bdf8";
         }
         function getRowLabel(r) {
-            if (r < 0) {
-                return "N" + Math.abs(r);
+            if (r === buildingRows - 2) return "M.9"; 
+            let index = r;
+            if (index > buildingRows - 2) {
+                index -= 1;
             }
-            let adjustedIndex = r;
-            if (adjustedIndex >= 8) {
-                adjustedIndex += 1; // skips 'I' (index 8) matching index[cite: 1]
+            if (index < 0) {
+                return "N" + Math.abs(index);
             }
-            return String.fromCharCode(65 + adjustedIndex); 
+            return String.fromCharCode(65 + index); 
         }
         window.switchLayer = function(layerName) {
             currentLayer = layerName;
@@ -427,7 +451,6 @@
             document.getElementById("layerGasBtn").classList.toggle("active", layerName === 'gas');
             document.getElementById("layerDockDoorsBtn").classList.toggle("active", layerName === 'dock_doors');
             document.getElementById("layerUnderMezzSprinklersBtn").classList.toggle("active", layerName === 'under_mezz_sprinklers');
-            document.getElementById("layerHvacBtn").classList.toggle("active", layerName === 'hvac');
             selectedId = null;
             render();
         }
@@ -437,6 +460,8 @@
         function render() {
             viewport.innerHTML = "";
             updateTransformString();
+            
+            // Site Background
             let siteBackground = document.createElementNS("http://www.w3.org/2000/svg", "g");
             let earthGrading = document.createElementNS("http://www.w3.org/2000/svg", "rect");
             earthGrading.setAttribute("x", minCol * gridSize);
@@ -457,6 +482,7 @@
             siteBackground.appendChild(siteLabel);
             viewport.appendChild(siteBackground);
 
+            // Grid Lines & Labels
             for (let c = minCol; c <= maxCol; c++) {
                 let line = document.createElementNS("http://www.w3.org/2000/svg", "line");
                 line.setAttribute("x1", c * gridSize);
@@ -473,22 +499,33 @@
                 text.textContent = c + 1; 
                 viewport.appendChild(text);
             }
-            for (let r = 0; r < buildingRows; r++) {
+            for (let r = minRow; r <= maxRow; r++) {
                 let line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-                line.setAttribute("x1", 0);
+                line.setAttribute("x1", minCol * gridSize);
                 line.setAttribute("y1", r * gridSize);
-                line.setAttribute("x2", buildingCols * gridSize);
+                line.setAttribute("x2", maxCol * gridSize);
                 line.setAttribute("y2", r * gridSize);
-                line.setAttribute("class", "grid-line");
+                if (r === buildingRows - 2) {
+                    line.setAttribute("stroke", "#f43f5e");
+                    line.setAttribute("stroke-dasharray", "2,2");
+                } else {
+                    line.setAttribute("class", "grid-line");
+                }
                 viewport.appendChild(line);
                 let text = document.createElementNS("http://www.w3.org/2000/svg", "text");
-                text.setAttribute("x", -10);
+                text.setAttribute("x", (minCol * gridSize) - 10);
                 text.setAttribute("y", (r * gridSize) + (gridSize / 2) + 3);
                 text.setAttribute("text-anchor", "end");
                 text.setAttribute("class", "coord-label");
+                if (r === buildingRows - 2) {
+                    text.setAttribute("fill", "#f43f5e");
+                    text.setAttribute("font-weight", "bold");
+                }
                 text.textContent = getRowLabel(r);
                 viewport.appendChild(text);
             }
+
+            // Building Footprint
             let buildingWall = document.createElementNS("http://www.w3.org/2000/svg", "rect");
             buildingWall.setAttribute("x", 0);
             buildingWall.setAttribute("y", 0);
@@ -502,11 +539,11 @@
             let layerTitleName = currentLayer.toUpperCase();
             let topLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
             topLabel.setAttribute("x", 0.5 * gridSize);
-            topLabel.setAttribute("y", -8);
+            topLabel.setAttribute("y", -22);
             topLabel.setAttribute("fill", "#38bdf8");
             topLabel.setAttribute("font-size", "10px");
             topLabel.setAttribute("font-weight", "bold");
-            topLabel.textContent = `SOUTH WALL - ROW A (${layerTitleName} LAYER) ▲`;
+            topLabel.textContent = `BUILDING SOUTH WALL (${layerTitleName} LAYER) ▲`;
             viewport.appendChild(topLabel);
             let bottomLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
             bottomLabel.setAttribute("x", 0.5 * gridSize);
@@ -514,37 +551,42 @@
             bottomLabel.setAttribute("fill", "#38bdf8");
             bottomLabel.setAttribute("font-size", "10px");
             bottomLabel.setAttribute("font-weight", "bold");
-            bottomLabel.textContent = `NORTH WALL - ROW N ▼`;
+            bottomLabel.textContent = `BUILDING NORTH WALL ▼`;
             viewport.appendChild(bottomLabel);
 
+            // Render Elements
             let visibleElements = elements.filter(el => (el.layer || 'ground') === currentLayer);
             visibleElements.forEach(el => {
                 let g = document.createElementNS("http://www.w3.org/2000/svg", "g");
                 g.setAttribute("class", "item-group");
-                g.addEventListener("click", (e) => {
+                
+                g.addEventListener("pointerdown", (e) => {
                     e.stopPropagation();
                     openModal(el);
                 });
+
                 if (el.type === 'asset') {
                     let cx = (el.x * gridSize) + (gridSize / 2);
                     let cy = (el.y * gridSize) + (gridSize / 2);
                     let catColor = getCategoryColor(el.category);
+                    
                     let circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
                     circle.setAttribute("cx", cx);
                     circle.setAttribute("cy", cy);
-                    circle.setAttribute("r", 5); 
-                    circle.setAttribute("class", `item-shape ${el.id === selectedId ? 'selected' : ''}`);
+                    circle.setAttribute("r", 6); 
                     circle.setAttribute("fill", "#111b27");
                     circle.setAttribute("stroke", catColor);
                     circle.setAttribute("stroke-width", "2");
+                    
                     let emojiText = document.createElementNS("http://www.w3.org/2000/svg", "text");
                     emojiText.setAttribute("x", cx);
                     emojiText.setAttribute("y", cy + 1);
                     emojiText.setAttribute("text-anchor", "middle");
                     emojiText.setAttribute("dominant-baseline", "central");
-                    emojiText.setAttribute("font-size", "9px");
+                    emojiText.setAttribute("font-size", "10px");
                     emojiText.style.pointerEvents = "none";
                     emojiText.textContent = el.emoji || "📍";
+                    
                     let popupGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
                     popupGroup.setAttribute("class", "asset-popup");
                     let boxWidth = (el.name.length * 6.5) + 12;
@@ -557,6 +599,7 @@
                     popupBg.setAttribute("fill", "#0b131d");
                     popupBg.setAttribute("stroke", catColor);
                     popupBg.setAttribute("stroke-width", "1.5");
+                    
                     let popupText = document.createElementNS("http://www.w3.org/2000/svg", "text");
                     popupText.setAttribute("x", cx);
                     popupText.setAttribute("y", cy - 16);
@@ -565,6 +608,7 @@
                     popupText.setAttribute("font-size", "10px");
                     popupText.setAttribute("font-weight", "bold");
                     popupText.textContent = el.name;
+                    
                     popupGroup.appendChild(popupBg);
                     popupGroup.appendChild(popupText);
                     g.appendChild(circle);
@@ -576,172 +620,11 @@
                     rect.setAttribute("y", el.y * gridSize);
                     rect.setAttribute("width", el.w * gridSize);
                     rect.setAttribute("height", el.h * gridSize);
-                    rect.setAttribute("class", `item-shape ${el.id === selectedId ? 'selected' : ''}`);
+                    
                     if (el.type === 'yard') {
                         rect.setAttribute("fill", "#b45309");
                         rect.setAttribute("fill-opacity", "0.3");
                         rect.setAttribute("stroke", "#d97706");
                     } else if (el.type === 'racking') {
                         rect.setAttribute("fill", "#d97706");
-                        rect.setAttribute("fill-opacity", "0.35");
-                        rect.setAttribute("stroke", "#f59e0b");
-                    } else if (el.type === 'mezzanine') {
-                        rect.setAttribute("fill", "#10b981");
-                        rect.setAttribute("fill-opacity", "0.35");
-                        rect.setAttribute("stroke", "#34d399");
-                    } else {
-                        rect.setAttribute("fill", "#0284c7");
-                        rect.setAttribute("fill-opacity", "0.35");
-                        rect.setAttribute("stroke", "#38bdf8");
-                    }
-                    rect.setAttribute("stroke-width", "1");
-                    let text = document.createElementNS("http://www.w3.org/2000/svg", "text");
-                    text.setAttribute("x", (el.x * gridSize) + 6);
-                    text.setAttribute("y", (el.y * gridSize) + 16);
-                    text.setAttribute("fill", "#fff");
-                    text.setAttribute("font-size", "10px");
-                    text.setAttribute("font-weight", "bold");
-                    text.style.pointerEvents = "none";
-                    text.textContent = el.name;
-                    g.appendChild(rect);
-                    g.appendChild(text);
-                }
-                viewport.appendChild(g);
-            });
-        }
-
-        function getPointerPos(e) {
-            let clientX = e.clientX || (e.touches && e.touches[0].clientX);
-            let clientY = e.clientY || (e.touches && e.touches[0].clientY);
-            return { x: clientX, y: clientY };
-        }
-
-        function handleMove(e) {
-            let pos = getPointerPos(e);
-            if (!pos.x || !pos.y) return;
-            let rect = container.getBoundingClientRect();
-            let mouseX = pos.x - rect.left;
-            let mouseY = pos.y - rect.top;
-            let localX = (mouseX - viewTransform.x) / viewTransform.scale;
-            let localY = (mouseY - viewTransform.y) / viewTransform.scale;
-            let coordDisplay = document.getElementById("coord-display");
-            let exactCol = localX / gridSize;
-            let rowIdx = Math.floor(localY / gridSize);
-            let preciseColNum = (exactCol + 1).toFixed(2);
-            let rowLabel = getRowLabel(rowIdx);
-            coordDisplay.innerHTML = `Grid: <b>Row ${rowLabel}, Col ${preciseColNum}</b>`;
-            if (isPanning) {
-                viewTransform.x = pos.x - panStart.x;
-                viewTransform.y = pos.y - panStart.y;
-                render();
-            }
-        }
-
-        container.addEventListener("mousemove", handleMove);
-        container.addEventListener("touchmove", handleMove, { passive: true });
-
-        container.addEventListener("wheel", (e) => {
-            e.preventDefault();
-            let zoomIntensity = 0.1;
-            let oldScale = viewTransform.scale;
-            if (e.deltaY < 0) {
-                viewTransform.scale = Math.min(viewTransform.scale * (1 + zoomIntensity), 3.0);
-            } else {
-                viewTransform.scale = Math.max(viewTransform.scale * (1 - zoomIntensity), 0.3);
-            }
-            let rect = container.getBoundingClientRect();
-            let mouseX = e.clientX - rect.left;
-            let mouseY = e.clientY - rect.top;
-            viewTransform.x = mouseX - (mouseX - viewTransform.x) * (viewTransform.scale / oldScale);
-            viewTransform.y = mouseY - (mouseY - viewTransform.y) * (viewTransform.scale / oldScale);
-            render();
-        }, { passive: false });
-
-        function handleStart(e) {
-            let pos = getPointerPos(e);
-            if (!pos.x || !pos.y) return;
-            isPanning = true;
-            container.classList.add("panning");
-            panStart = { x: pos.x - viewTransform.x, y: pos.y - viewTransform.y };
-        }
-
-        container.addEventListener("mousedown", handleStart);
-        container.addEventListener("touchstart", handleStart, { passive: true });
-
-        function handleEnd() {
-            if (isPanning) {
-                isPanning = false;
-                container.classList.remove("panning");
-            }
-        }
-
-        window.addEventListener("mouseup", handleEnd);
-        window.addEventListener("touchend", handleEnd);
-
-        function openModal(el) {
-            selectedId = el.id;
-            document.getElementById("modalElementId").value = el.id;
-            document.getElementById("modalTitle").innerText = `Details: ${el.name}`;
-            document.getElementById("modalName").value = el.name;
-            document.getElementById("modalX").value = el.x;
-            document.getElementById("modalY").value = el.y;
-            renderPhotos(el);
-            renderSpreadsheet(el);
-            document.getElementById("modal-overlay").style.display = "flex";
-            render();
-        }
-        window.closeModal = function() {
-            document.getElementById("modal-overlay").style.display = "none";
-            selectedId = null;
-            render();
-        }
-        function renderPhotos(el) {
-            let gallery = document.getElementById("modalPhotoGallery");
-            gallery.innerHTML = "";
-            if (!el.photos) el.photos = [];
-            el.photos.forEach((photoUrl) => {
-                let containerDiv = document.createElement("div");
-                containerDiv.className = "photo-thumb-container";
-                containerDiv.title = "Tap to enlarge photo";
-                containerDiv.onclick = () => openLightbox(photoUrl, el.name);
-                let img = document.createElement("img");
-                img.src = photoUrl;
-                containerDiv.appendChild(img);
-                gallery.appendChild(containerDiv);
-            });
-        }
-        window.openLightbox = function(url, itemName) {
-            document.getElementById("lightboxImage").src = url;
-            document.getElementById("lightboxCaption").innerText = itemName || "Photo Preview";
-            document.getElementById("lightbox-overlay").style.display = "flex";
-        }
-        window.closeLightbox = function() {
-            document.getElementById("lightbox-overlay").style.display = "none";
-        }
-        function renderSpreadsheet(el) {
-            let tbody = document.getElementById("spreadsheetBody");
-            tbody.innerHTML = "";
-            if (!el.spreadsheetData) el.spreadsheetData = [];
-            el.spreadsheetData.forEach((row) => {
-                let tr = document.createElement("tr");
-                let tdKey = document.createElement("td");
-                let inputKey = document.createElement("input");
-                inputKey.type = "text";
-                inputKey.value = row.key;
-                inputKey.disabled = true;
-                tdKey.appendChild(inputKey);
-                let tdVal = document.createElement("td");
-                let inputVal = document.createElement("input");
-                inputVal.type = "text";
-                inputVal.value = row.value;
-                inputVal.disabled = true;
-                tdVal.appendChild(inputVal);
-                tr.appendChild(tdKey);
-                tr.appendChild(tdVal);
-                tbody.appendChild(tr);
-            });
-        }
-        loadFromFirebase();
-    </script>
-</body>
-</html>
+                        rect
