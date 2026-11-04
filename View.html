@@ -363,7 +363,7 @@
         const minRow = -6;
         const maxRow = 20;
         const buildingCols = 30; 
-        const buildingRows = 13; // Set to 13 rows total (A-H, J-N)
+        const buildingRows = 13; // 13 total rows (A-H, J-N) matching index[cite: 1]
         let currentLayer = 'ground'; 
         let categories = [
             { name: "Fire Safety", color: "#ef4444" },
@@ -413,7 +413,7 @@
             }
             let adjustedIndex = r;
             if (adjustedIndex >= 8) {
-                adjustedIndex += 1; // skips 'I' (index 8)
+                adjustedIndex += 1; // skips 'I' (index 8) matching index[cite: 1]
             }
             return String.fromCharCode(65 + adjustedIndex); 
         }
@@ -700,4 +700,48 @@
             gallery.innerHTML = "";
             if (!el.photos) el.photos = [];
             el.photos.forEach((photoUrl) => {
-                let containerDiv = document.
+                let containerDiv = document.createElement("div");
+                containerDiv.className = "photo-thumb-container";
+                containerDiv.title = "Tap to enlarge photo";
+                containerDiv.onclick = () => openLightbox(photoUrl, el.name);
+                let img = document.createElement("img");
+                img.src = photoUrl;
+                containerDiv.appendChild(img);
+                gallery.appendChild(containerDiv);
+            });
+        }
+        window.openLightbox = function(url, itemName) {
+            document.getElementById("lightboxImage").src = url;
+            document.getElementById("lightboxCaption").innerText = itemName || "Photo Preview";
+            document.getElementById("lightbox-overlay").style.display = "flex";
+        }
+        window.closeLightbox = function() {
+            document.getElementById("lightbox-overlay").style.display = "none";
+        }
+        function renderSpreadsheet(el) {
+            let tbody = document.getElementById("spreadsheetBody");
+            tbody.innerHTML = "";
+            if (!el.spreadsheetData) el.spreadsheetData = [];
+            el.spreadsheetData.forEach((row) => {
+                let tr = document.createElement("tr");
+                let tdKey = document.createElement("td");
+                let inputKey = document.createElement("input");
+                inputKey.type = "text";
+                inputKey.value = row.key;
+                inputKey.disabled = true;
+                tdKey.appendChild(inputKey);
+                let tdVal = document.createElement("td");
+                let inputVal = document.createElement("input");
+                inputVal.type = "text";
+                inputVal.value = row.value;
+                inputVal.disabled = true;
+                tdVal.appendChild(inputVal);
+                tr.appendChild(tdKey);
+                tr.appendChild(tdVal);
+                tbody.appendChild(tr);
+            });
+        }
+        loadFromFirebase();
+    </script>
+</body>
+</html>
