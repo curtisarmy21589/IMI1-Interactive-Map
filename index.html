@@ -2,8 +2,12 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Facility Layout & Site Builder - Pan/Zoom Inspect & Spreadsheet</title>
+
+    <!-- Mobile PWA & App Manifest Settings -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#0b131d">
+
     <style>
         body {
             background-color: #0b131d;
@@ -35,14 +39,14 @@
         label { font-size: 11px; color: #94a3b8; }
         input, select, button, textarea {
             width: 100%;
-            padding: 8px;
+            padding: 6px 8px;
             background: #0b131d;
             border: 1px solid #38bdf8;
             color: #fff;
             border-radius: 4px;
             box-sizing: border-box;
             margin-top: 2px;
-            font-size: 14px; /* Larger font for easier touch input on mobile */
+            font-size: 12px;
         }
         textarea { resize: vertical; height: 60px; font-family: sans-serif; }
         button {
@@ -51,7 +55,6 @@
             cursor: pointer;
             transition: background 0.2s;
             touch-action: manipulation;
-            padding: 10px; /* Larger touch targets */
         }
         button:hover { background: #38bdf8; color: #0b131d; }
         .mode-btn {
@@ -65,11 +68,11 @@
         }
         .layer-btn {
             flex: 1;
-            padding: 8px 4px;
+            padding: 6px 4px;
             background: #070d14;
             border: 1px solid #1e293b;
             color: #94a3b8;
-            font-size: 11px;
+            font-size: 10px;
             cursor: pointer;
             border-radius: 4px;
             text-align: center;
@@ -89,11 +92,11 @@
         }
         .tab-btn {
             flex: 1;
-            padding: 8px;
+            padding: 6px;
             background: #070d14;
             border: 1px solid #1e293b;
             color: #94a3b8;
-            font-size: 12px;
+            font-size: 11px;
             cursor: pointer;
             border-radius: 4px;
         }
@@ -132,6 +135,7 @@
             stroke: #fbbf24;
             stroke-width: 3;
         }
+        /* HOVER POPUP BUBBLE STYLES */
         .asset-popup {
             opacity: 0;
             transition: opacity 0.15s ease-in-out;
@@ -154,20 +158,21 @@
         #coord-display {
             background: #070d14;
             border: 1px solid #1e293b;
-            padding: 8px;
+            padding: 6px;
             border-radius: 4px;
             font-family: monospace;
             color: #38bdf8;
-            font-size: 13px;
+            font-size: 12px;
             text-align: center;
         }
         #sync-status {
-            font-size: 11px;
+            font-size: 10px;
             text-align: center;
             color: #10b981;
             font-weight: bold;
             margin-top: -4px;
         }
+        /* MODAL STYLES */
         #modal-overlay, #category-modal-overlay, #lightbox-overlay {
             display: none;
             position: fixed;
@@ -185,8 +190,8 @@
             background: #111b27;
             border: 1px solid #38bdf8;
             border-radius: 8px;
-            width: 90%;
-            max-width: 600px;
+            width: 600px;
+            max-width: 92vw;
             max-height: 90vh;
             display: flex;
             flex-direction: column;
@@ -222,13 +227,15 @@
             background: none;
             border: none;
             color: #94a3b8;
-            font-size: 22px;
+            font-size: 18px;
             cursor: pointer;
             width: auto;
-            padding: 5px;
+            padding: 0;
             margin: 0;
         }
         .close-modal:hover { color: #fff; background: none; }
+        
+        /* SPREADSHEET TABLE */
         .spreadsheet-table {
             width: 100%;
             border-collapse: collapse;
@@ -238,7 +245,7 @@
             border: 1px solid #1f2d3d;
             padding: 6px;
             text-align: left;
-            font-size: 12px;
+            font-size: 11px;
         }
         .spreadsheet-table th {
             background: #0b131d;
@@ -249,10 +256,11 @@
             border: none;
             color: #fff;
             width: 100%;
-            padding: 4px;
+            padding: 2px;
             margin: 0;
         }
         .spreadsheet-table input:focus, .spreadsheet-table select:focus { outline: 1px solid #38bdf8; }
+        /* PHOTO GRID */
         .photo-gallery {
             display: flex;
             gap: 8px;
@@ -285,8 +293,8 @@
             color: white;
             border: none;
             border-radius: 50%;
-            width: 24px; height: 24px;
-            font-size: 13px;
+            width: 20px; height: 20px;
+            font-size: 11px;
             cursor: pointer;
             display: flex;
             align-items: center;
@@ -296,20 +304,15 @@
             z-index: 5;
         }
 
-        /* Responsive layout adaptation for Fold6 outer screen vs unfolded inner tablet display */
         @media (max-width: 768px) {
-            body {
-                flex-direction: column;
-            }
+            body { flex-direction: column; }
             #sidebar {
                 width: 100%;
+                height: auto;
                 max-height: 35vh;
-                border-right: none;
-                border-bottom: 1px solid #1f2d3d;
+                box-sizing: border-box;
             }
-            #canvas-container {
-                height: 65vh;
-            }
+            #canvas-container { height: 65vh; }
         }
     </style>
 </head>
@@ -332,11 +335,6 @@
                 <button class="layer-btn" id="layerWaterBtn" onclick="switchLayer('water')">Water Shutoffs</button>
                 <button class="layer-btn" id="layerGasBtn" onclick="switchLayer('gas')">Gas Shutoffs</button>
             </div>
-            <div style="display: flex; gap: 4px; margin-top: 4px;">
-                <button class="layer-btn" id="layerDockDoorsBtn" onclick="switchLayer('dock_doors')">Dock Doors</button>
-                <button class="layer-btn" id="layerUnderMezzSprinklersBtn" onclick="switchLayer('under_mezz_sprinklers')">Under Mezz Sprinklers</button>
-                <button class="layer-btn" id="layerHvacBtn" onclick="switchLayer('hvac')">HVAC</button>
-            </div>
         </div>
         <div>
             <label>Interaction Mode</label>
@@ -346,10 +344,12 @@
             </div>
         </div>
         <hr style="border-color: #1e293b; margin: 4px 0;">
+        <!-- Sidebar Tab Switcher -->
         <div class="tab-bar">
             <button class="tab-btn active" id="tabDeptBtn" onclick="switchTab('dept')">Zones & Yard</button>
             <button class="tab-btn" id="tabAssetBtn" onclick="switchTab('asset')">Assets Menu</button>
         </div>
+        <!-- PANEL 1: DEPARTMENTS & ZONES -->
         <div id="panelDept" class="panel active">
             <h3>Zone / Yard Management</h3>
             <div>
@@ -372,18 +372,21 @@
                 <button onclick="addDepartment()" style="margin-top: 6px;">Add Zone to Map</button>
             </div>
         </div>
+        <!-- PANEL 2: ASSETS (DOTS) -->
         <div id="panelAsset" class="panel">
             <div style="display: flex; justify-content: space-between; align-items: center;">
                 <h3>Utility & Fire Assets</h3>
-                <button onclick="openCategoryModal()" style="width: auto; padding: 6px 10px; font-size: 11px; background: #1e293b; color: #38bdf8;">⚙️ Categories</button>
+                <button onclick="openCategoryModal()" style="width: auto; padding: 2px 6px; font-size: 10px; background: #1e293b; color: #38bdf8;">⚙️ Categories</button>
             </div>
             <div>
                 <label>Asset Name</label>
                 <input type="text" id="newAssetName" value="Fire Hydrant #1">
                 <label>Category</label>
-                <select id="newAssetCategory"></select>
+                <select id="newAssetCategory">
+                    <!-- Populated dynamically -->
+                </select>
                 <label>Dot Icon (Emoji)</label>
-                <input type="text" id="newAssetEmoji" value="🧯" style="text-align: center; font-size: 18px;">
+                <input type="text" id="newAssetEmoji" value="🧯" style="text-align: center; font-size: 16px;">
                 <div style="display: flex; gap: 6px; margin-top: 4px;">
                     <div style="flex:1;"><label>X Col (-6 to 34)</label><input type="number" id="newAssetX" step="0.25" value="5"></div>
                     <div style="flex:1;"><label>Y Row (-4 to 18)</label><input type="number" id="newAssetY" step="0.25" value="-2"></div>
@@ -391,12 +394,21 @@
                 <button onclick="addAsset()" style="margin-top: 6px;">Add Fire/Utility Asset</button>
             </div>
         </div>
+        
+        <div>
+            <p style="font-size: 10px; color: #64748b; margin: 4px 0 0 0;">
+                💡 <b>Tip:</b> Tap asset icons to inspect or drag items. Use one finger to pan, two fingers to pinch-to-zoom.
+            </p>
+        </div>
     </div>
     <div id="canvas-container">
         <svg id="layoutSvg" width="2200" height="1400">
-            <g id="viewport"></g>
+            <g id="viewport">
+                <!-- Rendered dynamically -->
+            </g>
         </svg>
     </div>
+    <!-- ITEM DETAILS & PHOTO MODAL -->
     <div id="modal-overlay">
         <div class="modal-content">
             <div class="modal-header">
@@ -405,37 +417,44 @@
             </div>
             <div class="modal-body">
                 <input type="hidden" id="modalElementId">
+                
                 <div>
                     <label>Item Name / Designation</label>
-                    <input type="text" id="modalName" oninput="saveModalLiveChanges()" onchange="saveModalLiveChanges()">
+                    <input type="text" id="modalName" oninput="saveModalLiveChanges()">
                 </div>
+                <!-- Asset-Specific Fields (Category & Emoji) -->
                 <div id="modalAssetFields" style="display: flex; gap: 6px;">
                     <div style="flex: 3;">
                         <label>Asset Category</label>
-                        <select id="modalCategory" onchange="saveModalLiveChanges()"></select>
+                        <select id="modalCategory" onchange="saveModalLiveChanges()">
+                            <!-- Populated dynamically -->
+                        </select>
                     </div>
                     <div style="flex: 1;">
                         <label>Dot Emoji</label>
-                        <input type="text" id="modalEmoji" oninput="saveModalLiveChanges()" onchange="saveModalLiveChanges()" style="text-align: center; font-size: 18px;">
+                        <input type="text" id="modalEmoji" oninput="saveModalLiveChanges()" style="text-align: center; font-size: 16px;">
                     </div>
                 </div>
                 <div style="display: flex; gap: 6px;">
-                    <div style="flex:1;"><label>X Col</label><input type="number" id="modalX" step="0.25" oninput="saveModalLiveChanges()" onchange="saveModalLiveChanges()"></div>
-                    <div style="flex:1;"><label>Y Row</label><input type="number" id="modalY" step="0.25" oninput="saveModalLiveChanges()" onchange="saveModalLiveChanges()"></div>
+                    <div style="flex:1;"><label>X Col</label><input type="number" id="modalX" step="0.25" oninput="saveModalLiveChanges()"></div>
+                    <div style="flex:1;"><label>Y Row</label><input type="number" id="modalY" step="0.25" oninput="saveModalLiveChanges()"></div>
                 </div>
+                
                 <div id="modalSizeContainer" style="display: flex; gap: 6px;">
-                    <div style="flex:1;"><label>Width</label><input type="number" id="modalW" step="0.25" oninput="saveModalLiveChanges()" onchange="saveModalLiveChanges()"></div>
-                    <div style="flex:1;"><label>Height</label><input type="number" id="modalH" step="0.25" oninput="saveModalLiveChanges()" onchange="saveModalLiveChanges()"></div>
+                    <div style="flex:1;"><label>Width</label><input type="number" id="modalW" step="0.25" oninput="saveModalLiveChanges()"></div>
+                    <div style="flex:1;"><label>Height</label><input type="number" id="modalH" step="0.25" oninput="saveModalLiveChanges()"></div>
                 </div>
                 <div>
-                    <label>Location Photos (Click photo to enlarge) <span id="upload-status" style="color: #38bdf8; font-weight: normal;"></span></label>
+                    <label>Location Photos (Tap photo to enlarge) <span id="upload-status" style="color: #38bdf8; font-weight: normal;"></span></label>
                     <input type="file" id="photoUploadInput" accept="image/*" multiple onchange="handlePhotoUpload(event)">
-                    <div class="photo-gallery" id="modalPhotoGallery"></div>
+                    <div class="photo-gallery" id="modalPhotoGallery">
+                        <!-- Uploaded photos render here -->
+                    </div>
                 </div>
                 <div>
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
                         <label>Spreadsheet Details / Custom Records</label>
-                        <button onclick="addSpreadsheetRow()" style="width: auto; padding: 4px 10px; font-size: 11px;">+ Add Row</button>
+                        <button onclick="addSpreadsheetRow()" style="width: auto; padding: 2px 8px; font-size: 10px;">+ Add Row</button>
                     </div>
                     <table class="spreadsheet-table">
                         <thead>
@@ -445,16 +464,19 @@
                                 <th style="width: 10%;"></th>
                             </tr>
                         </thead>
-                        <tbody id="spreadsheetBody"></tbody>
+                        <tbody id="spreadsheetBody">
+                            <!-- Custom rows render here -->
+                        </tbody>
                     </table>
                 </div>
             </div>
             <div class="modal-footer">
-                <button class="danger" onclick="deleteItemFromModal()" style="width: auto; padding: 8px 14px;">Delete Item</button>
-                <button onclick="closeModal()" style="width: auto; padding: 8px 14px; background: #38bdf8; color: #0b131d;">Done / Save</button>
+                <button class="danger" onclick="deleteItemFromModal()" style="width: auto; padding: 6px 12px;">Delete Item</button>
+                <button onclick="closeModal()" style="width: auto; padding: 6px 12px; background: #38bdf8; color: #0b131d;">Done / Save</button>
             </div>
         </div>
     </div>
+    <!-- FULL-SIZE PHOTO LIGHTBOX OVERLAY -->
     <div id="lightbox-overlay" onclick="closeLightbox()">
         <div style="position: relative; max-width: 90vw; max-height: 90vh; display: flex; flex-direction: column; align-items: center;" onclick="event.stopPropagation()">
             <button onclick="closeLightbox()" style="position: absolute; top: -35px; right: 0; background: none; border: none; color: #fff; font-size: 24px; cursor: pointer;">×</button>
@@ -462,8 +484,9 @@
             <div id="lightboxCaption" style="margin-top: 8px; color: #38bdf8; font-size: 13px; font-weight: bold;"></div>
         </div>
     </div>
+    <!-- CATEGORY MANAGER MODAL -->
     <div id="category-modal-overlay">
-        <div class="modal-content" style="width: 90%; max-width: 500px;">
+        <div class="modal-content" style="width: 500px;">
             <div class="modal-header">
                 <h3 style="color: #38bdf8; margin: 0;">Manage Asset Categories</h3>
                 <button class="close-modal" onclick="closeCategoryModal()">×</button>
@@ -473,7 +496,7 @@
                     <label>Add New Category</label>
                     <div style="display: flex; gap: 6px; margin-top: 4px;">
                         <input type="text" id="newCatName" placeholder="Category Name (e.g. Water Main)" style="flex: 2;">
-                        <input type="color" id="newCatColor" value="#38bdf8" style="flex: 0.5; height: 36px; padding: 0; cursor: pointer;">
+                        <input type="color" id="newCatColor" value="#38bdf8" style="flex: 0.5; height: 30px; padding: 0; cursor: pointer;">
                         <button onclick="addCategory()" style="flex: 1; margin-top: 0;">Add Category</button>
                     </div>
                 </div>
@@ -487,15 +510,18 @@
                                 <th style="width: 50px; text-align: center;">Action</th>
                             </tr>
                         </thead>
-                        <tbody id="categoryTableBody"></tbody>
+                        <tbody id="categoryTableBody">
+                            <!-- Populated dynamically -->
+                        </tbody>
                     </table>
                 </div>
             </div>
             <div class="modal-footer">
-                <button onclick="closeCategoryModal()" style="width: auto; padding: 8px 14px; background: #38bdf8; color: #0b131d;">Save & Close</button>
+                <button onclick="closeCategoryModal()" style="width: auto; padding: 6px 12px; background: #38bdf8; color: #0b131d;">Save & Close</button>
             </div>
         </div>
     </div>
+    <!-- Firebase SDK Imports -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
@@ -516,7 +542,7 @@
         const minRow = -6;
         const maxRow = 20;
         const buildingCols = 30; 
-        const buildingRows = 13; 
+        const buildingRows = 14; 
         let currentMode = 'edit'; 
         let currentTab = 'dept'; 
         let currentLayer = 'ground'; 
@@ -579,8 +605,8 @@
         let isPanning = false;
         let panStart = { x: 0, y: 0 };
         let viewTransform = { x: 250, y: 180, scale: 0.9 };
-        
-        // Advanced Touch / Pointer Tracking Map for Fold6 Screen Resizing & Pinching
+
+        // Multi-touch tracking maps for mobile pinch-to-zoom & panning
         let activePointers = new Map();
         let initialPinchDistance = null;
         let initialPinchScale = 1;
@@ -618,11 +644,13 @@
             try {
                 syncStatus.innerText = "Saving...";
                 syncStatus.style.color = "#fbbf24";
+                
                 await setDoc(doc(db, "layouts", "facility_main"), {
                     elements: elements,
                     categories: categories,
                     updatedAt: new Date().toISOString()
                 });
+                
                 syncStatus.innerText = "Synced to Firebase";
                 syncStatus.style.color = "#10b981";
             } catch (error) {
@@ -634,6 +662,7 @@
         function populateCategoryDropdowns(selectedVal1 = null, selectedVal2 = null) {
             let select1 = document.getElementById("newAssetCategory");
             let select2 = document.getElementById("modalCategory");
+            
             let val1 = selectedVal1 || select1.value;
             let val2 = selectedVal2 || select2.value;
             select1.innerHTML = "";
@@ -674,21 +703,18 @@
                 let inputName = document.createElement("input");
                 inputName.type = "text";
                 inputName.value = cat.name;
-                let updateCatHandler = function() {
+                inputName.oninput = function() {
                     cat.name = inputName.value;
                     populateCategoryDropdowns();
                 };
-                inputName.oninput = updateCatHandler;
-                inputName.onchange = updateCatHandler;
                 tdName.appendChild(inputName);
-
                 let tdColor = document.createElement("td");
                 tdColor.style.textAlign = "center";
                 let inputColor = document.createElement("input");
                 inputColor.type = "color";
                 inputColor.value = cat.color;
                 inputColor.style.width = "40px";
-                inputColor.style.height = "28px";
+                inputColor.style.height = "24px";
                 inputColor.style.padding = "0";
                 inputColor.style.border = "none";
                 inputColor.style.cursor = "pointer";
@@ -696,13 +722,12 @@
                     cat.color = inputColor.value;
                 };
                 tdColor.appendChild(inputColor);
-
                 let tdAction = document.createElement("td");
                 tdAction.style.textAlign = "center";
                 let delBtn = document.createElement("button");
                 delBtn.className = "danger";
-                delBtn.style.padding = "6px 10px";
-                delBtn.style.fontSize = "11px";
+                delBtn.style.padding = "2px 6px";
+                delBtn.style.fontSize = "10px";
                 delBtn.innerText = "X";
                 delBtn.onclick = function() {
                     if (categories.length <= 1) {
@@ -724,6 +749,7 @@
             let nameInput = document.getElementById("newCatName");
             let colorInput = document.getElementById("newCatColor");
             let name = nameInput.value.trim();
+            
             if (!name) {
                 alert("Please enter a category name.");
                 return;
@@ -738,14 +764,15 @@
             populateCategoryDropdowns();
         }
         function getRowLabel(r) {
-            if (r < 0) {
-                return "N" + Math.abs(r);
+            if (r === buildingRows - 2) return "M.9"; 
+            let index = r;
+            if (index > buildingRows - 2) {
+                index -= 1;
             }
-            let adjustedIndex = r;
-            if (adjustedIndex >= 8) {
-                adjustedIndex += 1; 
+            if (index < 0) {
+                return "N" + Math.abs(index);
             }
-            return String.fromCharCode(65 + adjustedIndex); 
+            return String.fromCharCode(65 + index); 
         }
         window.switchLayer = function(layerName) {
             currentLayer = layerName;
@@ -755,9 +782,6 @@
             document.getElementById("layerSprinklerBtn").classList.toggle("active", layerName === 'sprinkler');
             document.getElementById("layerWaterBtn").classList.toggle("active", layerName === 'water');
             document.getElementById("layerGasBtn").classList.toggle("active", layerName === 'gas');
-            document.getElementById("layerDockDoorsBtn").classList.toggle("active", layerName === 'dock_doors');
-            document.getElementById("layerUnderMezzSprinklersBtn").classList.toggle("active", layerName === 'under_mezz_sprinklers');
-            document.getElementById("layerHvacBtn").classList.toggle("active", layerName === 'hvac');
             selectedId = null;
             render();
         }
@@ -782,7 +806,10 @@
         function render() {
             viewport.innerHTML = "";
             updateTransformString();
+            
+            // Site Background
             let siteBackground = document.createElementNS("http://www.w3.org/2000/svg", "g");
+            siteBackground.setAttribute("id", "site-surroundings");
             let earthGrading = document.createElementNS("http://www.w3.org/2000/svg", "rect");
             earthGrading.setAttribute("x", minCol * gridSize);
             earthGrading.setAttribute("y", minRow * gridSize);
@@ -802,6 +829,7 @@
             siteBackground.appendChild(siteLabel);
             viewport.appendChild(siteBackground);
 
+            // Grid Lines & Labels
             for (let c = minCol; c <= maxCol; c++) {
                 let line = document.createElementNS("http://www.w3.org/2000/svg", "line");
                 line.setAttribute("x1", c * gridSize);
@@ -818,22 +846,34 @@
                 text.textContent = c + 1; 
                 viewport.appendChild(text);
             }
-            for (let r = 0; r < buildingRows; r++) {
+            for (let r = minRow; r <= maxRow; r++) {
                 let line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-                line.setAttribute("x1", 0);
+                line.setAttribute("x1", minCol * gridSize);
                 line.setAttribute("y1", r * gridSize);
-                line.setAttribute("x2", buildingCols * gridSize);
+                line.setAttribute("x2", maxCol * gridSize);
                 line.setAttribute("y2", r * gridSize);
-                line.setAttribute("class", "grid-line");
+                
+                if (r === buildingRows - 2) {
+                    line.setAttribute("stroke", "#f43f5e");
+                    line.setAttribute("stroke-dasharray", "2,2");
+                } else {
+                    line.setAttribute("class", "grid-line");
+                }
                 viewport.appendChild(line);
                 let text = document.createElementNS("http://www.w3.org/2000/svg", "text");
-                text.setAttribute("x", -10);
+                text.setAttribute("x", (minCol * gridSize) - 10);
                 text.setAttribute("y", (r * gridSize) + (gridSize / 2) + 3);
                 text.setAttribute("text-anchor", "end");
                 text.setAttribute("class", "coord-label");
+                if (r === buildingRows - 2) {
+                    text.setAttribute("fill", "#f43f5e");
+                    text.setAttribute("font-weight", "bold");
+                }
                 text.textContent = getRowLabel(r);
                 viewport.appendChild(text);
             }
+
+            // Building Footprint
             let buildingWall = document.createElementNS("http://www.w3.org/2000/svg", "rect");
             buildingWall.setAttribute("x", 0);
             buildingWall.setAttribute("y", 0);
@@ -847,11 +887,11 @@
             let layerTitleName = currentLayer.toUpperCase();
             let topLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
             topLabel.setAttribute("x", 0.5 * gridSize);
-            topLabel.setAttribute("y", -8);
+            topLabel.setAttribute("y", -22);
             topLabel.setAttribute("fill", "#38bdf8");
             topLabel.setAttribute("font-size", "10px");
             topLabel.setAttribute("font-weight", "bold");
-            topLabel.textContent = `SOUTH WALL - ROW A (${layerTitleName} LAYER) ▲`;
+            topLabel.textContent = `BUILDING SOUTH WALL (${layerTitleName} LAYER) ▲`;
             viewport.appendChild(topLabel);
             let bottomLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
             bottomLabel.setAttribute("x", 0.5 * gridSize);
@@ -859,20 +899,21 @@
             bottomLabel.setAttribute("fill", "#38bdf8");
             bottomLabel.setAttribute("font-size", "10px");
             bottomLabel.setAttribute("font-weight", "bold");
-            bottomLabel.textContent = `NORTH WALL - ROW N ▼`;
+            bottomLabel.textContent = `BUILDING NORTH WALL ▼`;
             viewport.appendChild(bottomLabel);
 
+            // Render Elements
             let visibleElements = elements.filter(el => (el.layer || 'ground') === currentLayer);
             visibleElements.forEach(el => {
                 let g = document.createElementNS("http://www.w3.org/2000/svg", "g");
                 g.setAttribute("class", "item-group");
                 
-                // Unified touch & mouse interaction for elements
                 g.addEventListener("pointerdown", (e) => {
-                    e.stopPropagation();
                     if (currentMode === 'pan') {
+                        e.stopPropagation();
                         openModal(el);
                     } else if (currentMode === 'edit') {
+                        e.stopPropagation();
                         startDragElement(e, el);
                     }
                 });
@@ -881,14 +922,16 @@
                     let cx = (el.x * gridSize) + (gridSize / 2);
                     let cy = (el.y * gridSize) + (gridSize / 2);
                     let catColor = getCategoryColor(el.category);
+                    
                     let circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
                     circle.setAttribute("cx", cx);
                     circle.setAttribute("cy", cy);
-                    circle.setAttribute("r", 6); // slightly larger radius for easy tapping on mobile
+                    circle.setAttribute("r", 6); 
                     circle.setAttribute("class", `item-shape ${el.id === selectedId ? 'selected' : ''}`);
                     circle.setAttribute("fill", "#111b27");
                     circle.setAttribute("stroke", catColor);
                     circle.setAttribute("stroke-width", "2");
+                    
                     let emojiText = document.createElementNS("http://www.w3.org/2000/svg", "text");
                     emojiText.setAttribute("x", cx);
                     emojiText.setAttribute("y", cy + 1);
@@ -897,6 +940,7 @@
                     emojiText.setAttribute("font-size", "10px");
                     emojiText.style.pointerEvents = "none";
                     emojiText.textContent = el.emoji || "📍";
+                    
                     let popupGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
                     popupGroup.setAttribute("class", "asset-popup");
                     let boxWidth = (el.name.length * 6.5) + 12;
@@ -909,6 +953,8 @@
                     popupBg.setAttribute("fill", "#0b131d");
                     popupBg.setAttribute("stroke", catColor);
                     popupBg.setAttribute("stroke-width", "1.5");
+                    popupBg.setAttribute("filter", "drop-shadow(0px 2px 4px rgba(0,0,0,0.6))");
+                    
                     let popupText = document.createElementNS("http://www.w3.org/2000/svg", "text");
                     popupText.setAttribute("x", cx);
                     popupText.setAttribute("y", cy - 16);
@@ -917,6 +963,7 @@
                     popupText.setAttribute("font-size", "10px");
                     popupText.setAttribute("font-weight", "bold");
                     popupText.textContent = el.name;
+                    
                     popupGroup.appendChild(popupBg);
                     popupGroup.appendChild(popupText);
                     g.appendChild(circle);
@@ -929,6 +976,7 @@
                     rect.setAttribute("width", el.w * gridSize);
                     rect.setAttribute("height", el.h * gridSize);
                     rect.setAttribute("class", `item-shape ${el.id === selectedId ? 'selected' : ''}`);
+                    
                     if (el.type === 'yard') {
                         rect.setAttribute("fill", "#b45309");
                         rect.setAttribute("fill-opacity", "0.3");
@@ -947,6 +995,7 @@
                         rect.setAttribute("stroke", "#38bdf8");
                     }
                     rect.setAttribute("stroke-width", "1");
+                    
                     let text = document.createElementNS("http://www.w3.org/2000/svg", "text");
                     text.setAttribute("x", (el.x * gridSize) + 6);
                     text.setAttribute("y", (el.y * gridSize) + 16);
@@ -955,6 +1004,7 @@
                     text.setAttribute("font-weight", "bold");
                     text.style.pointerEvents = "none";
                     text.textContent = el.name;
+                    
                     g.appendChild(rect);
                     g.appendChild(text);
                 }
@@ -989,7 +1039,7 @@
             coordDisplay.innerHTML = `Grid: <b>Row ${rowLabel}, Col ${preciseColNum}</b>`;
         }
 
-        // Canvas container multi-touch and pointer gesture handler
+        // Pointer event mapping for container touch drag, element dragging, & pinch-to-zoom
         container.addEventListener("pointerdown", (e) => {
             activePointers.set(e.pointerId, e);
 
@@ -998,12 +1048,13 @@
                     isPanning = true;
                     container.classList.add("panning");
                     panStart = { x: e.clientX - viewTransform.x, y: e.clientY - viewTransform.y };
-                } else if (currentMode === 'edit' && !isDraggingElement) {
+                } else if (currentMode === 'edit') {
                     selectedId = null;
                     render();
                 }
             } else if (activePointers.size === 2) {
                 isPanning = false;
+                isDraggingElement = false;
                 container.classList.remove("panning");
                 let points = Array.from(activePointers.values());
                 initialPinchDistance = getPinchDistance(points[0], points[1]);
@@ -1054,6 +1105,10 @@
                     isPanning = false;
                     container.classList.remove("panning");
                 }
+                if (isDraggingElement) {
+                    isDraggingElement = false;
+                    saveToFirebase();
+                }
             }
         };
 
@@ -1061,11 +1116,12 @@
         container.addEventListener("pointercancel", handlePointerEnd);
         container.addEventListener("pointerleave", handlePointerEnd);
 
-        // Mouse Wheel Zoom fallback
+        // Mouse Wheel Zoom
         container.addEventListener("wheel", (e) => {
             e.preventDefault();
             let zoomIntensity = 0.1;
             let oldScale = viewTransform.scale;
+            
             if (e.deltaY < 0) {
                 viewTransform.scale = Math.min(viewTransform.scale * (1 + zoomIntensity), 4.0);
             } else {
@@ -1082,31 +1138,32 @@
         function startDragElement(e, el) {
             selectedId = el.id;
             isDraggingElement = true;
+            
             let startX = e.clientX;
             let startY = e.clientY;
             let origX = el.x;
             let origY = el.y;
-            
-            function onPointerMove(pe) {
+
+            function onPointerMove(e) {
                 if (!isDraggingElement) return;
-                let dx = (pe.clientX - startX) / viewTransform.scale;
-                let dy = (pe.clientY - startY) / viewTransform.scale;
+                let dx = (e.clientX - startX) / viewTransform.scale;
+                let dy = (e.clientY - startY) / viewTransform.scale;
+                
                 el.x = parseFloat((origX + (dx / gridSize)).toFixed(2));
                 el.y = parseFloat((origY + (dy / gridSize)).toFixed(2));
+                
                 render();
             }
-            
+
             function onPointerUp() {
                 isDraggingElement = false;
                 window.removeEventListener("pointermove", onPointerMove);
                 window.removeEventListener("pointerup", onPointerUp);
-                window.removeEventListener("pointercancel", onPointerUp);
                 saveToFirebase(); 
             }
-            
+
             window.addEventListener("pointermove", onPointerMove);
             window.addEventListener("pointerup", onPointerUp);
-            window.addEventListener("pointercancel", onPointerUp);
             render();
         }
 
@@ -1117,6 +1174,7 @@
             document.getElementById("modalName").value = el.name;
             document.getElementById("modalX").value = el.x;
             document.getElementById("modalY").value = el.y;
+            
             if (el.type === 'asset') {
                 document.getElementById("modalSizeContainer").style.display = "none";
                 document.getElementById("modalAssetFields").style.display = "flex";
@@ -1146,6 +1204,7 @@
                 el.name = document.getElementById("modalName").value;
                 el.x = parseFloat(document.getElementById("modalX").value) || 0;
                 el.y = parseFloat(document.getElementById("modalY").value) || 0;
+                
                 if (el.type === 'asset') {
                     el.category = document.getElementById("modalCategory").value;
                     el.emoji = document.getElementById("modalEmoji").value || "📍";
@@ -1153,6 +1212,7 @@
                     el.w = parseFloat(document.getElementById("modalW").value) || 1;
                     el.h = parseFloat(document.getElementById("modalH").value) || 1;
                 }
+                
                 document.getElementById("modalTitle").innerText = `Edit: ${el.name}`;
                 render();
             }
@@ -1162,24 +1222,31 @@
             let el = elements.find(item => item.id === id);
             if (!el) return;
             if (!el.photos) el.photos = [];
+            
             let files = event.target.files;
             let statusSpan = document.getElementById("upload-status");
+            
             for (let file of files) {
                 try {
                     statusSpan.innerText = `(Uploading ${file.name} to R2...)`;
                     let formData = new FormData();
                     formData.append("file", file);
+                    
                     let response = await fetch("https://imi1-map-uploader.curtisarmy21589.workers.dev", {
                         method: "POST",
                         body: formData
                     });
+                    
                     if (!response.ok) throw new Error("Upload failed");
+                    
                     let result = await response.json();
                     let photoUrl = result.url || result.fileUrl || (typeof result === 'string' ? result : null);
+                    
                     if (!photoUrl) {
                         let textRes = await response.text();
                         photoUrl = textRes;
                     }
+                    
                     if (photoUrl) {
                         el.photos.push(photoUrl);
                         renderPhotos(el);
@@ -1191,7 +1258,7 @@
                 }
             }
             statusSpan.innerText = "";
-            event.target.value = "";
+            event.target.value = ""; 
         }
         function renderPhotos(el) {
             let gallery = document.getElementById("modalPhotoGallery");
@@ -1200,16 +1267,18 @@
             el.photos.forEach((photoUrl, index) => {
                 let containerDiv = document.createElement("div");
                 containerDiv.className = "photo-thumb-container";
-                containerDiv.title = "Click to enlarge photo";
+                containerDiv.title = "Tap to enlarge photo";
                 containerDiv.onclick = () => openLightbox(photoUrl, el.name);
+                
                 let img = document.createElement("img");
                 img.src = photoUrl;
+                
                 let delBtn = document.createElement("button");
                 delBtn.className = "delete-photo-btn";
                 delBtn.innerHTML = "×";
                 delBtn.title = "Delete photo";
                 delBtn.onclick = (e) => {
-                    e.stopPropagation();
+                    e.stopPropagation(); 
                     el.photos.splice(index, 1);
                     renderPhotos(el);
                     saveToFirebase();
@@ -1233,36 +1302,31 @@
             if (!el.spreadsheetData) el.spreadsheetData = [];
             el.spreadsheetData.forEach((row, index) => {
                 let tr = document.createElement("tr");
+                
                 let tdKey = document.createElement("td");
                 let inputKey = document.createElement("input");
                 inputKey.type = "text";
                 inputKey.value = row.key;
-                let updateKeyHandler = function() {
+                inputKey.oninput = function() {
                     row.key = inputKey.value;
                     saveToFirebase();
                 };
-                inputKey.oninput = updateKeyHandler;
-                inputKey.onchange = updateKeyHandler;
                 tdKey.appendChild(inputKey);
-
                 let tdVal = document.createElement("td");
                 let inputVal = document.createElement("input");
                 inputVal.type = "text";
                 inputVal.value = row.value;
-                let updateValHandler = function() {
+                inputVal.oninput = function() {
                     row.value = inputVal.value;
                     saveToFirebase();
                 };
-                inputVal.oninput = updateValHandler;
-                inputVal.onchange = updateValHandler;
                 tdVal.appendChild(inputVal);
-
                 let tdAction = document.createElement("td");
                 tdAction.style.textAlign = "center";
                 let delRowBtn = document.createElement("button");
                 delRowBtn.className = "danger";
-                delRowBtn.style.padding = "6px 10px";
-                delRowBtn.style.fontSize = "11px";
+                delRowBtn.style.padding = "2px 6px";
+                delRowBtn.style.fontSize = "10px";
                 delRowBtn.innerText = "X";
                 delRowBtn.onclick = function() {
                     el.spreadsheetData.splice(index, 1);
@@ -1273,7 +1337,6 @@
                 tr.appendChild(tdKey);
                 tr.appendChild(tdVal);
                 tr.appendChild(tdAction);
-                tbody.apiAppend = tr; // reference
                 tbody.appendChild(tr);
             });
         }
@@ -1299,7 +1362,7 @@
             let newEl = {
                 id: Date.now(),
                 layer: currentLayer, 
-                name: document.getElementById("newDeptNameName")?.value || document.getElementById("newDeptName").value,
+                name: document.getElementById("newDeptName").value,
                 type: document.getElementById("newDeptType").value,
                 x: parseFloat(document.getElementById("newDeptX").value) || 0,
                 y: parseFloat(document.getElementById("newDeptY").value) || 0,
