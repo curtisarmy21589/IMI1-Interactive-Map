@@ -3,9 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <title>Facility Layout & Site Builder - Pan/Zoom Inspect & Spreadsheet</title>
+
     <!-- Mobile PWA & App Manifest Settings -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="theme-color" content="#0b131d">
+
     <style>
         body {
             background-color: #0b131d;
@@ -133,6 +135,7 @@
             stroke: #fbbf24;
             stroke-width: 3;
         }
+        /* HOVER POPUP BUBBLE STYLES */
         .asset-popup {
             opacity: 0;
             transition: opacity 0.15s ease-in-out;
@@ -154,7 +157,7 @@
         }
         #coord-display {
             background: #070d14;
-            border: 1px solid #1f2d3d;
+            border: 1px solid #1e293b;
             padding: 6px;
             border-radius: 4px;
             font-family: monospace;
@@ -169,6 +172,7 @@
             font-weight: bold;
             margin-top: -4px;
         }
+        /* MODAL STYLES */
         #modal-overlay, #category-modal-overlay, #lightbox-overlay {
             display: none;
             position: fixed;
@@ -230,6 +234,8 @@
             margin: 0;
         }
         .close-modal:hover { color: #fff; background: none; }
+        
+        /* SPREADSHEET TABLE */
         .spreadsheet-table {
             width: 100%;
             border-collapse: collapse;
@@ -254,6 +260,7 @@
             margin: 0;
         }
         .spreadsheet-table input:focus, .spreadsheet-table select:focus { outline: 1px solid #38bdf8; }
+        /* PHOTO GRID */
         .photo-gallery {
             display: flex;
             gap: 8px;
@@ -296,6 +303,7 @@
             margin: 0;
             z-index: 5;
         }
+
         @media (max-width: 768px) {
             body { flex-direction: column; }
             #sidebar {
@@ -314,24 +322,6 @@
         
         <div id="coord-display">Col: -- | Row: --</div>
         <div id="sync-status">Connected to Firebase</div>
-
-        <!-- NEW: FAST ASSET SEARCH & JUMP -->
-        <div>
-            <label>🔍 Quick Asset Search & Jump</label>
-            <input type="text" id="assetSearchInput" placeholder="Type asset or zone name..." oninput="filterSearchAssets()" autocomplete="off">
-            <div id="searchResultsList" style="max-height: 110px; overflow-y: auto; background: #070d14; border: 1px solid #1f2d3d; border-radius: 4px; margin-top: 2px; display: none;"></div>
-        </div>
-
-        <!-- NEW: EMERGENCY QUICK FILTERS -->
-        <div>
-            <label style="color: #ef4444; font-weight: bold;">🚨 Emergency Quick Filters</label>
-            <div style="display: flex; gap: 4px; margin-top: 2px;">
-                <button onclick="filterEmergencyCategory('Fire Safety')" style="background: #7f1d1d; border-color: #ef4444; font-size: 10px; padding: 4px;">Fire Hydrants</button>
-                <button onclick="filterEmergencyCategory('Plumbing')" style="background: #0369a1; border-color: #38bdf8; font-size: 10px; padding: 4px;">Water Valves</button>
-                <button onclick="filterEmergencyCategory('Electrical')" style="background: #c2410c; border-color: #f97316; font-size: 10px; padding: 4px;">Electrical MDP</button>
-            </div>
-        </div>
-
         <!-- LAYER SELECTION MENU -->
         <div>
             <label>Active View Layer</label>
@@ -345,20 +335,7 @@
                 <button class="layer-btn" id="layerWaterBtn" onclick="switchLayer('water')">Water Shutoffs</button>
                 <button class="layer-btn" id="layerGasBtn" onclick="switchLayer('gas')">Gas Shutoffs</button>
             </div>
-            <!-- NEW: GHOST LAYER OUTLINE TOGGLE -->
-            <div style="margin-top: 6px; display: flex; align-items: center; gap: 6px;">
-                <input type="checkbox" id="ghostLayerToggle" onchange="render()" style="width: auto; margin: 0;">
-                <label for="ghostLayerToggle" style="color: #38bdf8; cursor: pointer;">Ghost Ground Walls Underneath</label>
-            </div>
         </div>
-
-        <!-- NEW: DISTANCE MEASUREMENT RULER TOOL -->
-        <div>
-            <label>📏 Measurement Tool</label>
-            <button id="measureToolBtn" onclick="toggleMeasurementMode()" style="background: #1e293b; color: #38bdf8; font-size: 11px; padding: 6px;">Start Distance Ruler</button>
-            <div id="measureResultDisplay" style="font-size: 11px; color: #fbbf24; text-align: center; margin-top: 2px;"></div>
-        </div>
-
         <div>
             <label>Interaction Mode</label>
             <div style="display: flex; gap: 6px; margin-top: 2px;">
@@ -385,8 +362,8 @@
                     <option value="general">General Dept / Roof Unit</option>
                 </select>
                 <div style="display: flex; gap: 6px;">
-                    <div style="flex:1;"><label>X Col</label><input type="number" id="newDeptX" step="0.5" value="2"></div>
-                    <div style="flex:1;"><label>Y Row</label><input type="number" id="newDeptY" step="0.5" value="-4"></div>
+                    <div style="flex:1;"><label>X Col (-6 to 34)</label><input type="number" id="newDeptX" step="0.5" value="2"></div>
+                    <div style="flex:1;"><label>Y Row (-4 to 18)</label><input type="number" id="newDeptY" step="0.5" value="-4"></div>
                 </div>
                 <div style="display: flex; gap: 6px;">
                     <div style="flex:1;"><label>Width</label><input type="number" id="newDeptW" step="0.5" value="12"></div>
@@ -411,8 +388,8 @@
                 <label>Dot Icon (Emoji)</label>
                 <input type="text" id="newAssetEmoji" value="🧯" style="text-align: center; font-size: 16px;">
                 <div style="display: flex; gap: 6px; margin-top: 4px;">
-                    <div style="flex:1;"><label>X Col</label><input type="number" id="newAssetX" step="0.25" value="5"></div>
-                    <div style="flex:1;"><label>Y Row</label><input type="number" id="newAssetY" step="0.25" value="-2"></div>
+                    <div style="flex:1;"><label>X Col (-6 to 34)</label><input type="number" id="newAssetX" step="0.25" value="5"></div>
+                    <div style="flex:1;"><label>Y Row (-4 to 18)</label><input type="number" id="newAssetY" step="0.25" value="-2"></div>
                 </div>
                 <button onclick="addAsset()" style="margin-top: 6px;">Add Fire/Utility Asset</button>
             </div>
@@ -561,11 +538,11 @@
         const db = getFirestore(app);
         const gridSize = 25;
         const minCol = -8;
-        const maxCol = 37; // Adjusted for removed Column I
+        const maxCol = 38;
         const minRow = -6;
-        const maxRow = 19; // Adjusted for removed Row M.9
-        const buildingCols = 29; // Adjusted width minus Column I
-        const buildingRows = 13; // Adjusted height minus Row M.9
+        const maxRow = 20;
+        const buildingCols = 30; 
+        const buildingRows = 14; 
         let currentMode = 'edit'; 
         let currentTab = 'dept'; 
         let currentLayer = 'ground'; 
@@ -629,16 +606,13 @@
         let panStart = { x: 0, y: 0 };
         let viewTransform = { x: 250, y: 180, scale: 0.9 };
 
-        // Measurement tool states
-        let isMeasuring = false;
-        let measureStartPoint = null;
-
         // Multi-touch tracking maps for mobile pinch-to-zoom & panning
         let activePointers = new Map();
         let initialPinchDistance = null;
         let initialPinchScale = 1;
         let initialPinchCenter = { x: 0, y: 0 };
         let initialTransform = { x: 0, y: 0 };
+
         const container = document.getElementById("canvas-container");
         const svg = document.getElementById("layoutSvg");
         const viewport = document.getElementById("viewport");
@@ -653,27 +627,15 @@
                     if (data.elements) elements = data.elements;
                     if (data.categories) categories = data.categories;
                     syncStatus.innerText = "Loaded from Firebase";
-                    // Offline Cache Backup
-                    localStorage.setItem('cached_layout_elements', JSON.stringify(elements));
-                    localStorage.setItem('cached_layout_categories', JSON.stringify(categories));
                 } else {
                     await saveToFirebase();
                 }
                 populateCategoryDropdowns();
                 render();
             } catch (error) {
-                console.warn("Firebase offline or unavailable, checking local storage cache...", error);
-                let cachedEls = localStorage.getItem('cached_layout_elements');
-                let cachedCats = localStorage.getItem('cached_layout_categories');
-                if (cachedEls && cachedCats) {
-                    elements = JSON.parse(cachedEls);
-                    categories = JSON.parse(cachedCats);
-                    syncStatus.innerText = "Loaded Offline (Cache)";
-                    syncStatus.style.color = "#fbbf24";
-                } else {
-                    syncStatus.innerText = "Error Loading Database";
-                    syncStatus.style.color = "#ef4444";
-                }
+                console.error("Error loading layout:", error);
+                syncStatus.innerText = "Error Loading Database";
+                syncStatus.style.color = "#ef4444";
                 populateCategoryDropdowns();
                 render();
             }
@@ -689,122 +651,14 @@
                     updatedAt: new Date().toISOString()
                 });
                 
-                // Cache locally as well
-                localStorage.setItem('cached_layout_elements', JSON.stringify(elements));
-                localStorage.setItem('cached_layout_categories', JSON.stringify(categories));
-
                 syncStatus.innerText = "Synced to Firebase";
                 syncStatus.style.color = "#10b981";
             } catch (error) {
                 console.error("Error saving layout:", error);
-                localStorage.setItem('cached_layout_elements', JSON.stringify(elements));
-                localStorage.setItem('cached_layout_categories', JSON.stringify(categories));
-                syncStatus.innerText = "Saved Offline (Cache Only)";
-                syncStatus.style.color = "#fbbf24";
+                syncStatus.innerText = "Sync Failed";
+                syncStatus.style.color = "#ef4444";
             }
         }
-
-        // Coordinate mapping function to exclude Column I and Row M.9 cleanly
-        function getColLabel(c) {
-            if (c === 8) return null; // Column I (index 8) is omitted
-            let disp = c < 8 ? c + 1 : c;
-            return disp;
-        }
-        function getRowLabel(r) {
-            if (r === 12) return null; // Row M.9 (index 12) is omitted
-            let index = r > 12 ? r - 1 : r;
-            if (index < 0) {
-                return "N" + Math.abs(index);
-            }
-            return String.fromCharCode(65 + index); 
-        }
-
-        // Feature 1: Fast Search & Auto-Focus Bar
-        window.filterSearchAssets = function() {
-            let query = document.getElementById("assetSearchInput").value.toLowerCase().trim();
-            let resultsList = document.getElementById("searchResultsList");
-            resultsList.innerHTML = "";
-            if (!query) {
-                resultsList.style.display = "none";
-                return;
-            }
-            let matches = elements.filter(el => el.name.toLowerCase().includes(query));
-            if (matches.length === 0) {
-                resultsList.style.display = "none";
-                return;
-            }
-            resultsList.style.display = "block";
-            matches.forEach(item => {
-                let div = document.createElement("div");
-                div.style.padding = "6px 8px";
-                div.style.fontSize = "11px";
-                div.style.cursor = "pointer";
-                div.style.borderBottom = "1px solid #1f2d3d";
-                div.innerHTML = `<b>${item.name}</b> <span style="color:#38bdf8;">(${item.layer || 'ground'})</span>`;
-                div.onmouseover = () => div.style.background = "#1e293b";
-                div.onmouseout = () => div.style.background = "transparent";
-                div.onclick = () => {
-                    switchLayer(item.layer || 'ground');
-                    selectedId = item.id;
-                    viewTransform.x = container.clientWidth / 2 - (item.x * gridSize * viewTransform.scale);
-                    viewTransform.y = container.clientHeight / 2 - (item.y * gridSize * viewTransform.scale);
-                    render();
-                    resultsList.style.display = "none";
-                    document.getElementById("assetSearchInput").value = "";
-                    openModal(item);
-                };
-                resultsList.appendChild(div);
-            });
-        };
-
-        // Feature 5: Emergency Quick Filter Hotkeys
-        window.filterEmergencyCategory = function(catName) {
-            let match = elements.find(el => el.category === catName);
-            if (match) {
-                switchLayer(match.layer || 'ground');
-                selectedId = match.id;
-                render();
-                openModal(match);
-            } else {
-                alert(`No emergency assets found for category: ${catName}`);
-            }
-        };
-
-        // Feature 3: Distance Measurement Ruler Tool
-        window.toggleMeasurementMode = function() {
-            isMeasuring = !isMeasuring;
-            let btn = document.getElementById("measureToolBtn");
-            if (isMeasuring) {
-                btn.style.background = "#38bdf8";
-                btn.style.color = "#0b131d";
-                btn.innerText = "Click 2 points on map";
-            } else {
-                btn.style.background = "#1e293b";
-                btn.style.color = "#38bdf8";
-                btn.innerText = "Start Distance Ruler";
-                measureStartPoint = null;
-                document.getElementById("measureResultDisplay").innerText = "";
-                render();
-            }
-        };
-
-        function handleMeasurementClick(gridX, gridY) {
-            if (!measureStartPoint) {
-                measureStartPoint = { x: gridX, y: gridY };
-                document.getElementById("measureResultDisplay").innerText = "Start set. Click second point.";
-            } else {
-                let dx = Math.abs(gridX - measureStartPoint.x) * 10; // 1 grid unit = 10 ft scale
-                let dy = Math.abs(gridY - measureStartPoint.y) * 10;
-                let totalDist = Math.sqrt(dx * dx + dy * dy).toFixed(1);
-                document.getElementById("measureResultDisplay").innerText = `Distance: ~${totalDist} ft`;
-                measureStartPoint = null;
-                isMeasuring = false;
-                document.getElementById("measureToolBtn").style.background = "#1e293b";
-                document.getElementById("measureToolBtn").style.color = "#38bdf8";
-                document.getElementById("measureToolBtn").innerText = "Start Distance Ruler";
-            }
-        }
-
         function populateCategoryDropdowns(selectedVal1 = null, selectedVal2 = null) {
             let select1 = document.getElementById("newAssetCategory");
             let select2 = document.getElementById("modalCategory");
@@ -909,7 +763,17 @@
             renderCategoryTable();
             populateCategoryDropdowns();
         }
-
+        function getRowLabel(r) {
+            if (r === buildingRows - 2) return "M.9"; 
+            let index = r;
+            if (index > buildingRows - 2) {
+                index -= 1;
+            }
+            if (index < 0) {
+                return "N" + Math.abs(index);
+            }
+            return String.fromCharCode(65 + index); 
+        }
         window.switchLayer = function(layerName) {
             currentLayer = layerName;
             document.getElementById("layerGroundBtn").classList.toggle("active", layerName === 'ground');
@@ -965,10 +829,8 @@
             siteBackground.appendChild(siteLabel);
             viewport.appendChild(siteBackground);
 
-            // Grid Lines & Labels (Skipping Column I and Row M.9)
+            // Grid Lines & Labels
             for (let c = minCol; c <= maxCol; c++) {
-                let colNum = getColLabel(c);
-                if (colNum === null) continue;
                 let line = document.createElementNS("http://www.w3.org/2000/svg", "line");
                 line.setAttribute("x1", c * gridSize);
                 line.setAttribute("y1", minRow * gridSize);
@@ -981,25 +843,33 @@
                 text.setAttribute("y", (minRow * gridSize) - 8);
                 text.setAttribute("text-anchor", "middle");
                 text.setAttribute("class", "coord-label");
-                text.textContent = colNum; 
+                text.textContent = c + 1; 
                 viewport.appendChild(text);
             }
             for (let r = minRow; r <= maxRow; r++) {
-                let rowLbl = getRowLabel(r);
-                if (rowLbl === null) continue;
                 let line = document.createElementNS("http://www.w3.org/2000/svg", "line");
                 line.setAttribute("x1", minCol * gridSize);
                 line.setAttribute("y1", r * gridSize);
                 line.setAttribute("x2", maxCol * gridSize);
                 line.setAttribute("y2", r * gridSize);
-                line.setAttribute("class", "grid-line");
+                
+                if (r === buildingRows - 2) {
+                    line.setAttribute("stroke", "#f43f5e");
+                    line.setAttribute("stroke-dasharray", "2,2");
+                } else {
+                    line.setAttribute("class", "grid-line");
+                }
                 viewport.appendChild(line);
                 let text = document.createElementNS("http://www.w3.org/2000/svg", "text");
                 text.setAttribute("x", (minCol * gridSize) - 10);
                 text.setAttribute("y", (r * gridSize) + (gridSize / 2) + 3);
                 text.setAttribute("text-anchor", "end");
                 text.setAttribute("class", "coord-label");
-                text.textContent = rowLbl;
+                if (r === buildingRows - 2) {
+                    text.setAttribute("fill", "#f43f5e");
+                    text.setAttribute("font-weight", "bold");
+                }
+                text.textContent = getRowLabel(r);
                 viewport.appendChild(text);
             }
 
@@ -1014,27 +884,6 @@
             buildingWall.setAttribute("stroke", "#38bdf8");
             buildingWall.setAttribute("stroke-width", "2");
             viewport.appendChild(buildingWall);
-
-            // Feature 2: Ghost Ground Layer Outlines
-            let ghostToggle = document.getElementById("ghostLayerToggle");
-            if (ghostToggle && ghostToggle.checked && currentLayer !== 'ground') {
-                let groundElements = elements.filter(el => (el.layer || 'ground') === 'ground');
-                groundElements.forEach(el => {
-                    if (el.type !== 'asset') {
-                        let gRect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-                        gRect.setAttribute("x", el.x * gridSize);
-                        gRect.setAttribute("y", el.y * gridSize);
-                        gRect.setAttribute("width", el.w * gridSize);
-                        gRect.setAttribute("height", el.h * gridSize);
-                        gRect.setAttribute("fill", "#38bdf8");
-                        gRect.setAttribute("fill-opacity", "0.08");
-                        gRect.setAttribute("stroke", "#38bdf8");
-                        gRect.setAttribute("stroke-opacity", "0.2");
-                        viewport.appendChild(gRect);
-                    }
-                });
-            }
-
             let layerTitleName = currentLayer.toUpperCase();
             let topLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
             topLabel.setAttribute("x", 0.5 * gridSize);
@@ -1060,11 +909,6 @@
                 g.setAttribute("class", "item-group");
                 
                 g.addEventListener("pointerdown", (e) => {
-                    if (isMeasuring) {
-                        e.stopPropagation();
-                        handleMeasurementClick(el.x, el.y);
-                        return;
-                    }
                     if (currentMode === 'pan') {
                         e.stopPropagation();
                         openModal(el);
@@ -1073,6 +917,7 @@
                         startDragElement(e, el);
                     }
                 });
+
                 if (el.type === 'asset') {
                     let cx = (el.x * gridSize) + (gridSize / 2);
                     let cy = (el.y * gridSize) + (gridSize / 2);
@@ -1166,17 +1011,20 @@
                 viewport.appendChild(g);
             });
         }
+
         function getPinchDistance(p1, p2) {
             let dx = p1.clientX - p2.clientX;
             let dy = p1.clientY - p2.clientY;
             return Math.sqrt(dx * dx + dy * dy);
         }
+
         function getPinchCenter(p1, p2) {
             return {
                 x: (p1.clientX + p2.clientX) / 2,
                 y: (p1.clientY + p2.clientY) / 2
             };
         }
+
         function updateCoordinates(clientX, clientY) {
             let rect = container.getBoundingClientRect();
             let mouseX = clientX - rect.left;
@@ -1184,23 +1032,18 @@
             let localX = (mouseX - viewTransform.x) / viewTransform.scale;
             let localY = (mouseY - viewTransform.y) / viewTransform.scale;
             let coordDisplay = document.getElementById("coord-display");
-            let cIndex = Math.floor(localX / gridSize);
+            let exactCol = localX / gridSize;
             let rowIdx = Math.floor(localY / gridSize);
-            let colLbl = getColLabel(cIndex) || "I";
-            let rowLbl = getRowLabel(rowIdx) || "M.9";
-            coordDisplay.innerHTML = `Grid: <b>Row ${rowLbl}, Col ${colLbl}</b>`;
+            let preciseColNum = (exactCol + 1).toFixed(2);
+            let rowLabel = getRowLabel(rowIdx);
+            coordDisplay.innerHTML = `Grid: <b>Row ${rowLabel}, Col ${preciseColNum}</b>`;
         }
+
         // Pointer event mapping for container touch drag, element dragging, & pinch-to-zoom
         container.addEventListener("pointerdown", (e) => {
             activePointers.set(e.pointerId, e);
+
             if (activePointers.size === 1) {
-                if (isMeasuring) {
-                    let rect = container.getBoundingClientRect();
-                    let localX = (e.clientX - rect.left - viewTransform.x) / viewTransform.scale;
-                    let localY = (e.clientY - rect.top - viewTransform.y) / viewTransform.scale;
-                    handleMeasurementClick(localX / gridSize, localY / gridSize);
-                    return;
-                }
                 if (currentMode === 'pan') {
                     isPanning = true;
                     container.classList.add("panning");
@@ -1220,10 +1063,12 @@
                 initialTransform = { x: viewTransform.x, y: viewTransform.y };
             }
         });
+
         container.addEventListener("pointermove", (e) => {
             if (activePointers.has(e.pointerId)) {
                 activePointers.set(e.pointerId, e);
             }
+
             if (activePointers.size === 1) {
                 updateCoordinates(e.clientX, e.clientY);
                 if (isPanning && currentMode === 'pan') {
@@ -1242,12 +1087,14 @@
                 let rect = container.getBoundingClientRect();
                 let centerX = initialPinchCenter.x - rect.left;
                 let centerY = initialPinchCenter.y - rect.top;
+
                 viewTransform.scale = targetScale;
                 viewTransform.x = currentCenter.x - rect.left - (centerX - initialTransform.x) * (targetScale / initialPinchScale);
                 viewTransform.y = currentCenter.y - rect.top - (centerY - initialTransform.y) * (targetScale / initialPinchScale);
                 render();
             }
         });
+
         const handlePointerEnd = (e) => {
             activePointers.delete(e.pointerId);
             if (activePointers.size < 2) {
@@ -1264,9 +1111,11 @@
                 }
             }
         };
+
         container.addEventListener("pointerup", handlePointerEnd);
         container.addEventListener("pointercancel", handlePointerEnd);
         container.addEventListener("pointerleave", handlePointerEnd);
+
         // Mouse Wheel Zoom
         container.addEventListener("wheel", (e) => {
             e.preventDefault();
@@ -1285,6 +1134,7 @@
             viewTransform.y = mouseY - (mouseY - viewTransform.y) * (viewTransform.scale / oldScale);
             render();
         }, { passive: false });
+
         function startDragElement(e, el) {
             selectedId = el.id;
             isDraggingElement = true;
@@ -1293,6 +1143,7 @@
             let startY = e.clientY;
             let origX = el.x;
             let origY = el.y;
+
             function onPointerMove(e) {
                 if (!isDraggingElement) return;
                 let dx = (e.clientX - startX) / viewTransform.scale;
@@ -1303,16 +1154,19 @@
                 
                 render();
             }
+
             function onPointerUp() {
                 isDraggingElement = false;
                 window.removeEventListener("pointermove", onPointerMove);
                 window.removeEventListener("pointerup", onPointerUp);
                 saveToFirebase(); 
             }
+
             window.addEventListener("pointermove", onPointerMove);
             window.addEventListener("pointerup", onPointerUp);
             render();
         }
+
         function openModal(el) {
             selectedId = el.id;
             document.getElementById("modalElementId").value = el.id;
