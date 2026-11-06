@@ -305,16 +305,6 @@
             margin: 0;
             z-index: 5;
         }
-        .status-badge {
-            display: inline-block;
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            margin-right: 4px;
-        }
-        .status-operational { background-color: #10b981; }
-        .status-maintenance { background-color: #f59e0b; }
-        .status-down { background-color: #ef4444; }
     </style>
 </head>
 <body>
@@ -610,7 +600,7 @@
                 lastInspect: "", pmDue: "", photos: [], spreadsheetData: [{key: "Voltage", value: "480V 3-Phase"}, {key: "Amperage", value: "800A"}]
             },
             { 
-                id: 5, layer: "ground", name: "Water Main Shutoff", type: "asset", category: "Plumbing", status: "operational", emoji: "𚰞", x: 9, y: 3,
+                id: 5, layer: "ground", name: "Water Main Shutoff", type: "asset", category: "Plumbing", status: "operational", emoji: "🚰", x: 9, y: 3,
                 lastInspect: "", pmDue: "", photos: [], spreadsheetData: [{key: "Valve Type", value: "Quarter-turn Butterfly"}]
             },
             { 
@@ -977,14 +967,12 @@
                 let g = document.createElementNS("http://www.w3.org/2000/svg", "g");
                 g.setAttribute("class", "item-group");
 
-                const handleItemClick = (e) => {
-                    if (currentMode === 'pan') {
-                        e.stopPropagation();
-                        openModal(el);
-                    }
-                };
-
-                g.addEventListener("click", handleItemClick);
+                // Direct Click to open modal (skips mode checks except for Distance Calculator)
+                g.addEventListener("click", (e) => {
+                    e.stopPropagation();
+                    if (currentMode === 'calc') return; 
+                    openModal(el);
+                });
 
                 if (el.type === 'asset') {
                     let cx = (el.x * gridSize) + (gridSize / 2);
@@ -1124,7 +1112,6 @@
             }
         }
 
-        // Pointer/Mouse/Touch Coordinate calculations
         function getCanvasLocalCoords(clientX, clientY) {
             let rect = container.getBoundingClientRect();
             let mouseX = clientX - rect.left;
@@ -1188,7 +1175,7 @@
                     let dx = calcPoints[1].x - calcPoints[0].x;
                     let dy = calcPoints[1].y - calcPoints[0].y;
                     let distGrid = Math.sqrt(dx * dx + dy * dy);
-                    let distFeet = distGrid * 25; // Approx 1 grid unit = 25 ft scale
+                    let distFeet = distGrid * 25; 
                     document.getElementById("dist-result-display").innerHTML = 
                         `Dist: <b>${distGrid.toFixed(2)} units</b> (~${distFeet.toFixed(0)} ft)`;
                 } else {
@@ -1208,7 +1195,6 @@
             }
         });
 
-        // Touch event handlers for mobile gestures
         function getTouchDistance(touches) {
             let dx = touches[0].clientX - touches[1].clientX;
             let dy = touches[0].clientY - touches[1].clientY;
@@ -1450,7 +1436,7 @@
                 };
                 tdKey.appendChild(inputKey);
                 let tdVal = document.createElement("td");
-                let inputVal = inputVal = document.createElement("input");
+                let inputVal = document.createElement("input");
                 inputVal.type = "text";
                 inputVal.value = row.value;
                 inputVal.oninput = function() {
