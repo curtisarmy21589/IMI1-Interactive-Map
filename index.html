@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Facility Layout & Maintenance Hub</title>
-    <!-- html5-qrcode for live camera barcode scanning -->
+    <!-- html5-qrcode for live camera barcode scanning & AR overlay -->
     <script src="https://unpkg.com/html5-qrcode"></script>
     <style>
         * {
@@ -34,7 +34,7 @@
             overflow-y: auto;
             border-right: 1px solid #1f2d3d;
             -webkit-overflow-scrolling: touch;
-            transition: transform 0.3s ease, height 0.3s ease;
+            transition: transform 0.3s ease;
         }
         #mobile-nav-toggle {
             display: none;
@@ -62,12 +62,8 @@
             width: auto;
         }
         @media (max-width: 768px) {
-            body { 
-                flex-direction: column; 
-            }
-            #mobile-nav-toggle { 
-                display: flex; 
-            }
+            body { flex-direction: column; }
+            #mobile-nav-toggle { display: flex; }
             #sidebar { 
                 width: 100%; 
                 max-height: 50vh; 
@@ -75,24 +71,8 @@
                 border-bottom: 1px solid #1f2d3d;
                 box-shadow: 0 4px 10px rgba(0,0,0,0.5);
             }
-            #sidebar.collapsed {
-                display: none;
-            }
-            #canvas-container { 
-                height: 100%; 
-                flex-grow: 1;
-            }
-        }
-        /* Specific adjustments for narrow screens (e.g. Galaxy Z Fold outer display ~340px-380px wide) */
-        @media (max-width: 400px) {
-            #sidebar {
-                padding: 10px;
-                gap: 8px;
-            }
-            .layer-btn {
-                font-size: 9px !important;
-                padding: 6px 2px !important;
-            }
+            #sidebar.collapsed { display: none; }
+            #canvas-container { height: 100%; flex-grow: 1; }
         }
         h2, h3, h4 { margin: 0 0 5px 0; color: #38bdf8; font-size: 15px; }
         h4 { color: #f59e0b; font-size: 12px; margin-top: 8px; border-bottom: 1px solid #1f2d3d; padding-bottom: 2px; }
@@ -154,7 +134,7 @@
         .danger:hover, .danger:active { background: #ef4444; color: #fff; }
         .tab-bar { display: flex; gap: 4px; margin-bottom: 5px; }
         .tab-btn {
-            flex: 1; padding: 8px 2px; background: #070d14; border: 1px solid #1e293b; color: #94a3b8; font-size: 10px; cursor: pointer; border-radius: 4px; text-align: center; min-height: 34px;
+            flex: 1; padding: 6px 2px; background: #070d14; border: 1px solid #1e293b; color: #94a3b8; font-size: 9.5px; cursor: pointer; border-radius: 4px; text-align: center; min-height: 34px;
         }
         .tab-btn.active { background: #1e293b; color: #38bdf8; border-color: #38bdf8; }
         .panel { display: none; }
@@ -172,6 +152,40 @@
         .item-group:hover .asset-popup { opacity: 1; }
         .grid-line { stroke: #132235; stroke-width: 1; pointer-events: none; }
         .coord-label { fill: #64748b; font-size: 9px; font-family: monospace; pointer-events: none; }
+        
+        /* EMERGENCY QUICK-FILTER FLOATING BAR */
+        #quick-filter-bar {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            z-index: 10;
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            pointer-events: auto;
+        }
+        .filter-pill {
+            background: #111b27;
+            border: 1px solid #1f2d3d;
+            color: #94a3b8;
+            padding: 6px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.4);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .filter-pill.active {
+            background: #0284c7;
+            color: #fff;
+            border-color: #38bdf8;
+        }
+        .filter-pill.down-pill.active { background: #7f1d1d; border-color: #ef4444; }
+        .filter-pill.pm-pill.active { background: #b45309; border-color: #f59e0b; }
+
         #coord-display {
             background: #070d14; border: 1px solid #1e293b; padding: 6px; border-radius: 4px; font-family: monospace; color: #38bdf8; font-size: 12px; text-align: center;
         }
@@ -179,7 +193,7 @@
             background: #0f172a; border: 1px solid #f59e0b; color: #fbbf24; padding: 6px; border-radius: 4px; font-family: monospace; font-size: 11px; text-align: center; display: none;
         }
         #sync-status { font-size: 10px; text-align: center; color: #10b981; font-weight: bold; margin-top: -4px; }
-        #modal-overlay, #category-modal-overlay, #lightbox-overlay, #scanner-modal-overlay {
+        #modal-overlay, #category-modal-overlay, #lightbox-overlay, #scanner-modal-overlay, #ar-modal-overlay {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.85); z-index: 1000; justify-content: center; align-items: center; padding: 10px;
         }
         #lightbox-overlay { z-index: 2000; }
@@ -199,7 +213,6 @@
         .photo-gallery { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px; }
         .photo-thumb-container { position: relative; width: 80px; height: 80px; border: 1px solid #1f2d3d; border-radius: 4px; overflow: hidden; background: #0b131d; cursor: pointer; }
         .photo-thumb-container img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.2s; }
-        .photo-thumb-container:hover img { transform: scale(1.05); }
         .delete-photo-btn { position: absolute; top: 2px; right: 2px; background: rgba(239, 68, 68, 0.9); color: white; border: none; border-radius: 50%; width: 22px; height: 22px; font-size: 11px; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0; margin: 0; z-index: 5; min-height: auto; }
         .notes-log-box { background: #070d14; border: 1px solid #1f2d3d; border-radius: 4px; padding: 8px; max-height: 110px; overflow-y: auto; font-size: 11px; display: flex; flex-direction: column; gap: 4px; }
         .note-entry { border-bottom: 1px dotted #1f2d3d; padding-bottom: 3px; }
@@ -231,6 +244,14 @@
         <div id="dist-result-display">Click 2 points to measure distance</div>
         <div id="sync-status">Connected to Firebase</div>
         
+        <!-- GRID SNAPPING TOGGLE -->
+        <div>
+            <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+                <input type="checkbox" id="snapGridToggle" checked style="width:auto; margin:0; min-height:auto;">
+                <span style="color:#38bdf8; font-weight:bold;">🧲 Snap to Grid ($0.5$ Increment)</span>
+            </label>
+        </div>
+
         <!-- HEATMAP OVERLAY TOGGLE -->
         <div>
             <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
@@ -273,14 +294,16 @@
                     <button id="modePanBtn" class="mode-btn" style="flex:1;" onclick="setMode('pan')">Pan / Inspect</button>
                 </div>
                 <button id="modeCalcBtn" class="mode-btn" onclick="setMode('calc')">📏 Distance Calculator</button>
+                <button onclick="openARModal()" class="mode-btn" style="background:#0284c7; color:#fff; border-color:#38bdf8;">🕶️ AR Live Camera View</button>
             </div>
         </div>
         <button onclick="exportDataToCSV()" style="background: #0284c7; color: #fff; margin-top: 2px;">📊 Export Asset Inventory (CSV)</button>
         <hr style="border-color: #1e293b; margin: 4px 0;">
         <div class="tab-bar">
             <button class="tab-btn active" id="tabDeptBtn" onclick="switchTab('dept')">Zones</button>
-            <button class="tab-btn" id="tabLineBtn" onclick="switchTab('line')">Lines (Bends)</button>
+            <button class="tab-btn" id="tabLineBtn" onclick="switchTab('line')">Lines</button>
             <button class="tab-btn" id="tabAssetBtn" onclick="switchTab('asset')">Assets</button>
+            <button class="tab-btn" id="tabShiftBtn" onclick="switchTab('shift')">Shift Log</button>
         </div>
         <div id="panelDept" class="panel active">
             <h3>Zone / Yard Management</h3>
@@ -345,12 +368,39 @@
                 <button onclick="addAsset()" style="margin-top: 6px;">Add Automation Asset</button>
             </div>
         </div>
+        <!-- SHIFT HANDOVER LOG PANEL -->
+        <div id="panelShift" class="panel">
+            <h3>📝 Technician Shift Handover Log</h3>
+            <div>
+                <label>Shift Designation</label>
+                <select id="shiftName">
+                    <option value="Shift A">Shift A (Day)</option>
+                    <option value="Shift B">Shift B (Swing)</option>
+                    <option value="Shift C">Shift C (Night)</option>
+                </select>
+                <label>Handover Note / Parts Waiting in Cage</label>
+                <textarea id="shiftLogText" placeholder="Detailed handoff notes, jams, or parts set aside in cage..." style="height:70px;"></textarea>
+                <button onclick="addShiftLog()" style="margin-top: 6px; background:#0284c7; color:#fff;">+ Post Handover Entry</button>
+            </div>
+            <div class="notes-log-box" id="shiftLogContainer" style="max-height: 200px; margin-top: 6px;"></div>
+        </div>
     </div>
+
     <div id="canvas-container">
+        <!-- EMERGENCY QUICK-FILTER FLOATING PILLS -->
+        <div id="quick-filter-bar">
+            <button class="filter-pill down-pill" onclick="toggleQuickFilter('down')">🚨 Down Assets</button>
+            <button class="filter-pill pm-pill" onclick="toggleQuickFilter('pm_due')">🔥 Overdue PMs</button>
+            <button class="filter-pill" onclick="toggleQuickFilter('water')">💧 Water Shutoffs</button>
+            <button class="filter-pill" onclick="toggleQuickFilter('estop')">⚡ E-Stop Zones</button>
+            <button class="filter-pill active" id="filterAllBtn" onclick="toggleQuickFilter('all')">Show All</button>
+        </div>
+
         <svg id="layoutSvg" width="2200" height="1400">
             <g id="viewport"></g>
         </svg>
     </div>
+
     <!-- MAIN INSPECT & EDIT MODAL -->
     <div id="modal-overlay">
         <div class="modal-content">
@@ -498,6 +548,29 @@
             </div>
         </div>
     </div>
+
+    <!-- AR LIVE CAMERA OVERLAY MODAL -->
+    <div id="ar-modal-overlay">
+        <div class="modal-content" style="width: 500px; height: 500px;">
+            <div class="modal-header">
+                <h3 style="color: #38bdf8; margin: 0;">🕶️ AR Field Camera HUD</h3>
+                <button class="close-modal" onclick="closeARModal()">×</button>
+            </div>
+            <div class="modal-body" style="position: relative; padding: 0; background: #000; flex-grow: 1; display: flex; align-items: center; justify-content: center; overflow: hidden;">
+                <div id="ar-video-container" style="width: 100%; height: 100%;"></div>
+                <!-- Simulated AR Floating HUD Badge -->
+                <div style="position: absolute; top: 15px; left: 15px; background: rgba(17,27,39,0.85); border: 1px solid #38bdf8; padding: 8px 12px; border-radius: 6px; pointer-events: none;">
+                    <div style="color: #38bdf8; font-weight: bold; font-size: 11px;">OPEX UIS Sure Sort #1</div>
+                    <div style="color: #10b981; font-size: 10px;">Status: Operational | Runtime: 3,120 hrs</div>
+                    <div style="color: #f59e0b; font-size: 9px;">PLC Node: PLC-UIS-01 (192.168.1.101)</div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button onclick="closeARModal()" style="width: auto; padding: 6px 12px; background: #38bdf8; color: #0b131d;">Close AR View</button>
+            </div>
+        </div>
+    </div>
+
     <!-- LIGHTBOX MODAL -->
     <div id="lightbox-overlay" onclick="closeLightbox()">
         <div style="position: relative; max-width: 90vw; max-height: 90vh; display: flex; flex-direction: column; align-items: center;" onclick="event.stopPropagation()">
@@ -553,6 +626,7 @@
             </div>
         </div>
     </div>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
@@ -579,10 +653,12 @@
         let currentLayer = 'ground'; 
         let searchQuery = '';
         let showHeatmap = false;
+        let activeQuickFilter = 'all';
         let html5QrCode = null;
+        let arQrCode = null;
         let calcPoints = []; 
-        let drawingLineState = null; // { name, type, points: [] }
-        let draggingVertex = null; // { lineId, vertexIndex }
+        let drawingLineState = null; 
+        let draggingVertex = null; 
         let categories = [
             { name: "OPEX UIS Sorter", color: "#ec4899" },
             { name: "ATR Tote Retrieval", color: "#8b5cf6" },
@@ -620,6 +696,10 @@
                 photos: [], spreadsheetData: [{key: "Conveyance Type", value: "Belted"}]
             }
         ];
+        let shiftLogs = [
+            { time: "2026-11-06 22:30", shift: "Shift C", note: "Infeed belt #1 re-tensioned. 2 spare proximity sensors placed in Cage Aisle 2." }
+        ];
+
         let selectedId = null;
         let isDraggingElement = false;
         let isPanning = false;
@@ -633,8 +713,7 @@
         const syncStatus = document.getElementById("sync-status");
 
         window.toggleSidebar = function() {
-            const sidebar = document.getElementById("sidebar");
-            sidebar.classList.toggle("collapsed");
+            document.getElementById("sidebar").classList.toggle("collapsed");
         };
 
         async function loadFromFirebase() {
@@ -652,6 +731,7 @@
                         });
                     }
                     if (data.categories) categories = data.categories;
+                    if (data.shiftLogs) shiftLogs = data.shiftLogs;
                     syncStatus.innerText = "Loaded from Firebase";
                     localStorage.setItem("cached_layout", JSON.stringify(data));
                 } else {
@@ -659,24 +739,28 @@
                 }
                 populateCategoryDropdowns();
                 populateParentAssetDropdown();
+                renderShiftLogs();
                 render();
             } catch (error) {
-                console.error("Error loading layout, using offline fallback:", error);
+                console.error("Error loading layout:", error);
                 let offlineData = localStorage.getItem("cached_layout");
                 if (offlineData) {
                     let parsed = JSON.parse(offlineData);
                     if (parsed.elements) elements = parsed.elements;
                     if (parsed.categories) categories = parsed.categories;
-                    syncStatus.innerText = "Offline Mode (Cached Data)";
+                    if (parsed.shiftLogs) shiftLogs = parsed.shiftLogs;
+                    syncStatus.innerText = "Offline Mode (Cached)";
                 } else {
                     syncStatus.innerText = "Error Loading Database";
                 }
                 syncStatus.style.color = "#f59e0b";
                 populateCategoryDropdowns();
                 populateParentAssetDropdown();
+                renderShiftLogs();
                 render();
             }
         }
+
         async function saveToFirebase() {
             try {
                 syncStatus.innerText = "Saving...";
@@ -684,6 +768,7 @@
                 let layoutObject = {
                     elements: elements,
                     categories: categories,
+                    shiftLogs: shiftLogs,
                     updatedAt: new Date().toISOString()
                 };
                 localStorage.setItem("cached_layout", JSON.stringify(layoutObject));
@@ -696,6 +781,76 @@
                 syncStatus.style.color = "#f59e0b";
             }
         }
+
+        window.toggleQuickFilter = function(filterType) {
+            activeQuickFilter = filterType;
+            document.querySelectorAll('.filter-pill').forEach(btn => btn.classList.remove('active'));
+            if (filterType === 'down') document.querySelector('.down-pill').classList.add('active');
+            else if (filterType === 'pm_due') document.querySelector('.pm-pill').classList.add('active');
+            else if (filterType === 'water') document.querySelectorAll('.filter-pill')[2].classList.add('active');
+            else if (filterType === 'estop') document.querySelectorAll('.filter-pill')[3].classList.add('active');
+            else document.getElementById('filterAllBtn').classList.add('active');
+            render();
+        }
+
+        window.openARModal = function() {
+            document.getElementById("ar-modal-overlay").style.display = "flex";
+            arQrCode = new Html5Qrcode("ar-video-container");
+            arQrCode.start(
+                { facingMode: "environment" },
+                { fps: 10, qrbox: { width: 200, height: 200 } },
+                (decodedText) => {
+                    document.getElementById("assetSearchInput").value = decodedText;
+                    handleSearch(decodedText);
+                    closeARModal();
+                },
+                (err) => {}
+            ).catch(err => console.error("AR Camera error:", err));
+        }
+
+        window.closeARModal = function() {
+            if (arQrCode) {
+                arQrCode.stop().then(() => {
+                    arQrCode.clear();
+                    document.getElementById("ar-modal-overlay").style.display = "none";
+                }).catch(() => {
+                    document.getElementById("ar-modal-overlay").style.display = "none";
+                });
+            } else {
+                document.getElementById("ar-modal-overlay").style.display = "none";
+            }
+        }
+
+        window.addShiftLog = function() {
+            let shift = document.getElementById("shiftName").value;
+            let note = document.getElementById("shiftLogText").value.trim();
+            if (!note) {
+                alert("Please enter handover notes.");
+                return;
+            }
+            let timestamp = new Date().toISOString().replace('T', ' ').slice(0, 16);
+            shiftLogs.unshift({ time: timestamp, shift: shift, note: note });
+            document.getElementById("shiftLogText").value = "";
+            renderShiftLogs();
+            saveToFirebase();
+        }
+
+        function renderShiftLogs() {
+            let box = document.getElementById("shiftLogContainer");
+            if (!box) return;
+            box.innerHTML = "";
+            if (shiftLogs.length === 0) {
+                box.innerHTML = `<span style="color:#64748b; font-style:italic;">No shift handover entries.</span>`;
+                return;
+            }
+            shiftLogs.forEach(s => {
+                let div = document.createElement("div");
+                div.className = "note-entry";
+                div.innerHTML = `<span class="note-timestamp">[${s.time}] ${s.shift}:</span> ${s.note}`;
+                box.appendChild(div);
+            });
+        }
+
         function populateCategoryDropdowns(selectedVal1 = null, selectedVal2 = null) {
             let select1 = document.getElementById("newAssetCategory");
             let select2 = document.getElementById("modalCategory");
@@ -716,6 +871,7 @@
             if (val1 && categories.some(c => c.name === val1)) select1.value = val1;
             if (val2 && categories.some(c => c.name === val2)) select2.value = val2;
         }
+
         function populateParentAssetDropdown(selectedParentId = null) {
             let select = document.getElementById("modalParentAsset");
             select.innerHTML = '<option value="">None / Standalone Asset</option>';
@@ -727,15 +883,18 @@
             });
             if (selectedParentId) select.value = selectedParentId;
         }
+
         function getCategoryColor(catName) {
             let found = categories.find(c => c.name === catName);
             return found ? found.color : "#38bdf8";
         }
+
         function getStatusColor(status) {
             if (status === 'maintenance') return "#f59e0b";
             if (status === 'down') return "#ef4444";
             return "#10b981";
         }
+
         function getPmAlertStatus(pmDueStr) {
             if (!pmDueStr) return 'none';
             let due = new Date(pmDueStr);
@@ -745,14 +904,17 @@
             if (diffDays <= 7) return 'due_soon';
             return 'none';
         }
+
         window.handleSearch = function(val) {
             searchQuery = val.trim().toLowerCase();
             render();
         }
+
         window.toggleHeatmap = function(checked) {
             showHeatmap = checked;
             render();
         }
+
         window.openScannerModal = function() {
             document.getElementById("scanner-modal-overlay").style.display = "flex";
             html5QrCode = new Html5Qrcode("qr-reader");
@@ -764,21 +926,23 @@
                     document.getElementById("assetSearchInput").value = decodedText;
                     handleSearch(decodedText);
                 },
-                (errorMessage) => {}
+                () => {}
             ).catch(err => console.error("Camera access error:", err));
         }
+
         window.closeScannerModal = function() {
             if (html5QrCode) {
                 html5QrCode.stop().then(() => {
                     html5QrCode.clear();
                     document.getElementById("scanner-modal-overlay").style.display = "none";
-                }).catch(err => {
+                }).catch(() => {
                     document.getElementById("scanner-modal-overlay").style.display = "none";
                 });
             } else {
                 document.getElementById("scanner-modal-overlay").style.display = "none";
             }
         }
+
         window.exportDataToCSV = function() {
             let csvRows = [["ID", "Name", "Type / Conveyance", "Category / Details", "Status", "PLC Node", "X / Vertex Info", "Y Info", "W / Details", "H"]];
             elements.forEach(el => {
@@ -800,6 +964,7 @@
             a.click();
             URL.revokeObjectURL(url);
         }
+
         window.openCategoryModal = function() {
             renderCategoryTable();
             document.getElementById("category-modal-overlay").style.display = "flex";
@@ -810,6 +975,7 @@
             render();
             saveToFirebase();
         }
+
         function renderCategoryTable() {
             let tbody = document.getElementById("categoryTableBody");
             tbody.innerHTML = "";
@@ -834,9 +1000,7 @@
                 inputColor.style.padding = "0";
                 inputColor.style.border = "none";
                 inputColor.style.cursor = "pointer";
-                inputColor.oninput = function() {
-                    cat.color = inputColor.value;
-                };
+                inputColor.oninput = function() { cat.color = inputColor.value; };
                 tdColor.appendChild(inputColor);
                 let tdAction = document.createElement("td");
                 tdAction.style.textAlign = "center";
@@ -862,6 +1026,7 @@
                 tbody.appendChild(tr);
             });
         }
+
         window.addCategory = function() {
             let nameInput = document.getElementById("newCatName");
             let colorInput = document.getElementById("newCatColor");
@@ -879,16 +1044,14 @@
             renderCategoryTable();
             populateCategoryDropdowns();
         }
+
         function getRowLabel(r) {
-            if (r < 0) {
-                return "N" + Math.abs(r);
-            }
+            if (r < 0) return "N" + Math.abs(r);
             let adjustedIndex = r;
-            if (adjustedIndex >= 8) {
-                adjustedIndex += 1; 
-            }
+            if (adjustedIndex >= 8) adjustedIndex += 1; 
             return String.fromCharCode(65 + adjustedIndex); 
         }
+
         window.switchLayer = function(layerName) {
             currentLayer = layerName;
             let layerButtons = [
@@ -902,19 +1065,10 @@
                 if (btn) btn.classList.remove("active");
             });
             let mapLayerToBtn = {
-                'ground': 'layerGroundBtn',
-                'mezzanine': 'layerMezzBtn',
-                'roof': 'layerRoofBtn',
-                'uis_sorter': 'layerUisBtn',
-                'atr_retrieval': 'layerAtrBtn',
-                'conveyance': 'layerConveyanceBtn',
-                'sprinkler': 'layerSprinklerBtn',
-                'water': 'layerWaterBtn',
-                'gas': 'layerGasBtn',
-                'dock_doors': 'layerDockDoorsBtn',
-                'hvac': 'layerHvacBtn',
-                'loto': 'layerLotoBtn',
-                'assets': 'layerAssetsBtn'
+                'ground': 'layerGroundBtn', 'mezzanine': 'layerMezzBtn', 'roof': 'layerRoofBtn',
+                'uis_sorter': 'layerUisBtn', 'atr_retrieval': 'layerAtrBtn', 'conveyance': 'layerConveyanceBtn',
+                'sprinkler': 'layerSprinklerBtn', 'water': 'layerWaterBtn', 'gas': 'layerGasBtn',
+                'dock_doors': 'layerDockDoorsBtn', 'hvac': 'layerHvacBtn', 'loto': 'layerLotoBtn', 'assets': 'layerAssetsBtn'
             };
             if (mapLayerToBtn[layerName] && document.getElementById(mapLayerToBtn[layerName])) {
                 document.getElementById(mapLayerToBtn[layerName]).classList.add("active");
@@ -922,6 +1076,7 @@
             selectedId = null;
             render();
         }
+
         window.setMode = function(mode) {
             currentMode = mode;
             drawingLineState = null;
@@ -942,16 +1097,20 @@
             selectedId = null;
             render();
         }
+
         window.switchTab = function(tab) {
             currentTab = tab;
             document.getElementById("tabDeptBtn").classList.toggle("active", tab === 'dept');
             document.getElementById("tabLineBtn").classList.toggle("active", tab === 'line');
             document.getElementById("tabAssetBtn").classList.toggle("active", tab === 'asset');
+            document.getElementById("tabShiftBtn").classList.toggle("active", tab === 'shift');
             document.getElementById("panelDept").classList.toggle("active", tab === 'dept');
             document.getElementById("panelLine").classList.toggle("active", tab === 'line');
             document.getElementById("panelAsset").classList.toggle("active", tab === 'asset');
+            document.getElementById("panelShift").classList.toggle("active", tab === 'shift');
             if (tab === 'line') drawingLineState = null;
         }
+
         window.startDrawingLine = function() {
             let name = document.getElementById("newLineName").value.trim();
             let conveyanceType = document.getElementById("newLineType").value;
@@ -964,9 +1123,11 @@
             container.style.cursor = 'crosshair';
             alert("Click points on the map to create line bends. DOUBLE-CLICK anywhere to finish drawing.");
         }
+
         function updateTransformString() {
             viewport.setAttribute("transform", `translate(${viewTransform.x}, ${viewTransform.y}) scale(${viewTransform.scale})`);
         }
+
         function render() {
             viewport.innerHTML = "";
             updateTransformString();
@@ -1048,6 +1209,7 @@
             bottomLabel.setAttribute("font-weight", "bold");
             bottomLabel.textContent = `NORTH WALL - ROW N ▼`;
             viewport.appendChild(bottomLabel);
+
             // Draw Upstream/Downstream dependency lines
             elements.forEach(el => {
                 if (el.parentId) {
@@ -1069,6 +1231,7 @@
                     }
                 }
             });
+
             // Draw Heatmap Overlay Circles if enabled
             if (showHeatmap) {
                 elements.forEach(el => {
@@ -1083,11 +1246,11 @@
                         heatCircle.setAttribute("r", radius);
                         heatCircle.setAttribute("fill", el.status === 'down' ? "#ef4444" : "#f59e0b");
                         heatCircle.setAttribute("fill-opacity", "0.35");
-                        heatCircle.setAttribute("stroke", "none");
                         viewport.appendChild(heatCircle);
                     }
                 });
             }
+
             let visibleElements = elements.filter(el => {
                 if (searchQuery) {
                     let matchesName = el.name.toLowerCase().includes(searchQuery);
@@ -1096,6 +1259,20 @@
                     let matchesPlc = el.plcNode && el.plcNode.toLowerCase().includes(searchQuery);
                     if (!matchesName && !matchesCat && !matchesId && !matchesPlc) return false;
                 }
+                // Quick-Filter Pill conditions
+                if (activeQuickFilter === 'down') {
+                    return el.status === 'down';
+                }
+                if (activeQuickFilter === 'pm_due') {
+                    return getPmAlertStatus(el.pmDue) === 'overdue';
+                }
+                if (activeQuickFilter === 'water') {
+                    return el.layer === 'water' || (el.category && el.category.toLowerCase().includes('water'));
+                }
+                if (activeQuickFilter === 'estop') {
+                    return el.estopZone || (el.category && el.category.toLowerCase().includes('safety'));
+                }
+
                 if (currentLayer === 'assets') {
                     return el.type === 'asset' || el.type === 'conveyance_line';
                 }
@@ -1107,6 +1284,7 @@
                 }
                 return (el.layer || 'ground') === currentLayer;
             });
+
             visibleElements.forEach(el => {
                 let g = document.createElementNS("http://www.w3.org/2000/svg", "g");
                 g.setAttribute("class", "item-group");
@@ -1127,9 +1305,7 @@
                         path.setAttribute("fill", "none");
                         path.setAttribute("stroke", el.conveyanceType === 'flex' ? "#fbbf24" : "#22d3ee");
                         path.setAttribute("stroke-width", el.conveyanceType === 'flex' ? "4" : "6");
-                        if (el.conveyanceType === 'flex') {
-                            path.setAttribute("stroke-dasharray", "6,4");
-                        }
+                        if (el.conveyanceType === 'flex') path.setAttribute("stroke-dasharray", "6,4");
                         if (el.id === selectedId) {
                             path.setAttribute("stroke", "#fbbf24");
                             path.setAttribute("stroke-width", "8");
@@ -1145,13 +1321,13 @@
                         text.textContent = el.name;
                         g.appendChild(path);
                         g.appendChild(text);
-                        // If selected, render draggable vertex handles for bending/moving
+
                         if (el.id === selectedId) {
                             pts.forEach((pt, pIdx) => {
                                 let vCircle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
                                 vCircle.setAttribute("cx", pt.x * gridSize);
                                 vCircle.setAttribute("cy", pt.y * gridSize);
-                                vCircle.setAttribute("r", 8); // Slightly larger touch area for vertices
+                                vCircle.setAttribute("r", 8);
                                 vCircle.setAttribute("fill", "#fbbf24");
                                 vCircle.setAttribute("stroke", "#0b131d");
                                 vCircle.setAttribute("stroke-width", "1.5");
@@ -1162,8 +1338,7 @@
                                 });
                                 vCircle.addEventListener("touchstart", (e) => {
                                     e.stopPropagation();
-                                    let touch = e.touches[0];
-                                    startDragVertex(touch, el.id, pIdx);
+                                    startDragVertex(e.touches[0], el.id, pIdx);
                                 });
                                 g.appendChild(vCircle);
                             });
@@ -1238,35 +1413,9 @@
                     rect.setAttribute("width", el.w * gridSize);
                     rect.setAttribute("height", el.h * gridSize);
                     rect.setAttribute("class", `item-shape ${el.id === selectedId ? 'selected' : ''}`);
-                    if (el.type === 'uis_cell') {
-                        rect.setAttribute("fill", "#ec4899");
-                        rect.setAttribute("fill-opacity", "0.35");
-                        rect.setAttribute("stroke", "#f472b6");
-                    } else if (el.type === 'atr_cell') {
-                        rect.setAttribute("fill", "#8b5cf6");
-                        rect.setAttribute("fill-opacity", "0.35");
-                        rect.setAttribute("stroke", "#a78bfa");
-                    } else if (el.type === 'conveyance_run') {
-                        rect.setAttribute("fill", "#06b6d4");
-                        rect.setAttribute("fill-opacity", "0.35");
-                        rect.setAttribute("stroke", "#22d3ee");
-                    } else if (el.type === 'yard') {
-                        rect.setAttribute("fill", "#b45309");
-                        rect.setAttribute("fill-opacity", "0.3");
-                        rect.setAttribute("stroke", "#d97706");
-                    } else if (el.type === 'racking') {
-                        rect.setAttribute("fill", "#d97706");
-                        rect.setAttribute("fill-opacity", "0.35");
-                        rect.setAttribute("stroke", "#f59e0b");
-                    } else if (el.type === 'mezzanine') {
-                        rect.setAttribute("fill", "#10b981");
-                        rect.setAttribute("fill-opacity", "0.35");
-                        rect.setAttribute("stroke", "#34d399");
-                    } else {
-                        rect.setAttribute("fill", "#0284c7");
-                        rect.setAttribute("fill-opacity", "0.35");
-                        rect.setAttribute("stroke", "#38bdf8");
-                    }
+                    rect.setAttribute("fill", "#0284c7");
+                    rect.setAttribute("fill-opacity", "0.35");
+                    rect.setAttribute("stroke", "#38bdf8");
                     rect.setAttribute("stroke-width", "1");
                     let text = document.createElementNS("http://www.w3.org/2000/svg", "text");
                     text.setAttribute("x", (el.x * gridSize) + 6);
@@ -1290,7 +1439,6 @@
                         render();
                     }
                 };
-
                 g.addEventListener("mousedown", handleStart);
                 g.addEventListener("touchstart", handleStart, { passive: false });
                 viewport.appendChild(g);
@@ -1353,7 +1501,6 @@
             }
         });
 
-        // Touch handling: Pinch to zoom & Single/Multi touch pan
         function getTouchDistance(touches) {
             let dx = touches[0].clientX - touches[1].clientX;
             let dy = touches[0].clientY - touches[1].clientY;
@@ -1404,13 +1551,11 @@
                 let factor = currentDistance / initialPinchDistance;
                 let oldScale = viewTransform.scale;
                 let newScale = Math.min(Math.max(initialScale * factor, 0.3), 3.0);
-                
                 let midX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
                 let midY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
                 let rect = container.getBoundingClientRect();
                 let touchX = midX - rect.left;
                 let touchY = midY - rect.top;
-
                 viewTransform.scale = newScale;
                 viewTransform.x = touchX - (touchX - viewTransform.x) * (newScale / oldScale);
                 viewTransform.y = touchY - (touchY - viewTransform.y) * (newScale / oldScale);
@@ -1425,12 +1570,8 @@
         }, { passive: false });
 
         container.addEventListener("touchend", (e) => {
-            if (e.touches.length < 2) {
-                initialPinchDistance = null;
-            }
-            if (e.touches.length === 0) {
-                isPanning = false;
-            }
+            if (e.touches.length < 2) initialPinchDistance = null;
+            if (e.touches.length === 0) isPanning = false;
         });
 
         container.addEventListener("wheel", (e) => {
@@ -1480,7 +1621,7 @@
             }
         });
 
-        container.addEventListener("dblclick", (e) => {
+        container.addEventListener("dblclick", () => {
             if (currentMode === 'draw_line' && drawingLineState && drawingLineState.points.length >= 2) {
                 let newLine = {
                     id: Date.now(),
@@ -1522,6 +1663,7 @@
             let origPt = lineEl.points[vertexIndex];
             let origX = origPt.x;
             let origY = origPt.y;
+            let snapEnabled = document.getElementById("snapGridToggle").checked;
 
             function onMove(ev) {
                 if (!draggingVertex) return;
@@ -1529,8 +1671,14 @@
                 let clientY = ev.clientY || (ev.touches && ev.touches[0].clientY);
                 let dx = (clientX - startX) / viewTransform.scale;
                 let dy = (clientY - startY) / viewTransform.scale;
-                origPt.x = parseFloat((origX + (dx / gridSize)).toFixed(2));
-                origPt.y = parseFloat((origY + (dy / gridSize)).toFixed(2));
+                let nx = origX + (dx / gridSize);
+                let ny = origY + (dy / gridSize);
+                if (snapEnabled) {
+                    nx = Math.round(nx * 2) / 2;
+                    ny = Math.round(ny * 2) / 2;
+                }
+                origPt.x = parseFloat(nx.toFixed(2));
+                origPt.y = parseFloat(ny.toFixed(2));
                 render();
             }
             function onEnd() {
@@ -1554,15 +1702,22 @@
             let startY = e.clientY || (e.touches && e.touches[0].clientY);
             let origX = el.x;
             let origY = el.y;
+            let snapEnabled = document.getElementById("snapGridToggle").checked;
 
-            function onMouseMove(e) {
+            function onMouseMove(ev) {
                 if (!isDraggingElement) return;
-                let clientX = e.clientX || (e.touches && e.touches[0].clientX);
-                let clientY = e.clientY || (e.touches && e.touches[0].clientY);
+                let clientX = ev.clientX || (ev.touches && ev.touches[0].clientX);
+                let clientY = ev.clientY || (ev.touches && ev.touches[0].clientY);
                 let dx = (clientX - startX) / viewTransform.scale;
                 let dy = (clientY - startY) / viewTransform.scale;
-                el.x = parseFloat((origX + (dx / gridSize)).toFixed(2));
-                el.y = parseFloat((origY + (dy / gridSize)).toFixed(2));
+                let nx = origX + (dx / gridSize);
+                let ny = origY + (dy / gridSize);
+                if (snapEnabled) {
+                    nx = Math.round(nx * 2) / 2;
+                    ny = Math.round(ny * 2) / 2;
+                }
+                el.x = parseFloat(nx.toFixed(2));
+                el.y = parseFloat(ny.toFixed(2));
                 render();
             }
             function onMouseUp() {
@@ -1658,11 +1813,8 @@
 
         window.openManualUrl = function() {
             let url = document.getElementById("modalManualUrl").value;
-            if (url) {
-                window.open(url, '_blank');
-            } else {
-                alert("No URL/Manual link entered.");
-            }
+            if (url) window.open(url, '_blank');
+            else alert("No URL/Manual link entered.");
         }
 
         function renderLotoChecklist(el) {
@@ -1739,7 +1891,6 @@
                 let inputBin = document.createElement("input");
                 inputBin.type = "text";
                 inputBin.value = part.binLoc || "";
-                inputBin.placeholder = "Aisle 1, Bin B-3";
                 inputBin.oninput = function() { part.binLoc = inputBin.value; saveToFirebase(); };
                 tdBin.appendChild(inputBin);
                 let tdAction = document.createElement("td");
@@ -1867,28 +2018,22 @@
             let statusSpan = document.getElementById("upload-status");
             for (let file of files) {
                 try {
-                    statusSpan.innerText = `(Uploading ${file.name} to R2...)`;
+                    statusSpan.innerText = `(Uploading ${file.name}...)`;
                     let formData = new FormData();
                     formData.append("file", file);
-                    let response = await fetch("https://imi1-map-uploader.curtisarmy21589.workers.dev", {
-                        method: "POST",
-                        body: formData
-                    });
+                    let response = await fetch("https://imi1-map-uploader.curtisarmy21589.workers.dev", { method: "POST", body: formData });
                     if (!response.ok) throw new Error("Upload failed");
                     let result = await response.json();
                     let photoUrl = result.url || result.fileUrl || (typeof result === 'string' ? result : null);
-                    if (!photoUrl) {
-                        let textRes = await response.text();
-                        photoUrl = textRes;
-                    }
+                    if (!photoUrl) photoUrl = await response.text();
                     if (photoUrl) {
                         el.photos.push(photoUrl);
                         renderPhotos(el);
                         saveToFirebase();
                     }
                 } catch (error) {
-                    console.error("Error uploading to Cloudflare R2:", error);
-                    alert("Failed to upload photo to Cloudflare R2.");
+                    console.error("Upload error:", error);
+                    alert("Failed to upload photo.");
                 }
             }
             statusSpan.innerText = "";
@@ -1909,7 +2054,6 @@
                 let delBtn = document.createElement("button");
                 delBtn.className = "delete-photo-btn";
                 delBtn.innerHTML = "×";
-                delBtn.title = "Delete photo";
                 delBtn.onclick = (e) => {
                     e.stopPropagation();
                     el.photos.splice(index, 1);
@@ -1927,7 +2071,6 @@
             document.getElementById("lightboxCaption").innerText = itemName || "Photo Preview";
             document.getElementById("lightbox-overlay").style.display = "flex";
         }
-
         window.closeLightbox = function() {
             document.getElementById("lightbox-overlay").style.display = "none";
         }
@@ -1942,19 +2085,13 @@
                 let inputKey = document.createElement("input");
                 inputKey.type = "text";
                 inputKey.value = row.key;
-                inputKey.oninput = function() {
-                    row.key = inputKey.value;
-                    saveToFirebase();
-                };
+                inputKey.oninput = function() { row.key = inputKey.value; saveToFirebase(); };
                 tdKey.appendChild(inputKey);
                 let tdVal = document.createElement("td");
                 let inputVal = document.createElement("input");
                 inputVal.type = "text";
                 inputVal.value = row.value;
-                inputVal.oninput = function() {
-                    row.value = inputVal.value;
-                    saveToFirebase();
-                };
+                inputVal.oninput = function() { row.value = inputVal.value; saveToFirebase(); };
                 tdVal.appendChild(inputVal);
                 let tdAction = document.createElement("td");
                 tdAction.style.textAlign = "center";
