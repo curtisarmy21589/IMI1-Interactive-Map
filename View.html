@@ -121,9 +121,9 @@
             border-color: #38bdf8;
             font-weight: bold;
         }
-        .tab-bar { display: flex; gap: 4px; margin-bottom: 5px; }
+        .tab-bar { display: flex; gap: 3px; margin-bottom: 5px; }
         .tab-btn {
-            flex: 1; padding: 6px 2px; background: #070d14; border: 1px solid #1e293b; color: #94a3b8; font-size: 9px; cursor: pointer; border-radius: 4px; text-align: center; min-height: 34px;
+            flex: 1; padding: 6px 1px; background: #070d14; border: 1px solid #1e293b; color: #94a3b8; font-size: 8.5px; cursor: pointer; border-radius: 4px; text-align: center; min-height: 34px;
         }
         .tab-btn.active { background: #1e293b; color: #38bdf8; border-color: #38bdf8; }
         .panel { display: none; }
@@ -303,6 +303,7 @@
         <hr style="border-color: #1e293b; margin: 4px 0;">
         <div class="tab-bar">
             <button class="tab-btn active" id="tabInfoBtn" onclick="switchTab('info')">Info</button>
+            <button class="tab-btn" id="tabTechBtn" onclick="switchTab('tech')">Tech Log</button>
             <button class="tab-btn" id="tabShiftBtn" onclick="switchTab('shift')">Ops Log</button>
             <button class="tab-btn" id="tabSafetyBtn" onclick="switchTab('safety')">Safety</button>
             <button class="tab-btn" id="tabTomBtn" onclick="switchTab('tom')">Tom Team</button>
@@ -311,6 +312,27 @@
             <p style="font-size: 10px; color: #64748b; margin: 0;">
                 💡 <b>Tip:</b> Tap any asset or zone to inspect details, specs, LOTO instructions, and photos. Pan by dragging with one finger, zoom using pinch or scroll wheel.
             </p>
+        </div>
+        <!-- MAINTENANCE TECH SHIFT HANDOVER PANEL -->
+        <div id="panelTech" class="panel">
+            <h3>📝 Maintenance Tech Shift Log</h3>
+            <div>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
+                    <label>Shift Designation</label>
+                    <button onclick="openShiftManagerModal('tech')" style="width: auto; padding: 2px 6px; font-size: 10px; background: #1e293b; color: #38bdf8; min-height: auto;">⚙️ Manage Shifts</button>
+                </div>
+                <select id="techShiftName"></select>
+                <label>Handover Note / Parts Waiting in Cage</label>
+                <textarea id="techLogText" placeholder="Detailed handoff notes, jams, or parts set aside in cage..." style="height:60px;"></textarea>
+                <button onclick="addShiftLog('tech')" style="margin-top: 6px; background:#0284c7; color:#fff;">+ Post Tech Entry</button>
+            </div>
+            <div style="margin-top: 4px; margin-bottom: 2px;">
+                <label>Filter Log View</label>
+                <select id="techFilterSelect" onchange="filterShiftLogs('tech', this.value)">
+                    <option value="ALL">All Shifts</option>
+                </select>
+            </div>
+            <div class="notes-log-box" id="techLogContainer" style="max-height: 150px;"></div>
         </div>
         <!-- OPERATIONS SHIFT HANDOVER PANEL -->
         <div id="panelShift" class="panel">
@@ -624,10 +646,12 @@
         let shiftLogs = [];
         let safetyLogs = [];
         let tomLogs = [];
+        let techLogs = [];
         let opsShifts = ["FHD", "BHD", "FHN", "BHN", "BBM"];
         let safetyShifts = ["FHD", "BHD", "FHN", "BHN", "BBM"];
         let tomShifts = ["FHD", "BHD", "FHN", "BHN", "BBM"];
-        let activeShiftCategory = 'ops';
+        let techShifts = ["FHD", "BHD", "FHN", "BHN", "BBM"];
+        let activeShiftCategory = 'tech';
 
         let selectedId = null;
         let isPanning = false;
@@ -663,14 +687,17 @@
                     if (data.shiftLogs) shiftLogs = data.shiftLogs;
                     if (data.safetyLogs) safetyLogs = data.safetyLogs;
                     if (data.tomLogs) tomLogs = data.tomLogs;
+                    if (data.techLogs) techLogs = data.techLogs;
                     if (data.opsShifts) opsShifts = data.opsShifts;
                     if (data.safetyShifts) safetyShifts = data.safetyShifts;
                     if (data.tomShifts) tomShifts = data.tomShifts;
+                    if (data.techShifts) techShifts = data.techShifts;
                     syncStatus.innerText = "Connected (View Only)";
                 } else {
                     syncStatus.innerText = "No Data Found";
                 }
                 populateAllShiftDropdowns();
+                renderShiftLogs('tech', document.getElementById('techFilterSelect').value);
                 renderShiftLogs('ops', document.getElementById('shiftFilterSelect').value);
                 renderShiftLogs('safety', document.getElementById('safetyFilterSelect').value);
                 renderShiftLogs('tom', document.getElementById('tomFilterSelect').value);
@@ -693,9 +720,11 @@
                     shiftLogs: shiftLogs,
                     safetyLogs: safetyLogs,
                     tomLogs: tomLogs,
+                    techLogs: techLogs,
                     opsShifts: opsShifts,
                     safetyShifts: safetyShifts,
                     tomShifts: tomShifts,
+                    techShifts: techShifts,
                     updatedAt: new Date().toISOString()
                 };
                 localStorage.setItem("cached_layout", JSON.stringify(layoutObject));
@@ -710,9 +739,9 @@
         }
 
         window.addShiftLog = function(category) {
-            let shiftSelectId = category === 'safety' ? 'safetyShiftName' : (category === 'tom' ? 'tomShiftName' : 'shiftName');
-            let textInputId = category === 'safety' ? 'safetyLogText' : (category === 'tom' ? 'tomLogText' : 'shiftLogText');
-            let filterSelectId = category === 'safety' ? 'safetyFilterSelect' : (category === 'tom' ? 'tomFilterSelect' : 'shiftFilterSelect');
+            let shiftSelectId = category === 'safety' ? 'safetyShiftName' : (category === 'tom' ? 'tomShiftName' : (category === 'tech' ? 'techShiftName' : 'shiftName'));
+            let textInputId = category === 'safety' ? 'safetyLogText' : (category === 'tom' ? 'tomLogText' : (category === 'tech' ? 'techLogText' : 'shiftLogText'));
+            let filterSelectId = category === 'safety' ? 'safetyFilterSelect' : (category === 'tom' ? 'tomFilterSelect' : (category === 'tech' ? 'techFilterSelect' : 'shiftFilterSelect'));
 
             let shift = document.getElementById(shiftSelectId).value;
             let note = document.getElementById(textInputId).value.trim();
@@ -725,6 +754,7 @@
 
             if (category === 'safety') safetyLogs.unshift(entry);
             else if (category === 'tom') tomLogs.unshift(entry);
+            else if (category === 'tech') techLogs.unshift(entry);
             else shiftLogs.unshift(entry);
 
             document.getElementById(textInputId).value = "";
@@ -734,6 +764,7 @@
         };
 
         function populateAllShiftDropdowns() {
+            populateDropdownForCategory('tech', 'techShiftName', 'techFilterSelect');
             populateDropdownForCategory('ops', 'shiftName', 'shiftFilterSelect');
             populateDropdownForCategory('safety', 'safetyShiftName', 'safetyFilterSelect');
             populateDropdownForCategory('tom', 'tomShiftName', 'tomFilterSelect');
@@ -744,7 +775,7 @@
             let selectFilter = document.getElementById(filterSelectId);
             if (!selectName || !selectFilter) return;
 
-            let list = cat === 'safety' ? safetyShifts : (cat === 'tom' ? tomShifts : opsShifts);
+            let list = cat === 'safety' ? safetyShifts : (cat === 'tom' ? tomShifts : (cat === 'tech' ? techShifts : opsShifts));
             let currentNameVal = selectName.value;
             let currentFilterVal = selectFilter.value;
 
@@ -769,7 +800,12 @@
 
         window.openShiftManagerModal = function(cat) {
             activeShiftCategory = cat;
-            let titleMap = { ops: '⚙️ Manage Operations Shifts', safety: '⚙️ Manage Safety Shifts', tom: '⚙️ Manage Tom Team Shifts' };
+            let titleMap = { 
+                tech: '⚙️ Manage Tech Shifts', 
+                ops: '⚙️ Manage Operations Shifts', 
+                safety: '⚙️ Manage Safety Shifts', 
+                tom: '⚙️ Manage Tom Team Shifts' 
+            };
             document.getElementById("shiftModalTitle").innerText = titleMap[cat] || '⚙️ Manage Shifts';
             renderShiftTable();
             document.getElementById("shift-manager-modal-overlay").style.display = "flex";
@@ -785,7 +821,7 @@
             let tbody = document.getElementById("shiftTableBody");
             if (!tbody) return;
             tbody.innerHTML = "";
-            let list = activeShiftCategory === 'safety' ? safetyShifts : (activeShiftCategory === 'tom' ? tomShifts : opsShifts);
+            let list = activeShiftCategory === 'safety' ? safetyShifts : (activeShiftCategory === 'tom' ? tomShifts : (activeShiftCategory === 'tech' ? techShifts : opsShifts));
 
             list.forEach((shiftName, index) => {
                 let tr = document.createElement("tr");
@@ -830,7 +866,7 @@
                 alert("Please enter a shift designation.");
                 return;
             }
-            let list = activeShiftCategory === 'safety' ? safetyShifts : (activeShiftCategory === 'tom' ? tomShifts : opsShifts);
+            let list = activeShiftCategory === 'safety' ? safetyShifts : (activeShiftCategory === 'tom' ? tomShifts : (activeShiftCategory === 'tech' ? techShifts : opsShifts));
             if (list.includes(val)) {
                 alert("This shift already exists.");
                 return;
@@ -846,12 +882,12 @@
         };
 
         function renderShiftLogs(cat, filterShift = "ALL") {
-            let containerId = cat === 'safety' ? 'safetyLogContainer' : (cat === 'tom' ? 'tomLogContainer' : 'shiftLogContainer');
+            let containerId = cat === 'safety' ? 'safetyLogContainer' : (cat === 'tom' ? 'tomLogContainer' : (cat === 'tech' ? 'techLogContainer' : 'shiftLogContainer'));
             let box = document.getElementById(containerId);
             if (!box) return;
             box.innerHTML = "";
 
-            let logsToDisplay = cat === 'safety' ? safetyLogs : (cat === 'tom' ? tomLogs : shiftLogs);
+            let logsToDisplay = cat === 'safety' ? safetyLogs : (cat === 'tom' ? tomLogs : (cat === 'tech' ? techLogs : shiftLogs));
             if (filterShift && filterShift !== "ALL") {
                 logsToDisplay = logsToDisplay.filter(s => s.shift === filterShift);
             }
@@ -949,11 +985,13 @@
         window.switchTab = function(tab) {
             currentTab = tab;
             document.getElementById("tabInfoBtn").classList.toggle("active", tab === 'info');
+            document.getElementById("tabTechBtn").classList.toggle("active", tab === 'tech');
             document.getElementById("tabShiftBtn").classList.toggle("active", tab === 'shift');
             document.getElementById("tabSafetyBtn").classList.toggle("active", tab === 'safety');
             document.getElementById("tabTomBtn").classList.toggle("active", tab === 'tom');
 
             document.getElementById("panelInfo").classList.toggle("active", tab === 'info');
+            document.getElementById("panelTech").classList.toggle("active", tab === 'tech');
             document.getElementById("panelShift").classList.toggle("active", tab === 'shift');
             document.getElementById("panelSafety").classList.toggle("active", tab === 'safety');
             document.getElementById("panelTom").classList.toggle("active", tab === 'tom');
