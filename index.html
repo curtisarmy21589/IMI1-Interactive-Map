@@ -185,7 +185,6 @@
         }
         .filter-pill.down-pill.active { background: #7f1d1d; border-color: #ef4444; }
         .filter-pill.pm-pill.active { background: #b45309; border-color: #f59e0b; }
-
         #coord-display {
             background: #070d14; border: 1px solid #1e293b; padding: 6px; border-radius: 4px; font-family: monospace; color: #38bdf8; font-size: 12px; text-align: center;
         }
@@ -229,7 +228,6 @@
         <h2>Site & Layout Hub</h2>
         <button class="toggle-btn" onclick="toggleSidebar()">☰ Controls</button>
     </div>
-
     <div id="sidebar" class="collapsed">
         <h2>Site & Layout Builder</h2>
         
@@ -251,7 +249,6 @@
                 <span style="color:#38bdf8; font-weight:bold;">🧲 Snap to Grid ($0.5$ Increment)</span>
             </label>
         </div>
-
         <!-- HEATMAP OVERLAY TOGGLE -->
         <div>
             <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
@@ -374,9 +371,11 @@
             <div>
                 <label>Shift Designation</label>
                 <select id="shiftName">
-                    <option value="Shift A">Shift A (Day)</option>
-                    <option value="Shift B">Shift B (Swing)</option>
-                    <option value="Shift C">Shift C (Night)</option>
+                    <option value="FHD">FHD</option>
+                    <option value="BHD">BHD</option>
+                    <option value="FHN">FHN</option>
+                    <option value="BHN">BHN</option>
+                    <option value="BBM">BBM</option>
                 </select>
                 <label>Handover Note / Parts Waiting in Cage</label>
                 <textarea id="shiftLogText" placeholder="Detailed handoff notes, jams, or parts set aside in cage..." style="height:70px;"></textarea>
@@ -385,7 +384,6 @@
             <div class="notes-log-box" id="shiftLogContainer" style="max-height: 200px; margin-top: 6px;"></div>
         </div>
     </div>
-
     <div id="canvas-container">
         <!-- EMERGENCY QUICK-FILTER FLOATING PILLS -->
         <div id="quick-filter-bar">
@@ -395,12 +393,10 @@
             <button class="filter-pill" onclick="toggleQuickFilter('estop')">⚡ E-Stop Zones</button>
             <button class="filter-pill active" id="filterAllBtn" onclick="toggleQuickFilter('all')">Show All</button>
         </div>
-
         <svg id="layoutSvg" width="2200" height="1400">
             <g id="viewport"></g>
         </svg>
     </div>
-
     <!-- MAIN INSPECT & EDIT MODAL -->
     <div id="modal-overlay">
         <div class="modal-content">
@@ -548,7 +544,6 @@
             </div>
         </div>
     </div>
-
     <!-- AR LIVE CAMERA OVERLAY MODAL -->
     <div id="ar-modal-overlay">
         <div class="modal-content" style="width: 500px; height: 500px;">
@@ -570,7 +565,6 @@
             </div>
         </div>
     </div>
-
     <!-- LIGHTBOX MODAL -->
     <div id="lightbox-overlay" onclick="closeLightbox()">
         <div style="position: relative; max-width: 90vw; max-height: 90vh; display: flex; flex-direction: column; align-items: center;" onclick="event.stopPropagation()">
@@ -626,7 +620,6 @@
             </div>
         </div>
     </div>
-
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
@@ -697,9 +690,8 @@
             }
         ];
         let shiftLogs = [
-            { time: "2026-11-06 22:30", shift: "Shift C", note: "Infeed belt #1 re-tensioned. 2 spare proximity sensors placed in Cage Aisle 2." }
+            { time: "2026-11-06 22:30", shift: "BHD", note: "Infeed belt #1 re-tensioned. 2 spare proximity sensors placed in Cage Aisle 2." }
         ];
-
         let selectedId = null;
         let isDraggingElement = false;
         let isPanning = false;
@@ -711,11 +703,9 @@
         const svg = document.getElementById("layoutSvg");
         const viewport = document.getElementById("viewport");
         const syncStatus = document.getElementById("sync-status");
-
         window.toggleSidebar = function() {
             document.getElementById("sidebar").classList.toggle("collapsed");
         };
-
         async function loadFromFirebase() {
             try {
                 const docRef = doc(db, "layouts", "facility_main");
@@ -760,7 +750,6 @@
                 render();
             }
         }
-
         async function saveToFirebase() {
             try {
                 syncStatus.innerText = "Saving...";
@@ -781,7 +770,6 @@
                 syncStatus.style.color = "#f59e0b";
             }
         }
-
         window.toggleQuickFilter = function(filterType) {
             activeQuickFilter = filterType;
             document.querySelectorAll('.filter-pill').forEach(btn => btn.classList.remove('active'));
@@ -792,7 +780,6 @@
             else document.getElementById('filterAllBtn').classList.add('active');
             render();
         }
-
         window.openARModal = function() {
             document.getElementById("ar-modal-overlay").style.display = "flex";
             arQrCode = new Html5Qrcode("ar-video-container");
@@ -807,7 +794,6 @@
                 (err) => {}
             ).catch(err => console.error("AR Camera error:", err));
         }
-
         window.closeARModal = function() {
             if (arQrCode) {
                 arQrCode.stop().then(() => {
@@ -820,7 +806,6 @@
                 document.getElementById("ar-modal-overlay").style.display = "none";
             }
         }
-
         window.addShiftLog = function() {
             let shift = document.getElementById("shiftName").value;
             let note = document.getElementById("shiftLogText").value.trim();
@@ -834,7 +819,6 @@
             renderShiftLogs();
             saveToFirebase();
         }
-
         function renderShiftLogs() {
             let box = document.getElementById("shiftLogContainer");
             if (!box) return;
@@ -850,7 +834,6 @@
                 box.appendChild(div);
             });
         }
-
         function populateCategoryDropdowns(selectedVal1 = null, selectedVal2 = null) {
             let select1 = document.getElementById("newAssetCategory");
             let select2 = document.getElementById("modalCategory");
@@ -871,7 +854,6 @@
             if (val1 && categories.some(c => c.name === val1)) select1.value = val1;
             if (val2 && categories.some(c => c.name === val2)) select2.value = val2;
         }
-
         function populateParentAssetDropdown(selectedParentId = null) {
             let select = document.getElementById("modalParentAsset");
             select.innerHTML = '<option value="">None / Standalone Asset</option>';
@@ -883,18 +865,15 @@
             });
             if (selectedParentId) select.value = selectedParentId;
         }
-
         function getCategoryColor(catName) {
             let found = categories.find(c => c.name === catName);
             return found ? found.color : "#38bdf8";
         }
-
         function getStatusColor(status) {
             if (status === 'maintenance') return "#f59e0b";
             if (status === 'down') return "#ef4444";
             return "#10b981";
         }
-
         function getPmAlertStatus(pmDueStr) {
             if (!pmDueStr) return 'none';
             let due = new Date(pmDueStr);
@@ -904,17 +883,14 @@
             if (diffDays <= 7) return 'due_soon';
             return 'none';
         }
-
         window.handleSearch = function(val) {
             searchQuery = val.trim().toLowerCase();
             render();
         }
-
         window.toggleHeatmap = function(checked) {
             showHeatmap = checked;
             render();
         }
-
         window.openScannerModal = function() {
             document.getElementById("scanner-modal-overlay").style.display = "flex";
             html5QrCode = new Html5Qrcode("qr-reader");
@@ -929,7 +905,6 @@
                 () => {}
             ).catch(err => console.error("Camera access error:", err));
         }
-
         window.closeScannerModal = function() {
             if (html5QrCode) {
                 html5QrCode.stop().then(() => {
@@ -942,7 +917,6 @@
                 document.getElementById("scanner-modal-overlay").style.display = "none";
             }
         }
-
         window.exportDataToCSV = function() {
             let csvRows = [["ID", "Name", "Type / Conveyance", "Category / Details", "Status", "PLC Node", "X / Vertex Info", "Y Info", "W / Details", "H"]];
             elements.forEach(el => {
@@ -964,7 +938,6 @@
             a.click();
             URL.revokeObjectURL(url);
         }
-
         window.openCategoryModal = function() {
             renderCategoryTable();
             document.getElementById("category-modal-overlay").style.display = "flex";
@@ -975,7 +948,6 @@
             render();
             saveToFirebase();
         }
-
         function renderCategoryTable() {
             let tbody = document.getElementById("categoryTableBody");
             tbody.innerHTML = "";
@@ -1026,7 +998,6 @@
                 tbody.appendChild(tr);
             });
         }
-
         window.addCategory = function() {
             let nameInput = document.getElementById("newCatName");
             let colorInput = document.getElementById("newCatColor");
@@ -1044,14 +1015,12 @@
             renderCategoryTable();
             populateCategoryDropdowns();
         }
-
         function getRowLabel(r) {
             if (r < 0) return "N" + Math.abs(r);
             let adjustedIndex = r;
             if (adjustedIndex >= 8) adjustedIndex += 1; 
             return String.fromCharCode(65 + adjustedIndex); 
         }
-
         window.switchLayer = function(layerName) {
             currentLayer = layerName;
             let layerButtons = [
@@ -1076,7 +1045,6 @@
             selectedId = null;
             render();
         }
-
         window.setMode = function(mode) {
             currentMode = mode;
             drawingLineState = null;
@@ -1097,7 +1065,6 @@
             selectedId = null;
             render();
         }
-
         window.switchTab = function(tab) {
             currentTab = tab;
             document.getElementById("tabDeptBtn").classList.toggle("active", tab === 'dept');
@@ -1110,7 +1077,6 @@
             document.getElementById("panelShift").classList.toggle("active", tab === 'shift');
             if (tab === 'line') drawingLineState = null;
         }
-
         window.startDrawingLine = function() {
             let name = document.getElementById("newLineName").value.trim();
             let conveyanceType = document.getElementById("newLineType").value;
@@ -1123,11 +1089,9 @@
             container.style.cursor = 'crosshair';
             alert("Click points on the map to create line bends. DOUBLE-CLICK anywhere to finish drawing.");
         }
-
         function updateTransformString() {
             viewport.setAttribute("transform", `translate(${viewTransform.x}, ${viewTransform.y}) scale(${viewTransform.scale})`);
         }
-
         function render() {
             viewport.innerHTML = "";
             updateTransformString();
@@ -1209,7 +1173,6 @@
             bottomLabel.setAttribute("font-weight", "bold");
             bottomLabel.textContent = `NORTH WALL - ROW N ▼`;
             viewport.appendChild(bottomLabel);
-
             // Draw Upstream/Downstream dependency lines
             elements.forEach(el => {
                 if (el.parentId) {
@@ -1231,7 +1194,6 @@
                     }
                 }
             });
-
             // Draw Heatmap Overlay Circles if enabled
             if (showHeatmap) {
                 elements.forEach(el => {
@@ -1250,7 +1212,6 @@
                     }
                 });
             }
-
             let visibleElements = elements.filter(el => {
                 if (searchQuery) {
                     let matchesName = el.name.toLowerCase().includes(searchQuery);
@@ -1272,7 +1233,6 @@
                 if (activeQuickFilter === 'estop') {
                     return el.estopZone || (el.category && el.category.toLowerCase().includes('safety'));
                 }
-
                 if (currentLayer === 'assets') {
                     return el.type === 'asset' || el.type === 'conveyance_line';
                 }
@@ -1284,7 +1244,6 @@
                 }
                 return (el.layer || 'ground') === currentLayer;
             });
-
             visibleElements.forEach(el => {
                 let g = document.createElementNS("http://www.w3.org/2000/svg", "g");
                 g.setAttribute("class", "item-group");
@@ -1321,7 +1280,6 @@
                         text.textContent = el.name;
                         g.appendChild(path);
                         g.appendChild(text);
-
                         if (el.id === selectedId) {
                             pts.forEach((pt, pIdx) => {
                                 let vCircle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
@@ -1428,7 +1386,6 @@
                     g.appendChild(rect);
                     g.appendChild(text);
                 }
-
                 const handleStart = (e) => {
                     if (currentMode === 'edit' && el.type !== 'conveyance_line') {
                         e.stopPropagation();
@@ -1443,7 +1400,6 @@
                 g.addEventListener("touchstart", handleStart, { passive: false });
                 viewport.appendChild(g);
             });
-
             if (currentMode === 'calc' && calcPoints.length > 0) {
                 calcPoints.forEach((pt) => {
                     let ptCircle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
@@ -1468,7 +1424,6 @@
                 }
             }
         }
-
         function getCanvasLocalCoords(clientX, clientY) {
             let rect = container.getBoundingClientRect();
             let mouseX = clientX - rect.left;
@@ -1482,7 +1437,6 @@
                 rawY: localY
             };
         }
-
         function handlePointerMove(clientX, clientY) {
             let coords = getCanvasLocalCoords(clientX, clientY);
             let coordDisplay = document.getElementById("coord-display");
@@ -1491,7 +1445,6 @@
             let rowLabel = getRowLabel(rowIdx);
             coordDisplay.innerHTML = `Grid: <b>Row ${rowLabel}, Col ${preciseColNum}</b>`;
         }
-
         container.addEventListener("mousemove", (e) => {
             handlePointerMove(e.clientX, e.clientY);
             if (isPanning) {
@@ -1500,13 +1453,11 @@
                 render();
             }
         });
-
         function getTouchDistance(touches) {
             let dx = touches[0].clientX - touches[1].clientX;
             let dy = touches[0].clientY - touches[1].clientY;
             return Math.sqrt(dx * dx + dy * dy);
         }
-
         container.addEventListener("touchstart", (e) => {
             if (e.touches.length === 2) {
                 isPanning = false;
@@ -1543,7 +1494,6 @@
                 }
             }
         }, { passive: false });
-
         container.addEventListener("touchmove", (e) => {
             if (e.touches.length === 2 && initialPinchDistance) {
                 e.preventDefault();
@@ -1568,12 +1518,10 @@
                 render();
             }
         }, { passive: false });
-
         container.addEventListener("touchend", (e) => {
             if (e.touches.length < 2) initialPinchDistance = null;
             if (e.touches.length === 0) isPanning = false;
         });
-
         container.addEventListener("wheel", (e) => {
             e.preventDefault();
             let zoomIntensity = 0.1;
@@ -1590,7 +1538,6 @@
             viewTransform.y = mouseY - (mouseY - viewTransform.y) * (viewTransform.scale / oldScale);
             render();
         }, { passive: false });
-
         container.addEventListener("mousedown", (e) => {
             if (currentMode === 'pan') {
                 isPanning = true;
@@ -1620,7 +1567,6 @@
                 render();
             }
         });
-
         container.addEventListener("dblclick", () => {
             if (currentMode === 'draw_line' && drawingLineState && drawingLineState.points.length >= 2) {
                 let newLine = {
@@ -1642,7 +1588,6 @@
                 alert("Conveyance line with bends created successfully!");
             }
         });
-
         window.addEventListener("mouseup", () => {
             if (isPanning) {
                 isPanning = false;
@@ -1653,7 +1598,6 @@
                 saveToFirebase();
             }
         });
-
         function startDragVertex(e, lineId, vertexIndex) {
             draggingVertex = { lineId, vertexIndex };
             let lineEl = elements.find(el => el.id === lineId);
@@ -1664,7 +1608,6 @@
             let origX = origPt.x;
             let origY = origPt.y;
             let snapEnabled = document.getElementById("snapGridToggle").checked;
-
             function onMove(ev) {
                 if (!draggingVertex) return;
                 let clientX = ev.clientX || (ev.touches && ev.touches[0].clientX);
@@ -1694,7 +1637,6 @@
             window.addEventListener("touchmove", onMove);
             window.addEventListener("touchend", onEnd);
         }
-
         function startDragElement(e, el) {
             selectedId = el.id;
             isDraggingElement = true;
@@ -1703,7 +1645,6 @@
             let origX = el.x;
             let origY = el.y;
             let snapEnabled = document.getElementById("snapGridToggle").checked;
-
             function onMouseMove(ev) {
                 if (!isDraggingElement) return;
                 let clientX = ev.clientX || (ev.touches && ev.touches[0].clientX);
@@ -1734,7 +1675,6 @@
             window.addEventListener("touchend", onMouseUp);
             render();
         }
-
         function openModal(el) {
             selectedId = el.id;
             document.getElementById("modalElementId").value = el.id;
@@ -1810,13 +1750,11 @@
             document.getElementById("modal-overlay").style.display = "flex";
             render();
         }
-
         window.openManualUrl = function() {
             let url = document.getElementById("modalManualUrl").value;
             if (url) window.open(url, '_blank');
             else alert("No URL/Manual link entered.");
         }
-
         function renderLotoChecklist(el) {
             let container = document.getElementById("lotoChecklistList");
             container.innerHTML = "";
@@ -1834,7 +1772,6 @@
                 container.appendChild(div);
             });
         }
-
         window.addLotoStep = function() {
             let id = parseInt(document.getElementById("modalElementId").value);
             let el = elements.find(item => item.id === id);
@@ -1848,7 +1785,6 @@
                 saveToFirebase();
             }
         }
-
         window.toggleLotoStep = function(index, checked) {
             let id = parseInt(document.getElementById("modalElementId").value);
             let el = elements.find(item => item.id === id);
@@ -1858,7 +1794,6 @@
                 saveToFirebase();
             }
         }
-
         window.deleteLotoStep = function(index) {
             let id = parseInt(document.getElementById("modalElementId").value);
             let el = elements.find(item => item.id === id);
@@ -1868,7 +1803,6 @@
                 saveToFirebase();
             }
         }
-
         function renderBomTable(el) {
             let tbody = document.getElementById("bomBody");
             tbody.innerHTML = "";
@@ -1914,7 +1848,6 @@
                 tbody.appendChild(tr);
             });
         }
-
         window.addBomRow = function() {
             let id = parseInt(document.getElementById("modalElementId").value);
             let el = elements.find(item => item.id === id);
@@ -1925,7 +1858,6 @@
                 saveToFirebase();
             }
         }
-
         function renderWorkTickets(el) {
             let box = document.getElementById("ticketsBox");
             box.innerHTML = "";
@@ -1942,7 +1874,6 @@
                 box.appendChild(div);
             });
         }
-
         window.addWorkTicket = function() {
             let id = parseInt(document.getElementById("modalElementId").value);
             let el = elements.find(item => item.id === id);
@@ -1956,7 +1887,6 @@
                 saveToFirebase();
             }
         }
-
         window.resolveWorkTicket = function(index) {
             let id = parseInt(document.getElementById("modalElementId").value);
             let el = elements.find(item => item.id === id);
@@ -1966,14 +1896,12 @@
                 saveToFirebase();
             }
         }
-
         window.closeModal = function() {
             document.getElementById("modal-overlay").style.display = "none";
             selectedId = null;
             render();
             saveToFirebase();
         }
-
         window.saveModalLiveChanges = function() {
             let id = parseInt(document.getElementById("modalElementId").value);
             let el = elements.find(item => item.id === id);
@@ -2008,7 +1936,6 @@
                 render();
             }
         }
-
         window.handlePhotoUpload = async function(event) {
             let id = parseInt(document.getElementById("modalElementId").value);
             let el = elements.find(item => item.id === id);
@@ -2039,7 +1966,6 @@
             statusSpan.innerText = "";
             event.target.value = "";
         }
-
         function renderPhotos(el) {
             let gallery = document.getElementById("modalPhotoGallery");
             gallery.innerHTML = "";
@@ -2065,7 +1991,6 @@
                 gallery.appendChild(containerDiv);
             });
         }
-
         window.openLightbox = function(url, itemName) {
             document.getElementById("lightboxImage").src = url;
             document.getElementById("lightboxCaption").innerText = itemName || "Photo Preview";
@@ -2074,7 +1999,6 @@
         window.closeLightbox = function() {
             document.getElementById("lightbox-overlay").style.display = "none";
         }
-
         function renderSpreadsheet(el) {
             let tbody = document.getElementById("spreadsheetBody");
             tbody.innerHTML = "";
@@ -2113,7 +2037,6 @@
                 tbody.appendChild(tr);
             });
         }
-
         window.addSpreadsheetRow = function() {
             let id = parseInt(document.getElementById("modalElementId").value);
             let el = elements.find(item => item.id === id);
@@ -2124,7 +2047,6 @@
                 saveToFirebase();
             }
         }
-
         window.deleteItemFromModal = function() {
             let id = parseInt(document.getElementById("modalElementId").value);
             if (confirm("Are you sure you want to delete this item?")) {
@@ -2133,7 +2055,6 @@
                 saveToFirebase();
             }
         }
-
         window.addDepartment = function() {
             let newEl = {
                 id: Date.now(),
@@ -2151,7 +2072,6 @@
             render();
             saveToFirebase();
         }
-
         window.addAsset = function() {
             let newEl = {
                 id: Date.now(),
@@ -2171,7 +2091,6 @@
             render();
             saveToFirebase();
         }
-
         loadFromFirebase();
     </script>
 </body>
