@@ -130,11 +130,11 @@
             border-color: #38bdf8;
             font-weight: bold;
         }
-        .danger { background: #7f1d1d; border-color: #ef4444; }
+        .danger { background: #7f1d1d; border-color: #ef4444; color: white; }
         .danger:hover, .danger:active { background: #ef4444; color: #fff; }
-        .tab-bar { display: flex; gap: 4px; margin-bottom: 5px; }
+        .tab-bar { display: flex; gap: 3px; margin-bottom: 5px; }
         .tab-btn {
-            flex: 1; padding: 6px 2px; background: #070d14; border: 1px solid #1e293b; color: #94a3b8; font-size: 9.5px; cursor: pointer; border-radius: 4px; text-align: center; min-height: 34px;
+            flex: 1; padding: 6px 1px; background: #070d14; border: 1px solid #1e293b; color: #94a3b8; font-size: 8.5px; cursor: pointer; border-radius: 4px; text-align: center; min-height: 34px;
         }
         .tab-btn.active { background: #1e293b; color: #38bdf8; border-color: #38bdf8; }
         .panel { display: none; }
@@ -192,7 +192,7 @@
             background: #0f172a; border: 1px solid #f59e0b; color: #fbbf24; padding: 6px; border-radius: 4px; font-family: monospace; font-size: 11px; text-align: center; display: none;
         }
         #sync-status { font-size: 10px; text-align: center; color: #10b981; font-weight: bold; margin-top: -4px; }
-        #modal-overlay, #category-modal-overlay, #lightbox-overlay, #scanner-modal-overlay, #ar-modal-overlay {
+        #modal-overlay, #category-modal-overlay, #lightbox-overlay, #scanner-modal-overlay, #ar-modal-overlay, #shift-manager-modal-overlay {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.85); z-index: 1000; justify-content: center; align-items: center; padding: 10px;
         }
         #lightbox-overlay { z-index: 2000; }
@@ -208,7 +208,6 @@
         .spreadsheet-table th, .spreadsheet-table td { border: 1px solid #1f2d3d; padding: 6px; text-align: left; font-size: 11px; }
         .spreadsheet-table th { background: #0b131d; color: #38bdf8; }
         .spreadsheet-table input, .spreadsheet-table select { background: transparent; border: none; color: #fff; width: 100%; padding: 2px; margin: 0; min-height: 28px; }
-        .spreadsheet-table input:focus, .spreadsheet-table select:focus { outline: 1px solid #38bdf8; }
         .photo-gallery { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px; }
         .photo-thumb-container { position: relative; width: 80px; height: 80px; border: 1px solid #1f2d3d; border-radius: 4px; overflow: hidden; background: #0b131d; cursor: pointer; }
         .photo-thumb-container img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.2s; }
@@ -220,7 +219,7 @@
         .pm-overdue-pulse { animation: pmPulse 1.5s infinite ease-in-out; stroke: #ef4444; stroke-width: 2; fill: none; }
         .pm-due-pulse { animation: pmPulse 2s infinite ease-in-out; stroke: #f59e0b; stroke-width: 2; fill: none; }
         .loto-step { display: flex; align-items: center; gap: 6px; font-size: 11px; border-bottom: 1px solid #1f2d3d; padding: 3px 0; }
-        .loto-step input[type="checkbox"] { width: auto; margin: 0; min-height: auto; }
+        .action-item-row { display: flex; align-items: center; gap: 6px; font-size: 11px; border-bottom: 1px solid #1f2d3d; padding: 2px 0; }
     </style>
 </head>
 <body>
@@ -246,7 +245,7 @@
         <div>
             <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
                 <input type="checkbox" id="snapGridToggle" checked style="width:auto; margin:0; min-height:auto;">
-                <span style="color:#38bdf8; font-weight:bold;">🧲 Snap to Grid ($0.5$ Increment)</span>
+                <span style="color:#38bdf8; font-weight:bold;">🧲 Snap to Grid (0.5 Increment)</span>
             </label>
         </div>
         <!-- HEATMAP OVERLAY TOGGLE -->
@@ -300,7 +299,10 @@
             <button class="tab-btn active" id="tabDeptBtn" onclick="switchTab('dept')">Zones</button>
             <button class="tab-btn" id="tabLineBtn" onclick="switchTab('line')">Lines</button>
             <button class="tab-btn" id="tabAssetBtn" onclick="switchTab('asset')">Assets</button>
-            <button class="tab-btn" id="tabShiftBtn" onclick="switchTab('shift')">Shift Log</button>
+            <button class="tab-btn" id="tabTechBtn" onclick="switchTab('tech')">Tech Log</button>
+            <button class="tab-btn" id="tabShiftBtn" onclick="switchTab('shift')">Ops Log</button>
+            <button class="tab-btn" id="tabSafetyBtn" onclick="switchTab('safety')">Safety</button>
+            <button class="tab-btn" id="tabTomBtn" onclick="switchTab('tom')">Tom Team</button>
         </div>
         <div id="panelDept" class="panel active">
             <h3>Zone / Yard Management</h3>
@@ -365,23 +367,141 @@
                 <button onclick="addAsset()" style="margin-top: 6px;">Add Automation Asset</button>
             </div>
         </div>
-        <!-- SHIFT HANDOVER LOG PANEL -->
-        <div id="panelShift" class="panel">
-            <h3>📝 Technician Shift Handover Log</h3>
+        <!-- MAINTENANCE TECH SHIFT HANDOVER PANEL -->
+        <div id="panelTech" class="panel">
+            <h3>📝 Maintenance Tech Shift Log</h3>
             <div>
-                <label>Shift Designation</label>
-                <select id="shiftName">
-                    <option value="FHD">FHD</option>
-                    <option value="BHD">BHD</option>
-                    <option value="FHN">FHN</option>
-                    <option value="BHN">BHN</option>
-                    <option value="BBM">BBM</option>
-                </select>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
+                    <label>Shift Designation</label>
+                    <button onclick="openShiftManagerModal('tech')" style="width: auto; padding: 2px 6px; font-size: 10px; background: #1e293b; color: #38bdf8; min-height: auto;">⚙️ Manage Shifts</button>
+                </div>
+                <select id="techShiftName"></select>
                 <label>Handover Note / Parts Waiting in Cage</label>
-                <textarea id="shiftLogText" placeholder="Detailed handoff notes, jams, or parts set aside in cage..." style="height:70px;"></textarea>
-                <button onclick="addShiftLog()" style="margin-top: 6px; background:#0284c7; color:#fff;">+ Post Handover Entry</button>
+                <textarea id="techLogText" placeholder="Detailed handoff notes, jams, or parts set aside in cage..." style="height:50px;"></textarea>
+                <button onclick="addShiftLog('tech')" style="margin-top: 4px; background:#0284c7; color:#fff;">+ Post Tech Entry</button>
             </div>
-            <div class="notes-log-box" id="shiftLogContainer" style="max-height: 200px; margin-top: 6px;"></div>
+            <!-- ACTION ITEM TRACKER -->
+            <div style="margin-top: 4px;">
+                <label>📋 Shift Action Items / Tasks</label>
+                <div id="techActionList" style="max-height: 80px; overflow-y: auto; background: #070d14; border: 1px solid #1f2d3d; border-radius: 4px; padding: 4px; margin-top: 2px;"></div>
+                <div style="display: flex; gap: 4px; margin-top: 4px;">
+                    <input type="text" id="newTechActionText" placeholder="Add follow-up task..." style="min-height: 28px; padding: 4px;">
+                    <button onclick="addActionItem('tech')" style="width: auto; padding: 2px 8px; font-size: 10px; min-height: 28px;">+ Add</button>
+                </div>
+            </div>
+            <div style="display: flex; gap: 4px; margin-top: 4px;">
+                <button onclick="printHandoverReport('tech')" style="font-size: 10px; padding: 4px;">🖨️ Print Summary</button>
+                <button onclick="exportShiftLogsCSV('tech')" style="font-size: 10px; padding: 4px;">📥 CSV Export</button>
+            </div>
+            <div style="margin-top: 4px; margin-bottom: 2px;">
+                <label>Filter Log View</label>
+                <select id="techFilterSelect" onchange="filterShiftLogs('tech', this.value)">
+                    <option value="ALL">All Shifts</option>
+                </select>
+            </div>
+            <div class="notes-log-box" id="techLogContainer" style="max-height: 120px;"></div>
+        </div>
+        <!-- OPERATIONS SHIFT HANDOVER PANEL -->
+        <div id="panelShift" class="panel">
+            <h3>📝 Operations Shift Handover Log</h3>
+            <div>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
+                    <label>Shift Designation</label>
+                    <button onclick="openShiftManagerModal('ops')" style="width: auto; padding: 2px 6px; font-size: 10px; background: #1e293b; color: #38bdf8; min-height: auto;">⚙️ Manage Shifts</button>
+                </div>
+                <select id="shiftName"></select>
+                <label>Handover Note / Updates</label>
+                <textarea id="shiftLogText" placeholder="Detailed handoff notes, equipment status..." style="height:50px;"></textarea>
+                <button onclick="addShiftLog('ops')" style="margin-top: 4px; background:#0284c7; color:#fff;">+ Post Ops Entry</button>
+            </div>
+            <!-- ACTION ITEM TRACKER -->
+            <div style="margin-top: 4px;">
+                <label>📋 Ops Shift Action Items</label>
+                <div id="opsActionList" style="max-height: 80px; overflow-y: auto; background: #070d14; border: 1px solid #1f2d3d; border-radius: 4px; padding: 4px; margin-top: 2px;"></div>
+                <div style="display: flex; gap: 4px; margin-top: 4px;">
+                    <input type="text" id="newOpsActionText" placeholder="Add follow-up task..." style="min-height: 28px; padding: 4px;">
+                    <button onclick="addActionItem('ops')" style="width: auto; padding: 2px 8px; font-size: 10px; min-height: 28px;">+ Add</button>
+                </div>
+            </div>
+            <div style="display: flex; gap: 4px; margin-top: 4px;">
+                <button onclick="printHandoverReport('ops')" style="font-size: 10px; padding: 4px;">🖨️ Print Summary</button>
+                <button onclick="exportShiftLogsCSV('ops')" style="font-size: 10px; padding: 4px;">📥 CSV Export</button>
+            </div>
+            <div style="margin-top: 4px; margin-bottom: 2px;">
+                <label>Filter Log View</label>
+                <select id="shiftFilterSelect" onchange="filterShiftLogs('ops', this.value)">
+                    <option value="ALL">All Shifts</option>
+                </select>
+            </div>
+            <div class="notes-log-box" id="shiftLogContainer" style="max-height: 120px;"></div>
+        </div>
+        <!-- SAFETY SHIFT HANDOVER PANEL -->
+        <div id="panelSafety" class="panel">
+            <h3>🦺 Safety Shift Handover Log</h3>
+            <div>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
+                    <label>Shift Designation</label>
+                    <button onclick="openShiftManagerModal('safety')" style="width: auto; padding: 2px 6px; font-size: 10px; background: #1e293b; color: #38bdf8; min-height: auto;">⚙️ Manage Shifts</button>
+                </div>
+                <select id="safetyShiftName"></select>
+                <label>Safety Incidents / Audits / PPE Notes</label>
+                <textarea id="safetyLogText" placeholder="Near misses, safety audits, eyewash checks..." style="height:50px;"></textarea>
+                <button onclick="addShiftLog('safety')" style="margin-top: 4px; background:#0284c7; color:#fff;">+ Post Safety Entry</button>
+            </div>
+            <!-- ACTION ITEM TRACKER -->
+            <div style="margin-top: 4px;">
+                <label>📋 Safety Follow-up Action Items</label>
+                <div id="safetyActionList" style="max-height: 80px; overflow-y: auto; background: #070d14; border: 1px solid #1f2d3d; border-radius: 4px; padding: 4px; margin-top: 2px;"></div>
+                <div style="display: flex; gap: 4px; margin-top: 4px;">
+                    <input type="text" id="newSafetyActionText" placeholder="Add follow-up task..." style="min-height: 28px; padding: 4px;">
+                    <button onclick="addActionItem('safety')" style="width: auto; padding: 2px 8px; font-size: 10px; min-height: 28px;">+ Add</button>
+                </div>
+            </div>
+            <div style="display: flex; gap: 4px; margin-top: 4px;">
+                <button onclick="printHandoverReport('safety')" style="font-size: 10px; padding: 4px;">🖨️ Print Summary</button>
+                <button onclick="exportShiftLogsCSV('safety')" style="font-size: 10px; padding: 4px;">📥 CSV Export</button>
+            </div>
+            <div style="margin-top: 4px; margin-bottom: 2px;">
+                <label>Filter Log View</label>
+                <select id="safetyFilterSelect" onchange="filterShiftLogs('safety', this.value)">
+                    <option value="ALL">All Shifts</option>
+                </select>
+            </div>
+            <div class="notes-log-box" id="safetyLogContainer" style="max-height: 120px;"></div>
+        </div>
+        <!-- TOM TEAM SHIFT HANDOVER PANEL -->
+        <div id="panelTom" class="panel">
+            <h3>🚛 Tom Team Shift Handover Log</h3>
+            <div>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
+                    <label>Shift Designation</label>
+                    <button onclick="openShiftManagerModal('tom')" style="width: auto; padding: 2px 6px; font-size: 10px; background: #1e293b; color: #38bdf8; min-height: auto;">⚙️ Manage Shifts</button>
+                </div>
+                <select id="tomShiftName"></select>
+                <label>Yard / Yard Truck / Trailer Notes</label>
+                <textarea id="tomLogText" placeholder="Yard flow, spotter truck status, trailer moves..." style="height:50px;"></textarea>
+                <button onclick="addShiftLog('tom')" style="margin-top: 4px; background:#0284c7; color:#fff;">+ Post Tom Team Entry</button>
+            </div>
+            <!-- ACTION ITEM TRACKER -->
+            <div style="margin-top: 4px;">
+                <label>📋 Tom Team Action Items</label>
+                <div id="tomActionList" style="max-height: 80px; overflow-y: auto; background: #070d14; border: 1px solid #1f2d3d; border-radius: 4px; padding: 4px; margin-top: 2px;"></div>
+                <div style="display: flex; gap: 4px; margin-top: 4px;">
+                    <input type="text" id="newTomActionText" placeholder="Add follow-up task..." style="min-height: 28px; padding: 4px;">
+                    <button onclick="addActionItem('tom')" style="width: auto; padding: 2px 8px; font-size: 10px; min-height: 28px;">+ Add</button>
+                </div>
+            </div>
+            <div style="display: flex; gap: 4px; margin-top: 4px;">
+                <button onclick="printHandoverReport('tom')" style="font-size: 10px; padding: 4px;">🖨️ Print Summary</button>
+                <button onclick="exportShiftLogsCSV('tom')" style="font-size: 10px; padding: 4px;">📥 CSV Export</button>
+            </div>
+            <div style="margin-top: 4px; margin-bottom: 2px;">
+                <label>Filter Log View</label>
+                <select id="tomFilterSelect" onchange="filterShiftLogs('tom', this.value)">
+                    <option value="ALL">All Shifts</option>
+                </select>
+            </div>
+            <div class="notes-log-box" id="tomLogContainer" style="max-height: 120px;"></div>
         </div>
     </div>
     <div id="canvas-container">
@@ -389,6 +509,7 @@
         <div id="quick-filter-bar">
             <button class="filter-pill down-pill" onclick="toggleQuickFilter('down')">🚨 Down Assets</button>
             <button class="filter-pill pm-pill" onclick="toggleQuickFilter('pm_due')">🔥 Overdue PMs</button>
+            <button class="filter-pill" onclick="toggleQuickFilter('parts_needed')">📦 Parts Needed</button>
             <button class="filter-pill" onclick="toggleQuickFilter('water')">💧 Water Shutoffs</button>
             <button class="filter-pill" onclick="toggleQuickFilter('estop')">⚡ E-Stop Zones</button>
             <button class="filter-pill active" id="filterAllBtn" onclick="toggleQuickFilter('all')">Show All</button>
@@ -402,13 +523,23 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h3 id="modalTitle" style="color: #38bdf8; margin: 0;">Item Details</h3>
-                <button class="close-modal" onclick="closeModal()">×</button>
+                <div style="display: flex; gap: 6px; align-items: center;">
+                    <button onclick="printAssetQrCode()" style="width: auto; padding: 4px 8px; font-size: 10px; background: #0284c7; color: #fff;">🖨️ Print QR Label</button>
+                    <button class="close-modal" onclick="closeModal()">×</button>
+                </div>
             </div>
             <div class="modal-body">
                 <input type="hidden" id="modalElementId">
                 <div>
                     <label>Item Name / Designation</label>
                     <input type="text" id="modalName" oninput="saveModalLiveChanges()">
+                </div>
+                <!-- PARTS NEEDED QUICK TAG -->
+                <div>
+                    <label style="display:flex; align-items:center; gap:6px; cursor:pointer; background:#1e293b; padding:6px; border-radius:4px; border:1px solid #38bdf8;">
+                        <input type="checkbox" id="modalPartsNeeded" onchange="saveModalLiveChanges()" style="width:auto; margin:0; min-height:auto;">
+                        <span style="color:#ef4444; font-weight:bold;">📦 Flag as Waiting for Replacement Parts</span>
+                    </label>
                 </div>
                 <div id="modalAssetFields" style="display: flex; gap: 6px; flex-wrap: wrap;">
                     <div style="flex: 2; min-width: 140px;">
@@ -428,7 +559,6 @@
                         <input type="text" id="modalEmoji" oninput="saveModalLiveChanges()" style="text-align: center; font-size: 16px;">
                     </div>
                 </div>
-                <!-- PARENT/CHILD DEPENDENCY & PLC NODE -->
                 <div id="modalDependencyContainer" style="display: flex; gap: 6px; flex-wrap: wrap;">
                     <div style="flex: 1; min-width: 180px;">
                         <label>Upstream Parent Asset / Power Source</label>
@@ -439,7 +569,6 @@
                         <input type="text" id="modalPlcNode" placeholder="PLC-04 Rack 1, Slot 3 (192.168.1.45)" oninput="saveModalLiveChanges()">
                     </div>
                 </div>
-                <!-- MANUAL LINK -->
                 <div id="modalDocLinkContainer">
                     <label>Equipment Manual / Wiring Schematic (PDF Link)</label>
                     <div style="display: flex; gap: 4px;">
@@ -455,7 +584,6 @@
                     <div style="flex:1;"><label>Width</label><input type="number" id="modalW" step="0.25" oninput="saveModalLiveChanges()"></div>
                     <div style="flex:1;"><label>Height</label><input type="number" id="modalH" step="0.25" oninput="saveModalLiveChanges()"></div>
                 </div>
-                <!-- LOTO CHECKLIST -->
                 <div id="modalLotoContainer">
                     <h4>🔒 Lockout/Tagout (LOTO) Sequence & ESWC Checklist</h4>
                     <div id="lotoChecklistList"></div>
@@ -464,33 +592,28 @@
                         <button onclick="addLotoStep()" style="width: auto; padding: 4px 8px;">+ Add Step</button>
                     </div>
                 </div>
-                <!-- PREVENTIVE MAINTENANCE & METERS -->
                 <h4>⏱️ Maintenance & Operating Meters</h4>
                 <div id="modalPmContainer" style="display: flex; gap: 6px; flex-wrap: wrap;">
                     <div style="flex:1; min-width: 130px;"><label>Last Inspected</label><input type="date" id="modalLastInspect" onchange="saveModalLiveChanges()"></div>
                     <div style="flex:1; min-width: 130px;"><label>PM Due Date</label><input type="date" id="modalPmDue" onchange="saveModalLiveChanges()"></div>
                     <div style="flex:1; min-width: 130px;"><label>Run Hours / Meter</label><input type="number" id="modalRunHours" placeholder="e.g. 4250 hrs" oninput="saveModalLiveChanges()"></div>
                 </div>
-                <!-- PREDICTIVE & LUBRICATION METRICS -->
                 <h4>📊 Predictive Health & Lubrication</h4>
                 <div id="modalPredictiveContainer" style="display: flex; gap: 6px; flex-wrap: wrap;">
                     <div style="flex:1; min-width: 130px;"><label>Thermal Temp (°F)</label><input type="text" id="modalTemp" placeholder="115°F" oninput="saveModalLiveChanges()"></div>
                     <div style="flex:1; min-width: 130px;"><label>Vibration (in/s)</label><input type="text" id="modalVibration" placeholder="0.12 in/s" oninput="saveModalLiveChanges()"></div>
                     <div style="flex:1; min-width: 130px;"><label>Grease / Lube Type</label><input type="text" id="modalLube" placeholder="Mobilith SHC 220" oninput="saveModalLiveChanges()"></div>
                 </div>
-                <!-- UTILITIES & SAFETY INTERLOCKS -->
                 <h4>⚡ Utilities & Safety Interlocks</h4>
                 <div id="modalUtilitiesContainer" style="display: flex; gap: 6px; flex-wrap: wrap;">
                     <div style="flex:1; min-width: 130px;"><label>Amps/Cal</label><input type="text" id="modalUtilityDraw" placeholder="480V 45A / 12 Cal" oninput="saveModalLiveChanges()"></div>
                     <div style="flex:1; min-width: 130px;"><label>Safety / E-Stop Zone</label><input type="text" id="modalEstopZone" placeholder="E-Stop Relay Line #2" oninput="saveModalLiveChanges()"></div>
                 </div>
-                <!-- VENDOR DIRECTORY -->
                 <h4>📞 OEM & Vendor Support Contact</h4>
                 <div id="modalVendorContainer" style="display: flex; gap: 6px;">
                     <div style="flex:1;"><label>Vendor Name / Rep</label><input type="text" id="modalVendorName" placeholder="OPEX / System Integrator Support" oninput="saveModalLiveChanges()"></div>
                     <div style="flex:1;"><label>Contact Phone / Email</label><input type="text" id="modalVendorContact" placeholder="800-555-0199" oninput="saveModalLiveChanges()"></div>
                 </div>
-                <!-- SPARE PARTS CAGE & BIN LOCATION -->
                 <div id="modalBomContainer">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 6px;">
                         <h4>📦 Spare Parts & Cage Bin Mapping</h4>
@@ -508,7 +631,6 @@
                         <tbody id="bomBody"></tbody>
                     </table>
                 </div>
-                <!-- BREAKDOWN WORK TICKETS -->
                 <div id="modalTicketsContainer">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 6px;">
                         <h4>🛠️ Breakdown & Work Tickets</h4>
@@ -553,7 +675,6 @@
             </div>
             <div class="modal-body" style="position: relative; padding: 0; background: #000; flex-grow: 1; display: flex; align-items: center; justify-content: center; overflow: hidden;">
                 <div id="ar-video-container" style="width: 100%; height: 100%;"></div>
-                <!-- Simulated AR Floating HUD Badge -->
                 <div style="position: absolute; top: 15px; left: 15px; background: rgba(17,27,39,0.85); border: 1px solid #38bdf8; padding: 8px 12px; border-radius: 6px; pointer-events: none;">
                     <div style="color: #38bdf8; font-weight: bold; font-size: 11px;">OPEX UIS Sure Sort #1</div>
                     <div style="color: #10b981; font-size: 10px;">Status: Operational | Runtime: 3,120 hrs</div>
@@ -605,6 +726,39 @@
             </div>
             <div class="modal-footer">
                 <button onclick="closeCategoryModal()" style="width: auto; padding: 6px 12px; background: #38bdf8; color: #0b131d;">Save & Close</button>
+            </div>
+        </div>
+    </div>
+    <!-- SHIFT MANAGER MODAL -->
+    <div id="shift-manager-modal-overlay">
+        <div class="modal-content" style="width: 450px;">
+            <div class="modal-header">
+                <h3 id="shiftModalTitle" style="color: #38bdf8; margin: 0;">⚙️ Manage Shifts</h3>
+                <button class="close-modal" onclick="closeShiftManagerModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <div>
+                    <label>Add New Shift Code</label>
+                    <div style="display: flex; gap: 6px; margin-top: 4px;">
+                        <input type="text" id="newShiftInput" placeholder="Shift Name (e.g. D1, N2)" style="flex: 2;">
+                        <button onclick="addNewShift()" style="flex: 1; margin-top: 0; background: #0284c7; color: #fff;">Add Shift</button>
+                    </div>
+                </div>
+                <div style="margin-top: 8px;">
+                    <label>Existing Active Shifts</label>
+                    <table class="spreadsheet-table" style="margin-top: 6px;">
+                        <thead>
+                            <tr>
+                                <th>Shift Designation</th>
+                                <th style="width: 60px; text-align: center;">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="shiftTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button onclick="closeShiftManagerModal()" style="width: auto; padding: 6px 12px; background: #38bdf8; color: #0b131d;">Save & Close</button>
             </div>
         </div>
     </div>
@@ -666,7 +820,7 @@
         ];
         let elements = [
             { 
-                id: 501, layer: "uis_sorter", name: "OPEX UIS Sure Sort Frame #1", type: "asset", category: "OPEX UIS Sorter", status: "operational", emoji: "🤖", x: 10, y: 4,
+                id: 501, layer: "uis_sorter", name: "OPEX UIS Sure Sort Frame #1", type: "asset", category: "OPEX UIS Sorter", status: "operational", emoji: "🤖", x: 10, y: 4, partsNeeded: false,
                 parentId: "", plcNode: "PLC-UIS-01 (192.168.1.101)", manualUrl: "", runHours: "3120", temp: "95°F", vibration: "0.02 in/s", lube: "iBOT Guide Rail Lube", utilityDraw: "480V 30A / 8 Cal", estopZone: "UIS Bay E-Stop Circuit", vendorName: "OPEX Corporation Support", vendorContact: "800-555-0199",
                 lotoSteps: [{step: "Isolate Main UIS Control Panel Disconnect Switch", done: false}, {step: "Lockout Pneumatic Dump Valve HV-UIS1", done: false}],
                 spareParts: [
@@ -675,23 +829,22 @@
                 ], 
                 workTickets: [{time: "2026-10-20 09:15", priority: "Medium", desc: "iBOT #14 charging contact wear check."}], lastInspect: "2026-10-01", pmDue: "2026-11-15", photos: [], 
                 spreadsheetData: [{key: "Sorter Throughput", value: "2,400 UPH"}, {key: "iBOT Fleet Count", value: "22 iBOTs"}]
-            },
-            { 
-                id: 601, layer: "atr_retrieval", name: "ATR Stacker / Retrieval Cell #1", type: "asset", category: "ATR Tote Retrieval", status: "operational", emoji: "📦", x: 18, y: 4,
-                parentId: "", plcNode: "PLC-ATR-02 (192.168.1.105)", manualUrl: "", runHours: "1840", temp: "88°F", vibration: "0.05 in/s", lube: "Chain & Linear Rail Grease", utilityDraw: "480V 25A / 4 Cal", estopZone: "ATR Safety Light Curtain", vendorName: "ATR Integration Support", vendorContact: "800-555-0199",
-                lotoSteps: [{step: "Press Cell E-Stop", done: true}, {step: "Apply Lockout Hasp on Power Panel 4", done: true}],
-                spareParts: [{partName: "Tote Lift Pneumatic Cylinder", partNum: "CYL-ATR-80", binLoc: "Aisle 4, Shelf C-3"}], 
-                workTickets: [], lastInspect: "2026-09-28", pmDue: "2026-11-28", photos: [], 
-                spreadsheetData: [{key: "Tote Buffer Capacity", value: "120 Totes"}, {key: "De-stack Cycle Time", value: "3.2 sec"}]
-            },
-            {
-                id: 701, layer: "conveyance", name: "Mainline Infeed Belt #1", type: "conveyance_line", conveyanceType: "belted", points: [{x: 2, y: 2}, {x: 10, y: 2}, {x: 15, y: 6}],
-                photos: [], spreadsheetData: [{key: "Conveyance Type", value: "Belted"}]
             }
         ];
-        let shiftLogs = [
-            { time: "2026-11-06 22:30", shift: "BHD", note: "Infeed belt #1 re-tensioned. 2 spare proximity sensors placed in Cage Aisle 2." }
-        ];
+        let shiftLogs = [];
+        let safetyLogs = [];
+        let tomLogs = [];
+        let techLogs = [];
+        let opsShifts = ["FHD", "BHD", "FHN", "BHN", "BBM"];
+        let safetyShifts = ["FHD", "BHD", "FHN", "BHN", "BBM"];
+        let tomShifts = ["FHD", "BHD", "FHN", "BHN", "BBM"];
+        let techShifts = ["FHD", "BHD", "FHN", "BHN", "BBM"];
+        let techActions = [];
+        let opsActions = [];
+        let safetyActions = [];
+        let tomActions = [];
+        let activeShiftCategory = 'tech';
+
         let selectedId = null;
         let isDraggingElement = false;
         let isPanning = false;
@@ -703,9 +856,11 @@
         const svg = document.getElementById("layoutSvg");
         const viewport = document.getElementById("viewport");
         const syncStatus = document.getElementById("sync-status");
+
         window.toggleSidebar = function() {
             document.getElementById("sidebar").classList.toggle("collapsed");
         };
+
         async function loadFromFirebase() {
             try {
                 const docRef = doc(db, "layouts", "facility_main");
@@ -722,6 +877,17 @@
                     }
                     if (data.categories) categories = data.categories;
                     if (data.shiftLogs) shiftLogs = data.shiftLogs;
+                    if (data.safetyLogs) safetyLogs = data.safetyLogs;
+                    if (data.tomLogs) tomLogs = data.tomLogs;
+                    if (data.techLogs) techLogs = data.techLogs;
+                    if (data.opsShifts) opsShifts = data.opsShifts;
+                    if (data.safetyShifts) safetyShifts = data.safetyShifts;
+                    if (data.tomShifts) tomShifts = data.tomShifts;
+                    if (data.techShifts) techShifts = data.techShifts;
+                    if (data.techActions) techActions = data.techActions;
+                    if (data.opsActions) opsActions = data.opsActions;
+                    if (data.safetyActions) safetyActions = data.safetyActions;
+                    if (data.tomActions) tomActions = data.tomActions;
                     syncStatus.innerText = "Loaded from Firebase";
                     localStorage.setItem("cached_layout", JSON.stringify(data));
                 } else {
@@ -729,7 +895,12 @@
                 }
                 populateCategoryDropdowns();
                 populateParentAssetDropdown();
-                renderShiftLogs();
+                populateAllShiftDropdowns();
+                renderAllActionLists();
+                renderShiftLogs('tech', document.getElementById('techFilterSelect').value);
+                renderShiftLogs('ops', document.getElementById('shiftFilterSelect').value);
+                renderShiftLogs('safety', document.getElementById('safetyFilterSelect').value);
+                renderShiftLogs('tom', document.getElementById('tomFilterSelect').value);
                 render();
             } catch (error) {
                 console.error("Error loading layout:", error);
@@ -739,6 +910,9 @@
                     if (parsed.elements) elements = parsed.elements;
                     if (parsed.categories) categories = parsed.categories;
                     if (parsed.shiftLogs) shiftLogs = parsed.shiftLogs;
+                    if (parsed.safetyLogs) safetyLogs = parsed.safetyLogs;
+                    if (parsed.tomLogs) tomLogs = parsed.tomLogs;
+                    if (parsed.techLogs) techLogs = parsed.techLogs;
                     syncStatus.innerText = "Offline Mode (Cached)";
                 } else {
                     syncStatus.innerText = "Error Loading Database";
@@ -746,10 +920,12 @@
                 syncStatus.style.color = "#f59e0b";
                 populateCategoryDropdowns();
                 populateParentAssetDropdown();
-                renderShiftLogs();
+                populateAllShiftDropdowns();
+                renderAllActionLists();
                 render();
             }
         }
+
         async function saveToFirebase() {
             try {
                 syncStatus.innerText = "Saving...";
@@ -758,6 +934,17 @@
                     elements: elements,
                     categories: categories,
                     shiftLogs: shiftLogs,
+                    safetyLogs: safetyLogs,
+                    tomLogs: tomLogs,
+                    techLogs: techLogs,
+                    opsShifts: opsShifts,
+                    safetyShifts: safetyShifts,
+                    tomShifts: tomShifts,
+                    techShifts: techShifts,
+                    techActions: techActions,
+                    opsActions: opsActions,
+                    safetyActions: safetyActions,
+                    tomActions: tomActions,
                     updatedAt: new Date().toISOString()
                 };
                 localStorage.setItem("cached_layout", JSON.stringify(layoutObject));
@@ -770,16 +957,328 @@
                 syncStatus.style.color = "#f59e0b";
             }
         }
+
+        window.addShiftLog = function(category) {
+            let shiftSelectId = category === 'safety' ? 'safetyShiftName' : (category === 'tom' ? 'tomShiftName' : (category === 'tech' ? 'techShiftName' : 'shiftName'));
+            let textInputId = category === 'safety' ? 'safetyLogText' : (category === 'tom' ? 'tomLogText' : (category === 'tech' ? 'techLogText' : 'shiftLogText'));
+            let filterSelectId = category === 'safety' ? 'safetyFilterSelect' : (category === 'tom' ? 'tomFilterSelect' : (category === 'tech' ? 'techFilterSelect' : 'shiftFilterSelect'));
+
+            let shift = document.getElementById(shiftSelectId).value;
+            let note = document.getElementById(textInputId).value.trim();
+            if (!note) {
+                alert("Please enter handover notes.");
+                return;
+            }
+            let timestamp = new Date().toISOString().replace('T', ' ').slice(0, 16);
+            let entry = { time: timestamp, shift: shift, note: note };
+
+            if (category === 'safety') safetyLogs.unshift(entry);
+            else if (category === 'tom') tomLogs.unshift(entry);
+            else if (category === 'tech') techLogs.unshift(entry);
+            else shiftLogs.unshift(entry);
+
+            document.getElementById(textInputId).value = "";
+            let currentFilter = document.getElementById(filterSelectId).value;
+            renderShiftLogs(category, currentFilter);
+            saveToFirebase();
+        };
+
+        function populateAllShiftDropdowns() {
+            populateDropdownForCategory('tech', 'techShiftName', 'techFilterSelect');
+            populateDropdownForCategory('ops', 'shiftName', 'shiftFilterSelect');
+            populateDropdownForCategory('safety', 'safetyShiftName', 'safetyFilterSelect');
+            populateDropdownForCategory('tom', 'tomShiftName', 'tomFilterSelect');
+        }
+
+        function populateDropdownForCategory(cat, nameSelectId, filterSelectId) {
+            let selectName = document.getElementById(nameSelectId);
+            let selectFilter = document.getElementById(filterSelectId);
+            if (!selectName || !selectFilter) return;
+
+            let list = cat === 'safety' ? safetyShifts : (cat === 'tom' ? tomShifts : (cat === 'tech' ? techShifts : opsShifts));
+            let currentNameVal = selectName.value;
+            let currentFilterVal = selectFilter.value;
+
+            selectName.innerHTML = "";
+            selectFilter.innerHTML = '<option value="ALL">All Shifts</option>';
+
+            list.forEach(s => {
+                let opt1 = document.createElement("option");
+                opt1.value = s;
+                opt1.textContent = s;
+                selectName.appendChild(opt1);
+
+                let opt2 = document.createElement("option");
+                opt2.value = s;
+                opt2.textContent = s;
+                selectFilter.appendChild(opt2);
+            });
+
+            if (list.includes(currentNameVal)) selectName.value = currentNameVal;
+            if (currentFilterVal === "ALL" || list.includes(currentFilterVal)) selectFilter.value = currentFilterVal;
+        }
+
+        window.openShiftManagerModal = function(cat) {
+            activeShiftCategory = cat;
+            let titleMap = { tech: '⚙️ Manage Tech Shifts', ops: '⚙️ Manage Operations Shifts', safety: '⚙️ Manage Safety Shifts', tom: '⚙️ Manage Tom Team Shifts' };
+            document.getElementById("shiftModalTitle").innerText = titleMap[cat] || '⚙️ Manage Shifts';
+            renderShiftTable();
+            document.getElementById("shift-manager-modal-overlay").style.display = "flex";
+        };
+
+        window.closeShiftManagerModal = function() {
+            document.getElementById("shift-manager-modal-overlay").style.display = "none";
+            populateAllShiftDropdowns();
+            saveToFirebase();
+        };
+
+        function renderShiftTable() {
+            let tbody = document.getElementById("shiftTableBody");
+            if (!tbody) return;
+            tbody.innerHTML = "";
+            let list = activeShiftCategory === 'safety' ? safetyShifts : (activeShiftCategory === 'tom' ? tomShifts : (activeShiftCategory === 'tech' ? techShifts : opsShifts));
+
+            list.forEach((shiftName, index) => {
+                let tr = document.createElement("tr");
+                let tdName = document.createElement("td");
+                let inputName = document.createElement("input");
+                inputName.type = "text";
+                inputName.value = shiftName;
+                inputName.oninput = function() {
+                    list[index] = inputName.value.trim();
+                    populateAllShiftDropdowns();
+                };
+                tdName.appendChild(inputName);
+
+                let tdAction = document.createElement("td");
+                tdAction.style.textAlign = "center";
+                let delBtn = document.createElement("button");
+                delBtn.className = "danger";
+                delBtn.style.padding = "2px 6px";
+                delBtn.style.fontSize = "10px";
+                delBtn.style.minHeight = "auto";
+                delBtn.innerText = "X";
+                delBtn.onclick = function() {
+                    if (list.length <= 1) {
+                        alert("You must keep at least one active shift.");
+                        return;
+                    }
+                    list.splice(index, 1);
+                    renderShiftTable();
+                    populateAllShiftDropdowns();
+                };
+                tdAction.appendChild(delBtn);
+                tr.appendChild(tdName);
+                tr.appendChild(tdAction);
+                tbody.appendChild(tr);
+            });
+        }
+
+        window.addNewShift = function() {
+            let input = document.getElementById("newShiftInput");
+            let val = input.value.trim();
+            if (!val) {
+                alert("Please enter a shift designation.");
+                return;
+            }
+            let list = activeShiftCategory === 'safety' ? safetyShifts : (activeShiftCategory === 'tom' ? tomShifts : (activeShiftCategory === 'tech' ? techShifts : opsShifts));
+            if (list.includes(val)) {
+                alert("This shift already exists.");
+                return;
+            }
+            list.push(val);
+            input.value = "";
+            renderShiftTable();
+            populateAllShiftDropdowns();
+        };
+
+        window.filterShiftLogs = function(cat, selectedShift) {
+            renderShiftLogs(cat, selectedShift);
+        };
+
+        function renderShiftLogs(cat, filterShift = "ALL") {
+            let containerId = cat === 'safety' ? 'safetyLogContainer' : (cat === 'tom' ? 'tomLogContainer' : (cat === 'tech' ? 'techLogContainer' : 'shiftLogContainer'));
+            let box = document.getElementById(containerId);
+            if (!box) return;
+            box.innerHTML = "";
+
+            let logsToDisplay = cat === 'safety' ? safetyLogs : (cat === 'tom' ? tomLogs : (cat === 'tech' ? techLogs : shiftLogs));
+            if (filterShift && filterShift !== "ALL") {
+                logsToDisplay = logsToDisplay.filter(s => s.shift === filterShift);
+            }
+
+            if (!logsToDisplay || logsToDisplay.length === 0) {
+                box.innerHTML = `<span style="color:#64748b; font-style:italic;">No handover entries found for ${filterShift}.</span>`;
+                return;
+            }
+
+            logsToDisplay.forEach(s => {
+                let div = document.createElement("div");
+                div.className = "note-entry";
+                div.innerHTML = `<span class="note-timestamp">[${s.time}] ${s.shift}:</span> ${s.note}`;
+                box.appendChild(div);
+            });
+        }
+
+        /* ACTION ITEM TRACKER FUNCTIONS */
+        function getActionList(cat) {
+            if (cat === 'safety') return safetyActions;
+            if (cat === 'tom') return tomActions;
+            if (cat === 'tech') return techActions;
+            return opsActions;
+        }
+
+        window.addActionItem = function(cat) {
+            let inputId = cat === 'safety' ? 'newSafetyActionText' : (cat === 'tom' ? 'newTomActionText' : (cat === 'tech' ? 'newTechActionText' : 'newOpsActionText'));
+            let input = document.getElementById(inputId);
+            let text = input.value.trim();
+            if (!text) return;
+            let list = getActionList(cat);
+            list.push({ text, done: false });
+            input.value = "";
+            renderActionList(cat);
+            saveToFirebase();
+        };
+
+        window.toggleActionItem = function(cat, index, checked) {
+            let list = getActionList(cat);
+            if (list[index]) {
+                list[index].done = checked;
+                renderActionList(cat);
+                saveToFirebase();
+            }
+        };
+
+        window.deleteActionItem = function(cat, index) {
+            let list = getActionList(cat);
+            list.splice(index, 1);
+            renderActionList(cat);
+            saveToFirebase();
+        };
+
+        function renderAllActionLists() {
+            renderActionList('tech');
+            renderActionList('ops');
+            renderActionList('safety');
+            renderActionList('tom');
+        }
+
+        function renderActionList(cat) {
+            let containerId = cat === 'safety' ? 'safetyActionList' : (cat === 'tom' ? 'tomActionList' : (cat === 'tech' ? 'techActionList' : 'opsActionList'));
+            let box = document.getElementById(containerId);
+            if (!box) return;
+            box.innerHTML = "";
+            let list = getActionList(cat);
+            if (list.length === 0) {
+                box.innerHTML = `<span style="color:#64748b; font-style:italic; font-size:10px;">No pending action items.</span>`;
+                return;
+            }
+            list.forEach((item, idx) => {
+                let div = document.createElement("div");
+                div.className = "action-item-row";
+                div.innerHTML = `<input type="checkbox" ${item.done ? 'checked' : ''} onchange="toggleActionItem('${cat}', ${idx}, this.checked)" style="width:auto; margin:0; min-height:auto;">
+                <span style="${item.done ? 'text-decoration: line-through; color: #64748b;' : 'color: #fff;'} flex:1;">${item.text}</span>
+                <button onclick="deleteActionItem('${cat}', ${idx})" class="danger" style="width:auto; padding:0 4px; font-size:9px; min-height:auto;">X</button>`;
+                box.appendChild(div);
+            });
+        }
+
+        /* PRINT HANDOVER REPORT FUNCTION */
+        window.printHandoverReport = function(cat) {
+            let catName = cat === 'safety' ? 'Safety' : (cat === 'tom' ? 'Tom Team' : (cat === 'tech' ? 'Maintenance Tech' : 'Operations'));
+            let filterSelectId = cat === 'safety' ? 'safetyFilterSelect' : (cat === 'tom' ? 'tomFilterSelect' : (cat === 'tech' ? 'techFilterSelect' : 'shiftFilterSelect'));
+            let selectedShift = document.getElementById(filterSelectId).value;
+            let logs = cat === 'safety' ? safetyLogs : (cat === 'tom' ? tomLogs : (cat === 'tech' ? techLogs : shiftLogs));
+            if (selectedShift !== 'ALL') logs = logs.filter(l => l.shift === selectedShift);
+            let actions = getActionList(cat);
+
+            let printWin = window.open('', '_blank');
+            printWin.document.write(`
+                <html><head><title>${catName} Shift Handover Summary</title>
+                <style>
+                    body { font-family: sans-serif; padding: 20px; color: #111; }
+                    h2 { color: #0284c7; border-bottom: 2px solid #0284c7; padding-bottom: 4px; }
+                    h3 { margin-top: 15px; color: #333; }
+                    .entry { border-bottom: 1px dashed #ccc; padding: 6px 0; font-size: 13px; }
+                    .timestamp { font-weight: bold; color: #0284c7; }
+                    ul { padding-left: 20px; }
+                </style></head><body>
+                <h2>📋 ${catName} Shift Handover Summary (${selectedShift})</h2>
+                <p><b>Generated:</b> ${new Date().toLocaleString()}</p>
+                <h3>Pending Action Items</h3>
+                <ul>${actions.map(a => `<li>[${a.done ? 'X' : ' '}] ${a.text}</li>`).join('') || '<li>None</li>'}</ul>
+                <h3>Shift Handover Notes</h3>
+                ${logs.map(l => `<div class="entry"><span class="timestamp">[${l.time}] ${l.shift}:</span> ${l.note}</div>`).join('') || '<p>No log entries found.</p>'}
+                </body></html>
+            `);
+            printWin.document.close();
+            printWin.focus();
+            setTimeout(() => { printWin.print(); }, 250);
+        };
+
+        /* EXPORT LOGS CSV FUNCTION */
+        window.exportShiftLogsCSV = function(cat) {
+            let catName = cat === 'safety' ? 'Safety' : (cat === 'tom' ? 'Tom_Team' : (cat === 'tech' ? 'Tech' : 'Ops'));
+            let logs = cat === 'safety' ? safetyLogs : (cat === 'tom' ? tomLogs : (cat === 'tech' ? techLogs : shiftLogs));
+            let csvRows = [["Timestamp", "Shift", "Note / Handover Entry"]];
+            logs.forEach(l => csvRows.push([`"${l.time}"`, `"${l.shift}"`, `"${(l.note || '').replace(/"/g, '""')}"`]));
+            let csvString = csvRows.map(row => row.join(",")).join("\n");
+            let blob = new Blob([csvString], { type: "text/csv" });
+            let url = URL.createObjectURL(blob);
+            let a = document.createElement("a");
+            a.href = url;
+            a.download = `${catName}_Shift_Logs_${new Date().toISOString().slice(0, 10)}.csv`;
+            a.click();
+            URL.revokeObjectURL(url);
+        };
+
+        /* PRINT ASSET QR CODE LABEL */
+        window.printAssetQrCode = function() {
+            let id = parseInt(document.getElementById("modalElementId").value);
+            let el = elements.find(item => item.id === id);
+            if (!el) return;
+            let rowLabel = getRowLabel(Math.floor(el.y));
+            let colNum = (el.x + 1).toFixed(1);
+
+            let qrWin = window.open('', '_blank');
+            qrWin.document.write(`
+                <html><head><title>Asset Label - ${el.name}</title>
+                <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"><\/script>
+                <style>
+                    body { font-family: sans-serif; text-align: center; padding: 20px; }
+                    .label-card { border: 3px solid #000; padding: 15px; width: 260px; margin: 0 auto; border-radius: 8px; }
+                    h3 { margin: 0 0 5px 0; font-size: 16px; }
+                    p { margin: 2px 0; font-size: 12px; }
+                    canvas { margin-top: 10px; }
+                </style></head><body>
+                <div class="label-card">
+                    <h3>${el.name}</h3>
+                    <p><b>Category:</b> ${el.category || 'N/A'}</p>
+                    <p><b>Location:</b> Row ${rowLabel}, Col ${colNum}</p>
+                    <p><b>ID:</b> ${el.id}</p>
+                    <canvas id="qrCanvas"></canvas>
+                </div>
+                <script>
+                    QRCode.toCanvas(document.getElementById('qrCanvas'), '${el.id}', { width: 140 }, function () {
+                        window.print();
+                    });
+                <\/script></body></html>
+            `);
+            qrWin.document.close();
+        };
+
         window.toggleQuickFilter = function(filterType) {
             activeQuickFilter = filterType;
             document.querySelectorAll('.filter-pill').forEach(btn => btn.classList.remove('active'));
             if (filterType === 'down') document.querySelector('.down-pill').classList.add('active');
             else if (filterType === 'pm_due') document.querySelector('.pm-pill').classList.add('active');
-            else if (filterType === 'water') document.querySelectorAll('.filter-pill')[2].classList.add('active');
-            else if (filterType === 'estop') document.querySelectorAll('.filter-pill')[3].classList.add('active');
+            else if (filterType === 'parts_needed') document.querySelectorAll('.filter-pill')[2].classList.add('active');
+            else if (filterType === 'water') document.querySelectorAll('.filter-pill')[3].classList.add('active');
+            else if (filterType === 'estop') document.querySelectorAll('.filter-pill')[4].classList.add('active');
             else document.getElementById('filterAllBtn').classList.add('active');
             render();
-        }
+        };
+
         window.openARModal = function() {
             document.getElementById("ar-modal-overlay").style.display = "flex";
             arQrCode = new Html5Qrcode("ar-video-container");
@@ -793,7 +1292,8 @@
                 },
                 (err) => {}
             ).catch(err => console.error("AR Camera error:", err));
-        }
+        };
+
         window.closeARModal = function() {
             if (arQrCode) {
                 arQrCode.stop().then(() => {
@@ -805,35 +1305,8 @@
             } else {
                 document.getElementById("ar-modal-overlay").style.display = "none";
             }
-        }
-        window.addShiftLog = function() {
-            let shift = document.getElementById("shiftName").value;
-            let note = document.getElementById("shiftLogText").value.trim();
-            if (!note) {
-                alert("Please enter handover notes.");
-                return;
-            }
-            let timestamp = new Date().toISOString().replace('T', ' ').slice(0, 16);
-            shiftLogs.unshift({ time: timestamp, shift: shift, note: note });
-            document.getElementById("shiftLogText").value = "";
-            renderShiftLogs();
-            saveToFirebase();
-        }
-        function renderShiftLogs() {
-            let box = document.getElementById("shiftLogContainer");
-            if (!box) return;
-            box.innerHTML = "";
-            if (shiftLogs.length === 0) {
-                box.innerHTML = `<span style="color:#64748b; font-style:italic;">No shift handover entries.</span>`;
-                return;
-            }
-            shiftLogs.forEach(s => {
-                let div = document.createElement("div");
-                div.className = "note-entry";
-                div.innerHTML = `<span class="note-timestamp">[${s.time}] ${s.shift}:</span> ${s.note}`;
-                box.appendChild(div);
-            });
-        }
+        };
+
         function populateCategoryDropdowns(selectedVal1 = null, selectedVal2 = null) {
             let select1 = document.getElementById("newAssetCategory");
             let select2 = document.getElementById("modalCategory");
@@ -854,6 +1327,7 @@
             if (val1 && categories.some(c => c.name === val1)) select1.value = val1;
             if (val2 && categories.some(c => c.name === val2)) select2.value = val2;
         }
+
         function populateParentAssetDropdown(selectedParentId = null) {
             let select = document.getElementById("modalParentAsset");
             select.innerHTML = '<option value="">None / Standalone Asset</option>';
@@ -865,15 +1339,18 @@
             });
             if (selectedParentId) select.value = selectedParentId;
         }
+
         function getCategoryColor(catName) {
             let found = categories.find(c => c.name === catName);
             return found ? found.color : "#38bdf8";
         }
+
         function getStatusColor(status) {
             if (status === 'maintenance') return "#f59e0b";
             if (status === 'down') return "#ef4444";
             return "#10b981";
         }
+
         function getPmAlertStatus(pmDueStr) {
             if (!pmDueStr) return 'none';
             let due = new Date(pmDueStr);
@@ -883,14 +1360,17 @@
             if (diffDays <= 7) return 'due_soon';
             return 'none';
         }
+
         window.handleSearch = function(val) {
             searchQuery = val.trim().toLowerCase();
             render();
-        }
+        };
+
         window.toggleHeatmap = function(checked) {
             showHeatmap = checked;
             render();
-        }
+        };
+
         window.openScannerModal = function() {
             document.getElementById("scanner-modal-overlay").style.display = "flex";
             html5QrCode = new Html5Qrcode("qr-reader");
@@ -904,7 +1384,8 @@
                 },
                 () => {}
             ).catch(err => console.error("Camera access error:", err));
-        }
+        };
+
         window.closeScannerModal = function() {
             if (html5QrCode) {
                 html5QrCode.stop().then(() => {
@@ -916,7 +1397,8 @@
             } else {
                 document.getElementById("scanner-modal-overlay").style.display = "none";
             }
-        }
+        };
+
         window.exportDataToCSV = function() {
             let csvRows = [["ID", "Name", "Type / Conveyance", "Category / Details", "Status", "PLC Node", "X / Vertex Info", "Y Info", "W / Details", "H"]];
             elements.forEach(el => {
@@ -937,17 +1419,20 @@
             a.download = `Facility_Inventory_${new Date().toISOString().slice(0, 10)}.csv`;
             a.click();
             URL.revokeObjectURL(url);
-        }
+        };
+
         window.openCategoryModal = function() {
             renderCategoryTable();
             document.getElementById("category-modal-overlay").style.display = "flex";
-        }
+        };
+
         window.closeCategoryModal = function() {
             document.getElementById("category-modal-overlay").style.display = "none";
             populateCategoryDropdowns();
             render();
             saveToFirebase();
-        }
+        };
+
         function renderCategoryTable() {
             let tbody = document.getElementById("categoryTableBody");
             tbody.innerHTML = "";
@@ -998,6 +1483,7 @@
                 tbody.appendChild(tr);
             });
         }
+
         window.addCategory = function() {
             let nameInput = document.getElementById("newCatName");
             let colorInput = document.getElementById("newCatColor");
@@ -1014,13 +1500,15 @@
             nameInput.value = "";
             renderCategoryTable();
             populateCategoryDropdowns();
-        }
+        };
+
         function getRowLabel(r) {
             if (r < 0) return "N" + Math.abs(r);
             let adjustedIndex = r;
             if (adjustedIndex >= 8) adjustedIndex += 1; 
             return String.fromCharCode(65 + adjustedIndex); 
         }
+
         window.switchLayer = function(layerName) {
             currentLayer = layerName;
             let layerButtons = [
@@ -1044,7 +1532,8 @@
             }
             selectedId = null;
             render();
-        }
+        };
+
         window.setMode = function(mode) {
             currentMode = mode;
             drawingLineState = null;
@@ -1064,19 +1553,28 @@
             container.style.cursor = (mode === 'pan' || mode === 'calc') ? 'crosshair' : 'default';
             selectedId = null;
             render();
-        }
+        };
+
         window.switchTab = function(tab) {
             currentTab = tab;
             document.getElementById("tabDeptBtn").classList.toggle("active", tab === 'dept');
             document.getElementById("tabLineBtn").classList.toggle("active", tab === 'line');
             document.getElementById("tabAssetBtn").classList.toggle("active", tab === 'asset');
+            document.getElementById("tabTechBtn").classList.toggle("active", tab === 'tech');
             document.getElementById("tabShiftBtn").classList.toggle("active", tab === 'shift');
+            document.getElementById("tabSafetyBtn").classList.toggle("active", tab === 'safety');
+            document.getElementById("tabTomBtn").classList.toggle("active", tab === 'tom');
+
             document.getElementById("panelDept").classList.toggle("active", tab === 'dept');
             document.getElementById("panelLine").classList.toggle("active", tab === 'line');
             document.getElementById("panelAsset").classList.toggle("active", tab === 'asset');
+            document.getElementById("panelTech").classList.toggle("active", tab === 'tech');
             document.getElementById("panelShift").classList.toggle("active", tab === 'shift');
+            document.getElementById("panelSafety").classList.toggle("active", tab === 'safety');
+            document.getElementById("panelTom").classList.toggle("active", tab === 'tom');
             if (tab === 'line') drawingLineState = null;
-        }
+        };
+
         window.startDrawingLine = function() {
             let name = document.getElementById("newLineName").value.trim();
             let conveyanceType = document.getElementById("newLineType").value;
@@ -1088,10 +1586,12 @@
             currentMode = 'draw_line';
             container.style.cursor = 'crosshair';
             alert("Click points on the map to create line bends. DOUBLE-CLICK anywhere to finish drawing.");
-        }
+        };
+
         function updateTransformString() {
             viewport.setAttribute("transform", `translate(${viewTransform.x}, ${viewTransform.y}) scale(${viewTransform.scale})`);
         }
+
         function render() {
             viewport.innerHTML = "";
             updateTransformString();
@@ -1114,6 +1614,7 @@
             siteLabel.textContent = "▼ 6500 W MT HOPE HWY — SURROUNDING SITE EARTHWORK & AUTOMATION FOOTPRINT";
             siteBackground.appendChild(siteLabel);
             viewport.appendChild(siteBackground);
+
             for (let c = minCol; c <= maxCol; c++) {
                 let line = document.createElementNS("http://www.w3.org/2000/svg", "line");
                 line.setAttribute("x1", c * gridSize);
@@ -1146,6 +1647,7 @@
                 text.textContent = getRowLabel(r);
                 viewport.appendChild(text);
             }
+
             let buildingWall = document.createElementNS("http://www.w3.org/2000/svg", "rect");
             buildingWall.setAttribute("x", 0);
             buildingWall.setAttribute("y", 0);
@@ -1156,6 +1658,7 @@
             buildingWall.setAttribute("stroke", "#38bdf8");
             buildingWall.setAttribute("stroke-width", "2");
             viewport.appendChild(buildingWall);
+
             let layerTitleName = currentLayer.toUpperCase();
             let topLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
             topLabel.setAttribute("x", 0.5 * gridSize);
@@ -1173,7 +1676,7 @@
             bottomLabel.setAttribute("font-weight", "bold");
             bottomLabel.textContent = `NORTH WALL - ROW N ▼`;
             viewport.appendChild(bottomLabel);
-            // Draw Upstream/Downstream dependency lines
+
             elements.forEach(el => {
                 if (el.parentId) {
                     let parent = elements.find(p => p.id == el.parentId);
@@ -1194,7 +1697,7 @@
                     }
                 }
             });
-            // Draw Heatmap Overlay Circles if enabled
+
             if (showHeatmap) {
                 elements.forEach(el => {
                     let ticketCount = (el.workTickets || []).length;
@@ -1212,6 +1715,7 @@
                     }
                 });
             }
+
             let visibleElements = elements.filter(el => {
                 if (searchQuery) {
                     let matchesName = el.name.toLowerCase().includes(searchQuery);
@@ -1220,30 +1724,17 @@
                     let matchesPlc = el.plcNode && el.plcNode.toLowerCase().includes(searchQuery);
                     if (!matchesName && !matchesCat && !matchesId && !matchesPlc) return false;
                 }
-                // Quick-Filter Pill conditions
-                if (activeQuickFilter === 'down') {
-                    return el.status === 'down';
-                }
-                if (activeQuickFilter === 'pm_due') {
-                    return getPmAlertStatus(el.pmDue) === 'overdue';
-                }
-                if (activeQuickFilter === 'water') {
-                    return el.layer === 'water' || (el.category && el.category.toLowerCase().includes('water'));
-                }
-                if (activeQuickFilter === 'estop') {
-                    return el.estopZone || (el.category && el.category.toLowerCase().includes('safety'));
-                }
-                if (currentLayer === 'assets') {
-                    return el.type === 'asset' || el.type === 'conveyance_line';
-                }
-                if (currentLayer === 'conveyance') {
-                    return el.type === 'conveyance_line' || el.type === 'conveyance_run';
-                }
-                if (currentLayer === 'loto') {
-                    return el.type === 'asset' && el.category === 'LOTO Isolation';
-                }
+                if (activeQuickFilter === 'down') return el.status === 'down';
+                if (activeQuickFilter === 'pm_due') return getPmAlertStatus(el.pmDue) === 'overdue';
+                if (activeQuickFilter === 'parts_needed') return el.partsNeeded === true;
+                if (activeQuickFilter === 'water') return el.layer === 'water' || (el.category && el.category.toLowerCase().includes('water'));
+                if (activeQuickFilter === 'estop') return el.estopZone || (el.category && el.category.toLowerCase().includes('safety'));
+                if (currentLayer === 'assets') return el.type === 'asset' || el.type === 'conveyance_line';
+                if (currentLayer === 'conveyance') return el.type === 'conveyance_line' || el.type === 'conveyance_run';
+                if (currentLayer === 'loto') return el.type === 'asset' && el.category === 'LOTO Isolation';
                 return (el.layer || 'ground') === currentLayer;
             });
+
             visibleElements.forEach(el => {
                 let g = document.createElementNS("http://www.w3.org/2000/svg", "g");
                 g.setAttribute("class", "item-group");
@@ -1338,6 +1829,18 @@
                     emojiText.setAttribute("font-size", "10px");
                     emojiText.style.pointerEvents = "none";
                     emojiText.textContent = el.emoji || "📍";
+
+                    /* PARTS NEEDED MAP BADGE */
+                    if (el.partsNeeded) {
+                        let partsBadge = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                        partsBadge.setAttribute("x", cx - 12);
+                        partsBadge.setAttribute("y", cy - 7);
+                        partsBadge.setAttribute("font-size", "10px");
+                        partsBadge.style.pointerEvents = "none";
+                        partsBadge.textContent = "📦";
+                        g.appendChild(partsBadge);
+                    }
+
                     let popupGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
                     popupGroup.setAttribute("class", "asset-popup");
                     let boxWidth = (el.name.length * 6.5) + 12;
@@ -1424,6 +1927,7 @@
                 }
             }
         }
+
         function getCanvasLocalCoords(clientX, clientY) {
             let rect = container.getBoundingClientRect();
             let mouseX = clientX - rect.left;
@@ -1437,6 +1941,7 @@
                 rawY: localY
             };
         }
+
         function handlePointerMove(clientX, clientY) {
             let coords = getCanvasLocalCoords(clientX, clientY);
             let coordDisplay = document.getElementById("coord-display");
@@ -1445,6 +1950,7 @@
             let rowLabel = getRowLabel(rowIdx);
             coordDisplay.innerHTML = `Grid: <b>Row ${rowLabel}, Col ${preciseColNum}</b>`;
         }
+
         container.addEventListener("mousemove", (e) => {
             handlePointerMove(e.clientX, e.clientY);
             if (isPanning) {
@@ -1453,11 +1959,13 @@
                 render();
             }
         });
+
         function getTouchDistance(touches) {
             let dx = touches[0].clientX - touches[1].clientX;
             let dy = touches[0].clientY - touches[1].clientY;
             return Math.sqrt(dx * dx + dy * dy);
         }
+
         container.addEventListener("touchstart", (e) => {
             if (e.touches.length === 2) {
                 isPanning = false;
@@ -1494,6 +2002,7 @@
                 }
             }
         }, { passive: false });
+
         container.addEventListener("touchmove", (e) => {
             if (e.touches.length === 2 && initialPinchDistance) {
                 e.preventDefault();
@@ -1518,10 +2027,12 @@
                 render();
             }
         }, { passive: false });
+
         container.addEventListener("touchend", (e) => {
             if (e.touches.length < 2) initialPinchDistance = null;
             if (e.touches.length === 0) isPanning = false;
         });
+
         container.addEventListener("wheel", (e) => {
             e.preventDefault();
             let zoomIntensity = 0.1;
@@ -1538,6 +2049,7 @@
             viewTransform.y = mouseY - (mouseY - viewTransform.y) * (viewTransform.scale / oldScale);
             render();
         }, { passive: false });
+
         container.addEventListener("mousedown", (e) => {
             if (currentMode === 'pan') {
                 isPanning = true;
@@ -1567,6 +2079,7 @@
                 render();
             }
         });
+
         container.addEventListener("dblclick", () => {
             if (currentMode === 'draw_line' && drawingLineState && drawingLineState.points.length >= 2) {
                 let newLine = {
@@ -1588,6 +2101,7 @@
                 alert("Conveyance line with bends created successfully!");
             }
         });
+
         window.addEventListener("mouseup", () => {
             if (isPanning) {
                 isPanning = false;
@@ -1598,6 +2112,7 @@
                 saveToFirebase();
             }
         });
+
         function startDragVertex(e, lineId, vertexIndex) {
             draggingVertex = { lineId, vertexIndex };
             let lineEl = elements.find(el => el.id === lineId);
@@ -1637,6 +2152,7 @@
             window.addEventListener("touchmove", onMove);
             window.addEventListener("touchend", onEnd);
         }
+
         function startDragElement(e, el) {
             selectedId = el.id;
             isDraggingElement = true;
@@ -1675,11 +2191,14 @@
             window.addEventListener("touchend", onMouseUp);
             render();
         }
+
         function openModal(el) {
             selectedId = el.id;
             document.getElementById("modalElementId").value = el.id;
             document.getElementById("modalTitle").innerText = `Edit: ${el.name}`;
             document.getElementById("modalName").value = el.name;
+            document.getElementById("modalPartsNeeded").checked = el.partsNeeded || false;
+
             if (el.type === 'conveyance_line') {
                 document.getElementById("modalCoordContainer").style.display = "none";
                 document.getElementById("modalSizeContainer").style.display = "none";
@@ -1750,11 +2269,13 @@
             document.getElementById("modal-overlay").style.display = "flex";
             render();
         }
+
         window.openManualUrl = function() {
             let url = document.getElementById("modalManualUrl").value;
             if (url) window.open(url, '_blank');
             else alert("No URL/Manual link entered.");
-        }
+        };
+
         function renderLotoChecklist(el) {
             let container = document.getElementById("lotoChecklistList");
             container.innerHTML = "";
@@ -1772,6 +2293,7 @@
                 container.appendChild(div);
             });
         }
+
         window.addLotoStep = function() {
             let id = parseInt(document.getElementById("modalElementId").value);
             let el = elements.find(item => item.id === id);
@@ -1784,7 +2306,8 @@
                 renderLotoChecklist(el);
                 saveToFirebase();
             }
-        }
+        };
+
         window.toggleLotoStep = function(index, checked) {
             let id = parseInt(document.getElementById("modalElementId").value);
             let el = elements.find(item => item.id === id);
@@ -1793,7 +2316,8 @@
                 renderLotoChecklist(el);
                 saveToFirebase();
             }
-        }
+        };
+
         window.deleteLotoStep = function(index) {
             let id = parseInt(document.getElementById("modalElementId").value);
             let el = elements.find(item => item.id === id);
@@ -1802,7 +2326,8 @@
                 renderLotoChecklist(el);
                 saveToFirebase();
             }
-        }
+        };
+
         function renderBomTable(el) {
             let tbody = document.getElementById("bomBody");
             tbody.innerHTML = "";
@@ -1848,6 +2373,7 @@
                 tbody.appendChild(tr);
             });
         }
+
         window.addBomRow = function() {
             let id = parseInt(document.getElementById("modalElementId").value);
             let el = elements.find(item => item.id === id);
@@ -1857,7 +2383,8 @@
                 renderBomTable(el);
                 saveToFirebase();
             }
-        }
+        };
+
         function renderWorkTickets(el) {
             let box = document.getElementById("ticketsBox");
             box.innerHTML = "";
@@ -1874,6 +2401,7 @@
                 box.appendChild(div);
             });
         }
+
         window.addWorkTicket = function() {
             let id = parseInt(document.getElementById("modalElementId").value);
             let el = elements.find(item => item.id === id);
@@ -1886,7 +2414,8 @@
                 renderWorkTickets(el);
                 saveToFirebase();
             }
-        }
+        };
+
         window.resolveWorkTicket = function(index) {
             let id = parseInt(document.getElementById("modalElementId").value);
             let el = elements.find(item => item.id === id);
@@ -1895,18 +2424,21 @@
                 renderWorkTickets(el);
                 saveToFirebase();
             }
-        }
+        };
+
         window.closeModal = function() {
             document.getElementById("modal-overlay").style.display = "none";
             selectedId = null;
             render();
             saveToFirebase();
-        }
+        };
+
         window.saveModalLiveChanges = function() {
             let id = parseInt(document.getElementById("modalElementId").value);
             let el = elements.find(item => item.id === id);
             if (el) {
                 el.name = document.getElementById("modalName").value;
+                el.partsNeeded = document.getElementById("modalPartsNeeded").checked;
                 if (el.type !== 'conveyance_line') {
                     el.x = parseFloat(document.getElementById("modalX").value) || 0;
                     el.y = parseFloat(document.getElementById("modalY").value) || 0;
@@ -1935,7 +2467,8 @@
                 document.getElementById("modalTitle").innerText = `Edit: ${el.name}`;
                 render();
             }
-        }
+        };
+
         window.handlePhotoUpload = async function(event) {
             let id = parseInt(document.getElementById("modalElementId").value);
             let el = elements.find(item => item.id === id);
@@ -1965,7 +2498,8 @@
             }
             statusSpan.innerText = "";
             event.target.value = "";
-        }
+        };
+
         function renderPhotos(el) {
             let gallery = document.getElementById("modalPhotoGallery");
             gallery.innerHTML = "";
@@ -1991,14 +2525,17 @@
                 gallery.appendChild(containerDiv);
             });
         }
+
         window.openLightbox = function(url, itemName) {
             document.getElementById("lightboxImage").src = url;
             document.getElementById("lightboxCaption").innerText = itemName || "Photo Preview";
             document.getElementById("lightbox-overlay").style.display = "flex";
-        }
+        };
+
         window.closeLightbox = function() {
             document.getElementById("lightbox-overlay").style.display = "none";
-        }
+        };
+
         function renderSpreadsheet(el) {
             let tbody = document.getElementById("spreadsheetBody");
             tbody.innerHTML = "";
@@ -2037,6 +2574,7 @@
                 tbody.appendChild(tr);
             });
         }
+
         window.addSpreadsheetRow = function() {
             let id = parseInt(document.getElementById("modalElementId").value);
             let el = elements.find(item => item.id === id);
@@ -2046,7 +2584,8 @@
                 renderSpreadsheet(el);
                 saveToFirebase();
             }
-        }
+        };
+
         window.deleteItemFromModal = function() {
             let id = parseInt(document.getElementById("modalElementId").value);
             if (confirm("Are you sure you want to delete this item?")) {
@@ -2054,7 +2593,8 @@
                 closeModal();
                 saveToFirebase();
             }
-        }
+        };
+
         window.addDepartment = function() {
             let newEl = {
                 id: Date.now(),
@@ -2071,7 +2611,8 @@
             elements.push(newEl);
             render();
             saveToFirebase();
-        }
+        };
+
         window.addAsset = function() {
             let newEl = {
                 id: Date.now(),
@@ -2083,14 +2624,15 @@
                 emoji: document.getElementById("newAssetEmoji").value || "📍",
                 x: parseFloat(document.getElementById("newAssetX").value) || 0,
                 y: parseFloat(document.getElementById("newAssetY").value) || 0,
-                parentId: "", plcNode: "", manualUrl: "", runHours: "", temp: "", vibration: "", lube: "", utilityDraw: "", estopZone: "", vendorName: "", vendorContact: "",
+                partsNeeded: false, parentId: "", plcNode: "", manualUrl: "", runHours: "", temp: "", vibration: "", lube: "", utilityDraw: "", estopZone: "", vendorName: "", vendorContact: "",
                 lotoSteps: [], spareParts: [], workTickets: [], lastInspect: "", pmDue: "", photos: [],
                 spreadsheetData: [{key: "Asset Type", value: "Automation System Node"}]
             };
             elements.push(newEl);
             render();
             saveToFirebase();
-        }
+        };
+
         loadFromFirebase();
     </script>
 </body>
