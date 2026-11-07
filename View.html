@@ -310,7 +310,20 @@
         </div>
         <div id="panelShift" class="panel">
             <h3>📝 Technician Shift Handover Log</h3>
-            <div style="margin-bottom: 6px;">
+            <div>
+                <label>Shift Designation</label>
+                <select id="shiftName">
+                    <option value="FHD">FHD</option>
+                    <option value="BHD">BHD</option>
+                    <option value="FHN">FHN</option>
+                    <option value="BHN">BHN</option>
+                    <option value="BBM">BBM</option>
+                </select>
+                <label>Handover Note / Parts Waiting in Cage</label>
+                <textarea id="shiftLogText" placeholder="Detailed handoff notes, jams, or parts set aside in cage..." style="height:70px;"></textarea>
+                <button onclick="addShiftLog()" style="margin-top: 6px; background:#0284c7; color:#fff;">+ Post Handover Entry</button>
+            </div>
+            <div style="margin-top: 8px; margin-bottom: 6px;">
                 <label>Filter/Select Shift Log View</label>
                 <select id="shiftFilterSelect" onchange="filterShiftLogs(this.value)">
                     <option value="ALL">All Shifts</option>
@@ -495,7 +508,7 @@
     <!-- Firebase SDK Imports -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
         
         const firebaseConfig = {
             apiKey: "AIzaSyCrKAut8_5nHWTWtYqZZr5HOENGd8mqZxE",
@@ -574,7 +587,8 @@
                 } else {
                     syncStatus.innerText = "No Data Found";
                 }
-                renderShiftLogs();
+                let currentFilter = document.getElementById("shiftFilterSelect").value;
+                renderShiftLogs(currentFilter);
                 render();
             } catch (error) {
                 console.error("Error loading layout:", error);
@@ -583,6 +597,43 @@
                 render();
             }
         }
+
+        async function saveToFirebase() {
+            try {
+                syncStatus.innerText = "Saving...";
+                syncStatus.style.color = "#fbbf24";
+                let layoutObject = {
+                    elements: elements,
+                    categories: categories,
+                    shiftLogs: shiftLogs,
+                    updatedAt: new Date().toISOString()
+                };
+                localStorage.setItem("cached_layout", JSON.stringify(layoutObject));
+                await setDoc(doc(db, "layouts", "facility_main"), layoutObject);
+                syncStatus.innerText = "Connected (View Only)";
+                syncStatus.style.color = "#10b981";
+            } catch (error) {
+                console.error("Error saving handover note:", error);
+                syncStatus.innerText = "Error Saving";
+                syncStatus.style.color = "#ef4444";
+            }
+        }
+
+        window.addShiftLog = function() {
+            let shift = document.getElementById("shiftName").value;
+            let note = document.getElementById("shiftLogText").value.trim();
+            if (!note) {
+                alert("Please enter handover notes.");
+                return;
+            }
+            let timestamp = new Date().toISOString().replace('T', ' ').slice(0, 16);
+            shiftLogs.unshift({ time: timestamp, shift: shift, note: note });
+            document.getElementById("shiftLogText").value = "";
+            let currentFilter = document.getElementById("shiftFilterSelect").value;
+            renderShiftLogs(currentFilter);
+            saveToFirebase();
+        };
+
         window.toggleQuickFilter = function(filterType) {
             activeQuickFilter = filterType;
             document.querySelectorAll('.filter-pill').forEach(btn => btn.classList.remove('active'));
