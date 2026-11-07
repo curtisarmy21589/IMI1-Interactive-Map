@@ -2,77 +2,30 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Facility Layout Viewer - View Only</title>
-    <!-- Mobile PWA & App Manifest Settings -->
+    <title>Facility Layout Viewer - View Only (APM & 3D Isometric)</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="theme-color" content="#0b131d">
-    <!-- html5-qrcode for live camera barcode scanning & AR view -->
     <script src="https://unpkg.com/html5-qrcode"></script>
     <style>
-        * {
-            box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
-        }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body {
-            background-color: #0b131d;
-            color: #e0e1dd;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            margin: 0;
-            display: flex;
-            height: 100vh;
-            height: 100dvh;
-            overflow: hidden;
-            touch-action: none;
+            background-color: #0b131d; color: #e0e1dd; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            margin: 0; display: flex; height: 100vh; height: 100dvh; overflow: hidden; touch-action: none;
         }
         #sidebar {
-            width: 360px;
-            background-color: #111b27;
-            padding: 15px;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            box-shadow: 2px 0 10px rgba(0,0,0,0.7);
-            z-index: 20;
-            overflow-y: auto;
-            border-right: 1px solid #1f2d3d;
-            -webkit-overflow-scrolling: touch;
-            transition: transform 0.3s ease;
+            width: 360px; background-color: #111b27; padding: 15px; display: flex; flex-direction: column; gap: 12px;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.7); z-index: 20; overflow-y: auto; border-right: 1px solid #1f2d3d;
+            -webkit-overflow-scrolling: touch; transition: transform 0.3s ease;
         }
         #mobile-nav-toggle {
-            display: none;
-            background: #111b27;
-            border-bottom: 1px solid #1f2d3d;
-            padding: 10px 15px;
-            z-index: 30;
-            justify-content: space-between;
-            align-items: center;
+            display: none; background: #111b27; border-bottom: 1px solid #1f2d3d; padding: 10px 15px; z-index: 30; justify-content: space-between; align-items: center;
         }
-        #mobile-nav-toggle h2 {
-            margin: 0;
-            font-size: 16px;
-            color: #38bdf8;
-        }
-        .toggle-btn {
-            background: #0284c7;
-            color: #fff;
-            border: none;
-            padding: 6px 12px;
-            border-radius: 4px;
-            font-weight: bold;
-            font-size: 12px;
-            cursor: pointer;
-            width: auto;
-        }
+        #mobile-nav-toggle h2 { margin: 0; font-size: 16px; color: #38bdf8; }
+        .toggle-btn { background: #0284c7; color: #fff; border: none; padding: 6px 12px; border-radius: 4px; font-weight: bold; font-size: 12px; cursor: pointer; width: auto; }
         @media (max-width: 768px) {
             body { flex-direction: column; }
             #mobile-nav-toggle { display: flex; }
-            #sidebar { 
-                width: 100%; 
-                max-height: 50vh; 
-                border-right: none; 
-                border-bottom: 1px solid #1f2d3d;
-                box-shadow: 0 4px 10px rgba(0,0,0,0.5);
-            }
+            #sidebar { width: 100%; max-height: 50vh; border-right: none; border-bottom: 1px solid #1f2d3d; }
             #sidebar.collapsed { display: none; }
             #canvas-container { height: 100%; flex-grow: 1; }
         }
@@ -80,169 +33,82 @@
         h4 { color: #f59e0b; font-size: 12px; margin-top: 8px; border-bottom: 1px solid #1f2d3d; padding-bottom: 2px; }
         label { font-size: 11px; color: #94a3b8; }
         input, select, button, textarea {
-            width: 100%;
-            padding: 8px;
-            background: #0b131d;
-            border: 1px solid #38bdf8;
-            color: #fff;
-            border-radius: 4px;
-            box-sizing: border-box;
-            margin-top: 2px;
-            font-size: 12px;
-            min-height: 36px;
+            width: 100%; padding: 8px; background: #0b131d; border: 1px solid #38bdf8; color: #fff; border-radius: 4px;
+            box-sizing: border-box; margin-top: 2px; font-size: 12px; min-height: 36px;
         }
-        textarea { resize: vertical; height: 50px; font-family: sans-serif; }
-        button {
-            background: #1e293b;
-            font-weight: bold;
-            cursor: pointer;
-            transition: background 0.2s;
-            touch-action: manipulation;
-        }
+        button { background: #1e293b; font-weight: bold; cursor: pointer; transition: background 0.2s; touch-action: manipulation; }
         button:hover, button:active { background: #38bdf8; color: #0b131d; }
         .layer-btn {
-            flex: 1;
-            padding: 6px 4px;
-            background: #070d14;
-            border: 1px solid #1e293b;
-            color: #94a3b8;
-            font-size: 10px;
-            cursor: pointer;
-            border-radius: 4px;
-            text-align: center;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 32px;
+            flex: 1; padding: 6px 4px; background: #070d14; border: 1px solid #1e293b; color: #94a3b8; font-size: 10px;
+            cursor: pointer; border-radius: 4px; text-align: center; display: flex; align-items: center; justify-content: center; min-height: 32px;
         }
-        .layer-btn.active {
-            background: #0284c7;
-            color: #fff;
-            border-color: #38bdf8;
-            font-weight: bold;
-        }
+        .layer-btn.active { background: #0284c7; color: #fff; border-color: #38bdf8; font-weight: bold; }
         .tab-bar { display: flex; gap: 4px; margin-bottom: 5px; }
-        .tab-btn {
-            flex: 1; padding: 6px 2px; background: #070d14; border: 1px solid #1e293b; color: #94a3b8; font-size: 9.5px; cursor: pointer; border-radius: 4px; text-align: center; min-height: 34px;
-        }
+        .tab-btn { flex: 1; padding: 6px 2px; background: #070d14; border: 1px solid #1f2d3d; color: #94a3b8; font-size: 9.5px; cursor: pointer; border-radius: 4px; text-align: center; min-height: 34px; }
         .tab-btn.active { background: #1e293b; color: #38bdf8; border-color: #38bdf8; }
         .panel { display: none; }
         .panel.active { display: flex; flex-direction: column; gap: 8px; }
 
-        /* EMERGENCY QUICK-FILTER FLOATING BAR */
         #quick-filter-bar {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            z-index: 10;
-            display: flex;
-            gap: 6px;
-            flex-wrap: wrap;
-            pointer-events: auto;
+            position: absolute; top: 10px; left: 10px; z-index: 10; display: flex; gap: 6px; flex-wrap: wrap; pointer-events: auto;
         }
         .filter-pill {
-            background: #111b27;
-            border: 1px solid #1f2d3d;
-            color: #94a3b8;
-            padding: 6px 10px;
-            border-radius: 20px;
-            font-size: 11px;
-            font-weight: bold;
-            cursor: pointer;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.4);
-            display: flex;
-            align-items: center;
-            gap: 4px;
+            background: #111b27; border: 1px solid #1f2d3d; color: #94a3b8; padding: 6px 10px; border-radius: 20px; font-size: 11px;
+            font-weight: bold; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.4); display: flex; align-items: center; gap: 4px;
         }
         .filter-pill.active { background: #0284c7; color: #fff; border-color: #38bdf8; }
         .filter-pill.down-pill.active { background: #7f1d1d; border-color: #ef4444; }
         .filter-pill.pm-pill.active { background: #b45309; border-color: #f59e0b; }
 
-        #canvas-container {
-            flex-grow: 1;
-            position: relative;
-            background-color: #070d14;
-            overflow: hidden;
-            cursor: grab;
-            touch-action: none;
-        }
+        #canvas-container { flex-grow: 1; position: relative; background-color: #070d14; overflow: hidden; cursor: grab; touch-action: none; }
         #canvas-container.panning { cursor: grabbing; }
         svg {
-            position: absolute;
-            top: 0; left: 0;
-            transform-origin: 0 0;
-            touch-action: none;
+            position: absolute; top: 0; left: 0; transform-origin: 0 0; touch-action: none;
+            transition: transform 0.5s ease;
         }
+        svg.isometric-view {
+            transform: perspective(1200px) rotateX(42deg) rotateZ(-30deg) scale(0.85);
+        }
+
         .item-group { cursor: pointer; touch-action: none; }
         .item-shape { transition: stroke 0.2s; }
         .item-group:hover .item-shape { stroke: #fff; }
-        .asset-popup {
-            opacity: 0;
-            transition: opacity 0.15s ease-in-out;
-            pointer-events: none;
-        }
+        .asset-popup { opacity: 0; transition: opacity 0.15s ease-in-out; pointer-events: none; }
         .item-group:hover .asset-popup { opacity: 1; }
         .grid-line { stroke: #132235; stroke-width: 1; pointer-events: none; }
         .coord-label { fill: #64748b; font-size: 9px; font-family: monospace; pointer-events: none; }
-        #coord-display {
-            background: #070d14; border: 1px solid #1e293b; padding: 6px; border-radius: 4px; font-family: monospace; color: #38bdf8; font-size: 12px; text-align: center;
-        }
-        #sync-status {
-            font-size: 10px; text-align: center; color: #10b981; font-weight: bold; margin-top: -4px;
-        }
+        #coord-display { background: #070d14; border: 1px solid #1f2d3d; padding: 6px; border-radius: 4px; font-family: monospace; color: #38bdf8; font-size: 12px; text-align: center; }
+        #sync-status { font-size: 10px; text-align: center; color: #10b981; font-weight: bold; margin-top: -4px; }
+        
         #modal-overlay, #lightbox-overlay, #scanner-modal-overlay, #ar-modal-overlay {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.85);
-            z-index: 1000;
-            justify-content: center;
-            align-items: center;
-            padding: 10px;
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.85); z-index: 1000; justify-content: center; align-items: center; padding: 10px;
         }
         #lightbox-overlay { z-index: 2000; }
         .modal-content {
-            background: #111b27;
-            border: 1px solid #38bdf8;
-            border-radius: 8px;
-            width: 720px;
-            max-width: 100%;
-            max-height: 92vh;
-            display: flex;
-            flex-direction: column;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.8);
-            overflow: hidden;
+            background: #111b27; border: 1px solid #38bdf8; border-radius: 8px; width: 720px; max-width: 100%; max-height: 92vh;
+            display: flex; flex-direction: column; box-shadow: 0 10px 25px rgba(0,0,0,0.8); overflow: hidden;
         }
-        .modal-header {
-            background: #0b131d; padding: 12px 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1f2d3d;
-        }
-        .modal-body {
-            padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; -webkit-overflow-scrolling: touch;
-        }
-        .modal-footer {
-            background: #0b131d; padding: 10px 15px; display: flex; justify-content: flex-end; gap: 8px; border-top: 1px solid #1f2d3d;
-        }
-        .close-modal {
-            background: none; border: none; color: #94a3b8; font-size: 24px; cursor: pointer; width: auto; padding: 0 8px; margin: 0;
-        }
+        .modal-header { background: #0b131d; padding: 12px 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1f2d3d; }
+        .modal-body { padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; -webkit-overflow-scrolling: touch; }
+        .modal-footer { background: #0b131d; padding: 10px 15px; display: flex; justify-content: flex-end; gap: 8px; border-top: 1px solid #1f2d3d; }
+        .close-modal { background: none; border: none; color: #94a3b8; font-size: 24px; cursor: pointer; width: auto; padding: 0 8px; margin: 0; }
         .close-modal:hover { color: #fff; background: none; }
         .spreadsheet-table { width: 100%; border-collapse: collapse; margin-top: 4px; }
         .spreadsheet-table th, .spreadsheet-table td { border: 1px solid #1f2d3d; padding: 6px; text-align: left; font-size: 11px; }
         .spreadsheet-table th { background: #0b131d; color: #38bdf8; }
         .spreadsheet-table input, .spreadsheet-table select { background: transparent; border: none; color: #fff; width: 100%; padding: 2px; margin: 0; min-height: 28px; }
         .photo-gallery { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px; }
-        .photo-thumb-container {
-            position: relative; width: 80px; height: 80px; border: 1px solid #1f2d3d; border-radius: 4px; overflow: hidden; background: #0b131d; cursor: pointer;
-        }
+        .photo-thumb-container { position: relative; width: 80px; height: 80px; border: 1px solid #1f2d3d; border-radius: 4px; overflow: hidden; background: #0b131d; cursor: pointer; }
         .photo-thumb-container img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.2s; }
-        .photo-thumb-container:hover img { transform: scale(1.05); }
         .notes-log-box { background: #070d14; border: 1px solid #1f2d3d; border-radius: 4px; padding: 8px; max-height: 110px; overflow-y: auto; font-size: 11px; display: flex; flex-direction: column; gap: 4px; }
         .note-entry { border-bottom: 1px dotted #1f2d3d; padding-bottom: 3px; }
         .note-timestamp { color: #38bdf8; font-size: 9px; font-weight: bold; }
-        @keyframes pmPulse { 0% { r: 7px; opacity: 1; } 50% { r: 12px; opacity: 0.3; } 100% { r: 7px; opacity: 1; } }
-        .pm-overdue-pulse { animation: pmPulse 1.5s infinite ease-in-out; stroke: #ef4444; stroke-width: 2; fill: none; }
-        .pm-due-pulse { animation: pmPulse 2s infinite ease-in-out; stroke: #f59e0b; stroke-width: 2; fill: none; }
-        .loto-step { display: flex; align-items: center; gap: 6px; font-size: 11px; border-bottom: 1px solid #1f2d3d; padding: 3px 0; }
+        @keyframes pmPulse { 0% { r: 7px; opacity: 1; } 50% { r: 14px; opacity: 0.2; } 100% { r: 7px; opacity: 1; } }
+        .pm-overdue-pulse { animation: pmPulse 1.5s infinite ease-in-out; stroke: #ef4444; stroke-width: 2.5; fill: none; }
+        .pm-due-pulse { animation: pmPulse 2s infinite ease-in-out; stroke: #f59e0b; stroke-width: 2.5; fill: none; }
+        @keyframes lotoTraceGlow { 0% { stroke: #a855f7; stroke-width: 3; opacity: 1; } 50% { stroke: #38bdf8; stroke-width: 6; opacity: 0.5; } 100% { stroke: #a855f7; stroke-width: 3; opacity: 1; } }
+        .loto-trace-line { animation: lotoTraceGlow 1.2s infinite ease-in-out; fill: none; stroke-dasharray: 8,4; }
     </style>
 </head>
 <body>
@@ -255,20 +121,24 @@
         <h2>Facility Viewer (View Only)</h2>
         
         <div>
-            <label>🔍 Asset Search / QR Scanner</label>
+            <label>🔍 Search APM Tag, Name, PLC</label>
             <div style="display: flex; gap: 4px;">
-                <input type="text" id="assetSearchInput" placeholder="Search Asset Name, Tag ID, PLC..." oninput="handleSearch(this.value)">
+                <input type="text" id="assetSearchInput" placeholder="Search APM Tag, Name..." oninput="handleSearch(this.value)">
                 <button onclick="openScannerModal()" style="width: auto; padding: 4px 10px; font-size: 11px;">📷 Scan</button>
             </div>
         </div>
         <div id="coord-display">Col: -- | Row: --</div>
         <div id="sync-status">Connected (View Only)</div>
         
-        <!-- HEATMAP OVERLAY TOGGLE -->
-        <div>
+        <!-- 3.5D ISOMETRIC TILT & HEATMAP TOGGLES -->
+        <div style="display: flex; flex-direction: column; gap: 6px; background: #070d14; padding: 8px; border: 1px solid #1f2d3d; border-radius: 4px;">
+            <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+                <input type="checkbox" id="isometricToggle" onchange="toggleIsometricView(this.checked)" style="width:auto; margin:0; min-height:auto;">
+                <span style="color:#38bdf8; font-weight:bold;">🌐 3.5D Isometric Tilt View</span>
+            </label>
             <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
                 <input type="checkbox" id="heatmapToggle" onchange="toggleHeatmap(this.checked)" style="width:auto; margin:0; min-height:auto;">
-                <span style="color:#f59e0b; font-weight:bold;">🔥 Show Downtime & Breakdown Heatmap</span>
+                <span style="color:#f59e0b; font-weight:bold;">🔥 Downtime & Breakdown Heatmap</span>
             </label>
         </div>
 
@@ -311,7 +181,7 @@
         </div>
         <div id="panelInfo" class="panel active">
             <p style="font-size: 10px; color: #64748b; margin: 0;">
-                💡 <b>Tip:</b> Tap any asset or zone to inspect details, specs, LOTO instructions, and photos. Pan by dragging with one finger, zoom using pinch or scroll wheel.
+                💡 <b>Tip:</b> Tap any asset to inspect APM specs, LOTO checklists, and photos. Pan with one finger, zoom with pinch.
             </p>
         </div>
         <div id="panelShift" class="panel">
@@ -339,34 +209,22 @@
     <div id="modal-overlay">
         <div class="modal-content">
             <div class="modal-header">
-                <h3 id="modalTitle" style="color: #38bdf8; margin: 0;">Item Details</h3>
+                <h3 id="modalTitle" style="color: #38bdf8; margin: 0;">Asset Details</h3>
                 <button class="close-modal" onclick="closeModal()">×</button>
             </div>
             <div class="modal-body">
                 <input type="hidden" id="modalElementId">
-                <div>
-                    <label>Item Name / Designation</label>
-                    <input type="text" id="modalName" disabled>
+                <div style="display: flex; gap: 6px;">
+                    <div style="flex: 2;"><label>Item Name / Designation</label><input type="text" id="modalName" disabled></div>
+                    <div style="flex: 1;"><label>APM Tag Number</label><input type="text" id="modalApmTag" disabled></div>
                 </div>
                 <div id="modalAssetFields" style="display: flex; gap: 6px; flex-wrap: wrap;">
-                    <div style="flex: 2; min-width: 140px;">
-                        <label>Asset Category</label>
-                        <input type="text" id="modalCategory" disabled>
-                    </div>
-                    <div style="flex: 2; min-width: 140px;">
-                        <label>Maintenance Status</label>
-                        <input type="text" id="modalStatus" disabled>
-                    </div>
+                    <div style="flex: 2; min-width: 140px;"><label>Asset Category</label><input type="text" id="modalCategory" disabled></div>
+                    <div style="flex: 2; min-width: 140px;"><label>Maintenance Status</label><input type="text" id="modalStatus" disabled></div>
                 </div>
                 <div id="modalDependencyContainer" style="display: flex; gap: 6px; flex-wrap: wrap;">
-                    <div style="flex: 1; min-width: 180px;">
-                        <label>Upstream Parent Asset / Power Source</label>
-                        <input type="text" id="modalParentAsset" disabled>
-                    </div>
-                    <div style="flex: 1; min-width: 180px;">
-                        <label>PLC Rack / EtherNet IP Drop / Node ID</label>
-                        <input type="text" id="modalPlcNode" disabled>
-                    </div>
+                    <div style="flex: 1; min-width: 180px;"><label>Upstream Parent Asset ID</label><input type="text" id="modalParentId" disabled></div>
+                    <div style="flex: 1; min-width: 180px;"><label>PLC Node ID</label><input type="text" id="modalPlcNode" disabled></div>
                 </div>
                 <div id="modalDocLinkContainer">
                     <label>Equipment Manual / Wiring Schematic (PDF Link)</label>
@@ -375,15 +233,25 @@
                         <button onclick="openManualUrl()" style="width: auto; padding: 4px 8px;">🔗 Open</button>
                     </div>
                 </div>
+
+                <!-- LOTO SIMULATION & ISOLATION TRACE -->
+                <div style="background: #070d14; border: 1px solid #38bdf8; padding: 10px; border-radius: 6px; display: flex; flex-direction: column; gap: 6px;">
+                    <h4 style="margin:0; color:#38bdf8;">⚡ LOTO Energy Isolation Simulation</h4>
+                    <p style="font-size: 11px; color:#94a3b8; margin:0;">Simulate zero-energy state verification by tracing connected upstream breakers and safety disconnects.</p>
+                    <button onclick="simulateLotoTrace()" style="background:#a855f7; color:#fff; border:none; padding:6px; font-weight:bold;">🔍 Trace LOTO Isolation Path on Map</button>
+                </div>
+
                 <div style="display: flex; gap: 6px;" id="modalCoordContainer">
                     <div style="flex:1;"><label>X Col</label><input type="number" id="modalX" disabled></div>
                     <div style="flex:1;"><label>Y Row</label><input type="number" id="modalY" disabled></div>
                 </div>
+
                 <!-- LOTO CHECKLIST -->
                 <div id="modalLotoContainer">
-                    <h4>🔒 Lockout/Tagout (LOTO) Sequence & ESWC Checklist</h4>
+                    <h4>🔒 Lockout/Tagout (LOTO) & ESWC Checklist</h4>
                     <div id="lotoChecklistList"></div>
                 </div>
+
                 <!-- PREVENTIVE MAINTENANCE & METERS -->
                 <h4>⏱️ Maintenance & Operating Meters</h4>
                 <div id="modalPmContainer" style="display: flex; gap: 6px; flex-wrap: wrap;">
@@ -391,26 +259,16 @@
                     <div style="flex:1; min-width: 130px;"><label>PM Due Date</label><input type="date" id="modalPmDue" disabled></div>
                     <div style="flex:1; min-width: 130px;"><label>Run Hours / Meter</label><input type="text" id="modalRunHours" disabled></div>
                 </div>
-                <!-- PREDICTIVE & LUBRICATION METRICS -->
+
+                <!-- PREDICTIVE & LUBRICATION -->
                 <h4>📊 Predictive Health & Lubrication</h4>
                 <div id="modalPredictiveContainer" style="display: flex; gap: 6px; flex-wrap: wrap;">
                     <div style="flex:1; min-width: 130px;"><label>Thermal Temp (°F)</label><input type="text" id="modalTemp" disabled></div>
                     <div style="flex:1; min-width: 130px;"><label>Vibration (in/s)</label><input type="text" id="modalVibration" disabled></div>
                     <div style="flex:1; min-width: 130px;"><label>Grease / Lube Type</label><input type="text" id="modalLube" disabled></div>
                 </div>
-                <!-- UTILITIES & SAFETY INTERLOCKS -->
-                <h4>⚡ Utilities & Safety Interlocks</h4>
-                <div id="modalUtilitiesContainer" style="display: flex; gap: 6px; flex-wrap: wrap;">
-                    <div style="flex:1; min-width: 130px;"><label>Amps/Cal</label><input type="text" id="modalUtilityDraw" disabled></div>
-                    <div style="flex:1; min-width: 130px;"><label>Safety / E-Stop Zone</label><input type="text" id="modalEstopZone" disabled></div>
-                </div>
-                <!-- VENDOR DIRECTORY -->
-                <h4>📞 OEM & Vendor Support Contact</h4>
-                <div id="modalVendorContainer" style="display: flex; gap: 6px;">
-                    <div style="flex:1;"><label>Vendor Name / Rep</label><input type="text" id="modalVendorName" disabled></div>
-                    <div style="flex:1;"><label>Contact Phone / Email</label><input type="text" id="modalVendorContact" disabled></div>
-                </div>
-                <!-- SPARE PARTS & BIN LOCATION -->
+
+                <!-- SPARE PARTS BOM -->
                 <div id="modalBomContainer">
                     <h4 style="margin-top: 6px;">📦 Spare Parts & Cage Bin Mapping</h4>
                     <table class="spreadsheet-table">
@@ -418,17 +276,19 @@
                             <tr>
                                 <th style="width: 35%;">Part Name</th>
                                 <th style="width: 35%;">Part # / SKU</th>
-                                <th style="width: 30%;">Bin / Shelf Location</th>
+                                <th style="width: 30%;">Bin / Shelf</th>
                             </tr>
                         </thead>
                         <tbody id="bomBody"></tbody>
                     </table>
                 </div>
-                <!-- BREAKDOWN WORK TICKETS -->
+
+                <!-- WORK TICKETS -->
                 <div id="modalTicketsContainer">
                     <h4 style="margin-top: 6px;">🛠️ Open Breakdown Tickets</h4>
                     <div class="notes-log-box" id="ticketsBox"></div>
                 </div>
+
                 <div>
                     <label>Location Photos (Click photo to enlarge)</label>
                     <div class="photo-gallery" id="modalPhotoGallery"></div>
@@ -452,7 +312,7 @@
         </div>
     </div>
 
-    <!-- AR LIVE CAMERA OVERLAY MODAL -->
+    <!-- AR FIELD CAMERA MODAL -->
     <div id="ar-modal-overlay">
         <div class="modal-content" style="width: 500px; height: 500px;">
             <div class="modal-header">
@@ -462,7 +322,7 @@
             <div class="modal-body" style="position: relative; padding: 0; background: #000; flex-grow: 1; display: flex; align-items: center; justify-content: center; overflow: hidden;">
                 <div id="ar-video-container" style="width: 100%; height: 100%;"></div>
                 <div style="position: absolute; top: 15px; left: 15px; background: rgba(17,27,39,0.85); border: 1px solid #38bdf8; padding: 8px 12px; border-radius: 6px; pointer-events: none;">
-                    <div style="color: #38bdf8; font-weight: bold; font-size: 11px;">Scan Asset Tag / Barcode</div>
+                    <div style="color: #38bdf8; font-weight: bold; font-size: 11px;">Scan APM Tag / Barcode</div>
                     <div style="color: #10b981; font-size: 10px;">Camera active for plant floor inspection</div>
                 </div>
             </div>
@@ -472,11 +332,11 @@
         </div>
     </div>
 
-    <!-- QR CAMERA SCANNER MODAL -->
+    <!-- QR SCANNER MODAL -->
     <div id="scanner-modal-overlay">
         <div class="modal-content" style="width: 450px;">
             <div class="modal-header">
-                <h3 style="color: #38bdf8; margin: 0;">📷 Scan Asset Barcode / QR Tag</h3>
+                <h3 style="color: #38bdf8; margin: 0;">📷 Scan APM Barcode / QR Tag</h3>
                 <button class="close-modal" onclick="closeScannerModal()">×</button>
             </div>
             <div class="modal-body">
@@ -489,12 +349,11 @@
     <div id="lightbox-overlay" onclick="closeLightbox()">
         <div style="position: relative; max-width: 90vw; max-height: 90vh; display: flex; flex-direction: column; align-items: center;" onclick="event.stopPropagation()">
             <button onclick="closeLightbox()" style="position: absolute; top: -35px; right: 0; background: none; border: none; color: #fff; font-size: 24px; cursor: pointer;">×</button>
-            <img id="lightboxImage" src="" style="max-width: 85vw; max-height: 80vh; object-fit: contain; border-radius: 4px; border: 1px solid #38bdf8; box-shadow: 0 10px 30px rgba(0,0,0,0.9);">
+            <img id="lightboxImage" src="" style="max-width: 85vw; max-height: 80vh; object-fit: contain; border-radius: 4px; border: 1px solid #38bdf8;">
             <div id="lightboxCaption" style="margin-top: 8px; color: #38bdf8; font-size: 13px; font-weight: bold;"></div>
         </div>
     </div>
 
-    <!-- Firebase SDK Imports -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
@@ -517,12 +376,14 @@
         const minRow = -6;
         const maxRow = 20;
         const buildingCols = 30; 
-        const buildingRows = 13; // Matched to main map code
+        const buildingRows = 13; 
         let currentLayer = 'ground'; 
         let currentTab = 'info';
         let searchQuery = '';
         let showHeatmap = false;
+        let isIsometric = false;
         let activeQuickFilter = 'all';
+        let activeLotoTraceId = null;
         let html5QrCode = null;
         let arQrCode = null;
 
@@ -590,6 +451,12 @@
             }
         }
 
+        window.toggleIsometricView = function(checked) {
+            isIsometric = checked;
+            if (checked) svg.classList.add("isometric-view");
+            else svg.classList.remove("isometric-view");
+        }
+
         window.toggleQuickFilter = function(filterType) {
             activeQuickFilter = filterType;
             document.querySelectorAll('.filter-pill').forEach(btn => btn.classList.remove('active'));
@@ -599,6 +466,14 @@
             else if (filterType === 'estop') document.querySelectorAll('.filter-pill')[3].classList.add('active');
             else document.getElementById('filterAllBtn').classList.add('active');
             render();
+        }
+
+        window.simulateLotoTrace = function() {
+            let elId = document.getElementById("modalElementId").value;
+            activeLotoTraceId = elId;
+            closeModal();
+            render();
+            syncStatus.innerText = "⚡ LOTO Zero-Energy Simulation Active";
         }
 
         window.openARModal = function() {
@@ -618,15 +493,8 @@
 
         window.closeARModal = function() {
             if (arQrCode) {
-                arQrCode.stop().then(() => {
-                    arQrCode.clear();
-                    document.getElementById("ar-modal-overlay").style.display = "none";
-                }).catch(() => {
-                    document.getElementById("ar-modal-overlay").style.display = "none";
-                });
-            } else {
-                document.getElementById("ar-modal-overlay").style.display = "none";
-            }
+                arQrCode.stop().then(() => { arQrCode.clear(); document.getElementById("ar-modal-overlay").style.display = "none"; }).catch(() => { document.getElementById("ar-modal-overlay").style.display = "none"; });
+            } else { document.getElementById("ar-modal-overlay").style.display = "none"; }
         }
 
         window.openScannerModal = function() {
@@ -646,15 +514,8 @@
 
         window.closeScannerModal = function() {
             if (html5QrCode) {
-                html5QrCode.stop().then(() => {
-                    html5QrCode.clear();
-                    document.getElementById("scanner-modal-overlay").style.display = "none";
-                }).catch(() => {
-                    document.getElementById("scanner-modal-overlay").style.display = "none";
-                });
-            } else {
-                document.getElementById("scanner-modal-overlay").style.display = "none";
-            }
+                html5QrCode.stop().then(() => { html5QrCode.clear(); document.getElementById("scanner-modal-overlay").style.display = "none"; }).catch(() => { document.getElementById("scanner-modal-overlay").style.display = "none"; });
+            } else { document.getElementById("scanner-modal-overlay").style.display = "none"; }
         }
 
         window.handleSearch = function(val) {
@@ -713,13 +574,9 @@
         }
 
         function getRowLabel(r) {
-            if (r < 0) {
-                return "N" + Math.abs(r);
-            }
+            if (r < 0) return "N" + Math.abs(r);
             let adjustedIndex = r;
-            if (adjustedIndex >= 8) {
-                adjustedIndex += 1; 
-            }
+            if (adjustedIndex >= 8) adjustedIndex += 1; 
             return String.fromCharCode(65 + adjustedIndex); 
         }
 
@@ -729,7 +586,7 @@
                 'layerGroundBtn', 'layerMezzBtn', 'layerRoofBtn', 
                 'layerUisBtn', 'layerAtrBtn', 'layerConveyanceBtn',
                 'layerSprinklerBtn', 'layerWaterBtn', 'layerGasBtn', 
-                'layerDockDoorsBtn', 'layerUnderMezzSprinklersBtn', 'layerHvacBtn', 'layerLotoBtn', 'layerAssetsBtn'
+                'layerDockDoorsBtn', 'layerHvacBtn', 'layerLotoBtn', 'layerAssetsBtn'
             ];
             layerButtons.forEach(btnId => {
                 let btn = document.getElementById(btnId);
@@ -739,8 +596,7 @@
                 'ground': 'layerGroundBtn', 'mezzanine': 'layerMezzBtn', 'roof': 'layerRoofBtn',
                 'uis_sorter': 'layerUisBtn', 'atr_retrieval': 'layerAtrBtn', 'conveyance': 'layerConveyanceBtn',
                 'sprinkler': 'layerSprinklerBtn', 'water': 'layerWaterBtn', 'gas': 'layerGasBtn',
-                'dock_doors': 'layerDockDoorsBtn', 'under_mezz_sprinklers': 'layerUnderMezzSprinklersBtn',
-                'hvac': 'layerHvacBtn', 'loto': 'layerLotoBtn', 'assets': 'layerAssetsBtn'
+                'dock_doors': 'layerDockDoorsBtn', 'hvac': 'layerHvacBtn', 'loto': 'layerLotoBtn', 'assets': 'layerAssetsBtn'
             };
             if (mapLayerToBtn[layerName] && document.getElementById(mapLayerToBtn[layerName])) {
                 document.getElementById(mapLayerToBtn[layerName]).classList.add("active");
@@ -774,11 +630,11 @@
             siteLabel.setAttribute("fill", "#854d0e");
             siteLabel.setAttribute("font-size", "12px");
             siteLabel.setAttribute("font-weight", "bold");
-            siteLabel.textContent = "▼ 6500 W MT HOPE HWY — SURROUNDING SITE EARTHWORK & AUTOMATION FOOTPRINT";
+            siteLabel.textContent = "▼ 6500 W MT HOPE HWY — SITE & APM DIGITAL TWIN INFRASTRUCTURE";
             siteBackground.appendChild(siteLabel);
             viewport.appendChild(siteBackground);
 
-            // Grid Lines & Labels (Matching main map loop)
+            // Grid Lines & Labels
             for (let c = minCol; c <= maxCol; c++) {
                 let line = document.createElementNS("http://www.w3.org/2000/svg", "line");
                 line.setAttribute("x1", c * gridSize);
@@ -842,7 +698,7 @@
             bottomLabel.textContent = `NORTH WALL - ROW N ▼`;
             viewport.appendChild(bottomLabel);
 
-            // Draw Heatmap Overlay Circles if enabled
+            // Heatmap Circles
             if (showHeatmap) {
                 elements.forEach(el => {
                     let ticketCount = (el.workTickets || []).length;
@@ -861,14 +717,40 @@
                 });
             }
 
-            // Render Elements with Search & Quick-Filter Filtering
+            // LOTO Trace Simulation Overlay Lines
+            if (activeLotoTraceId) {
+                let targetEl = elements.find(e => e.id === activeLotoTraceId);
+                if (targetEl && targetEl.x !== undefined) {
+                    let tx = (targetEl.x * gridSize) + (gridSize / 2);
+                    let ty = (targetEl.y * gridSize) + (gridSize / 2);
+                    
+                    elements.forEach(other => {
+                        if (other.id !== activeLotoTraceId && other.x !== undefined) {
+                            if (other.category === 'Electrical' || other.category === 'LOTO Isolation' || other.id === targetEl.parentId) {
+                                let ox = (other.x * gridSize) + (gridSize / 2);
+                                let oy = (other.y * gridSize) + (gridSize / 2);
+                                let traceLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                                traceLine.setAttribute("x1", tx);
+                                traceLine.setAttribute("y1", ty);
+                                traceLine.setAttribute("x2", ox);
+                                traceLine.setAttribute("y2", oy);
+                                traceLine.setAttribute("class", "loto-trace-line");
+                                viewport.appendChild(traceLine);
+                            }
+                        }
+                    });
+                }
+            }
+
+            // Render Elements
             let visibleElements = elements.filter(el => {
                 if (searchQuery) {
                     let matchesName = el.name.toLowerCase().includes(searchQuery);
+                    let matchesApm = el.apmTag && el.apmTag.toLowerCase().includes(searchQuery);
                     let matchesCat = el.category && el.category.toLowerCase().includes(searchQuery);
                     let matchesId = el.id.toString().includes(searchQuery);
                     let matchesPlc = el.plcNode && el.plcNode.toLowerCase().includes(searchQuery);
-                    if (!matchesName && !matchesCat && !matchesId && !matchesPlc) return false;
+                    if (!matchesName && !matchesApm && !matchesCat && !matchesId && !matchesPlc) return false;
                 }
 
                 if (activeQuickFilter === 'down') return el.status === 'down';
@@ -913,7 +795,7 @@
                         text.setAttribute("fill", "#fff");
                         text.setAttribute("font-size", "10px");
                         text.setAttribute("font-weight", "bold");
-                        text.textContent = el.name;
+                        text.textContent = `${el.name} [${el.apmTag || ''}]`;
                         g.appendChild(path);
                         g.appendChild(text);
                     }
@@ -959,7 +841,8 @@
 
                     let popupGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
                     popupGroup.setAttribute("class", "asset-popup");
-                    let boxWidth = (el.name.length * 6.5) + 12;
+                    let labelText = `${el.apmTag ? '[' + el.apmTag + '] ' : ''}${el.name}`;
+                    let boxWidth = (labelText.length * 6) + 12;
                     let popupBg = document.createElementNS("http://www.w3.org/2000/svg", "rect");
                     popupBg.setAttribute("x", cx - (boxWidth / 2));
                     popupBg.setAttribute("y", cy - 28);
@@ -975,9 +858,9 @@
                     popupText.setAttribute("y", cy - 16);
                     popupText.setAttribute("text-anchor", "middle");
                     popupText.setAttribute("fill", "#ffffff");
-                    popupText.setAttribute("font-size", "10px");
+                    popupText.setAttribute("font-size", "9.5px");
                     popupText.setAttribute("font-weight", "bold");
-                    popupText.textContent = el.name;
+                    popupText.textContent = labelText;
 
                     popupGroup.appendChild(popupBg);
                     popupGroup.appendChild(popupText);
@@ -991,16 +874,9 @@
                     rect.setAttribute("y", el.y * gridSize);
                     rect.setAttribute("width", el.w * gridSize);
                     rect.setAttribute("height", el.h * gridSize);
-                    
-                    if (el.type === 'yard') {
-                        rect.setAttribute("fill", "#b45309"); rect.setAttribute("fill-opacity", "0.3"); rect.setAttribute("stroke", "#d97706");
-                    } else if (el.type === 'racking') {
-                        rect.setAttribute("fill", "#d97706"); rect.setAttribute("fill-opacity", "0.35"); rect.setAttribute("stroke", "#f59e0b");
-                    } else if (el.type === 'mezzanine') {
-                        rect.setAttribute("fill", "#10b981"); rect.setAttribute("fill-opacity", "0.35"); rect.setAttribute("stroke", "#34d399");
-                    } else {
-                        rect.setAttribute("fill", "#0284c7"); rect.setAttribute("fill-opacity", "0.35"); rect.setAttribute("stroke", "#38bdf8");
-                    }
+                    rect.setAttribute("fill", "#0284c7");
+                    rect.setAttribute("fill-opacity", "0.35");
+                    rect.setAttribute("stroke", "#38bdf8");
                     rect.setAttribute("stroke-width", "1");
                     
                     let text = document.createElementNS("http://www.w3.org/2000/svg", "text");
@@ -1010,7 +886,7 @@
                     text.setAttribute("font-size", "10px");
                     text.setAttribute("font-weight", "bold");
                     text.style.pointerEvents = "none";
-                    text.textContent = el.name;
+                    text.textContent = `${el.name} [${el.apmTag || ''}]`;
                     g.appendChild(rect);
                     g.appendChild(text);
                 }
@@ -1114,8 +990,9 @@
         function openModal(el) {
             selectedId = el.id;
             document.getElementById("modalElementId").value = el.id;
-            document.getElementById("modalTitle").innerText = `Details: ${el.name}`;
+            document.getElementById("modalTitle").innerText = `Asset Details: ${el.name} [${el.apmTag || ''}]`;
             document.getElementById("modalName").value = el.name;
+            document.getElementById("modalApmTag").value = el.apmTag || "";
             
             if (el.type === 'asset') {
                 document.getElementById("modalAssetFields").style.display = "flex";
@@ -1124,16 +1001,14 @@
                 document.getElementById("modalLotoContainer").style.display = "block";
                 document.getElementById("modalPmContainer").style.display = "flex";
                 document.getElementById("modalPredictiveContainer").style.display = "flex";
-                document.getElementById("modalUtilitiesContainer").style.display = "flex";
-                document.getElementById("modalVendorContainer").style.display = "flex";
                 document.getElementById("modalBomContainer").style.display = "block";
                 document.getElementById("modalTicketsContainer").style.display = "block";
                 document.getElementById("modalCoordContainer").style.display = "flex";
 
                 document.getElementById("modalCategory").value = el.category || "General";
                 document.getElementById("modalStatus").value = el.status || "operational";
-                document.getElementById("modalParentAsset").value = el.parentId ? `Parent ID: ${el.parentId}` : "None / Standalone";
-                document.getElementById("modalPlcNode").value = el.plcNode || "None";
+                document.getElementById("modalParentId").value = el.parentId || "";
+                document.getElementById("modalPlcNode").value = el.plcNode || "";
                 document.getElementById("modalManualUrl").value = el.manualUrl || "";
                 document.getElementById("modalX").value = el.x;
                 document.getElementById("modalY").value = el.y;
@@ -1143,10 +1018,6 @@
                 document.getElementById("modalTemp").value = el.temp || "";
                 document.getElementById("modalVibration").value = el.vibration || "";
                 document.getElementById("modalLube").value = el.lube || "";
-                document.getElementById("modalUtilityDraw").value = el.utilityDraw || "";
-                document.getElementById("modalEstopZone").value = el.estopZone || "";
-                document.getElementById("modalVendorName").value = el.vendorName || "";
-                document.getElementById("modalVendorContact").value = el.vendorContact || "";
 
                 renderLotoChecklist(el);
                 renderBomTable(el);
@@ -1158,8 +1029,6 @@
                 document.getElementById("modalLotoContainer").style.display = "none";
                 document.getElementById("modalPmContainer").style.display = "none";
                 document.getElementById("modalPredictiveContainer").style.display = "none";
-                document.getElementById("modalUtilitiesContainer").style.display = "none";
-                document.getElementById("modalVendorContainer").style.display = "none";
                 document.getElementById("modalBomContainer").style.display = "none";
                 document.getElementById("modalTicketsContainer").style.display = "none";
                 document.getElementById("modalCoordContainer").style.display = "flex";
@@ -1188,7 +1057,7 @@
             el.lotoSteps.forEach((s) => {
                 let div = document.createElement("div");
                 div.className = "loto-step";
-                div.innerHTML = `<input type="checkbox" ${s.done ? 'checked' : ''} disabled>
+                div.innerHTML = `<input type="checkbox" ${s.done ? 'checked' : ''} disabled style="width:auto; min-height:auto;">
                 <span style="${s.done ? 'text-decoration: line-through; color: #64748b;' : 'color: #fff;'}">${s.step}</span>`;
                 container.appendChild(div);
             });
@@ -1212,7 +1081,7 @@
             let box = document.getElementById("ticketsBox");
             box.innerHTML = "";
             if (!el.workTickets || el.workTickets.length === 0) {
-                box.innerHTML = `<span style="color: #64748b; font-style: italic;">No active breakdown tickets.</span>`;
+                box.innerHTML = `<span style="color: #64748b; font-style: italic;">No open breakdown tickets.</span>`;
                 return;
             }
             el.workTickets.forEach(t => {
