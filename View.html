@@ -3,44 +3,85 @@
 <head>
     <meta charset="UTF-8">
     <title>Facility Layout Viewer - View Only</title>
-
     <!-- Mobile PWA & App Manifest Settings -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="theme-color" content="#0b131d">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="FacilityMap">
-    <link rel="manifest" href="manifest.json">
-    <link rel="apple-touch-icon" href="https://img.icons8.com/color/512/map-marker.png">
-
+    <!-- html5-qrcode for live camera barcode scanning & AR view -->
+    <script src="https://unpkg.com/html5-qrcode"></script>
     <style>
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
         body {
             background-color: #0b131d;
             color: #e0e1dd;
-            font-family: sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             margin: 0;
             display: flex;
             height: 100vh;
+            height: 100dvh;
             overflow: hidden;
             touch-action: none;
         }
         #sidebar {
-            width: 340px;
+            width: 360px;
             background-color: #111b27;
             padding: 15px;
             display: flex;
             flex-direction: column;
             gap: 12px;
             box-shadow: 2px 0 10px rgba(0,0,0,0.7);
-            z-index: 10;
+            z-index: 20;
             overflow-y: auto;
             border-right: 1px solid #1f2d3d;
+            -webkit-overflow-scrolling: touch;
+            transition: transform 0.3s ease;
         }
-        h2, h3 { margin: 0 0 5px 0; color: #38bdf8; font-size: 15px; }
+        #mobile-nav-toggle {
+            display: none;
+            background: #111b27;
+            border-bottom: 1px solid #1f2d3d;
+            padding: 10px 15px;
+            z-index: 30;
+            justify-content: space-between;
+            align-items: center;
+        }
+        #mobile-nav-toggle h2 {
+            margin: 0;
+            font-size: 16px;
+            color: #38bdf8;
+        }
+        .toggle-btn {
+            background: #0284c7;
+            color: #fff;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 12px;
+            cursor: pointer;
+            width: auto;
+        }
+        @media (max-width: 768px) {
+            body { flex-direction: column; }
+            #mobile-nav-toggle { display: flex; }
+            #sidebar { 
+                width: 100%; 
+                max-height: 50vh; 
+                border-right: none; 
+                border-bottom: 1px solid #1f2d3d;
+                box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            }
+            #sidebar.collapsed { display: none; }
+            #canvas-container { height: 100%; flex-grow: 1; }
+        }
+        h2, h3, h4 { margin: 0 0 5px 0; color: #38bdf8; font-size: 15px; }
+        h4 { color: #f59e0b; font-size: 12px; margin-top: 8px; border-bottom: 1px solid #1f2d3d; padding-bottom: 2px; }
         label { font-size: 11px; color: #94a3b8; }
         input, select, button, textarea {
             width: 100%;
-            padding: 6px 8px;
+            padding: 8px;
             background: #0b131d;
             border: 1px solid #38bdf8;
             color: #fff;
@@ -48,15 +89,17 @@
             box-sizing: border-box;
             margin-top: 2px;
             font-size: 12px;
+            min-height: 36px;
         }
-        textarea { resize: vertical; height: 60px; font-family: sans-serif; }
+        textarea { resize: vertical; height: 50px; font-family: sans-serif; }
         button {
             background: #1e293b;
             font-weight: bold;
             cursor: pointer;
             transition: background 0.2s;
+            touch-action: manipulation;
         }
-        button:hover { background: #38bdf8; color: #0b131d; }
+        button:hover, button:active { background: #38bdf8; color: #0b131d; }
         .layer-btn {
             flex: 1;
             padding: 6px 4px;
@@ -67,6 +110,10 @@
             cursor: pointer;
             border-radius: 4px;
             text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 32px;
         }
         .layer-btn.active {
             background: #0284c7;
@@ -74,6 +121,43 @@
             border-color: #38bdf8;
             font-weight: bold;
         }
+        .tab-bar { display: flex; gap: 4px; margin-bottom: 5px; }
+        .tab-btn {
+            flex: 1; padding: 6px 2px; background: #070d14; border: 1px solid #1e293b; color: #94a3b8; font-size: 9.5px; cursor: pointer; border-radius: 4px; text-align: center; min-height: 34px;
+        }
+        .tab-btn.active { background: #1e293b; color: #38bdf8; border-color: #38bdf8; }
+        .panel { display: none; }
+        .panel.active { display: flex; flex-direction: column; gap: 8px; }
+
+        /* EMERGENCY QUICK-FILTER FLOATING BAR */
+        #quick-filter-bar {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            z-index: 10;
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            pointer-events: auto;
+        }
+        .filter-pill {
+            background: #111b27;
+            border: 1px solid #1f2d3d;
+            color: #94a3b8;
+            padding: 6px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.4);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .filter-pill.active { background: #0284c7; color: #fff; border-color: #38bdf8; }
+        .filter-pill.down-pill.active { background: #7f1d1d; border-color: #ef4444; }
+        .filter-pill.pm-pill.active { background: #b45309; border-color: #f59e0b; }
+
         #canvas-container {
             flex-grow: 1;
             position: relative;
@@ -85,58 +169,28 @@
         #canvas-container.panning { cursor: grabbing; }
         svg {
             position: absolute;
-            top: 0;
-            left: 0;
+            top: 0; left: 0;
             transform-origin: 0 0;
+            touch-action: none;
         }
-        .item-group {
-            cursor: pointer;
-        }
-        .item-shape {
-            transition: stroke 0.2s;
-        }
+        .item-group { cursor: pointer; touch-action: none; }
+        .item-shape { transition: stroke 0.2s; }
         .item-group:hover .item-shape { stroke: #fff; }
-        .item-shape.selected {
-            stroke: #fbbf24;
-            stroke-width: 3;
-        }
         .asset-popup {
             opacity: 0;
             transition: opacity 0.15s ease-in-out;
             pointer-events: none;
         }
-        .item-group:hover .asset-popup {
-            opacity: 1;
-        }
-        .grid-line {
-            stroke: #132235;
-            stroke-width: 1;
-            pointer-events: none;
-        }
-        .coord-label {
-            fill: #64748b;
-            font-size: 9px;
-            font-family: monospace;
-            pointer-events: none;
-        }
+        .item-group:hover .asset-popup { opacity: 1; }
+        .grid-line { stroke: #132235; stroke-width: 1; pointer-events: none; }
+        .coord-label { fill: #64748b; font-size: 9px; font-family: monospace; pointer-events: none; }
         #coord-display {
-            background: #070d14;
-            border: 1px solid #1e293b;
-            padding: 6px;
-            border-radius: 4px;
-            font-family: monospace;
-            color: #38bdf8;
-            font-size: 12px;
-            text-align: center;
+            background: #070d14; border: 1px solid #1e293b; padding: 6px; border-radius: 4px; font-family: monospace; color: #38bdf8; font-size: 12px; text-align: center;
         }
         #sync-status {
-            font-size: 10px;
-            text-align: center;
-            color: #10b981;
-            font-weight: bold;
-            margin-top: -4px;
+            font-size: 10px; text-align: center; color: #10b981; font-weight: bold; margin-top: -4px;
         }
-        #modal-overlay, #lightbox-overlay {
+        #modal-overlay, #lightbox-overlay, #scanner-modal-overlay, #ar-modal-overlay {
             display: none;
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -144,125 +198,80 @@
             z-index: 1000;
             justify-content: center;
             align-items: center;
+            padding: 10px;
         }
-        #lightbox-overlay {
-            z-index: 2000;
-        }
+        #lightbox-overlay { z-index: 2000; }
         .modal-content {
             background: #111b27;
             border: 1px solid #38bdf8;
             border-radius: 8px;
-            width: 600px;
-            max-width: 92vw;
-            max-height: 90vh;
+            width: 720px;
+            max-width: 100%;
+            max-height: 92vh;
             display: flex;
             flex-direction: column;
             box-shadow: 0 10px 25px rgba(0,0,0,0.8);
             overflow: hidden;
         }
         .modal-header {
-            background: #0b131d;
-            padding: 12px 15px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid #1f2d3d;
+            background: #0b131d; padding: 12px 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1f2d3d;
         }
         .modal-body {
-            padding: 15px;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
+            padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; -webkit-overflow-scrolling: touch;
         }
         .modal-footer {
-            background: #0b131d;
-            padding: 10px 15px;
-            display: flex;
-            justify-content: flex-end;
-            gap: 8px;
-            border-top: 1px solid #1f2d3d;
+            background: #0b131d; padding: 10px 15px; display: flex; justify-content: flex-end; gap: 8px; border-top: 1px solid #1f2d3d;
         }
         .close-modal {
-            background: none;
-            border: none;
-            color: #94a3b8;
-            font-size: 18px;
-            cursor: pointer;
-            width: auto;
-            padding: 0;
-            margin: 0;
+            background: none; border: none; color: #94a3b8; font-size: 24px; cursor: pointer; width: auto; padding: 0 8px; margin: 0;
         }
         .close-modal:hover { color: #fff; background: none; }
-        .spreadsheet-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 4px;
-        }
-        .spreadsheet-table th, .spreadsheet-table td {
-            border: 1px solid #1f2d3d;
-            padding: 6px;
-            text-align: left;
-            font-size: 11px;
-        }
-        .spreadsheet-table th {
-            background: #0b131d;
-            color: #38bdf8;
-        }
-        .spreadsheet-table input {
-            background: transparent;
-            border: none;
-            color: #fff;
-            width: 100%;
-            padding: 2px;
-            margin: 0;
-        }
-        .photo-gallery {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-            margin-top: 4px;
-        }
+        .spreadsheet-table { width: 100%; border-collapse: collapse; margin-top: 4px; }
+        .spreadsheet-table th, .spreadsheet-table td { border: 1px solid #1f2d3d; padding: 6px; text-align: left; font-size: 11px; }
+        .spreadsheet-table th { background: #0b131d; color: #38bdf8; }
+        .spreadsheet-table input, .spreadsheet-table select { background: transparent; border: none; color: #fff; width: 100%; padding: 2px; margin: 0; min-height: 28px; }
+        .photo-gallery { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px; }
         .photo-thumb-container {
-            position: relative;
-            width: 90px;
-            height: 90px;
-            border: 1px solid #1f2d3d;
-            border-radius: 4px;
-            overflow: hidden;
-            background: #0b131d;
-            cursor: pointer;
+            position: relative; width: 80px; height: 80px; border: 1px solid #1f2d3d; border-radius: 4px; overflow: hidden; background: #0b131d; cursor: pointer;
         }
-        .photo-thumb-container img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            transition: transform 0.2s;
-        }
-        .photo-thumb-container:hover img {
-            transform: scale(1.05);
-        }
-
-        @media (max-width: 768px) {
-            body { flex-direction: column; }
-            #sidebar {
-                width: 100%;
-                height: auto;
-                max-height: 35vh;
-                padding: 10px;
-                box-sizing: border-box;
-            }
-            #canvas-container { height: 65vh; }
-        }
+        .photo-thumb-container img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.2s; }
+        .photo-thumb-container:hover img { transform: scale(1.05); }
+        .notes-log-box { background: #070d14; border: 1px solid #1f2d3d; border-radius: 4px; padding: 8px; max-height: 110px; overflow-y: auto; font-size: 11px; display: flex; flex-direction: column; gap: 4px; }
+        .note-entry { border-bottom: 1px dotted #1f2d3d; padding-bottom: 3px; }
+        .note-timestamp { color: #38bdf8; font-size: 9px; font-weight: bold; }
+        @keyframes pmPulse { 0% { r: 7px; opacity: 1; } 50% { r: 12px; opacity: 0.3; } 100% { r: 7px; opacity: 1; } }
+        .pm-overdue-pulse { animation: pmPulse 1.5s infinite ease-in-out; stroke: #ef4444; stroke-width: 2; fill: none; }
+        .pm-due-pulse { animation: pmPulse 2s infinite ease-in-out; stroke: #f59e0b; stroke-width: 2; fill: none; }
+        .loto-step { display: flex; align-items: center; gap: 6px; font-size: 11px; border-bottom: 1px solid #1f2d3d; padding: 3px 0; }
     </style>
 </head>
 <body>
-    <div id="sidebar">
+    <div id="mobile-nav-toggle">
+        <h2>Facility Viewer (View Only)</h2>
+        <button class="toggle-btn" onclick="toggleSidebar()">☰ Menu</button>
+    </div>
+
+    <div id="sidebar" class="collapsed">
         <h2>Facility Viewer (View Only)</h2>
         
+        <div>
+            <label>🔍 Asset Search / QR Scanner</label>
+            <div style="display: flex; gap: 4px;">
+                <input type="text" id="assetSearchInput" placeholder="Search Asset Name, Tag ID, PLC..." oninput="handleSearch(this.value)">
+                <button onclick="openScannerModal()" style="width: auto; padding: 4px 10px; font-size: 11px;">📷 Scan</button>
+            </div>
+        </div>
         <div id="coord-display">Col: -- | Row: --</div>
         <div id="sync-status">Connected (View Only)</div>
         
+        <!-- HEATMAP OVERLAY TOGGLE -->
+        <div>
+            <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+                <input type="checkbox" id="heatmapToggle" onchange="toggleHeatmap(this.checked)" style="width:auto; margin:0; min-height:auto;">
+                <span style="color:#f59e0b; font-weight:bold;">🔥 Show Downtime & Breakdown Heatmap</span>
+            </label>
+        </div>
+
         <!-- LAYER SELECTION MENU -->
         <div>
             <label>Active View Layer</label>
@@ -272,30 +281,62 @@
                 <button class="layer-btn" id="layerRoofBtn" onclick="switchLayer('roof')">Roof Layer</button>
             </div>
             <div style="display: flex; gap: 4px; margin-top: 4px;">
-                <button class="layer-btn" id="layerSprinklerBtn" onclick="switchLayer('sprinkler')">Sprinkler Shutoffs</button>
+                <button class="layer-btn" id="layerUisBtn" onclick="switchLayer('uis_sorter')">OPEX UIS Sorter</button>
+                <button class="layer-btn" id="layerAtrBtn" onclick="switchLayer('atr_retrieval')">ATR Retrieval</button>
+                <button class="layer-btn" id="layerConveyanceBtn" onclick="switchLayer('conveyance')">Conveyance</button>
+            </div>
+            <div style="display: flex; gap: 4px; margin-top: 4px;">
+                <button class="layer-btn" id="layerSprinklerBtn" onclick="switchLayer('sprinkler')">Sprinklers</button>
                 <button class="layer-btn" id="layerWaterBtn" onclick="switchLayer('water')">Water Shutoffs</button>
                 <button class="layer-btn" id="layerGasBtn" onclick="switchLayer('gas')">Gas Shutoffs</button>
             </div>
             <div style="display: flex; gap: 4px; margin-top: 4px;">
                 <button class="layer-btn" id="layerDockDoorsBtn" onclick="switchLayer('dock_doors')">Dock Doors</button>
-                <button class="layer-btn" id="layerUnderMezzSprinklersBtn" onclick="switchLayer('under_mezz_sprinklers')">Under Mezz Sprinklers</button>
+                <button class="layer-btn" id="layerUnderMezzSprinklersBtn" onclick="switchLayer('under_mezz_sprinklers')">Under Mezz</button>
                 <button class="layer-btn" id="layerHvacBtn" onclick="switchLayer('hvac')">HVAC</button>
+            </div>
+            <div style="display: flex; gap: 4px; margin-top: 4px;">
+                <button class="layer-btn" id="layerLotoBtn" onclick="switchLayer('loto')">LOTO Isolation</button>
+                <button class="layer-btn" id="layerAssetsBtn" onclick="switchLayer('assets')">All Assets</button>
             </div>
         </div>
 
         <div>
-            <p style="font-size: 10px; color: #64748b; margin: 10px 0 0 0;">
-                💡 <b>Tip:</b> Tap any asset or zone on the map to inspect parameters and photos. Use touch gestures to drag and pinch to zoom.
+            <button onclick="openARModal()" style="background:#0284c7; color:#fff; border-color:#38bdf8;">🕶️ AR Live Camera View</button>
+        </div>
+
+        <hr style="border-color: #1e293b; margin: 4px 0;">
+        <div class="tab-bar">
+            <button class="tab-btn active" id="tabInfoBtn" onclick="switchTab('info')">Info</button>
+            <button class="tab-btn" id="tabShiftBtn" onclick="switchTab('shift')">Shift Log</button>
+        </div>
+        <div id="panelInfo" class="panel active">
+            <p style="font-size: 10px; color: #64748b; margin: 0;">
+                💡 <b>Tip:</b> Tap any asset or zone to inspect details, specs, LOTO instructions, and photos. Pan by dragging with one finger, zoom using pinch or scroll wheel.
             </p>
+        </div>
+        <div id="panelShift" class="panel">
+            <h3>📝 Technician Shift Handover Log</h3>
+            <div class="notes-log-box" id="shiftLogContainer" style="max-height: 250px;"></div>
         </div>
     </div>
 
     <div id="canvas-container">
+        <!-- EMERGENCY QUICK-FILTER FLOATING PILLS -->
+        <div id="quick-filter-bar">
+            <button class="filter-pill down-pill" onclick="toggleQuickFilter('down')">🚨 Down Assets</button>
+            <button class="filter-pill pm-pill" onclick="toggleQuickFilter('pm_due')">🔥 Overdue PMs</button>
+            <button class="filter-pill" onclick="toggleQuickFilter('water')">💧 Water Shutoffs</button>
+            <button class="filter-pill" onclick="toggleQuickFilter('estop')">⚡ E-Stop Zones</button>
+            <button class="filter-pill active" id="filterAllBtn" onclick="toggleQuickFilter('all')">Show All</button>
+        </div>
+
         <svg id="layoutSvg" width="2200" height="1400">
             <g id="viewport"></g>
         </svg>
     </div>
 
+    <!-- ITEM DETAILS & INSPECT MODAL -->
     <div id="modal-overlay">
         <div class="modal-content">
             <div class="modal-header">
@@ -308,12 +349,89 @@
                     <label>Item Name / Designation</label>
                     <input type="text" id="modalName" disabled>
                 </div>
-                <div style="display: flex; gap: 6px;">
+                <div id="modalAssetFields" style="display: flex; gap: 6px; flex-wrap: wrap;">
+                    <div style="flex: 2; min-width: 140px;">
+                        <label>Asset Category</label>
+                        <input type="text" id="modalCategory" disabled>
+                    </div>
+                    <div style="flex: 2; min-width: 140px;">
+                        <label>Maintenance Status</label>
+                        <input type="text" id="modalStatus" disabled>
+                    </div>
+                </div>
+                <div id="modalDependencyContainer" style="display: flex; gap: 6px; flex-wrap: wrap;">
+                    <div style="flex: 1; min-width: 180px;">
+                        <label>Upstream Parent Asset / Power Source</label>
+                        <input type="text" id="modalParentAsset" disabled>
+                    </div>
+                    <div style="flex: 1; min-width: 180px;">
+                        <label>PLC Rack / EtherNet IP Drop / Node ID</label>
+                        <input type="text" id="modalPlcNode" disabled>
+                    </div>
+                </div>
+                <div id="modalDocLinkContainer">
+                    <label>Equipment Manual / Wiring Schematic (PDF Link)</label>
+                    <div style="display: flex; gap: 4px;">
+                        <input type="url" id="modalManualUrl" placeholder="No manual linked" disabled>
+                        <button onclick="openManualUrl()" style="width: auto; padding: 4px 8px;">🔗 Open</button>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 6px;" id="modalCoordContainer">
                     <div style="flex:1;"><label>X Col</label><input type="number" id="modalX" disabled></div>
                     <div style="flex:1;"><label>Y Row</label><input type="number" id="modalY" disabled></div>
                 </div>
+                <!-- LOTO CHECKLIST -->
+                <div id="modalLotoContainer">
+                    <h4>🔒 Lockout/Tagout (LOTO) Sequence & ESWC Checklist</h4>
+                    <div id="lotoChecklistList"></div>
+                </div>
+                <!-- PREVENTIVE MAINTENANCE & METERS -->
+                <h4>⏱️ Maintenance & Operating Meters</h4>
+                <div id="modalPmContainer" style="display: flex; gap: 6px; flex-wrap: wrap;">
+                    <div style="flex:1; min-width: 130px;"><label>Last Inspected</label><input type="date" id="modalLastInspect" disabled></div>
+                    <div style="flex:1; min-width: 130px;"><label>PM Due Date</label><input type="date" id="modalPmDue" disabled></div>
+                    <div style="flex:1; min-width: 130px;"><label>Run Hours / Meter</label><input type="text" id="modalRunHours" disabled></div>
+                </div>
+                <!-- PREDICTIVE & LUBRICATION METRICS -->
+                <h4>📊 Predictive Health & Lubrication</h4>
+                <div id="modalPredictiveContainer" style="display: flex; gap: 6px; flex-wrap: wrap;">
+                    <div style="flex:1; min-width: 130px;"><label>Thermal Temp (°F)</label><input type="text" id="modalTemp" disabled></div>
+                    <div style="flex:1; min-width: 130px;"><label>Vibration (in/s)</label><input type="text" id="modalVibration" disabled></div>
+                    <div style="flex:1; min-width: 130px;"><label>Grease / Lube Type</label><input type="text" id="modalLube" disabled></div>
+                </div>
+                <!-- UTILITIES & SAFETY INTERLOCKS -->
+                <h4>⚡ Utilities & Safety Interlocks</h4>
+                <div id="modalUtilitiesContainer" style="display: flex; gap: 6px; flex-wrap: wrap;">
+                    <div style="flex:1; min-width: 130px;"><label>Amps/Cal</label><input type="text" id="modalUtilityDraw" disabled></div>
+                    <div style="flex:1; min-width: 130px;"><label>Safety / E-Stop Zone</label><input type="text" id="modalEstopZone" disabled></div>
+                </div>
+                <!-- VENDOR DIRECTORY -->
+                <h4>📞 OEM & Vendor Support Contact</h4>
+                <div id="modalVendorContainer" style="display: flex; gap: 6px;">
+                    <div style="flex:1;"><label>Vendor Name / Rep</label><input type="text" id="modalVendorName" disabled></div>
+                    <div style="flex:1;"><label>Contact Phone / Email</label><input type="text" id="modalVendorContact" disabled></div>
+                </div>
+                <!-- SPARE PARTS & BIN LOCATION -->
+                <div id="modalBomContainer">
+                    <h4 style="margin-top: 6px;">📦 Spare Parts & Cage Bin Mapping</h4>
+                    <table class="spreadsheet-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 35%;">Part Name</th>
+                                <th style="width: 35%;">Part # / SKU</th>
+                                <th style="width: 30%;">Bin / Shelf Location</th>
+                            </tr>
+                        </thead>
+                        <tbody id="bomBody"></tbody>
+                    </table>
+                </div>
+                <!-- BREAKDOWN WORK TICKETS -->
+                <div id="modalTicketsContainer">
+                    <h4 style="margin-top: 6px;">🛠️ Open Breakdown Tickets</h4>
+                    <div class="notes-log-box" id="ticketsBox"></div>
+                </div>
                 <div>
-                    <label>Location Photos (Tap photo to enlarge)</label>
+                    <label>Location Photos (Click photo to enlarge)</label>
                     <div class="photo-gallery" id="modalPhotoGallery"></div>
                 </div>
                 <div>
@@ -335,6 +453,40 @@
         </div>
     </div>
 
+    <!-- AR LIVE CAMERA OVERLAY MODAL -->
+    <div id="ar-modal-overlay">
+        <div class="modal-content" style="width: 500px; height: 500px;">
+            <div class="modal-header">
+                <h3 style="color: #38bdf8; margin: 0;">🕶️ AR Field Camera HUD</h3>
+                <button class="close-modal" onclick="closeARModal()">×</button>
+            </div>
+            <div class="modal-body" style="position: relative; padding: 0; background: #000; flex-grow: 1; display: flex; align-items: center; justify-content: center; overflow: hidden;">
+                <div id="ar-video-container" style="width: 100%; height: 100%;"></div>
+                <div style="position: absolute; top: 15px; left: 15px; background: rgba(17,27,39,0.85); border: 1px solid #38bdf8; padding: 8px 12px; border-radius: 6px; pointer-events: none;">
+                    <div style="color: #38bdf8; font-weight: bold; font-size: 11px;">Scan Asset Tag / Barcode</div>
+                    <div style="color: #10b981; font-size: 10px;">Camera active for plant floor inspection</div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button onclick="closeARModal()" style="width: auto; padding: 6px 12px; background: #38bdf8; color: #0b131d;">Close AR View</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- QR CAMERA SCANNER MODAL -->
+    <div id="scanner-modal-overlay">
+        <div class="modal-content" style="width: 450px;">
+            <div class="modal-header">
+                <h3 style="color: #38bdf8; margin: 0;">📷 Scan Asset Barcode / QR Tag</h3>
+                <button class="close-modal" onclick="closeScannerModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <div id="qr-reader" style="width: 100%;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- LIGHTBOX OVERLAY -->
     <div id="lightbox-overlay" onclick="closeLightbox()">
         <div style="position: relative; max-width: 90vw; max-height: 90vh; display: flex; flex-direction: column; align-items: center;" onclick="event.stopPropagation()">
             <button onclick="closeLightbox()" style="position: absolute; top: -35px; right: 0; background: none; border: none; color: #fff; font-size: 24px; cursor: pointer;">×</button>
@@ -343,9 +495,11 @@
         </div>
     </div>
 
+    <!-- Firebase SDK Imports -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        
         const firebaseConfig = {
             apiKey: "AIzaSyCrKAut8_5nHWTWtYqZZr5HOENGd8mqZxE",
             authDomain: "imi1-interactive-map-8d929.firebaseapp.com",
@@ -357,31 +511,55 @@
         };
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
+        
         const gridSize = 25;
         const minCol = -8;
         const maxCol = 38;
         const minRow = -6;
         const maxRow = 20;
         const buildingCols = 30; 
-        const buildingRows = 13; // 13 total rows (A-H, J-N) matching index[cite: 1]
+        const buildingRows = 14; 
         let currentLayer = 'ground'; 
+        let currentTab = 'info';
+        let searchQuery = '';
+        let showHeatmap = false;
+        let activeQuickFilter = 'all';
+        let html5QrCode = null;
+        let arQrCode = null;
+
         let categories = [
-            { name: "Fire Safety", color: "#ef4444" },
+            { name: "OPEX UIS Sorter", color: "#ec4899" },
+            { name: "ATR Tote Retrieval", color: "#8b5cf6" },
+            { name: "Conveyance", color: "#06b6d4" },
             { name: "Electrical", color: "#f97316" },
+            { name: "Fire Safety", color: "#ef4444" },
             { name: "Plumbing", color: "#38bdf8" },
             { name: "Safety", color: "#fbbf24" },
             { name: "HVAC", color: "#34d399" },
+            { name: "LOTO Isolation", color: "#a855f7" },
             { name: "General", color: "#94a3b8" }
         ];
         let elements = [];
+        let shiftLogs = [];
         let selectedId = null;
         let isPanning = false;
         let panStart = { x: 0, y: 0 };
         let viewTransform = { x: 250, y: 180, scale: 0.9 };
+        
+        let activePointers = new Map();
+        let initialPinchDistance = null;
+        let initialPinchScale = 1;
+        let initialPinchCenter = { x: 0, y: 0 };
+        let initialTransform = { x: 0, y: 0 };
+
         const container = document.getElementById("canvas-container");
         const svg = document.getElementById("layoutSvg");
         const viewport = document.getElementById("viewport");
         const syncStatus = document.getElementById("sync-status");
+
+        window.toggleSidebar = function() {
+            document.getElementById("sidebar").classList.toggle("collapsed");
+        };
 
         async function loadFromFirebase() {
             try {
@@ -389,12 +567,21 @@
                 const docSnap = await getDoc(docRef);
                 if (docSnap.exists()) {
                     let data = docSnap.data();
-                    if (data.elements) elements = data.elements;
+                    if (data.elements) {
+                        elements = data.elements.map(el => {
+                            if (el.type === 'conveyance_line' && !el.points && el.x1 !== undefined) {
+                                el.points = [{x: el.x1, y: el.y1}, {x: el.x2, y: el.y2}];
+                            }
+                            return el;
+                        });
+                    }
                     if (data.categories) categories = data.categories;
+                    if (data.shiftLogs) shiftLogs = data.shiftLogs;
                     syncStatus.innerText = "Connected (View Only)";
                 } else {
                     syncStatus.innerText = "No Data Found";
                 }
+                renderShiftLogs();
                 render();
             } catch (error) {
                 console.error("Error loading layout:", error);
@@ -403,40 +590,172 @@
                 render();
             }
         }
+
+        window.toggleQuickFilter = function(filterType) {
+            activeQuickFilter = filterType;
+            document.querySelectorAll('.filter-pill').forEach(btn => btn.classList.remove('active'));
+            if (filterType === 'down') document.querySelector('.down-pill').classList.add('active');
+            else if (filterType === 'pm_due') document.querySelector('.pm-pill').classList.add('active');
+            else if (filterType === 'water') document.querySelectorAll('.filter-pill')[2].classList.add('active');
+            else if (filterType === 'estop') document.querySelectorAll('.filter-pill')[3].classList.add('active');
+            else document.getElementById('filterAllBtn').classList.add('active');
+            render();
+        }
+
+        window.openARModal = function() {
+            document.getElementById("ar-modal-overlay").style.display = "flex";
+            arQrCode = new Html5Qrcode("ar-video-container");
+            arQrCode.start(
+                { facingMode: "environment" },
+                { fps: 10, qrbox: { width: 200, height: 200 } },
+                (decodedText) => {
+                    document.getElementById("assetSearchInput").value = decodedText;
+                    handleSearch(decodedText);
+                    closeARModal();
+                },
+                () => {}
+            ).catch(err => console.error("AR Camera error:", err));
+        }
+
+        window.closeARModal = function() {
+            if (arQrCode) {
+                arQrCode.stop().then(() => {
+                    arQrCode.clear();
+                    document.getElementById("ar-modal-overlay").style.display = "none";
+                }).catch(() => {
+                    document.getElementById("ar-modal-overlay").style.display = "none";
+                });
+            } else {
+                document.getElementById("ar-modal-overlay").style.display = "none";
+            }
+        }
+
+        window.openScannerModal = function() {
+            document.getElementById("scanner-modal-overlay").style.display = "flex";
+            html5QrCode = new Html5Qrcode("qr-reader");
+            html5QrCode.start(
+                { facingMode: "environment" },
+                { fps: 10, qrbox: { width: 250, height: 250 } },
+                (decodedText) => {
+                    closeScannerModal();
+                    document.getElementById("assetSearchInput").value = decodedText;
+                    handleSearch(decodedText);
+                },
+                () => {}
+            ).catch(err => console.error("Scanner error:", err));
+        }
+
+        window.closeScannerModal = function() {
+            if (html5QrCode) {
+                html5QrCode.stop().then(() => {
+                    html5QrCode.clear();
+                    document.getElementById("scanner-modal-overlay").style.display = "none";
+                }).catch(() => {
+                    document.getElementById("scanner-modal-overlay").style.display = "none";
+                });
+            } else {
+                document.getElementById("scanner-modal-overlay").style.display = "none";
+            }
+        }
+
+        window.handleSearch = function(val) {
+            searchQuery = val.trim().toLowerCase();
+            render();
+        }
+
+        window.toggleHeatmap = function(checked) {
+            showHeatmap = checked;
+            render();
+        }
+
+        window.switchTab = function(tab) {
+            currentTab = tab;
+            document.getElementById("tabInfoBtn").classList.toggle("active", tab === 'info');
+            document.getElementById("tabShiftBtn").classList.toggle("active", tab === 'shift');
+            document.getElementById("panelInfo").classList.toggle("active", tab === 'info');
+            document.getElementById("panelShift").classList.toggle("active", tab === 'shift');
+        }
+
+        function renderShiftLogs() {
+            let box = document.getElementById("shiftLogContainer");
+            if (!box) return;
+            box.innerHTML = "";
+            if (!shiftLogs || shiftLogs.length === 0) {
+                box.innerHTML = `<span style="color:#64748b; font-style:italic;">No shift handover entries.</span>`;
+                return;
+            }
+            shiftLogs.forEach(s => {
+                let div = document.createElement("div");
+                div.className = "note-entry";
+                div.innerHTML = `<span class="note-timestamp">[${s.time}] ${s.shift}:</span> ${s.note}`;
+                box.appendChild(div);
+            });
+        }
+
         function getCategoryColor(catName) {
             let found = categories.find(c => c.name === catName);
             return found ? found.color : "#38bdf8";
         }
-        function getRowLabel(r) {
-            if (r < 0) {
-                return "N" + Math.abs(r);
-            }
-            let adjustedIndex = r;
-            if (adjustedIndex >= 8) {
-                adjustedIndex += 1; // skips 'I' (index 8) matching index[cite: 1]
-            }
-            return String.fromCharCode(65 + adjustedIndex); 
+
+        function getStatusColor(status) {
+            if (status === 'maintenance') return "#f59e0b";
+            if (status === 'down') return "#ef4444";
+            return "#10b981";
         }
+
+        function getPmAlertStatus(pmDueStr) {
+            if (!pmDueStr) return 'none';
+            let due = new Date(pmDueStr);
+            let today = new Date();
+            let diffDays = (due - today) / (1000 * 3600 * 24);
+            if (diffDays < 0) return 'overdue';
+            if (diffDays <= 7) return 'due_soon';
+            return 'none';
+        }
+
+        function getRowLabel(r) {
+            if (r === buildingRows - 2) return "M.9"; 
+            let index = r;
+            if (index > buildingRows - 2) index -= 1;
+            if (index < 0) return "N" + Math.abs(index);
+            return String.fromCharCode(65 + index); 
+        }
+
         window.switchLayer = function(layerName) {
             currentLayer = layerName;
-            document.getElementById("layerGroundBtn").classList.toggle("active", layerName === 'ground');
-            document.getElementById("layerMezzBtn").classList.toggle("active", layerName === 'mezzanine');
-            document.getElementById("layerRoofBtn").classList.toggle("active", layerName === 'roof');
-            document.getElementById("layerSprinklerBtn").classList.toggle("active", layerName === 'sprinkler');
-            document.getElementById("layerWaterBtn").classList.toggle("active", layerName === 'water');
-            document.getElementById("layerGasBtn").classList.toggle("active", layerName === 'gas');
-            document.getElementById("layerDockDoorsBtn").classList.toggle("active", layerName === 'dock_doors');
-            document.getElementById("layerUnderMezzSprinklersBtn").classList.toggle("active", layerName === 'under_mezz_sprinklers');
-            document.getElementById("layerHvacBtn").classList.toggle("active", layerName === 'hvac');
+            let layerButtons = [
+                'layerGroundBtn', 'layerMezzBtn', 'layerRoofBtn', 
+                'layerUisBtn', 'layerAtrBtn', 'layerConveyanceBtn',
+                'layerSprinklerBtn', 'layerWaterBtn', 'layerGasBtn', 
+                'layerDockDoorsBtn', 'layerUnderMezzSprinklersBtn', 'layerHvacBtn', 'layerLotoBtn', 'layerAssetsBtn'
+            ];
+            layerButtons.forEach(btnId => {
+                let btn = document.getElementById(btnId);
+                if (btn) btn.classList.remove("active");
+            });
+            let mapLayerToBtn = {
+                'ground': 'layerGroundBtn', 'mezzanine': 'layerMezzBtn', 'roof': 'layerRoofBtn',
+                'uis_sorter': 'layerUisBtn', 'atr_retrieval': 'layerAtrBtn', 'conveyance': 'layerConveyanceBtn',
+                'sprinkler': 'layerSprinklerBtn', 'water': 'layerWaterBtn', 'gas': 'layerGasBtn',
+                'dock_doors': 'layerDockDoorsBtn', 'under_mezz_sprinklers': 'layerUnderMezzSprinklersBtn',
+                'hvac': 'layerHvacBtn', 'loto': 'layerLotoBtn', 'assets': 'layerAssetsBtn'
+            };
+            if (mapLayerToBtn[layerName] && document.getElementById(mapLayerToBtn[layerName])) {
+                document.getElementById(mapLayerToBtn[layerName]).classList.add("active");
+            }
             selectedId = null;
             render();
         }
+
         function updateTransformString() {
             viewport.setAttribute("transform", `translate(${viewTransform.x}, ${viewTransform.y}) scale(${viewTransform.scale})`);
         }
+
         function render() {
             viewport.innerHTML = "";
             updateTransformString();
+            
+            // Site Background
             let siteBackground = document.createElementNS("http://www.w3.org/2000/svg", "g");
             let earthGrading = document.createElementNS("http://www.w3.org/2000/svg", "rect");
             earthGrading.setAttribute("x", minCol * gridSize);
@@ -457,6 +776,7 @@
             siteBackground.appendChild(siteLabel);
             viewport.appendChild(siteBackground);
 
+            // Grid Lines & Labels
             for (let c = minCol; c <= maxCol; c++) {
                 let line = document.createElementNS("http://www.w3.org/2000/svg", "line");
                 line.setAttribute("x1", c * gridSize);
@@ -473,22 +793,33 @@
                 text.textContent = c + 1; 
                 viewport.appendChild(text);
             }
-            for (let r = 0; r < buildingRows; r++) {
+            for (let r = minRow; r <= maxRow; r++) {
                 let line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-                line.setAttribute("x1", 0);
+                line.setAttribute("x1", minCol * gridSize);
                 line.setAttribute("y1", r * gridSize);
-                line.setAttribute("x2", buildingCols * gridSize);
+                line.setAttribute("x2", maxCol * gridSize);
                 line.setAttribute("y2", r * gridSize);
-                line.setAttribute("class", "grid-line");
+                if (r === buildingRows - 2) {
+                    line.setAttribute("stroke", "#f43f5e");
+                    line.setAttribute("stroke-dasharray", "2,2");
+                } else {
+                    line.setAttribute("class", "grid-line");
+                }
                 viewport.appendChild(line);
                 let text = document.createElementNS("http://www.w3.org/2000/svg", "text");
-                text.setAttribute("x", -10);
+                text.setAttribute("x", (minCol * gridSize) - 10);
                 text.setAttribute("y", (r * gridSize) + (gridSize / 2) + 3);
                 text.setAttribute("text-anchor", "end");
                 text.setAttribute("class", "coord-label");
+                if (r === buildingRows - 2) {
+                    text.setAttribute("fill", "#f43f5e");
+                    text.setAttribute("font-weight", "bold");
+                }
                 text.textContent = getRowLabel(r);
                 viewport.appendChild(text);
             }
+
+            // Building Footprint
             let buildingWall = document.createElementNS("http://www.w3.org/2000/svg", "rect");
             buildingWall.setAttribute("x", 0);
             buildingWall.setAttribute("y", 0);
@@ -499,14 +830,15 @@
             buildingWall.setAttribute("stroke", "#38bdf8");
             buildingWall.setAttribute("stroke-width", "2");
             viewport.appendChild(buildingWall);
+
             let layerTitleName = currentLayer.toUpperCase();
             let topLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
             topLabel.setAttribute("x", 0.5 * gridSize);
-            topLabel.setAttribute("y", -8);
+            topLabel.setAttribute("y", -22);
             topLabel.setAttribute("fill", "#38bdf8");
             topLabel.setAttribute("font-size", "10px");
             topLabel.setAttribute("font-weight", "bold");
-            topLabel.textContent = `SOUTH WALL - ROW A (${layerTitleName} LAYER) ▲`;
+            topLabel.textContent = `BUILDING SOUTH WALL (${layerTitleName} LAYER) ▲`;
             viewport.appendChild(topLabel);
             let bottomLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
             bottomLabel.setAttribute("x", 0.5 * gridSize);
@@ -514,29 +846,115 @@
             bottomLabel.setAttribute("fill", "#38bdf8");
             bottomLabel.setAttribute("font-size", "10px");
             bottomLabel.setAttribute("font-weight", "bold");
-            bottomLabel.textContent = `NORTH WALL - ROW N ▼`;
+            bottomLabel.textContent = `BUILDING NORTH WALL ▼`;
             viewport.appendChild(bottomLabel);
 
-            let visibleElements = elements.filter(el => (el.layer || 'ground') === currentLayer);
+            // Draw Heatmap Overlay Circles if enabled
+            if (showHeatmap) {
+                elements.forEach(el => {
+                    let ticketCount = (el.workTickets || []).length;
+                    if (ticketCount > 0 || el.status === 'down') {
+                        let cx = (el.x * gridSize) + (gridSize / 2);
+                        let cy = (el.y * gridSize) + (gridSize / 2);
+                        let radius = Math.min(30 + (ticketCount * 15), 90);
+                        let heatCircle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                        heatCircle.setAttribute("cx", cx);
+                        heatCircle.setAttribute("cy", cy);
+                        heatCircle.setAttribute("r", radius);
+                        heatCircle.setAttribute("fill", el.status === 'down' ? "#ef4444" : "#f59e0b");
+                        heatCircle.setAttribute("fill-opacity", "0.35");
+                        viewport.appendChild(heatCircle);
+                    }
+                });
+            }
+
+            // Render Elements with Search & Quick-Filter Filtering
+            let visibleElements = elements.filter(el => {
+                if (searchQuery) {
+                    let matchesName = el.name.toLowerCase().includes(searchQuery);
+                    let matchesCat = el.category && el.category.toLowerCase().includes(searchQuery);
+                    let matchesId = el.id.toString().includes(searchQuery);
+                    let matchesPlc = el.plcNode && el.plcNode.toLowerCase().includes(searchQuery);
+                    if (!matchesName && !matchesCat && !matchesId && !matchesPlc) return false;
+                }
+
+                if (activeQuickFilter === 'down') return el.status === 'down';
+                if (activeQuickFilter === 'pm_due') return getPmAlertStatus(el.pmDue) === 'overdue';
+                if (activeQuickFilter === 'water') return el.layer === 'water' || (el.category && el.category.toLowerCase().includes('water'));
+                if (activeQuickFilter === 'estop') return el.estopZone || (el.category && el.category.toLowerCase().includes('safety'));
+
+                if (currentLayer === 'assets') return el.type === 'asset' || el.type === 'conveyance_line';
+                if (currentLayer === 'conveyance') return el.type === 'conveyance_line' || el.type === 'conveyance_run';
+                if (currentLayer === 'loto') return el.type === 'asset' && el.category === 'LOTO Isolation';
+
+                return (el.layer || 'ground') === currentLayer;
+            });
+
             visibleElements.forEach(el => {
                 let g = document.createElementNS("http://www.w3.org/2000/svg", "g");
                 g.setAttribute("class", "item-group");
-                g.addEventListener("click", (e) => {
+                g.addEventListener("pointerdown", (e) => {
                     e.stopPropagation();
                     openModal(el);
                 });
-                if (el.type === 'asset') {
+
+                if (el.type === 'conveyance_line') {
+                    let pts = el.points || [];
+                    if (pts.length >= 2) {
+                        let pathStr = `M ${pts[0].x * gridSize} ${pts[0].y * gridSize}`;
+                        for (let i = 1; i < pts.length; i++) {
+                            pathStr += ` L ${pts[i].x * gridSize} ${pts[i].y * gridSize}`;
+                        }
+                        let path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                        path.setAttribute("d", pathStr);
+                        path.setAttribute("fill", "none");
+                        path.setAttribute("stroke", el.conveyanceType === 'flex' ? "#fbbf24" : "#22d3ee");
+                        path.setAttribute("stroke-width", el.conveyanceType === 'flex' ? "4" : "6");
+                        if (el.conveyanceType === 'flex') path.setAttribute("stroke-dasharray", "6,4");
+                        
+                        let text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                        let midPt = pts[Math.floor(pts.length / 2)];
+                        text.setAttribute("x", midPt.x * gridSize);
+                        text.setAttribute("y", (midPt.y * gridSize) - 6);
+                        text.setAttribute("text-anchor", "middle");
+                        text.setAttribute("fill", "#fff");
+                        text.setAttribute("font-size", "10px");
+                        text.setAttribute("font-weight", "bold");
+                        text.textContent = el.name;
+                        g.appendChild(path);
+                        g.appendChild(text);
+                    }
+                } else if (el.type === 'asset') {
                     let cx = (el.x * gridSize) + (gridSize / 2);
                     let cy = (el.y * gridSize) + (gridSize / 2);
                     let catColor = getCategoryColor(el.category);
+                    let statusColor = getStatusColor(el.status || 'operational');
+                    let pmAlert = getPmAlertStatus(el.pmDue);
+
+                    if (pmAlert !== 'none') {
+                        let pulseRing = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                        pulseRing.setAttribute("cx", cx);
+                        pulseRing.setAttribute("cy", cy);
+                        pulseRing.setAttribute("class", pmAlert === 'overdue' ? 'pm-overdue-pulse' : 'pm-due-pulse');
+                        g.appendChild(pulseRing);
+                    }
+
                     let circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
                     circle.setAttribute("cx", cx);
                     circle.setAttribute("cy", cy);
-                    circle.setAttribute("r", 5); 
-                    circle.setAttribute("class", `item-shape ${el.id === selectedId ? 'selected' : ''}`);
+                    circle.setAttribute("r", 7); 
                     circle.setAttribute("fill", "#111b27");
                     circle.setAttribute("stroke", catColor);
                     circle.setAttribute("stroke-width", "2");
+
+                    let statusDot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                    statusDot.setAttribute("cx", cx + 6);
+                    statusDot.setAttribute("cy", cy - 6);
+                    statusDot.setAttribute("r", 3);
+                    statusDot.setAttribute("fill", statusColor);
+                    statusDot.setAttribute("stroke", "#0b131d");
+                    statusDot.setAttribute("stroke-width", "1");
+
                     let emojiText = document.createElementNS("http://www.w3.org/2000/svg", "text");
                     emojiText.setAttribute("x", cx);
                     emojiText.setAttribute("y", cy + 1);
@@ -545,6 +963,7 @@
                     emojiText.setAttribute("font-size", "9px");
                     emojiText.style.pointerEvents = "none";
                     emojiText.textContent = el.emoji || "📍";
+
                     let popupGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
                     popupGroup.setAttribute("class", "asset-popup");
                     let boxWidth = (el.name.length * 6.5) + 12;
@@ -557,6 +976,7 @@
                     popupBg.setAttribute("fill", "#0b131d");
                     popupBg.setAttribute("stroke", catColor);
                     popupBg.setAttribute("stroke-width", "1.5");
+
                     let popupText = document.createElementNS("http://www.w3.org/2000/svg", "text");
                     popupText.setAttribute("x", cx);
                     popupText.setAttribute("y", cy - 16);
@@ -565,9 +985,11 @@
                     popupText.setAttribute("font-size", "10px");
                     popupText.setAttribute("font-weight", "bold");
                     popupText.textContent = el.name;
+
                     popupGroup.appendChild(popupBg);
                     popupGroup.appendChild(popupText);
                     g.appendChild(circle);
+                    g.appendChild(statusDot);
                     g.appendChild(emojiText);
                     g.appendChild(popupGroup);
                 } else {
@@ -576,25 +998,18 @@
                     rect.setAttribute("y", el.y * gridSize);
                     rect.setAttribute("width", el.w * gridSize);
                     rect.setAttribute("height", el.h * gridSize);
-                    rect.setAttribute("class", `item-shape ${el.id === selectedId ? 'selected' : ''}`);
+                    
                     if (el.type === 'yard') {
-                        rect.setAttribute("fill", "#b45309");
-                        rect.setAttribute("fill-opacity", "0.3");
-                        rect.setAttribute("stroke", "#d97706");
+                        rect.setAttribute("fill", "#b45309"); rect.setAttribute("fill-opacity", "0.3"); rect.setAttribute("stroke", "#d97706");
                     } else if (el.type === 'racking') {
-                        rect.setAttribute("fill", "#d97706");
-                        rect.setAttribute("fill-opacity", "0.35");
-                        rect.setAttribute("stroke", "#f59e0b");
+                        rect.setAttribute("fill", "#d97706"); rect.setAttribute("fill-opacity", "0.35"); rect.setAttribute("stroke", "#f59e0b");
                     } else if (el.type === 'mezzanine') {
-                        rect.setAttribute("fill", "#10b981");
-                        rect.setAttribute("fill-opacity", "0.35");
-                        rect.setAttribute("stroke", "#34d399");
+                        rect.setAttribute("fill", "#10b981"); rect.setAttribute("fill-opacity", "0.35"); rect.setAttribute("stroke", "#34d399");
                     } else {
-                        rect.setAttribute("fill", "#0284c7");
-                        rect.setAttribute("fill-opacity", "0.35");
-                        rect.setAttribute("stroke", "#38bdf8");
+                        rect.setAttribute("fill", "#0284c7"); rect.setAttribute("fill-opacity", "0.35"); rect.setAttribute("stroke", "#38bdf8");
                     }
                     rect.setAttribute("stroke-width", "1");
+                    
                     let text = document.createElementNS("http://www.w3.org/2000/svg", "text");
                     text.setAttribute("x", (el.x * gridSize) + 6);
                     text.setAttribute("y", (el.y * gridSize) + 16);
@@ -610,18 +1025,18 @@
             });
         }
 
-        function getPointerPos(e) {
-            let clientX = e.clientX || (e.touches && e.touches[0].clientX);
-            let clientY = e.clientY || (e.touches && e.touches[0].clientY);
-            return { x: clientX, y: clientY };
+        function getPinchDistance(p1, p2) {
+            let dx = p1.clientX - p2.clientX;
+            let dy = p1.clientY - p2.clientY;
+            return Math.sqrt(dx * dx + dy * dy);
         }
-
-        function handleMove(e) {
-            let pos = getPointerPos(e);
-            if (!pos.x || !pos.y) return;
+        function getPinchCenter(p1, p2) {
+            return { x: (p1.clientX + p2.clientX) / 2, y: (p1.clientY + p2.clientY) / 2 };
+        }
+        function updateCoordinates(clientX, clientY) {
             let rect = container.getBoundingClientRect();
-            let mouseX = pos.x - rect.left;
-            let mouseY = pos.y - rect.top;
+            let mouseX = clientX - rect.left;
+            let mouseY = clientY - rect.top;
             let localX = (mouseX - viewTransform.x) / viewTransform.scale;
             let localY = (mouseY - viewTransform.y) / viewTransform.scale;
             let coordDisplay = document.getElementById("coord-display");
@@ -630,24 +1045,70 @@
             let preciseColNum = (exactCol + 1).toFixed(2);
             let rowLabel = getRowLabel(rowIdx);
             coordDisplay.innerHTML = `Grid: <b>Row ${rowLabel}, Col ${preciseColNum}</b>`;
-            if (isPanning) {
-                viewTransform.x = pos.x - panStart.x;
-                viewTransform.y = pos.y - panStart.y;
-                render();
-            }
         }
 
-        container.addEventListener("mousemove", handleMove);
-        container.addEventListener("touchmove", handleMove, { passive: true });
+        container.addEventListener("pointerdown", (e) => {
+            activePointers.set(e.pointerId, e);
+            if (activePointers.size === 1) {
+                isPanning = true;
+                container.classList.add("panning");
+                panStart = { x: e.clientX - viewTransform.x, y: e.clientY - viewTransform.y };
+            } else if (activePointers.size === 2) {
+                isPanning = false;
+                container.classList.remove("panning");
+                let points = Array.from(activePointers.values());
+                initialPinchDistance = getPinchDistance(points[0], points[1]);
+                initialPinchScale = viewTransform.scale;
+                initialPinchCenter = getPinchCenter(points[0], points[1]);
+                initialTransform = { x: viewTransform.x, y: viewTransform.y };
+            }
+        });
+
+        container.addEventListener("pointermove", (e) => {
+            if (activePointers.has(e.pointerId)) activePointers.set(e.pointerId, e);
+            if (activePointers.size === 1) {
+                updateCoordinates(e.clientX, e.clientY);
+                if (isPanning) {
+                    viewTransform.x = e.clientX - panStart.x;
+                    viewTransform.y = e.clientY - panStart.y;
+                    render();
+                }
+            } else if (activePointers.size === 2 && initialPinchDistance) {
+                let points = Array.from(activePointers.values());
+                let currentDistance = getPinchDistance(points[0], points[1]);
+                let currentCenter = getPinchCenter(points[0], points[1]);
+                let scaleFactor = currentDistance / initialPinchDistance;
+                let targetScale = Math.min(Math.max(initialPinchScale * scaleFactor, 0.25), 4.0);
+                let rect = container.getBoundingClientRect();
+                let centerX = initialPinchCenter.x - rect.left;
+                let centerY = initialPinchCenter.y - rect.top;
+                viewTransform.scale = targetScale;
+                viewTransform.x = currentCenter.x - rect.left - (centerX - initialTransform.x) * (targetScale / initialPinchScale);
+                viewTransform.y = currentCenter.y - rect.top - (centerY - initialTransform.y) * (targetScale / initialPinchScale);
+                render();
+            }
+        });
+
+        const handlePointerEnd = (e) => {
+            activePointers.delete(e.pointerId);
+            if (activePointers.size < 2) initialPinchDistance = null;
+            if (activePointers.size === 0 && isPanning) {
+                isPanning = false;
+                container.classList.remove("panning");
+            }
+        };
+        container.addEventListener("pointerup", handlePointerEnd);
+        container.addEventListener("pointercancel", handlePointerEnd);
+        container.addEventListener("pointerleave", handlePointerEnd);
 
         container.addEventListener("wheel", (e) => {
             e.preventDefault();
             let zoomIntensity = 0.1;
             let oldScale = viewTransform.scale;
             if (e.deltaY < 0) {
-                viewTransform.scale = Math.min(viewTransform.scale * (1 + zoomIntensity), 3.0);
+                viewTransform.scale = Math.min(viewTransform.scale * (1 + zoomIntensity), 4.0);
             } else {
-                viewTransform.scale = Math.max(viewTransform.scale * (1 - zoomIntensity), 0.3);
+                viewTransform.scale = Math.max(viewTransform.scale * (1 - zoomIntensity), 0.25);
             }
             let rect = container.getBoundingClientRect();
             let mouseX = e.clientX - rect.left;
@@ -657,52 +1118,134 @@
             render();
         }, { passive: false });
 
-        function handleStart(e) {
-            let pos = getPointerPos(e);
-            if (!pos.x || !pos.y) return;
-            isPanning = true;
-            container.classList.add("panning");
-            panStart = { x: pos.x - viewTransform.x, y: pos.y - viewTransform.y };
-        }
-
-        container.addEventListener("mousedown", handleStart);
-        container.addEventListener("touchstart", handleStart, { passive: true });
-
-        function handleEnd() {
-            if (isPanning) {
-                isPanning = false;
-                container.classList.remove("panning");
-            }
-        }
-
-        window.addEventListener("mouseup", handleEnd);
-        window.addEventListener("touchend", handleEnd);
-
         function openModal(el) {
             selectedId = el.id;
             document.getElementById("modalElementId").value = el.id;
             document.getElementById("modalTitle").innerText = `Details: ${el.name}`;
             document.getElementById("modalName").value = el.name;
-            document.getElementById("modalX").value = el.x;
-            document.getElementById("modalY").value = el.y;
+            
+            if (el.type === 'asset') {
+                document.getElementById("modalAssetFields").style.display = "flex";
+                document.getElementById("modalDependencyContainer").style.display = "flex";
+                document.getElementById("modalDocLinkContainer").style.display = "block";
+                document.getElementById("modalLotoContainer").style.display = "block";
+                document.getElementById("modalPmContainer").style.display = "flex";
+                document.getElementById("modalPredictiveContainer").style.display = "flex";
+                document.getElementById("modalUtilitiesContainer").style.display = "flex";
+                document.getElementById("modalVendorContainer").style.display = "flex";
+                document.getElementById("modalBomContainer").style.display = "block";
+                document.getElementById("modalTicketsContainer").style.display = "block";
+                document.getElementById("modalCoordContainer").style.display = "flex";
+
+                document.getElementById("modalCategory").value = el.category || "General";
+                document.getElementById("modalStatus").value = el.status || "operational";
+                document.getElementById("modalParentAsset").value = el.parentId ? `Parent ID: ${el.parentId}` : "None / Standalone";
+                document.getElementById("modalPlcNode").value = el.plcNode || "None";
+                document.getElementById("modalManualUrl").value = el.manualUrl || "";
+                document.getElementById("modalX").value = el.x;
+                document.getElementById("modalY").value = el.y;
+                document.getElementById("modalLastInspect").value = el.lastInspect || "";
+                document.getElementById("modalPmDue").value = el.pmDue || "";
+                document.getElementById("modalRunHours").value = el.runHours || "";
+                document.getElementById("modalTemp").value = el.temp || "";
+                document.getElementById("modalVibration").value = el.vibration || "";
+                document.getElementById("modalLube").value = el.lube || "";
+                document.getElementById("modalUtilityDraw").value = el.utilityDraw || "";
+                document.getElementById("modalEstopZone").value = el.estopZone || "";
+                document.getElementById("modalVendorName").value = el.vendorName || "";
+                document.getElementById("modalVendorContact").value = el.vendorContact || "";
+
+                renderLotoChecklist(el);
+                renderBomTable(el);
+                renderWorkTickets(el);
+            } else {
+                document.getElementById("modalAssetFields").style.display = "none";
+                document.getElementById("modalDependencyContainer").style.display = "none";
+                document.getElementById("modalDocLinkContainer").style.display = "none";
+                document.getElementById("modalLotoContainer").style.display = "none";
+                document.getElementById("modalPmContainer").style.display = "none";
+                document.getElementById("modalPredictiveContainer").style.display = "none";
+                document.getElementById("modalUtilitiesContainer").style.display = "none";
+                document.getElementById("modalVendorContainer").style.display = "none";
+                document.getElementById("modalBomContainer").style.display = "none";
+                document.getElementById("modalTicketsContainer").style.display = "none";
+                document.getElementById("modalCoordContainer").style.display = "flex";
+                document.getElementById("modalX").value = el.x;
+                document.getElementById("modalY").value = el.y;
+            }
+
             renderPhotos(el);
             renderSpreadsheet(el);
             document.getElementById("modal-overlay").style.display = "flex";
-            render();
         }
+
+        window.openManualUrl = function() {
+            let url = document.getElementById("modalManualUrl").value;
+            if (url) window.open(url, '_blank');
+            else alert("No manual link available for this asset.");
+        }
+
+        function renderLotoChecklist(el) {
+            let container = document.getElementById("lotoChecklistList");
+            container.innerHTML = "";
+            if (!el.lotoSteps || el.lotoSteps.length === 0) {
+                container.innerHTML = `<span style="color: #64748b; font-style: italic;">No LOTO steps documented.</span>`;
+                return;
+            }
+            el.lotoSteps.forEach((s) => {
+                let div = document.createElement("div");
+                div.className = "loto-step";
+                div.innerHTML = `<input type="checkbox" ${s.done ? 'checked' : ''} disabled>
+                <span style="${s.done ? 'text-decoration: line-through; color: #64748b;' : 'color: #fff;'}">${s.step}</span>`;
+                container.appendChild(div);
+            });
+        }
+
+        function renderBomTable(el) {
+            let tbody = document.getElementById("bomBody");
+            tbody.innerHTML = "";
+            if (!el.spareParts || el.spareParts.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="3" style="color: #64748b; font-style: italic;">No spare parts mapped.</td></tr>`;
+                return;
+            }
+            el.spareParts.forEach(part => {
+                let tr = document.createElement("tr");
+                tr.innerHTML = `<td>${part.partName}</td><td>${part.partNum}</td><td>${part.binLoc || 'N/A'}</td>`;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function renderWorkTickets(el) {
+            let box = document.getElementById("ticketsBox");
+            box.innerHTML = "";
+            if (!el.workTickets || el.workTickets.length === 0) {
+                box.innerHTML = `<span style="color: #64748b; font-style: italic;">No active breakdown tickets.</span>`;
+                return;
+            }
+            el.workTickets.forEach(t => {
+                let div = document.createElement("div");
+                div.className = "note-entry";
+                div.innerHTML = `<span class="note-timestamp">[${t.time}] PRIORITY: ${t.priority}</span> - ${t.desc}`;
+                box.appendChild(div);
+            });
+        }
+
         window.closeModal = function() {
             document.getElementById("modal-overlay").style.display = "none";
             selectedId = null;
-            render();
         }
+
         function renderPhotos(el) {
             let gallery = document.getElementById("modalPhotoGallery");
             gallery.innerHTML = "";
-            if (!el.photos) el.photos = [];
+            if (!el.photos || el.photos.length === 0) {
+                gallery.innerHTML = `<span style="color: #64748b; font-style: italic; font-size: 11px;">No photos uploaded.</span>`;
+                return;
+            }
             el.photos.forEach((photoUrl) => {
                 let containerDiv = document.createElement("div");
                 containerDiv.className = "photo-thumb-container";
-                containerDiv.title = "Tap to enlarge photo";
+                containerDiv.title = "Click to enlarge photo";
                 containerDiv.onclick = () => openLightbox(photoUrl, el.name);
                 let img = document.createElement("img");
                 img.src = photoUrl;
@@ -710,6 +1253,7 @@
                 gallery.appendChild(containerDiv);
             });
         }
+
         window.openLightbox = function(url, itemName) {
             document.getElementById("lightboxImage").src = url;
             document.getElementById("lightboxCaption").innerText = itemName || "Photo Preview";
@@ -718,29 +1262,28 @@
         window.closeLightbox = function() {
             document.getElementById("lightbox-overlay").style.display = "none";
         }
+
         function renderSpreadsheet(el) {
             let tbody = document.getElementById("spreadsheetBody");
             tbody.innerHTML = "";
             if (!el.spreadsheetData) el.spreadsheetData = [];
-            el.spreadsheetData.forEach((row) => {
+            let rowsData = el.spreadsheetData.rows || el.spreadsheetData;
+            if (rowsData.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="2" style="color: #64748b; font-style: italic;">No custom records.</td></tr>`;
+                return;
+            }
+            rowsData.forEach((row) => {
                 let tr = document.createElement("tr");
                 let tdKey = document.createElement("td");
-                let inputKey = document.createElement("input");
-                inputKey.type = "text";
-                inputKey.value = row.key;
-                inputKey.disabled = true;
-                tdKey.appendChild(inputKey);
+                tdKey.innerText = row.key;
                 let tdVal = document.createElement("td");
-                let inputVal = document.createElement("input");
-                inputVal.type = "text";
-                inputVal.value = row.value;
-                inputVal.disabled = true;
-                tdVal.appendChild(inputVal);
+                tdVal.innerText = row.value;
                 tr.appendChild(tdKey);
                 tr.appendChild(tdVal);
                 tbody.appendChild(tr);
             });
         }
+
         loadFromFirebase();
     </script>
 </body>
