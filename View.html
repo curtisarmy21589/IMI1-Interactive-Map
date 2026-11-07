@@ -241,6 +241,7 @@
         .pm-overdue-pulse { animation: pmPulse 1.5s infinite ease-in-out; stroke: #ef4444; stroke-width: 2; fill: none; }
         .pm-due-pulse { animation: pmPulse 2s infinite ease-in-out; stroke: #f59e0b; stroke-width: 2; fill: none; }
         .loto-step { display: flex; align-items: center; gap: 6px; font-size: 11px; border-bottom: 1px solid #1f2d3d; padding: 3px 0; }
+        .action-item-row { display: flex; align-items: center; gap: 6px; font-size: 11px; border-bottom: 1px solid #1f2d3d; padding: 2px 0; }
         .danger { background: #7f1d1d; border-color: #ef4444; color: white; }
         .danger:hover { background: #ef4444; }
     </style>
@@ -323,8 +324,21 @@
                 </div>
                 <select id="techShiftName"></select>
                 <label>Handover Note / Parts Waiting in Cage</label>
-                <textarea id="techLogText" placeholder="Detailed handoff notes, jams, or parts set aside in cage..." style="height:60px;"></textarea>
-                <button onclick="addShiftLog('tech')" style="margin-top: 6px; background:#0284c7; color:#fff;">+ Post Tech Entry</button>
+                <textarea id="techLogText" placeholder="Detailed handoff notes, jams, or parts set aside in cage..." style="height:50px;"></textarea>
+                <button onclick="addShiftLog('tech')" style="margin-top: 4px; background:#0284c7; color:#fff;">+ Post Tech Entry</button>
+            </div>
+            <!-- ACTION ITEM TRACKER -->
+            <div style="margin-top: 4px;">
+                <label>📋 Shift Action Items / Tasks</label>
+                <div id="techActionList" style="max-height: 80px; overflow-y: auto; background: #070d14; border: 1px solid #1f2d3d; border-radius: 4px; padding: 4px; margin-top: 2px;"></div>
+                <div style="display: flex; gap: 4px; margin-top: 4px;">
+                    <input type="text" id="newTechActionText" placeholder="Add follow-up task..." style="min-height: 28px; padding: 4px;">
+                    <button onclick="addActionItem('tech')" style="width: auto; padding: 2px 8px; font-size: 10px; min-height: 28px;">+ Add</button>
+                </div>
+            </div>
+            <div style="display: flex; gap: 4px; margin-top: 4px;">
+                <button onclick="printHandoverReport('tech')" style="font-size: 10px; padding: 4px;">🖨️ Print Summary</button>
+                <button onclick="exportShiftLogsCSV('tech')" style="font-size: 10px; padding: 4px;">📥 CSV Export</button>
             </div>
             <div style="margin-top: 4px; margin-bottom: 2px;">
                 <label>Filter Log View</label>
@@ -332,7 +346,7 @@
                     <option value="ALL">All Shifts</option>
                 </select>
             </div>
-            <div class="notes-log-box" id="techLogContainer" style="max-height: 150px;"></div>
+            <div class="notes-log-box" id="techLogContainer" style="max-height: 120px;"></div>
         </div>
         <!-- OPERATIONS SHIFT HANDOVER PANEL -->
         <div id="panelShift" class="panel">
@@ -344,8 +358,21 @@
                 </div>
                 <select id="shiftName"></select>
                 <label>Handover Note / Updates</label>
-                <textarea id="shiftLogText" placeholder="Detailed handoff notes, equipment status..." style="height:60px;"></textarea>
-                <button onclick="addShiftLog('ops')" style="margin-top: 6px; background:#0284c7; color:#fff;">+ Post Ops Entry</button>
+                <textarea id="shiftLogText" placeholder="Detailed handoff notes, equipment status..." style="height:50px;"></textarea>
+                <button onclick="addShiftLog('ops')" style="margin-top: 4px; background:#0284c7; color:#fff;">+ Post Ops Entry</button>
+            </div>
+            <!-- ACTION ITEM TRACKER -->
+            <div style="margin-top: 4px;">
+                <label>📋 Ops Shift Action Items</label>
+                <div id="opsActionList" style="max-height: 80px; overflow-y: auto; background: #070d14; border: 1px solid #1f2d3d; border-radius: 4px; padding: 4px; margin-top: 2px;"></div>
+                <div style="display: flex; gap: 4px; margin-top: 4px;">
+                    <input type="text" id="newOpsActionText" placeholder="Add follow-up task..." style="min-height: 28px; padding: 4px;">
+                    <button onclick="addActionItem('ops')" style="width: auto; padding: 2px 8px; font-size: 10px; min-height: 28px;">+ Add</button>
+                </div>
+            </div>
+            <div style="display: flex; gap: 4px; margin-top: 4px;">
+                <button onclick="printHandoverReport('ops')" style="font-size: 10px; padding: 4px;">🖨️ Print Summary</button>
+                <button onclick="exportShiftLogsCSV('ops')" style="font-size: 10px; padding: 4px;">📥 CSV Export</button>
             </div>
             <div style="margin-top: 4px; margin-bottom: 2px;">
                 <label>Filter Log View</label>
@@ -353,7 +380,7 @@
                     <option value="ALL">All Shifts</option>
                 </select>
             </div>
-            <div class="notes-log-box" id="shiftLogContainer" style="max-height: 150px;"></div>
+            <div class="notes-log-box" id="shiftLogContainer" style="max-height: 120px;"></div>
         </div>
         <!-- SAFETY SHIFT HANDOVER PANEL -->
         <div id="panelSafety" class="panel">
@@ -365,8 +392,21 @@
                 </div>
                 <select id="safetyShiftName"></select>
                 <label>Safety Incidents / Audits / PPE Notes</label>
-                <textarea id="safetyLogText" placeholder="Near misses, safety audits, eyewash checks..." style="height:60px;"></textarea>
-                <button onclick="addShiftLog('safety')" style="margin-top: 6px; background:#0284c7; color:#fff;">+ Post Safety Entry</button>
+                <textarea id="safetyLogText" placeholder="Near misses, safety audits, eyewash checks..." style="height:50px;"></textarea>
+                <button onclick="addShiftLog('safety')" style="margin-top: 4px; background:#0284c7; color:#fff;">+ Post Safety Entry</button>
+            </div>
+            <!-- ACTION ITEM TRACKER -->
+            <div style="margin-top: 4px;">
+                <label>📋 Safety Follow-up Action Items</label>
+                <div id="safetyActionList" style="max-height: 80px; overflow-y: auto; background: #070d14; border: 1px solid #1f2d3d; border-radius: 4px; padding: 4px; margin-top: 2px;"></div>
+                <div style="display: flex; gap: 4px; margin-top: 4px;">
+                    <input type="text" id="newSafetyActionText" placeholder="Add follow-up task..." style="min-height: 28px; padding: 4px;">
+                    <button onclick="addActionItem('safety')" style="width: auto; padding: 2px 8px; font-size: 10px; min-height: 28px;">+ Add</button>
+                </div>
+            </div>
+            <div style="display: flex; gap: 4px; margin-top: 4px;">
+                <button onclick="printHandoverReport('safety')" style="font-size: 10px; padding: 4px;">🖨️ Print Summary</button>
+                <button onclick="exportShiftLogsCSV('safety')" style="font-size: 10px; padding: 4px;">📥 CSV Export</button>
             </div>
             <div style="margin-top: 4px; margin-bottom: 2px;">
                 <label>Filter Log View</label>
@@ -374,7 +414,7 @@
                     <option value="ALL">All Shifts</option>
                 </select>
             </div>
-            <div class="notes-log-box" id="safetyLogContainer" style="max-height: 150px;"></div>
+            <div class="notes-log-box" id="safetyLogContainer" style="max-height: 120px;"></div>
         </div>
         <!-- TOM TEAM SHIFT HANDOVER PANEL -->
         <div id="panelTom" class="panel">
@@ -386,8 +426,21 @@
                 </div>
                 <select id="tomShiftName"></select>
                 <label>Yard / Yard Truck / Trailer Notes</label>
-                <textarea id="tomLogText" placeholder="Yard flow, spotter truck status, trailer moves..." style="height:60px;"></textarea>
-                <button onclick="addShiftLog('tom')" style="margin-top: 6px; background:#0284c7; color:#fff;">+ Post Tom Team Entry</button>
+                <textarea id="tomLogText" placeholder="Yard flow, spotter truck status, trailer moves..." style="height:50px;"></textarea>
+                <button onclick="addShiftLog('tom')" style="margin-top: 4px; background:#0284c7; color:#fff;">+ Post Tom Team Entry</button>
+            </div>
+            <!-- ACTION ITEM TRACKER -->
+            <div style="margin-top: 4px;">
+                <label>📋 Tom Team Action Items</label>
+                <div id="tomActionList" style="max-height: 80px; overflow-y: auto; background: #070d14; border: 1px solid #1f2d3d; border-radius: 4px; padding: 4px; margin-top: 2px;"></div>
+                <div style="display: flex; gap: 4px; margin-top: 4px;">
+                    <input type="text" id="newTomActionText" placeholder="Add follow-up task..." style="min-height: 28px; padding: 4px;">
+                    <button onclick="addActionItem('tom')" style="width: auto; padding: 2px 8px; font-size: 10px; min-height: 28px;">+ Add</button>
+                </div>
+            </div>
+            <div style="display: flex; gap: 4px; margin-top: 4px;">
+                <button onclick="printHandoverReport('tom')" style="font-size: 10px; padding: 4px;">🖨️ Print Summary</button>
+                <button onclick="exportShiftLogsCSV('tom')" style="font-size: 10px; padding: 4px;">📥 CSV Export</button>
             </div>
             <div style="margin-top: 4px; margin-bottom: 2px;">
                 <label>Filter Log View</label>
@@ -395,7 +448,7 @@
                     <option value="ALL">All Shifts</option>
                 </select>
             </div>
-            <div class="notes-log-box" id="tomLogContainer" style="max-height: 150px;"></div>
+            <div class="notes-log-box" id="tomLogContainer" style="max-height: 120px;"></div>
         </div>
     </div>
     <div id="canvas-container">
@@ -403,6 +456,7 @@
         <div id="quick-filter-bar">
             <button class="filter-pill down-pill" onclick="toggleQuickFilter('down')">🚨 Down Assets</button>
             <button class="filter-pill pm-pill" onclick="toggleQuickFilter('pm_due')">🔥 Overdue PMs</button>
+            <button class="filter-pill" onclick="toggleQuickFilter('parts_needed')">📦 Parts Needed</button>
             <button class="filter-pill" onclick="toggleQuickFilter('water')">💧 Water Shutoffs</button>
             <button class="filter-pill" onclick="toggleQuickFilter('estop')">⚡ E-Stop Zones</button>
             <button class="filter-pill active" id="filterAllBtn" onclick="toggleQuickFilter('all')">Show All</button>
@@ -416,7 +470,10 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h3 id="modalTitle" style="color: #38bdf8; margin: 0;">Item Details</h3>
-                <button class="close-modal" onclick="closeModal()">×</button>
+                <div style="display: flex; gap: 6px; align-items: center;">
+                    <button onclick="printAssetQrCode()" style="width: auto; padding: 4px 8px; font-size: 10px; background: #0284c7; color: #fff;">🖨️ Print QR Label</button>
+                    <button class="close-modal" onclick="closeModal()">×</button>
+                </div>
             </div>
             <div class="modal-body">
                 <input type="hidden" id="modalElementId">
@@ -455,38 +512,32 @@
                     <div style="flex:1;"><label>X Col</label><input type="number" id="modalX" disabled></div>
                     <div style="flex:1;"><label>Y Row</label><input type="number" id="modalY" disabled></div>
                 </div>
-                <!-- LOTO CHECKLIST -->
                 <div id="modalLotoContainer">
                     <h4>🔒 Lockout/Tagout (LOTO) Sequence & ESWC Checklist</h4>
                     <div id="lotoChecklistList"></div>
                 </div>
-                <!-- PREVENTIVE MAINTENANCE & METERS -->
                 <h4>⏱️ Maintenance & Operating Meters</h4>
                 <div id="modalPmContainer" style="display: flex; gap: 6px; flex-wrap: wrap;">
                     <div style="flex:1; min-width: 130px;"><label>Last Inspected</label><input type="date" id="modalLastInspect" disabled></div>
                     <div style="flex:1; min-width: 130px;"><label>PM Due Date</label><input type="date" id="modalPmDue" disabled></div>
                     <div style="flex:1; min-width: 130px;"><label>Run Hours / Meter</label><input type="text" id="modalRunHours" disabled></div>
                 </div>
-                <!-- PREDICTIVE & LUBRICATION METRICS -->
                 <h4>📊 Predictive Health & Lubrication</h4>
                 <div id="modalPredictiveContainer" style="display: flex; gap: 6px; flex-wrap: wrap;">
                     <div style="flex:1; min-width: 130px;"><label>Thermal Temp (°F)</label><input type="text" id="modalTemp" disabled></div>
                     <div style="flex:1; min-width: 130px;"><label>Vibration (in/s)</label><input type="text" id="modalVibration" disabled></div>
                     <div style="flex:1; min-width: 130px;"><label>Grease / Lube Type</label><input type="text" id="modalLube" disabled></div>
                 </div>
-                <!-- UTILITIES & SAFETY INTERLOCKS -->
                 <h4>⚡ Utilities & Safety Interlocks</h4>
                 <div id="modalUtilitiesContainer" style="display: flex; gap: 6px; flex-wrap: wrap;">
                     <div style="flex:1; min-width: 130px;"><label>Amps/Cal</label><input type="text" id="modalUtilityDraw" disabled></div>
                     <div style="flex:1; min-width: 130px;"><label>Safety / E-Stop Zone</label><input type="text" id="modalEstopZone" disabled></div>
                 </div>
-                <!-- VENDOR DIRECTORY -->
                 <h4>📞 OEM & Vendor Support Contact</h4>
                 <div id="modalVendorContainer" style="display: flex; gap: 6px;">
                     <div style="flex:1;"><label>Vendor Name / Rep</label><input type="text" id="modalVendorName" disabled></div>
                     <div style="flex:1;"><label>Contact Phone / Email</label><input type="text" id="modalVendorContact" disabled></div>
                 </div>
-                <!-- SPARE PARTS & BIN LOCATION -->
                 <div id="modalBomContainer">
                     <h4 style="margin-top: 6px;">📦 Spare Parts & Cage Bin Mapping</h4>
                     <table class="spreadsheet-table">
@@ -500,7 +551,6 @@
                         <tbody id="bomBody"></tbody>
                     </table>
                 </div>
-                <!-- BREAKDOWN WORK TICKETS -->
                 <div id="modalTicketsContainer">
                     <h4 style="margin-top: 6px;">🛠️ Open Breakdown Tickets</h4>
                     <div class="notes-log-box" id="ticketsBox"></div>
@@ -651,6 +701,10 @@
         let safetyShifts = ["FHD", "BHD", "FHN", "BHN", "BBM"];
         let tomShifts = ["FHD", "BHD", "FHN", "BHN", "BBM"];
         let techShifts = ["FHD", "BHD", "FHN", "BHN", "BBM"];
+        let techActions = [];
+        let opsActions = [];
+        let safetyActions = [];
+        let tomActions = [];
         let activeShiftCategory = 'tech';
 
         let selectedId = null;
@@ -692,11 +746,16 @@
                     if (data.safetyShifts) safetyShifts = data.safetyShifts;
                     if (data.tomShifts) tomShifts = data.tomShifts;
                     if (data.techShifts) techShifts = data.techShifts;
+                    if (data.techActions) techActions = data.techActions;
+                    if (data.opsActions) opsActions = data.opsActions;
+                    if (data.safetyActions) safetyActions = data.safetyActions;
+                    if (data.tomActions) tomActions = data.tomActions;
                     syncStatus.innerText = "Connected (View Only)";
                 } else {
                     syncStatus.innerText = "No Data Found";
                 }
                 populateAllShiftDropdowns();
+                renderAllActionLists();
                 renderShiftLogs('tech', document.getElementById('techFilterSelect').value);
                 renderShiftLogs('ops', document.getElementById('shiftFilterSelect').value);
                 renderShiftLogs('safety', document.getElementById('safetyFilterSelect').value);
@@ -725,6 +784,10 @@
                     safetyShifts: safetyShifts,
                     tomShifts: tomShifts,
                     techShifts: techShifts,
+                    techActions: techActions,
+                    opsActions: opsActions,
+                    safetyActions: safetyActions,
+                    tomActions: tomActions,
                     updatedAt: new Date().toISOString()
                 };
                 localStorage.setItem("cached_layout", JSON.stringify(layoutObject));
@@ -800,12 +863,7 @@
 
         window.openShiftManagerModal = function(cat) {
             activeShiftCategory = cat;
-            let titleMap = { 
-                tech: '⚙️ Manage Tech Shifts', 
-                ops: '⚙️ Manage Operations Shifts', 
-                safety: '⚙️ Manage Safety Shifts', 
-                tom: '⚙️ Manage Tom Team Shifts' 
-            };
+            let titleMap = { tech: '⚙️ Manage Tech Shifts', ops: '⚙️ Manage Operations Shifts', safety: '⚙️ Manage Safety Shifts', tom: '⚙️ Manage Tom Team Shifts' };
             document.getElementById("shiftModalTitle").innerText = titleMap[cat] || '⚙️ Manage Shifts';
             renderShiftTable();
             document.getElementById("shift-manager-modal-overlay").style.display = "flex";
@@ -905,13 +963,161 @@
             });
         }
 
+        /* ACTION ITEM TRACKER FUNCTIONS */
+        function getActionList(cat) {
+            if (cat === 'safety') return safetyActions;
+            if (cat === 'tom') return tomActions;
+            if (cat === 'tech') return techActions;
+            return opsActions;
+        }
+
+        window.addActionItem = function(cat) {
+            let inputId = cat === 'safety' ? 'newSafetyActionText' : (cat === 'tom' ? 'newTomActionText' : (cat === 'tech' ? 'newTechActionText' : 'newOpsActionText'));
+            let input = document.getElementById(inputId);
+            let text = input.value.trim();
+            if (!text) return;
+            let list = getActionList(cat);
+            list.push({ text, done: false });
+            input.value = "";
+            renderActionList(cat);
+            saveToFirebase();
+        };
+
+        window.toggleActionItem = function(cat, index, checked) {
+            let list = getActionList(cat);
+            if (list[index]) {
+                list[index].done = checked;
+                renderActionList(cat);
+                saveToFirebase();
+            }
+        };
+
+        window.deleteActionItem = function(cat, index) {
+            let list = getActionList(cat);
+            list.splice(index, 1);
+            renderActionList(cat);
+            saveToFirebase();
+        };
+
+        function renderAllActionLists() {
+            renderActionList('tech');
+            renderActionList('ops');
+            renderActionList('safety');
+            renderActionList('tom');
+        }
+
+        function renderActionList(cat) {
+            let containerId = cat === 'safety' ? 'safetyActionList' : (cat === 'tom' ? 'tomActionList' : (cat === 'tech' ? 'techActionList' : 'opsActionList'));
+            let box = document.getElementById(containerId);
+            if (!box) return;
+            box.innerHTML = "";
+            let list = getActionList(cat);
+            if (list.length === 0) {
+                box.innerHTML = `<span style="color:#64748b; font-style:italic; font-size:10px;">No pending action items.</span>`;
+                return;
+            }
+            list.forEach((item, idx) => {
+                let div = document.createElement("div");
+                div.className = "action-item-row";
+                div.innerHTML = `<input type="checkbox" ${item.done ? 'checked' : ''} onchange="toggleActionItem('${cat}', ${idx}, this.checked)" style="width:auto; margin:0; min-height:auto;">
+                <span style="${item.done ? 'text-decoration: line-through; color: #64748b;' : 'color: #fff;'} flex:1;">${item.text}</span>
+                <button onclick="deleteActionItem('${cat}', ${idx})" class="danger" style="width:auto; padding:0 4px; font-size:9px; min-height:auto;">X</button>`;
+                box.appendChild(div);
+            });
+        }
+
+        /* PRINT HANDOVER REPORT FUNCTION */
+        window.printHandoverReport = function(cat) {
+            let catName = cat === 'safety' ? 'Safety' : (cat === 'tom' ? 'Tom Team' : (cat === 'tech' ? 'Maintenance Tech' : 'Operations'));
+            let filterSelectId = cat === 'safety' ? 'safetyFilterSelect' : (cat === 'tom' ? 'tomFilterSelect' : (cat === 'tech' ? 'techFilterSelect' : 'shiftFilterSelect'));
+            let selectedShift = document.getElementById(filterSelectId).value;
+            let logs = cat === 'safety' ? safetyLogs : (cat === 'tom' ? tomLogs : (cat === 'tech' ? techLogs : shiftLogs));
+            if (selectedShift !== 'ALL') logs = logs.filter(l => l.shift === selectedShift);
+            let actions = getActionList(cat);
+
+            let printWin = window.open('', '_blank');
+            printWin.document.write(`
+                <html><head><title>${catName} Shift Handover Summary</title>
+                <style>
+                    body { font-family: sans-serif; padding: 20px; color: #111; }
+                    h2 { color: #0284c7; border-bottom: 2px solid #0284c7; padding-bottom: 4px; }
+                    h3 { margin-top: 15px; color: #333; }
+                    .entry { border-bottom: 1px dashed #ccc; padding: 6px 0; font-size: 13px; }
+                    .timestamp { font-weight: bold; color: #0284c7; }
+                    ul { padding-left: 20px; }
+                </style></head><body>
+                <h2>📋 ${catName} Shift Handover Summary (${selectedShift})</h2>
+                <p><b>Generated:</b> ${new Date().toLocaleString()}</p>
+                <h3>Pending Action Items</h3>
+                <ul>${actions.map(a => `<li>[${a.done ? 'X' : ' '}] ${a.text}</li>`).join('') || '<li>None</li>'}</ul>
+                <h3>Shift Handover Notes</h3>
+                ${logs.map(l => `<div class="entry"><span class="timestamp">[${l.time}] ${l.shift}:</span> ${l.note}</div>`).join('') || '<p>No log entries found.</p>'}
+                </body></html>
+            `);
+            printWin.document.close();
+            printWin.focus();
+            setTimeout(() => { printWin.print(); }, 250);
+        };
+
+        /* EXPORT LOGS CSV FUNCTION */
+        window.exportShiftLogsCSV = function(cat) {
+            let catName = cat === 'safety' ? 'Safety' : (cat === 'tom' ? 'Tom_Team' : (cat === 'tech' ? 'Tech' : 'Ops'));
+            let logs = cat === 'safety' ? safetyLogs : (cat === 'tom' ? tomLogs : (cat === 'tech' ? techLogs : shiftLogs));
+            let csvRows = [["Timestamp", "Shift", "Note / Handover Entry"]];
+            logs.forEach(l => csvRows.push([`"${l.time}"`, `"${l.shift}"`, `"${(l.note || '').replace(/"/g, '""')}"`]));
+            let csvString = csvRows.map(row => row.join(",")).join("\n");
+            let blob = new Blob([csvString], { type: "text/csv" });
+            let url = URL.createObjectURL(blob);
+            let a = document.createElement("a");
+            a.href = url;
+            a.download = `${catName}_Shift_Logs_${new Date().toISOString().slice(0, 10)}.csv`;
+            a.click();
+            URL.revokeObjectURL(url);
+        };
+
+        /* PRINT ASSET QR CODE LABEL */
+        window.printAssetQrCode = function() {
+            let id = parseInt(document.getElementById("modalElementId").value);
+            let el = elements.find(item => item.id === id);
+            if (!el) return;
+            let rowLabel = getRowLabel(Math.floor(el.y));
+            let colNum = (el.x + 1).toFixed(1);
+
+            let qrWin = window.open('', '_blank');
+            qrWin.document.write(`
+                <html><head><title>Asset Label - ${el.name}</title>
+                <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"><\/script>
+                <style>
+                    body { font-family: sans-serif; text-align: center; padding: 20px; }
+                    .label-card { border: 3px solid #000; padding: 15px; width: 260px; margin: 0 auto; border-radius: 8px; }
+                    h3 { margin: 0 0 5px 0; font-size: 16px; }
+                    p { margin: 2px 0; font-size: 12px; }
+                    canvas { margin-top: 10px; }
+                </style></head><body>
+                <div class="label-card">
+                    <h3>${el.name}</h3>
+                    <p><b>Category:</b> ${el.category || 'N/A'}</p>
+                    <p><b>Location:</b> Row ${rowLabel}, Col ${colNum}</p>
+                    <p><b>ID:</b> ${el.id}</p>
+                    <canvas id="qrCanvas"></canvas>
+                </div>
+                <script>
+                    QRCode.toCanvas(document.getElementById('qrCanvas'), '${el.id}', { width: 140 }, function () {
+                        window.print();
+                    });
+                <\/script></body></html>
+            `);
+            qrWin.document.close();
+        };
+
         window.toggleQuickFilter = function(filterType) {
             activeQuickFilter = filterType;
             document.querySelectorAll('.filter-pill').forEach(btn => btn.classList.remove('active'));
             if (filterType === 'down') document.querySelector('.down-pill').classList.add('active');
             else if (filterType === 'pm_due') document.querySelector('.pm-pill').classList.add('active');
-            else if (filterType === 'water') document.querySelectorAll('.filter-pill')[2].classList.add('active');
-            else if (filterType === 'estop') document.querySelectorAll('.filter-pill')[3].classList.add('active');
+            else if (filterType === 'parts_needed') document.querySelectorAll('.filter-pill')[2].classList.add('active');
+            else if (filterType === 'water') document.querySelectorAll('.filter-pill')[3].classList.add('active');
+            else if (filterType === 'estop') document.querySelectorAll('.filter-pill')[4].classList.add('active');
             else document.getElementById('filterAllBtn').classList.add('active');
             render();
         };
@@ -1178,6 +1384,7 @@
                 }
                 if (activeQuickFilter === 'down') return el.status === 'down';
                 if (activeQuickFilter === 'pm_due') return getPmAlertStatus(el.pmDue) === 'overdue';
+                if (activeQuickFilter === 'parts_needed') return el.partsNeeded === true;
                 if (activeQuickFilter === 'water') return el.layer === 'water' || (el.category && el.category.toLowerCase().includes('water'));
                 if (activeQuickFilter === 'estop') return el.estopZone || (el.category && el.category.toLowerCase().includes('safety'));
                 if (currentLayer === 'assets') return el.type === 'asset' || el.type === 'conveyance_line';
@@ -1254,6 +1461,18 @@
                     emojiText.setAttribute("font-size", "9px");
                     emojiText.style.pointerEvents = "none";
                     emojiText.textContent = el.emoji || "📍";
+
+                    /* PARTS NEEDED MAP BADGE */
+                    if (el.partsNeeded) {
+                        let partsBadge = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                        partsBadge.setAttribute("x", cx - 12);
+                        partsBadge.setAttribute("y", cy - 7);
+                        partsBadge.setAttribute("font-size", "10px");
+                        partsBadge.style.pointerEvents = "none";
+                        partsBadge.textContent = "📦";
+                        g.appendChild(partsBadge);
+                    }
+
                     let popupGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
                     popupGroup.setAttribute("class", "asset-popup");
                     let boxWidth = (el.name.length * 6.5) + 12;
