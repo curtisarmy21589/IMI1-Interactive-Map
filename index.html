@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Facility Layout & Maintenance Hub</title>
     <!-- html5-qrcode for live camera barcode scanning -->
     <script src="https://unpkg.com/html5-qrcode"></script>
@@ -15,10 +15,10 @@
             display: flex;
             height: 100vh;
             overflow: hidden;
-            touch-action: none; /* Prevents default mobile pinch/zoom body scrolling */
+            touch-action: none;
         }
         #sidebar {
-            width: 380px;
+            width: 360px;
             background-color: #111b27;
             padding: 15px;
             display: flex;
@@ -32,22 +32,22 @@
         }
         @media (max-width: 768px) {
             body { flex-direction: column; }
-            #sidebar { width: 100%; height: 45vh; border-right: none; border-bottom: 1px solid #1f2d3d; }
-            #canvas-container { height: 55vh; }
+            #sidebar { width: 100%; height: 40vh; border-right: none; border-bottom: 1px solid #1f2d3d; }
+            #canvas-container { height: 60vh; }
         }
         h2, h3, h4 { margin: 0 0 5px 0; color: #38bdf8; font-size: 15px; }
         h4 { color: #f59e0b; font-size: 12px; margin-top: 8px; border-bottom: 1px solid #1f2d3d; padding-bottom: 2px; }
         label { font-size: 11px; color: #94a3b8; }
         input, select, button, textarea {
             width: 100%;
-            padding: 8px 10px; /* Increased touch targets */
+            padding: 6px 8px;
             background: #0b131d;
             border: 1px solid #38bdf8;
             color: #fff;
             border-radius: 4px;
             box-sizing: border-box;
             margin-top: 2px;
-            font-size: 13px;
+            font-size: 12px;
         }
         textarea { resize: vertical; height: 50px; font-family: sans-serif; }
         button {
@@ -56,14 +56,13 @@
             cursor: pointer;
             transition: background 0.2s;
             touch-action: manipulation;
-            min-height: 38px; /* Touch-friendly button height */
         }
         button:hover { background: #38bdf8; color: #0b131d; }
         .mode-btn {
             background: #070d14;
             border: 2px solid #1e293b;
-            padding: 10px;
-            font-size: 12px;
+            padding: 8px;
+            font-size: 11px;
         }
         .mode-btn.active {
             background: #38bdf8;
@@ -72,15 +71,14 @@
         }
         .layer-btn {
             flex: 1;
-            padding: 8px 4px;
+            padding: 6px 4px;
             background: #070d14;
             border: 1px solid #1e293b;
             color: #94a3b8;
-            font-size: 11px;
+            font-size: 10px;
             cursor: pointer;
             border-radius: 4px;
             text-align: center;
-            min-height: 36px;
         }
         .layer-btn.active {
             background: #0284c7;
@@ -92,7 +90,7 @@
         .danger:hover { background: #ef4444; color: #fff; }
         .tab-bar { display: flex; gap: 4px; margin-bottom: 5px; }
         .tab-btn {
-            flex: 1; padding: 8px 4px; background: #070d14; border: 1px solid #1e293b; color: #94a3b8; font-size: 11px; cursor: pointer; border-radius: 4px; text-align: center;
+            flex: 1; padding: 5px 2px; background: #070d14; border: 1px solid #1e293b; color: #94a3b8; font-size: 10px; cursor: pointer; border-radius: 4px; text-align: center;
         }
         .tab-btn.active { background: #1e293b; color: #38bdf8; border-color: #38bdf8; }
         .panel { display: none; }
@@ -111,10 +109,10 @@
         .grid-line { stroke: #132235; stroke-width: 1; pointer-events: none; }
         .coord-label { fill: #64748b; font-size: 9px; font-family: monospace; pointer-events: none; }
         #coord-display {
-            background: #070d14; border: 1px solid #1e293b; padding: 8px; border-radius: 4px; font-family: monospace; color: #38bdf8; font-size: 12px; text-align: center;
+            background: #070d14; border: 1px solid #1e293b; padding: 6px; border-radius: 4px; font-family: monospace; color: #38bdf8; font-size: 12px; text-align: center;
         }
         #dist-result-display {
-            background: #0f172a; border: 1px solid #f59e0b; color: #fbbf24; padding: 8px; border-radius: 4px; font-family: monospace; font-size: 11px; text-align: center; display: none;
+            background: #0f172a; border: 1px solid #f59e0b; color: #fbbf24; padding: 6px; border-radius: 4px; font-family: monospace; font-size: 11px; text-align: center; display: none;
         }
         #sync-status { font-size: 10px; text-align: center; color: #10b981; font-weight: bold; margin-top: -4px; }
         #modal-overlay, #category-modal-overlay, #lightbox-overlay, #scanner-modal-overlay {
@@ -127,36 +125,37 @@
         .modal-header { background: #0b131d; padding: 12px 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1f2d3d; }
         .modal-body { padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; -webkit-overflow-scrolling: touch; }
         .modal-footer { background: #0b131d; padding: 10px 15px; display: flex; justify-content: flex-end; gap: 8px; border-top: 1px solid #1f2d3d; }
-        .close-modal { background: none; border: none; color: #94a3b8; font-size: 22px; cursor: pointer; width: auto; padding: 4px 8px; margin: 0; }
+        .close-modal { background: none; border: none; color: #94a3b8; font-size: 18px; cursor: pointer; width: auto; padding: 0; margin: 0; }
         .close-modal:hover { color: #fff; background: none; }
         .spreadsheet-table { width: 100%; border-collapse: collapse; margin-top: 4px; }
-        .spreadsheet-table th, .spreadsheet-table td { border: 1px solid #1f2d3d; padding: 8px; text-align: left; font-size: 11px; }
+        .spreadsheet-table th, .spreadsheet-table td { border: 1px solid #1f2d3d; padding: 6px; text-align: left; font-size: 11px; }
         .spreadsheet-table th { background: #0b131d; color: #38bdf8; }
-        .spreadsheet-table input, .spreadsheet-table select { background: transparent; border: none; color: #fff; width: 100%; padding: 4px; margin: 0; }
+        .spreadsheet-table input, .spreadsheet-table select { background: transparent; border: none; color: #fff; width: 100%; padding: 2px; margin: 0; }
         .spreadsheet-table input:focus, .spreadsheet-table select:focus { outline: 1px solid #38bdf8; }
         .photo-gallery { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px; }
-        .photo-thumb-container { position: relative; width: 85px; height: 85px; border: 1px solid #1f2d3d; border-radius: 4px; overflow: hidden; background: #0b131d; cursor: pointer; }
-        .photo-thumb-container img { width: 100%; height: 100%; object-fit: cover; }
-        .delete-photo-btn { position: absolute; top: 2px; right: 2px; background: rgba(239, 68, 68, 0.9); color: white; border: none; border-radius: 50%; width: 24px; height: 24px; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0; margin: 0; z-index: 5; }
+        .photo-thumb-container { position: relative; width: 80px; height: 80px; border: 1px solid #1f2d3d; border-radius: 4px; overflow: hidden; background: #0b131d; cursor: pointer; }
+        .photo-thumb-container img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.2s; }
+        .photo-thumb-container:hover img { transform: scale(1.05); }
+        .delete-photo-btn { position: absolute; top: 2px; right: 2px; background: rgba(239, 68, 68, 0.9); color: white; border: none; border-radius: 50%; width: 20px; height: 20px; font-size: 11px; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0; margin: 0; z-index: 5; }
         .notes-log-box { background: #070d14; border: 1px solid #1f2d3d; border-radius: 4px; padding: 8px; max-height: 110px; overflow-y: auto; font-size: 11px; display: flex; flex-direction: column; gap: 4px; }
         .note-entry { border-bottom: 1px dotted #1f2d3d; padding-bottom: 3px; }
         .note-timestamp { color: #38bdf8; font-size: 9px; font-weight: bold; }
-        @keyframes pmPulse { 0% { r: 7px; opacity: 1; } 50% { r: 14px; opacity: 0.3; } 100% { r: 7px; opacity: 1; } }
+        @keyframes pmPulse { 0% { r: 7px; opacity: 1; } 50% { r: 12px; opacity: 0.3; } 100% { r: 7px; opacity: 1; } }
         .pm-overdue-pulse { animation: pmPulse 1.5s infinite ease-in-out; stroke: #ef4444; stroke-width: 2; fill: none; }
         .pm-due-pulse { animation: pmPulse 2s infinite ease-in-out; stroke: #f59e0b; stroke-width: 2; fill: none; }
-        .loto-step { display: flex; align-items: center; gap: 8px; font-size: 11px; border-bottom: 1px solid #1f2d3d; padding: 6px 0; }
-        .loto-step input[type="checkbox"] { width: 18px; height: 18px; margin: 0; }
+        .loto-step { display: flex; align-items: center; gap: 6px; font-size: 11px; border-bottom: 1px solid #1f2d3d; padding: 3px 0; }
+        .loto-step input[type="checkbox"] { width: auto; margin: 0; }
     </style>
 </head>
 <body>
     <div id="sidebar">
-        <h2>Site & Layout Builder (Touch Optimized)</h2>
+        <h2>Site & Layout Builder</h2>
         
         <div>
             <label>🔍 Asset Search / QR Scanner</label>
             <div style="display: flex; gap: 4px;">
-                <input type="text" id="assetSearchInput" placeholder="Search Asset, Tag ID, PLC..." oninput="handleSearch(this.value)">
-                <button onclick="openScannerModal()" style="width: auto; padding: 6px 12px; font-size: 12px;">📷 Scan</button>
+                <input type="text" id="assetSearchInput" placeholder="Search Asset Name, Tag ID, PLC..." oninput="handleSearch(this.value)">
+                <button onclick="openScannerModal()" style="width: auto; padding: 4px 8px; font-size: 11px;">📷 Scan</button>
             </div>
         </div>
 
@@ -166,9 +165,9 @@
         
         <!-- HEATMAP OVERLAY TOGGLE -->
         <div>
-            <label style="display:flex; align-items:center; gap:8px; cursor:pointer; padding: 4px 0;">
-                <input type="checkbox" id="heatmapToggle" onchange="toggleHeatmap(this.checked)" style="width:20px; height:20px; margin:0;">
-                <span style="color:#f59e0b; font-weight:bold; font-size:12px;">🔥 Show Downtime & Breakdown Heatmap</span>
+            <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+                <input type="checkbox" id="heatmapToggle" onchange="toggleHeatmap(this.checked)" style="width:auto; margin:0;">
+                <span style="color:#f59e0b; font-weight:bold;">🔥 Show Downtime & Breakdown Heatmap</span>
             </label>
         </div>
 
@@ -176,36 +175,36 @@
         <div>
             <label>Active View Layer</label>
             <div style="display: flex; gap: 4px; margin-top: 2px;">
-                <button class="layer-btn active" id="layerGroundBtn" onclick="switchLayer('ground')">Ground</button>
-                <button class="layer-btn" id="layerMezzBtn" onclick="switchLayer('mezzanine')">Mezz</button>
-                <button class="layer-btn" id="layerRoofBtn" onclick="switchLayer('roof')">Roof</button>
+                <button class="layer-btn active" id="layerGroundBtn" onclick="switchLayer('ground')">Ground Floor</button>
+                <button class="layer-btn" id="layerMezzBtn" onclick="switchLayer('mezzanine')">Mezz Floor</button>
+                <button class="layer-btn" id="layerRoofBtn" onclick="switchLayer('roof')">Roof Layer</button>
             </div>
             <div style="display: flex; gap: 4px; margin-top: 4px;">
-                <button class="layer-btn" id="layerUisBtn" onclick="switchLayer('uis_sorter')">OPEX UIS</button>
-                <button class="layer-btn" id="layerAtrBtn" onclick="switchLayer('atr_retrieval')">ATR Totes</button>
-                <button class="layer-btn" id="layerConveyanceBtn" onclick="switchLayer('conveyance')">Conveyors</button>
+                <button class="layer-btn" id="layerUisBtn" onclick="switchLayer('uis_sorter')">OPEX UIS Sorter</button>
+                <button class="layer-btn" id="layerAtrBtn" onclick="switchLayer('atr_retrieval')">ATR Tote Retrieval</button>
+                <button class="layer-btn" id="layerConveyanceBtn" onclick="switchLayer('conveyance')">Conveyance Lines</button>
             </div>
             <div style="display: flex; gap: 4px; margin-top: 4px;">
-                <button class="layer-btn" id="layerSprinklerBtn" onclick="switchLayer('sprinkler')">Sprinklers</button>
-                <button class="layer-btn" id="layerWaterBtn" onclick="switchLayer('water')">Water Shut</button>
-                <button class="layer-btn" id="layerGasBtn" onclick="switchLayer('gas')">Gas Shut</button>
+                <button class="layer-btn" id="layerSprinklerBtn" onclick="switchLayer('sprinkler')">Sprinkler Shutoffs</button>
+                <button class="layer-btn" id="layerWaterBtn" onclick="switchLayer('water')">Water Shutoffs</button>
+                <button class="layer-btn" id="layerGasBtn" onclick="switchLayer('gas')">Gas Shutoffs</button>
             </div>
             <div style="display: flex; gap: 4px; margin-top: 4px;">
-                <button class="layer-btn" id="layerDockDoorsBtn" onclick="switchLayer('dock_doors')">Docks</button>
+                <button class="layer-btn" id="layerDockDoorsBtn" onclick="switchLayer('dock_doors')">Dock Doors</button>
                 <button class="layer-btn" id="layerHvacBtn" onclick="switchLayer('hvac')">HVAC</button>
-                <button class="layer-btn" id="layerLotoBtn" onclick="switchLayer('loto')">LOTO</button>
+                <button class="layer-btn" id="layerLotoBtn" onclick="switchLayer('loto')">LOTO Isolation</button>
             </div>
             <div style="display: flex; gap: 4px; margin-top: 4px;">
-                <button class="layer-btn" id="layerAssetsBtn" onclick="switchLayer('assets')">All Assets</button>
+                <button class="layer-btn" id="layerAssetsBtn" onclick="switchLayer('assets')">All Assets & Utilities</button>
             </div>
         </div>
 
         <div>
             <label>Interaction Mode</label>
-            <div style="display: flex; flex-direction: column; gap: 6px; margin-top: 2px;">
-                <div style="display: flex; gap: 6px;">
-                    <button id="modeEditBtn" class="mode-btn active" style="flex:1;" onclick="setMode('edit')">✏️ Edit / Move</button>
-                    <button id="modePanBtn" class="mode-btn" style="flex:1;" onclick="setMode('pan')">🖐️ Pan / Inspect</button>
+            <div style="display: flex; flex-direction: column; gap: 4px; margin-top: 2px;">
+                <div style="display: flex; gap: 4px;">
+                    <button id="modeEditBtn" class="mode-btn active" style="flex:1;" onclick="setMode('edit')">Edit (Drag)</button>
+                    <button id="modePanBtn" class="mode-btn" style="flex:1;" onclick="setMode('pan')">Pan / Inspect</button>
                 </div>
                 <button id="modeCalcBtn" class="mode-btn" onclick="setMode('calc')">📏 Distance Calculator</button>
             </div>
@@ -254,13 +253,13 @@
                     <option value="belted">Belted Conveyance (Solid Line)</option>
                     <option value="flex">Flex Conveyance / Expandable (Dashed Line)</option>
                 </select>
-                <button onclick="startDrawingLine()" style="margin-top: 6px; background: #0284c7; color: #fff;">✏️ Draw Multi-Point Line (Double-Tap End)</button>
+                <button onclick="startDrawingLine()" style="margin-top: 6px; background: #0284c7; color: #fff;">✏️ Draw Multi-Point Line (Double-Click End)</button>
             </div>
         </div>
         <div id="panelAsset" class="panel">
             <div style="display: flex; justify-content: space-between; align-items: center;">
                 <h3>Utility & Automation Assets</h3>
-                <button onclick="openCategoryModal()" style="width: auto; padding: 4px 8px; font-size: 11px; background: #1e293b; color: #38bdf8;">⚙️ Categories</button>
+                <button onclick="openCategoryModal()" style="width: auto; padding: 2px 6px; font-size: 10px; background: #1e293b; color: #38bdf8;">⚙️ Categories</button>
             </div>
             <div>
                 <label>Asset Name</label>
@@ -339,7 +338,7 @@
                     <label>Equipment Manual / Wiring Schematic (PDF Link)</label>
                     <div style="display: flex; gap: 4px;">
                         <input type="url" id="modalManualUrl" placeholder="https://example.com/schematics.pdf" oninput="saveModalLiveChanges()">
-                        <button onclick="openManualUrl()" style="width: auto; padding: 6px 12px;">🔗 Open</button>
+                        <button onclick="openManualUrl()" style="width: auto; padding: 4px 8px;">🔗 Open</button>
                     </div>
                 </div>
 
@@ -358,7 +357,7 @@
                     <div id="lotoChecklistList"></div>
                     <div style="display: flex; gap: 4px; margin-top: 4px;">
                         <input type="text" id="newLotoStepText" placeholder="Add isolation step (e.g. Open Breaker CB-1)...">
-                        <button onclick="addLotoStep()" style="width: auto; padding: 6px 12px;">+ Add Step</button>
+                        <button onclick="addLotoStep()" style="width: auto; padding: 4px 8px;">+ Add Step</button>
                     </div>
                 </div>
 
@@ -396,7 +395,7 @@
                 <div id="modalBomContainer">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 6px;">
                         <h4>📦 Spare Parts & Cage Bin Mapping</h4>
-                        <button onclick="addBomRow()" style="width: auto; padding: 4px 10px; font-size: 11px;">+ Add Spare Part</button>
+                        <button onclick="addBomRow()" style="width: auto; padding: 2px 8px; font-size: 10px;">+ Add Spare Part</button>
                     </div>
                     <table class="spreadsheet-table">
                         <thead>
@@ -415,20 +414,20 @@
                 <div id="modalTicketsContainer">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 6px;">
                         <h4>🛠️ Breakdown & Work Tickets</h4>
-                        <button onclick="addWorkTicket()" style="width: auto; padding: 4px 10px; font-size: 11px;">+ Raise Ticket</button>
+                        <button onclick="addWorkTicket()" style="width: auto; padding: 2px 8px; font-size: 10px;">+ Raise Ticket</button>
                     </div>
                     <div class="notes-log-box" id="ticketsBox"></div>
                 </div>
 
                 <div>
-                    <label>Location Photos (Tap photo to enlarge) <span id="upload-status" style="color: #38bdf8; font-weight: normal;"></span></label>
+                    <label>Location Photos (Click photo to enlarge) <span id="upload-status" style="color: #38bdf8; font-weight: normal;"></span></label>
                     <input type="file" id="photoUploadInput" accept="image/*" multiple onchange="handlePhotoUpload(event)">
                     <div class="photo-gallery" id="modalPhotoGallery"></div>
                 </div>
                 <div>
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
                         <label>Spreadsheet Details / Custom Records</label>
-                        <button onclick="addSpreadsheetRow()" style="width: auto; padding: 4px 10px; font-size: 11px;">+ Add Row</button>
+                        <button onclick="addSpreadsheetRow()" style="width: auto; padding: 2px 8px; font-size: 10px;">+ Add Row</button>
                     </div>
                     <table class="spreadsheet-table">
                         <thead>
@@ -443,8 +442,8 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button class="danger" onclick="deleteItemFromModal()" style="width: auto; padding: 8px 16px;">Delete Item</button>
-                <button onclick="closeModal()" style="width: auto; padding: 8px 16px; background: #38bdf8; color: #0b131d;">Done / Save</button>
+                <button class="danger" onclick="deleteItemFromModal()" style="width: auto; padding: 6px 12px;">Delete Item</button>
+                <button onclick="closeModal()" style="width: auto; padding: 6px 12px; background: #38bdf8; color: #0b131d;">Done / Save</button>
             </div>
         </div>
     </div>
@@ -470,8 +469,8 @@
                     <label>Add New Category</label>
                     <div style="display: flex; gap: 6px; margin-top: 4px;">
                         <input type="text" id="newCatName" placeholder="Category Name (e.g. OPEX Sorter)" style="flex: 2;">
-                        <input type="color" id="newCatColor" value="#38bdf8" style="flex: 0.5; height: 38px; padding: 0; cursor: pointer;">
-                        <button onclick="addCategory()" style="flex: 1; margin-top: 0;">Add</button>
+                        <input type="color" id="newCatColor" value="#38bdf8" style="flex: 0.5; height: 30px; padding: 0; cursor: pointer;">
+                        <button onclick="addCategory()" style="flex: 1; margin-top: 0;">Add Category</button>
                     </div>
                 </div>
                 <div style="margin-top: 8px;">
@@ -489,7 +488,7 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button onclick="closeCategoryModal()" style="width: auto; padding: 8px 16px; background: #38bdf8; color: #0b131d;">Save & Close</button>
+                <button onclick="closeCategoryModal()" style="width: auto; padding: 6px 12px; background: #38bdf8; color: #0b131d;">Save & Close</button>
             </div>
         </div>
     </div>
@@ -540,15 +539,8 @@
         let html5QrCode = null;
 
         let calcPoints = []; 
-        let drawingLineState = null; 
-        let draggingVertex = null; 
-        let isDraggingElement = false;
-        let activeDraggedElement = null;
-
-        // Active touch pointer tracking for multi-touch pinch zoom & pan
-        let activePointers = new Map();
-        let initialPinchDist = null;
-        let initialScaleVal = 0.9;
+        let drawingLineState = null; // { name, type, points: [] }
+        let draggingVertex = null; // { lineId, vertexIndex }
 
         let categories = [
             { name: "OPEX UIS Sorter", color: "#ec4899" },
@@ -590,9 +582,13 @@
         ];
 
         let selectedId = null;
+        let isDraggingElement = false;
         let isPanning = false;
         let panStart = { x: 0, y: 0 };
         let viewTransform = { x: 250, y: 180, scale: 0.9 };
+
+        let initialPinchDistance = null;
+        let initialScale = 0.9;
 
         const container = document.getElementById("canvas-container");
         const svg = document.getElementById("layoutSvg");
@@ -807,7 +803,7 @@
                 inputColor.type = "color";
                 inputColor.value = cat.color;
                 inputColor.style.width = "40px";
-                inputColor.style.height = "28px";
+                inputColor.style.height = "24px";
                 inputColor.style.padding = "0";
                 inputColor.style.border = "none";
                 inputColor.style.cursor = "pointer";
@@ -819,8 +815,8 @@
                 tdAction.style.textAlign = "center";
                 let delBtn = document.createElement("button");
                 delBtn.className = "danger";
-                delBtn.style.padding = "4px 8px";
-                delBtn.style.fontSize = "11px";
+                delBtn.style.padding = "2px 6px";
+                delBtn.style.fontSize = "10px";
                 delBtn.innerText = "X";
                 delBtn.onclick = function() {
                     if (categories.length <= 1) {
@@ -916,7 +912,7 @@
             if (mode === 'calc') {
                 distDisplay.style.display = 'block';
                 calcPoints = [];
-                distDisplay.innerText = "Tap 2 points to measure distance";
+                distDisplay.innerText = "Click 2 points to measure distance";
             } else {
                 distDisplay.style.display = 'none';
                 calcPoints = [];
@@ -948,7 +944,7 @@
             drawingLineState = { name, conveyanceType, points: [] };
             currentMode = 'draw_line';
             container.style.cursor = 'crosshair';
-            alert("Tap points on the map to create line bends. DOUBLE-TAP anywhere to finish drawing.");
+            alert("Click points on the map to create line bends. DOUBLE-CLICK anywhere to finish drawing.");
         }
 
         function updateTransformString() {
@@ -1057,4 +1053,928 @@
                         let cy = (el.y * gridSize) + (gridSize / 2);
 
                         let depLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
-                        depLine.setAttribute("
+                        depLine.setAttribute("x1", px);
+                        depLine.setAttribute("y1", py);
+                        depLine.setAttribute("x2", cx);
+                        depLine.setAttribute("y2", cy);
+                        depLine.setAttribute("stroke", "#a855f7");
+                        depLine.setAttribute("stroke-width", "1.5");
+                        depLine.setAttribute("stroke-dasharray", "3");
+                        viewport.appendChild(depLine);
+                    }
+                }
+            });
+
+            // Draw Heatmap Overlay Circles if enabled
+            if (showHeatmap) {
+                elements.forEach(el => {
+                    let ticketCount = (el.workTickets || []).length;
+                    if (ticketCount > 0 || el.status === 'down') {
+                        let cx = (el.x * gridSize) + (gridSize / 2);
+                        let cy = (el.y * gridSize) + (gridSize / 2);
+                        let radius = Math.min(30 + (ticketCount * 15), 90);
+
+                        let heatCircle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                        heatCircle.setAttribute("cx", cx);
+                        heatCircle.setAttribute("cy", cy);
+                        heatCircle.setAttribute("r", radius);
+                        heatCircle.setAttribute("fill", el.status === 'down' ? "#ef4444" : "#f59e0b");
+                        heatCircle.setAttribute("fill-opacity", "0.35");
+                        heatCircle.setAttribute("stroke", "none");
+                        viewport.appendChild(heatCircle);
+                    }
+                });
+            }
+
+            let visibleElements = elements.filter(el => {
+                if (searchQuery) {
+                    let matchesName = el.name.toLowerCase().includes(searchQuery);
+                    let matchesCat = el.category && el.category.toLowerCase().includes(searchQuery);
+                    let matchesId = el.id.toString().includes(searchQuery);
+                    let matchesPlc = el.plcNode && el.plcNode.toLowerCase().includes(searchQuery);
+                    if (!matchesName && !matchesCat && !matchesId && !matchesPlc) return false;
+                }
+                if (currentLayer === 'assets') {
+                    return el.type === 'asset' || el.type === 'conveyance_line';
+                }
+                if (currentLayer === 'conveyance') {
+                    return el.type === 'conveyance_line' || el.type === 'conveyance_run';
+                }
+                if (currentLayer === 'loto') {
+                    return el.type === 'asset' && el.category === 'LOTO Isolation';
+                }
+                return (el.layer || 'ground') === currentLayer;
+            });
+
+            visibleElements.forEach(el => {
+                let g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+                g.setAttribute("class", "item-group");
+
+                g.addEventListener("click", (e) => {
+                    e.stopPropagation();
+                    if (currentMode === 'calc' || currentMode === 'draw_line') return; 
+                    openModal(el);
+                });
+
+                if (el.type === 'conveyance_line') {
+                    let pts = el.points || [];
+                    if (pts.length >= 2) {
+                        let pathStr = `M ${pts[0].x * gridSize} ${pts[0].y * gridSize}`;
+                        for (let i = 1; i < pts.length; i++) {
+                            pathStr += ` L ${pts[i].x * gridSize} ${pts[i].y * gridSize}`;
+                        }
+
+                        let path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                        path.setAttribute("d", pathStr);
+                        path.setAttribute("fill", "none");
+                        path.setAttribute("stroke", el.conveyanceType === 'flex' ? "#fbbf24" : "#22d3ee");
+                        path.setAttribute("stroke-width", el.conveyanceType === 'flex' ? "4" : "6");
+                        if (el.conveyanceType === 'flex') {
+                            path.setAttribute("stroke-dasharray", "6,4");
+                        }
+                        if (el.id === selectedId) {
+                            path.setAttribute("stroke", "#fbbf24");
+                            path.setAttribute("stroke-width", "8");
+                        }
+
+                        let text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                        let midPt = pts[Math.floor(pts.length / 2)];
+                        text.setAttribute("x", midPt.x * gridSize);
+                        text.setAttribute("y", (midPt.y * gridSize) - 6);
+                        text.setAttribute("text-anchor", "middle");
+                        text.setAttribute("fill", "#fff");
+                        text.setAttribute("font-size", "10px");
+                        text.setAttribute("font-weight", "bold");
+                        text.textContent = el.name;
+
+                        g.appendChild(path);
+                        g.appendChild(text);
+
+                        // If selected, render draggable vertex handles for bending/moving
+                        if (el.id === selectedId) {
+                            pts.forEach((pt, pIdx) => {
+                                let vCircle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                                vCircle.setAttribute("cx", pt.x * gridSize);
+                                vCircle.setAttribute("cy", pt.y * gridSize);
+                                vCircle.setAttribute("r", 5);
+                                vCircle.setAttribute("fill", "#fbbf24");
+                                vCircle.setAttribute("stroke", "#0b131d");
+                                vCircle.setAttribute("stroke-width", "1.5");
+                                vCircle.style.cursor = "pointer";
+                                vCircle.addEventListener("mousedown", (e) => {
+                                    e.stopPropagation();
+                                    startDragVertex(e, el.id, pIdx);
+                                });
+                                g.appendChild(vCircle);
+                            });
+                        }
+                    }
+                } else if (el.type === 'asset') {
+                    let cx = (el.x * gridSize) + (gridSize / 2);
+                    let cy = (el.y * gridSize) + (gridSize / 2);
+                    let catColor = getCategoryColor(el.category);
+                    let statusColor = getStatusColor(el.status || 'operational');
+
+                    let pmAlert = getPmAlertStatus(el.pmDue);
+                    if (pmAlert !== 'none') {
+                        let pulseRing = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                        pulseRing.setAttribute("cx", cx);
+                        pulseRing.setAttribute("cy", cy);
+                        pulseRing.setAttribute("class", pmAlert === 'overdue' ? 'pm-overdue-pulse' : 'pm-due-pulse');
+                        g.appendChild(pulseRing);
+                    }
+
+                    let circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                    circle.setAttribute("cx", cx);
+                    circle.setAttribute("cy", cy);
+                    circle.setAttribute("r", 7); 
+                    circle.setAttribute("class", `item-shape ${el.id === selectedId ? 'selected' : ''}`);
+                    circle.setAttribute("fill", "#111b27");
+                    circle.setAttribute("stroke", catColor);
+                    circle.setAttribute("stroke-width", "2");
+
+                    let statusDot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                    statusDot.setAttribute("cx", cx + 6);
+                    statusDot.setAttribute("cy", cy - 6);
+                    statusDot.setAttribute("r", 3);
+                    statusDot.setAttribute("fill", statusColor);
+                    statusDot.setAttribute("stroke", "#0b131d");
+                    statusDot.setAttribute("stroke-width", "1");
+
+                    let emojiText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                    emojiText.setAttribute("x", cx);
+                    emojiText.setAttribute("y", cy + 1);
+                    emojiText.setAttribute("text-anchor", "middle");
+                    emojiText.setAttribute("dominant-baseline", "central");
+                    emojiText.setAttribute("font-size", "9px");
+                    emojiText.style.pointerEvents = "none";
+                    emojiText.textContent = el.emoji || "📍";
+
+                    let popupGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
+                    popupGroup.setAttribute("class", "asset-popup");
+                    let boxWidth = (el.name.length * 6.5) + 12;
+                    let popupBg = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+                    popupBg.setAttribute("x", cx - (boxWidth / 2));
+                    popupBg.setAttribute("y", cy - 28);
+                    popupBg.setAttribute("width", boxWidth);
+                    popupBg.setAttribute("height", 18);
+                    popupBg.setAttribute("rx", 4);
+                    popupBg.setAttribute("fill", "#0b131d");
+                    popupBg.setAttribute("stroke", catColor);
+                    popupBg.setAttribute("stroke-width", "1.5");
+
+                    let popupText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                    popupText.setAttribute("x", cx);
+                    popupText.setAttribute("y", cy - 16);
+                    popupText.setAttribute("text-anchor", "middle");
+                    popupText.setAttribute("fill", "#ffffff");
+                    popupText.setAttribute("font-size", "10px");
+                    popupText.setAttribute("font-weight", "bold");
+                    popupText.textContent = el.name;
+
+                    popupGroup.appendChild(popupBg);
+                    popupGroup.appendChild(popupText);
+
+                    g.appendChild(circle);
+                    g.appendChild(statusDot);
+                    g.appendChild(emojiText);
+                    g.appendChild(popupGroup);
+                } else {
+                    let rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+                    rect.setAttribute("x", el.x * gridSize);
+                    rect.setAttribute("y", el.y * gridSize);
+                    rect.setAttribute("width", el.w * gridSize);
+                    rect.setAttribute("height", el.h * gridSize);
+                    rect.setAttribute("class", `item-shape ${el.id === selectedId ? 'selected' : ''}`);
+
+                    if (el.type === 'uis_cell') {
+                        rect.setAttribute("fill", "#ec4899");
+                        rect.setAttribute("fill-opacity", "0.35");
+                        rect.setAttribute("stroke", "#f472b6");
+                    } else if (el.type === 'atr_cell') {
+                        rect.setAttribute("fill", "#8b5cf6");
+                        rect.setAttribute("fill-opacity", "0.35");
+                        rect.setAttribute("stroke", "#a78bfa");
+                    } else if (el.type === 'conveyance_run') {
+                        rect.setAttribute("fill", "#06b6d4");
+                        rect.setAttribute("fill-opacity", "0.35");
+                        rect.setAttribute("stroke", "#22d3ee");
+                    } else if (el.type === 'yard') {
+                        rect.setAttribute("fill", "#b45309");
+                        rect.setAttribute("fill-opacity", "0.3");
+                        rect.setAttribute("stroke", "#d97706");
+                    } else if (el.type === 'racking') {
+                        rect.setAttribute("fill", "#d97706");
+                        rect.setAttribute("fill-opacity", "0.35");
+                        rect.setAttribute("stroke", "#f59e0b");
+                    } else if (el.type === 'mezzanine') {
+                        rect.setAttribute("fill", "#10b981");
+                        rect.setAttribute("fill-opacity", "0.35");
+                        rect.setAttribute("stroke", "#34d399");
+                    } else {
+                        rect.setAttribute("fill", "#0284c7");
+                        rect.setAttribute("fill-opacity", "0.35");
+                        rect.setAttribute("stroke", "#38bdf8");
+                    }
+                    rect.setAttribute("stroke-width", "1");
+
+                    let text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                    text.setAttribute("x", (el.x * gridSize) + 6);
+                    text.setAttribute("y", (el.y * gridSize) + 16);
+                    text.setAttribute("fill", "#fff");
+                    text.setAttribute("font-size", "10px");
+                    text.setAttribute("font-weight", "bold");
+                    text.style.pointerEvents = "none";
+                    text.textContent = el.name;
+
+                    g.appendChild(rect);
+                    g.appendChild(text);
+                }
+
+                g.addEventListener("mousedown", (e) => {
+                    if (currentMode === 'edit' && el.type !== 'conveyance_line') {
+                        e.stopPropagation();
+                        startDragElement(e, el);
+                    } else if (currentMode === 'edit' && el.type === 'conveyance_line') {
+                        e.stopPropagation();
+                        selectedId = el.id;
+                        render();
+                    }
+                });
+
+                viewport.appendChild(g);
+            });
+
+            if (currentMode === 'calc' && calcPoints.length > 0) {
+                calcPoints.forEach((pt) => {
+                    let ptCircle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                    ptCircle.setAttribute("cx", pt.x * gridSize);
+                    ptCircle.setAttribute("cy", pt.y * gridSize);
+                    ptCircle.setAttribute("r", 5);
+                    ptCircle.setAttribute("fill", "#f59e0b");
+                    ptCircle.setAttribute("stroke", "#fff");
+                    ptCircle.setAttribute("stroke-width", "2");
+                    viewport.appendChild(ptCircle);
+                });
+
+                if (calcPoints.length === 2) {
+                    let line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                    line.setAttribute("x1", calcPoints[0].x * gridSize);
+                    line.setAttribute("y1", calcPoints[0].y * gridSize);
+                    line.setAttribute("x2", calcPoints[1].x * gridSize);
+                    line.setAttribute("y2", calcPoints[1].y * gridSize);
+                    line.setAttribute("stroke", "#f59e0b");
+                    line.setAttribute("stroke-width", "2.5");
+                    line.setAttribute("stroke-dasharray", "4");
+                    viewport.appendChild(line);
+                }
+            }
+        }
+
+        function getCanvasLocalCoords(clientX, clientY) {
+            let rect = container.getBoundingClientRect();
+            let mouseX = clientX - rect.left;
+            let mouseY = clientY - rect.top;
+            let localX = (mouseX - viewTransform.x) / viewTransform.scale;
+            let localY = (mouseY - viewTransform.y) / viewTransform.scale;
+            return {
+                x: localX / gridSize,
+                y: localY / gridSize,
+                rawX: localX,
+                rawY: localY
+            };
+        }
+
+        function handlePointerMove(clientX, clientY) {
+            let coords = getCanvasLocalCoords(clientX, clientY);
+            let coordDisplay = document.getElementById("coord-display");
+            let rowIdx = Math.floor(coords.y);
+            let preciseColNum = (coords.x + 1).toFixed(2);
+            let rowLabel = getRowLabel(rowIdx);
+            coordDisplay.innerHTML = `Grid: <b>Row ${rowLabel}, Col ${preciseColNum}</b>`;
+        }
+
+        container.addEventListener("mousemove", (e) => {
+            handlePointerMove(e.clientX, e.clientY);
+            if (isPanning) {
+                viewTransform.x = e.clientX - panStart.x;
+                viewTransform.y = e.clientY - panStart.y;
+                render();
+            }
+        });
+
+        container.addEventListener("wheel", (e) => {
+            e.preventDefault();
+            let zoomIntensity = 0.1;
+            let oldScale = viewTransform.scale;
+            if (e.deltaY < 0) {
+                viewTransform.scale = Math.min(viewTransform.scale * (1 + zoomIntensity), 3.0);
+            } else {
+                viewTransform.scale = Math.max(viewTransform.scale * (1 - zoomIntensity), 0.3);
+            }
+            let rect = container.getBoundingClientRect();
+            let mouseX = e.clientX - rect.left;
+            let mouseY = e.clientY - rect.top;
+            viewTransform.x = mouseX - (mouseX - viewTransform.x) * (viewTransform.scale / oldScale);
+            viewTransform.y = mouseY - (mouseY - viewTransform.y) * (viewTransform.scale / oldScale);
+            render();
+        }, { passive: false });
+
+        container.addEventListener("mousedown", (e) => {
+            if (currentMode === 'pan') {
+                isPanning = true;
+                container.classList.add("panning");
+                panStart = { x: e.clientX - viewTransform.x, y: e.clientY - viewTransform.y };
+            } else if (currentMode === 'calc') {
+                let coords = getCanvasLocalCoords(e.clientX, e.clientY);
+                if (calcPoints.length >= 2) calcPoints = [];
+                calcPoints.push({ x: coords.x, y: coords.y });
+
+                if (calcPoints.length === 2) {
+                    let dx = calcPoints[1].x - calcPoints[0].x;
+                    let dy = calcPoints[1].y - calcPoints[0].y;
+                    let distGrid = Math.sqrt(dx * dx + dy * dy);
+                    let distFeet = distGrid * 25; 
+                    document.getElementById("dist-result-display").innerHTML = 
+                        `Dist: <b>${distGrid.toFixed(2)} units</b> (~${distFeet.toFixed(0)} ft)`;
+                } else {
+                    document.getElementById("dist-result-display").innerText = "Click second point to complete calculation";
+                }
+                render();
+            } else if (currentMode === 'draw_line' && drawingLineState) {
+                let coords = getCanvasLocalCoords(e.clientX, e.clientY);
+                drawingLineState.points.push({ x: parseFloat(coords.x.toFixed(2)), y: parseFloat(coords.y.toFixed(2)) });
+                render();
+            } else if (currentMode === 'edit') {
+                selectedId = null;
+                render();
+            }
+        });
+
+        container.addEventListener("dblclick", (e) => {
+            if (currentMode === 'draw_line' && drawingLineState && drawingLineState.points.length >= 2) {
+                let newLine = {
+                    id: Date.now(),
+                    layer: currentLayer,
+                    name: drawingLineState.name,
+                    type: "conveyance_line",
+                    conveyanceType: drawingLineState.conveyanceType,
+                    points: drawingLineState.points,
+                    photos: [],
+                    spreadsheetData: [{key: "Conveyance Type", value: drawingLineState.conveyanceType === 'belted' ? "Belted" : "Flex"}]
+                };
+                elements.push(newLine);
+                drawingLineState = null;
+                currentMode = 'edit';
+                container.style.cursor = 'default';
+                render();
+                saveToFirebase();
+                alert("Conveyance line with bends created successfully!");
+            }
+        });
+
+        window.addEventListener("mouseup", () => {
+            if (isPanning) {
+                isPanning = false;
+                container.classList.remove("panning");
+            }
+            if (draggingVertex) {
+                draggingVertex = null;
+                saveToFirebase();
+            }
+        });
+
+        function startDragVertex(e, lineId, vertexIndex) {
+            draggingVertex = { lineId, vertexIndex };
+            let lineEl = elements.find(el => el.id === lineId);
+            if (!lineEl) return;
+
+            let startX = e.clientX;
+            let startY = e.clientY;
+            let origPt = lineEl.points[vertexIndex];
+            let origX = origPt.x;
+            let origY = origPt.y;
+
+            function onMouseMove(e) {
+                if (!draggingVertex) return;
+                let dx = (e.clientX - startX) / viewTransform.scale;
+                let dy = (e.clientY - startY) / viewTransform.scale;
+                origPt.x = parseFloat((origX + (dx / gridSize)).toFixed(2));
+                origPt.y = parseFloat((origY + (dy / gridSize)).toFixed(2));
+                render();
+            }
+
+            function onMouseUp() {
+                draggingVertex = null;
+                window.removeEventListener("mousemove", onMouseMove);
+                window.removeEventListener("mouseup", onMouseUp);
+                saveToFirebase();
+            }
+
+            window.addEventListener("mousemove", onMouseMove);
+            window.addEventListener("mouseup", onMouseUp);
+        }
+
+        function startDragElement(e, el) {
+            selectedId = el.id;
+            isDraggingElement = true;
+            let startX = e.clientX || (e.touches && e.touches[0].clientX);
+            let startY = e.clientY || (e.touches && e.touches[0].clientY);
+            let origX = el.x;
+            let origY = el.y;
+
+            function onMouseMove(e) {
+                if (!isDraggingElement) return;
+                let clientX = e.clientX || (e.touches && e.touches[0].clientX);
+                let clientY = e.clientY || (e.touches && e.touches[0].clientY);
+                let dx = (clientX - startX) / viewTransform.scale;
+                let dy = (clientY - startY) / viewTransform.scale;
+                el.x = parseFloat((origX + (dx / gridSize)).toFixed(2));
+                el.y = parseFloat((origY + (dy / gridSize)).toFixed(2));
+                render();
+            }
+
+            function onMouseUp() {
+                isDraggingElement = false;
+                window.removeEventListener("mousemove", onMouseMove);
+                window.removeEventListener("mouseup", onMouseUp);
+                window.removeEventListener("touchmove", onMouseMove);
+                window.removeEventListener("touchend", onMouseUp);
+                saveToFirebase(); 
+            }
+
+            window.addEventListener("mousemove", onMouseMove);
+            window.addEventListener("mouseup", onMouseUp);
+            window.addEventListener("touchmove", onMouseMove);
+            window.addEventListener("touchend", onMouseUp);
+            render();
+        }
+
+        function openModal(el) {
+            selectedId = el.id;
+            document.getElementById("modalElementId").value = el.id;
+            document.getElementById("modalTitle").innerText = `Edit: ${el.name}`;
+            document.getElementById("modalName").value = el.name;
+
+            if (el.type === 'conveyance_line') {
+                document.getElementById("modalCoordContainer").style.display = "none";
+                document.getElementById("modalSizeContainer").style.display = "none";
+                document.getElementById("modalAssetFields").style.display = "none";
+                document.getElementById("modalDependencyContainer").style.display = "none";
+                document.getElementById("modalDocLinkContainer").style.display = "none";
+                document.getElementById("modalLotoContainer").style.display = "none";
+                document.getElementById("modalPmContainer").style.display = "none";
+                document.getElementById("modalPredictiveContainer").style.display = "none";
+                document.getElementById("modalUtilitiesContainer").style.display = "none";
+                document.getElementById("modalVendorContainer").style.display = "none";
+                document.getElementById("modalBomContainer").style.display = "none";
+                document.getElementById("modalTicketsContainer").style.display = "none";
+            } else if (el.type === 'asset') {
+                document.getElementById("modalCoordContainer").style.display = "flex";
+                document.getElementById("modalSizeContainer").style.display = "none";
+                document.getElementById("modalAssetFields").style.display = "flex";
+                document.getElementById("modalDependencyContainer").style.display = "flex";
+                document.getElementById("modalDocLinkContainer").style.display = "block";
+                document.getElementById("modalLotoContainer").style.display = "block";
+                document.getElementById("modalPmContainer").style.display = "flex";
+                document.getElementById("modalPredictiveContainer").style.display = "flex";
+                document.getElementById("modalUtilitiesContainer").style.display = "flex";
+                document.getElementById("modalVendorContainer").style.display = "flex";
+                document.getElementById("modalBomContainer").style.display = "block";
+                document.getElementById("modalTicketsContainer").style.display = "block";
+
+                document.getElementById("modalX").value = el.x;
+                document.getElementById("modalY").value = el.y;
+                populateCategoryDropdowns(null, el.category);
+                populateParentAssetDropdown(el.parentId);
+                document.getElementById("modalStatus").value = el.status || "operational";
+                document.getElementById("modalEmoji").value = el.emoji || "📍";
+                document.getElementById("modalPlcNode").value = el.plcNode || "";
+                document.getElementById("modalLastInspect").value = el.lastInspect || "";
+                document.getElementById("modalPmDue").value = el.pmDue || "";
+                document.getElementById("modalManualUrl").value = el.manualUrl || "";
+                document.getElementById("modalRunHours").value = el.runHours || "";
+                document.getElementById("modalTemp").value = el.temp || "";
+                document.getElementById("modalVibration").value = el.vibration || "";
+                document.getElementById("modalLube").value = el.lube || "";
+                document.getElementById("modalUtilityDraw").value = el.utilityDraw || "";
+                document.getElementById("modalEstopZone").value = el.estopZone || "";
+                document.getElementById("modalVendorName").value = el.vendorName || "";
+                document.getElementById("modalVendorContact").value = el.vendorContact || "";
+
+                renderLotoChecklist(el);
+                renderBomTable(el);
+                renderWorkTickets(el);
+            } else {
+                document.getElementById("modalCoordContainer").style.display = "flex";
+                document.getElementById("modalSizeContainer").style.display = "flex";
+                document.getElementById("modalAssetFields").style.display = "none";
+                document.getElementById("modalDependencyContainer").style.display = "none";
+                document.getElementById("modalDocLinkContainer").style.display = "none";
+                document.getElementById("modalLotoContainer").style.display = "none";
+                document.getElementById("modalPmContainer").style.display = "none";
+                document.getElementById("modalPredictiveContainer").style.display = "none";
+                document.getElementById("modalUtilitiesContainer").style.display = "none";
+                document.getElementById("modalVendorContainer").style.display = "none";
+                document.getElementById("modalBomContainer").style.display = "none";
+                document.getElementById("modalTicketsContainer").style.display = "none";
+
+                document.getElementById("modalX").value = el.x;
+                document.getElementById("modalY").value = el.y;
+                document.getElementById("modalW").value = el.w;
+                document.getElementById("modalH").value = el.h;
+            }
+
+            renderPhotos(el);
+            renderSpreadsheet(el);
+            document.getElementById("modal-overlay").style.display = "flex";
+            render();
+        }
+
+        window.openManualUrl = function() {
+            let url = document.getElementById("modalManualUrl").value;
+            if (url) {
+                window.open(url, '_blank');
+            } else {
+                alert("No URL/Manual link entered.");
+            }
+        }
+
+        function renderLotoChecklist(el) {
+            let container = document.getElementById("lotoChecklistList");
+            container.innerHTML = "";
+            if (!el.lotoSteps) el.lotoSteps = [];
+            if (el.lotoSteps.length === 0) {
+                container.innerHTML = `<span style="color: #64748b; font-style: italic;">No LOTO steps added.</span>`;
+                return;
+            }
+            el.lotoSteps.forEach((s, idx) => {
+                let div = document.createElement("div");
+                div.className = "loto-step";
+                div.innerHTML = `<input type="checkbox" ${s.done ? 'checked' : ''} onchange="toggleLotoStep(${idx}, this.checked)">
+                <span style="${s.done ? 'text-decoration: line-through; color: #64748b;' : 'color: #fff;'}">${s.step}</span>
+                <button onclick="deleteLotoStep(${idx})" style="width: auto; padding: 1px 4px; font-size: 9px; margin-left: auto;" class="danger">X</button>`;
+                container.appendChild(div);
+            });
+        }
+
+        window.addLotoStep = function() {
+            let id = parseInt(document.getElementById("modalElementId").value);
+            let el = elements.find(item => item.id === id);
+            let input = document.getElementById("newLotoStepText");
+            let text = input.value.trim();
+            if (el && text) {
+                if (!el.lotoSteps) el.lotoSteps = [];
+                el.lotoSteps.push({ step: text, done: false });
+                input.value = "";
+                renderLotoChecklist(el);
+                saveToFirebase();
+            }
+        }
+
+        window.toggleLotoStep = function(index, checked) {
+            let id = parseInt(document.getElementById("modalElementId").value);
+            let el = elements.find(item => item.id === id);
+            if (el && el.lotoSteps[index]) {
+                el.lotoSteps[index].done = checked;
+                renderLotoChecklist(el);
+                saveToFirebase();
+            }
+        }
+
+        window.deleteLotoStep = function(index) {
+            let id = parseInt(document.getElementById("modalElementId").value);
+            let el = elements.find(item => item.id === id);
+            if (el && el.lotoSteps) {
+                el.lotoSteps.splice(index, 1);
+                renderLotoChecklist(el);
+                saveToFirebase();
+            }
+        }
+
+        function renderBomTable(el) {
+            let tbody = document.getElementById("bomBody");
+            tbody.innerHTML = "";
+            if (!el.spareParts) el.spareParts = [];
+            el.spareParts.forEach((part, index) => {
+                let tr = document.createElement("tr");
+
+                let tdName = document.createElement("td");
+                let inputName = document.createElement("input");
+                inputName.type = "text";
+                inputName.value = part.partName;
+                inputName.oninput = function() { part.partName = inputName.value; saveToFirebase(); };
+                tdName.appendChild(inputName);
+
+                let tdNum = document.createElement("td");
+                let inputNum = document.createElement("input");
+                inputNum.type = "text";
+                inputNum.value = part.partNum;
+                inputNum.oninput = function() { part.partNum = inputNum.value; saveToFirebase(); };
+                tdNum.appendChild(inputNum);
+
+                let tdBin = document.createElement("td");
+                let inputBin = document.createElement("input");
+                inputBin.type = "text";
+                inputBin.value = part.binLoc || "";
+                inputBin.placeholder = "Aisle 1, Bin B-3";
+                inputBin.oninput = function() { part.binLoc = inputBin.value; saveToFirebase(); };
+                tdBin.appendChild(inputBin);
+
+                let tdAction = document.createElement("td");
+                tdAction.style.textAlign = "center";
+                let delBtn = document.createElement("button");
+                delBtn.className = "danger";
+                delBtn.style.padding = "2px 6px";
+                delBtn.style.fontSize = "10px";
+                delBtn.innerText = "X";
+                delBtn.onclick = function() {
+                    el.spareParts.splice(index, 1);
+                    renderBomTable(el);
+                    saveToFirebase();
+                };
+                tdAction.appendChild(delBtn);
+
+                tr.appendChild(tdName);
+                tr.appendChild(tdNum);
+                tr.appendChild(tdBin);
+                tr.appendChild(tdAction);
+                tbody.appendChild(tr);
+            });
+        }
+
+        window.addBomRow = function() {
+            let id = parseInt(document.getElementById("modalElementId").value);
+            let el = elements.find(item => item.id === id);
+            if (el) {
+                if (!el.spareParts) el.spareParts = [];
+                el.spareParts.push({ partName: "Spare Part / Belt / Relay", partNum: "PART-101", binLoc: "Aisle 1, Bin A-1" });
+                renderBomTable(el);
+                saveToFirebase();
+            }
+        }
+
+        function renderWorkTickets(el) {
+            let box = document.getElementById("ticketsBox");
+            box.innerHTML = "";
+            if (!el.workTickets) el.workTickets = [];
+            if (el.workTickets.length === 0) {
+                box.innerHTML = `<span style="color: #64748b; font-style: italic;">No open breakdown tickets.</span>`;
+                return;
+            }
+            el.workTickets.forEach((t, idx) => {
+                let div = document.createElement("div");
+                div.className = "note-entry";
+                div.innerHTML = `<span class="note-timestamp">[${t.time}] PRIORITY: ${t.priority}</span> - ${t.desc} 
+                <button onclick="resolveWorkTicket(${idx})" style="width: auto; padding: 1px 4px; font-size: 9px; float: right; background: #10b981;">Resolve</button>`;
+                box.appendChild(div);
+            });
+        }
+
+        window.addWorkTicket = function() {
+            let id = parseInt(document.getElementById("modalElementId").value);
+            let el = elements.find(item => item.id === id);
+            let desc = prompt("Enter breakdown / work order issue description:");
+            let priority = prompt("Enter priority (High, Medium, Low):", "High");
+            if (el && desc) {
+                if (!el.workTickets) el.workTickets = [];
+                let timestamp = new Date().toISOString().replace('T', ' ').slice(0, 16);
+                el.workTickets.unshift({ time: timestamp, priority: priority || "High", desc: desc });
+                renderWorkTickets(el);
+                saveToFirebase();
+            }
+        }
+
+        window.resolveWorkTicket = function(index) {
+            let id = parseInt(document.getElementById("modalElementId").value);
+            let el = elements.find(item => item.id === id);
+            if (el && el.workTickets) {
+                el.workTickets.splice(index, 1);
+                renderWorkTickets(el);
+                saveToFirebase();
+            }
+        }
+
+        window.closeModal = function() {
+            document.getElementById("modal-overlay").style.display = "none";
+            selectedId = null;
+            render();
+            saveToFirebase();
+        }
+
+        window.saveModalLiveChanges = function() {
+            let id = parseInt(document.getElementById("modalElementId").value);
+            let el = elements.find(item => item.id === id);
+            if (el) {
+                el.name = document.getElementById("modalName").value;
+                if (el.type !== 'conveyance_line') {
+                    el.x = parseFloat(document.getElementById("modalX").value) || 0;
+                    el.y = parseFloat(document.getElementById("modalY").value) || 0;
+                }
+
+                if (el.type === 'asset') {
+                    el.category = document.getElementById("modalCategory").value;
+                    el.status = document.getElementById("modalStatus").value;
+                    el.parentId = document.getElementById("modalParentAsset").value;
+                    el.plcNode = document.getElementById("modalPlcNode").value;
+                    el.emoji = document.getElementById("modalEmoji").value || "📍";
+                    el.lastInspect = document.getElementById("modalLastInspect").value;
+                    el.pmDue = document.getElementById("modalPmDue").value;
+                    el.manualUrl = document.getElementById("modalManualUrl").value;
+                    el.runHours = document.getElementById("modalRunHours").value;
+                    el.temp = document.getElementById("modalTemp").value;
+                    el.vibration = document.getElementById("modalVibration").value;
+                    el.lube = document.getElementById("modalLube").value;
+                    el.utilityDraw = document.getElementById("modalUtilityDraw").value;
+                    el.estopZone = document.getElementById("modalEstopZone").value;
+                    el.vendorName = document.getElementById("modalVendorName").value;
+                    el.vendorContact = document.getElementById("modalVendorContact").value;
+                } else if (el.type !== 'conveyance_line') {
+                    el.w = parseFloat(document.getElementById("modalW").value) || 1;
+                    el.h = parseFloat(document.getElementById("modalH").value) || 1;
+                }
+                document.getElementById("modalTitle").innerText = `Edit: ${el.name}`;
+                render();
+            }
+        }
+
+        window.handlePhotoUpload = async function(event) {
+            let id = parseInt(document.getElementById("modalElementId").value);
+            let el = elements.find(item => item.id === id);
+            if (!el) return;
+            if (!el.photos) el.photos = [];
+            let files = event.target.files;
+            let statusSpan = document.getElementById("upload-status");
+            for (let file of files) {
+                try {
+                    statusSpan.innerText = `(Uploading ${file.name} to R2...)`;
+                    let formData = new FormData();
+                    formData.append("file", file);
+                    let response = await fetch("https://imi1-map-uploader.curtisarmy21589.workers.dev", {
+                        method: "POST",
+                        body: formData
+                    });
+                    if (!response.ok) throw new Error("Upload failed");
+                    let result = await response.json();
+                    let photoUrl = result.url || result.fileUrl || (typeof result === 'string' ? result : null);
+                    if (!photoUrl) {
+                        let textRes = await response.text();
+                        photoUrl = textRes;
+                    }
+                    if (photoUrl) {
+                        el.photos.push(photoUrl);
+                        renderPhotos(el);
+                        saveToFirebase();
+                    }
+                } catch (error) {
+                    console.error("Error uploading to Cloudflare R2:", error);
+                    alert("Failed to upload photo to Cloudflare R2.");
+                }
+            }
+            statusSpan.innerText = "";
+            event.target.value = "";
+        }
+
+        function renderPhotos(el) {
+            let gallery = document.getElementById("modalPhotoGallery");
+            gallery.innerHTML = "";
+            if (!el.photos) el.photos = [];
+            el.photos.forEach((photoUrl, index) => {
+                let containerDiv = document.createElement("div");
+                containerDiv.className = "photo-thumb-container";
+                containerDiv.title = "Click to enlarge photo";
+                containerDiv.onclick = () => openLightbox(photoUrl, el.name);
+                let img = document.createElement("img");
+                img.src = photoUrl;
+                let delBtn = document.createElement("button");
+                delBtn.className = "delete-photo-btn";
+                delBtn.innerHTML = "×";
+                delBtn.title = "Delete photo";
+                delBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    el.photos.splice(index, 1);
+                    renderPhotos(el);
+                    saveToFirebase();
+                };
+                containerDiv.appendChild(img);
+                containerDiv.appendChild(delBtn);
+                gallery.appendChild(containerDiv);
+            });
+        }
+
+        window.openLightbox = function(url, itemName) {
+            document.getElementById("lightboxImage").src = url;
+            document.getElementById("lightboxCaption").innerText = itemName || "Photo Preview";
+            document.getElementById("lightbox-overlay").style.display = "flex";
+        }
+
+        window.closeLightbox = function() {
+            document.getElementById("lightbox-overlay").style.display = "none";
+        }
+
+        function renderSpreadsheet(el) {
+            let tbody = document.getElementById("spreadsheetBody");
+            tbody.innerHTML = "";
+            if (!el.spreadsheetData) el.spreadsheetData = [];
+            el.spreadsheetData.forEach((row, index) => {
+                let tr = document.createElement("tr");
+                let tdKey = document.createElement("td");
+                let inputKey = document.createElement("input");
+                inputKey.type = "text";
+                inputKey.value = row.key;
+                inputKey.oninput = function() {
+                    row.key = inputKey.value;
+                    saveToFirebase();
+                };
+                tdKey.appendChild(inputKey);
+                let tdVal = document.createElement("td");
+                let inputVal = document.createElement("input");
+                inputVal.type = "text";
+                inputVal.value = row.value;
+                inputVal.oninput = function() {
+                    row.value = inputVal.value;
+                    saveToFirebase();
+                };
+                tdVal.appendChild(inputVal);
+                let tdAction = document.createElement("td");
+                tdAction.style.textAlign = "center";
+                let delRowBtn = document.createElement("button");
+                delRowBtn.className = "danger";
+                delRowBtn.style.padding = "2px 6px";
+                delRowBtn.style.fontSize = "10px";
+                delRowBtn.innerText = "X";
+                delRowBtn.onclick = function() {
+                    el.spreadsheetData.splice(index, 1);
+                    renderSpreadsheet(el);
+                    saveToFirebase();
+                };
+                tdAction.appendChild(delRowBtn);
+                tr.appendChild(tdKey);
+                tr.appendChild(tdVal);
+                tr.appendChild(tdAction);
+                tbody.appendChild(tr);
+            });
+        }
+
+        window.addSpreadsheetRow = function() {
+            let id = parseInt(document.getElementById("modalElementId").value);
+            let el = elements.find(item => item.id === id);
+            if (el) {
+                if (!el.spreadsheetData) el.spreadsheetData = [];
+                el.spreadsheetData.push({ key: "New Field", value: "Value" });
+                renderSpreadsheet(el);
+                saveToFirebase();
+            }
+        }
+
+        window.deleteItemFromModal = function() {
+            let id = parseInt(document.getElementById("modalElementId").value);
+            if (confirm("Are you sure you want to delete this item?")) {
+                elements = elements.filter(item => item.id !== id);
+                closeModal();
+                saveToFirebase();
+            }
+        }
+
+        window.addDepartment = function() {
+            let newEl = {
+                id: Date.now(),
+                layer: currentLayer, 
+                name: document.getElementById("newDeptName").value,
+                type: document.getElementById("newDeptType").value,
+                x: parseFloat(document.getElementById("newDeptX").value) || 0,
+                y: parseFloat(document.getElementById("newDeptY").value) || 0,
+                w: parseFloat(document.getElementById("newDeptW").value) || 5,
+                h: parseFloat(document.getElementById("newDeptH").value) || 5,
+                photos: [],
+                spreadsheetData: [{key: "Status", value: "Active"}]
+            };
+            elements.push(newEl);
+            render();
+            saveToFirebase();
+        }
+
+        window.addAsset = function() {
+            let newEl = {
+                id: Date.now(),
+                layer: currentLayer, 
+                name: document.getElementById("newAssetName").value,
+                type: "asset",
+                category: document.getElementById("newAssetCategory").value,
+                status: document.getElementById("newAssetStatus").value || "operational",
+                emoji: document.getElementById("newAssetEmoji").value || "📍",
+                x: parseFloat(document.getElementById("newAssetX").value) || 0,
+                y: parseFloat(document.getElementById("newAssetY").value) || 0,
+                parentId: "", plcNode: "", manualUrl: "", runHours: "", temp: "", vibration: "", lube: "", utilityDraw: "", estopZone: "", vendorName: "", vendorContact: "",
+                lotoSteps: [], spareParts: [], workTickets: [], lastInspect: "", pmDue: "", photos: [],
+                spreadsheetData: [{key: "Asset Type", value: "Automation System Node"}]
+            };
+            elements.push(newEl);
+            render();
+            saveToFirebase();
+        }
+
+        loadFromFirebase();
+    </script>
+</body>
+</html>
