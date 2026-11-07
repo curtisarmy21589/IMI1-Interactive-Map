@@ -88,9 +88,9 @@
         }
         .danger { background: #7f1d1d; border-color: #ef4444; }
         .danger:hover { background: #ef4444; color: #fff; }
-        .tab-bar { display: flex; gap: 5px; margin-bottom: 5px; }
+        .tab-bar { display: flex; gap: 4px; margin-bottom: 5px; }
         .tab-btn {
-            flex: 1; padding: 6px; background: #070d14; border: 1px solid #1e293b; color: #94a3b8; font-size: 11px; cursor: pointer; border-radius: 4px;
+            flex: 1; padding: 5px 2px; background: #070d14; border: 1px solid #1e293b; color: #94a3b8; font-size: 10px; cursor: pointer; border-radius: 4px; text-align: center;
         }
         .tab-btn.active { background: #1e293b; color: #38bdf8; border-color: #38bdf8; }
         .panel { display: none; }
@@ -215,7 +215,8 @@
         <hr style="border-color: #1e293b; margin: 4px 0;">
         <div class="tab-bar">
             <button class="tab-btn active" id="tabDeptBtn" onclick="switchTab('dept')">Zones & Yard</button>
-            <button class="tab-btn" id="tabAssetBtn" onclick="switchTab('asset')">Assets Menu</button>
+            <button class="tab-btn" id="tabLineBtn" onclick="switchTab('line')">Conveyance Lines</button>
+            <button class="tab-btn" id="tabAssetBtn" onclick="switchTab('asset')">Assets</button>
         </div>
         <div id="panelDept" class="panel active">
             <h3>Zone / Yard Management</h3>
@@ -240,6 +241,19 @@
                     <div style="flex:1;"><label>Height</label><input type="number" id="newDeptH" step="0.5" value="5"></div>
                 </div>
                 <button onclick="addDepartment()" style="margin-top: 6px;">Add Zone to Map</button>
+            </div>
+        </div>
+        <div id="panelLine" class="panel">
+            <h3>Conveyance Line Tool</h3>
+            <div>
+                <label>Line Name / ID</label>
+                <input type="text" id="newLineName" value="Mainline Infeed Conveyor 1">
+                <label>Conveyance Type</label>
+                <select id="newLineType">
+                    <option value="belted">Belted Conveyance (Solid Line)</option>
+                    <option value="flex">Flex Conveyance / Expandable (Dashed Line)</option>
+                </select>
+                <button onclick="startDrawingLine()" style="margin-top: 6px; background: #0284c7; color: #fff;">✏️ Draw Line on Map (Click Start & End)</button>
             </div>
         </div>
         <div id="panelAsset" class="panel">
@@ -525,6 +539,7 @@
         let html5QrCode = null;
 
         let calcPoints = []; 
+        let drawingLineState = null; // { name, type, startX, startY }
 
         let categories = [
             { name: "OPEX UIS Sorter", color: "#ec4899" },
@@ -558,6 +573,10 @@
                 spareParts: [{partName: "Tote Lift Pneumatic Cylinder", partNum: "CYL-ATR-80", binLoc: "Aisle 4, Shelf C-3"}], 
                 workTickets: [], lastInspect: "2026-09-28", pmDue: "2026-11-28", photos: [], 
                 spreadsheetData: [{key: "Tote Buffer Capacity", value: "120 Totes"}, {key: "De-stack Cycle Time", value: "3.2 sec"}]
+            },
+            {
+                id: 701, layer: "conveyance", name: "Mainline Infeed Belt #1", type: "conveyance_line", conveyanceType: "belted", x1: 2, y1: 2, x2: 15, y2: 2,
+                photos: [], spreadsheetData: [{key: "Conveyance Type", value: "Belted"}]
             }
         ];
 
@@ -722,24 +741,15 @@
         }
 
         window.exportDataToCSV = function() {
-            let csvRows = [["Asset ID", "Name", "Type", "Category", "Status", "PLC Node", "Parent ID", "X Col", "Y Row", "Last Inspected", "PM Due", "Run Hours", "Estop Zone", "Vendor"]];
+            let csvRows = [["ID", "Name", "Type / Conveyance", "Category / Details", "Status", "PLC Node", "X1/X", "Y1/Y", "X2 (Lines)", "Y2 (Lines)"]];
             elements.forEach(el => {
-                csvRows.push([
-                    el.id,
-                    `"${(el.name || '').replace(/"/g, '""')}"`,
-                    el.type,
-                    el.category || "N/A",
-                    el.status || "N/A",
-                    `"${(el.plcNode || '').replace(/"/g, '""')}"`,
-                    el.parentId || "N/A",
-                    el.x,
-                    el.y,
-                    el.lastInspect || "",
-                    el.pmDue || "",
-                    el.runHours || "",
-                    `"${(el.estopZone || '').replace(/"/g, '""')}"`,
-                    `"${(el.vendorName || '').replace(/"/g, '""')}"`
-                ]);
+                if (el.type === 'conveyance_line') {
+                    csvRows.push([el.id, `"${(el.name || '').replace(/"/g, '""')}"`, el.conveyanceType, "Conveyance Line", "N/A", "N/A", el.x1, el.y1, el.x2, el.y2]);
+                } else if (el.type === 'asset') {
+                    csvRows.push([el.id, `"${(el.name || '').replace(/"/g, '""')}"`, el.type, el.category || "N/A", el.status || "N/A", `"${(el.plcNode || '').replace(/"/g, '""')}"`, el.x, el.y, "", ""]);
+                } else {
+                    csvRows.push([el.id, `"${(el.name || '').replace(/"/g, '""')}"`, el.type, "Zone / Area", "N/A", "N/A", el.x, el.y, el.w || "", el.h || ""]);
+                }
             });
 
             let csvString = csvRows.map(row => row.join(",")).join("\n");
@@ -747,7 +757,7 @@
             let url = URL.createObjectURL(blob);
             let a = document.createElement("a");
             a.href = url;
-            a.download = `Facility_Asset_Inventory_${new Date().toISOString().slice(0, 10)}.csv`;
+            a.download = `Facility_Inventory_${new Date().toISOString().slice(0, 10)}.csv`;
             a.click();
             URL.revokeObjectURL(url);
         }
@@ -884,6 +894,7 @@
 
         window.setMode = function(mode) {
             currentMode = mode;
+            drawingLineState = null;
             document.getElementById("modeEditBtn").classList.toggle("active", mode === 'edit');
             document.getElementById("modePanBtn").classList.toggle("active", mode === 'pan');
             document.getElementById("modeCalcBtn").classList.toggle("active", mode === 'calc');
@@ -906,9 +917,25 @@
         window.switchTab = function(tab) {
             currentTab = tab;
             document.getElementById("tabDeptBtn").classList.toggle("active", tab === 'dept');
+            document.getElementById("tabLineBtn").classList.toggle("active", tab === 'line');
             document.getElementById("tabAssetBtn").classList.toggle("active", tab === 'asset');
             document.getElementById("panelDept").classList.toggle("active", tab === 'dept');
+            document.getElementById("panelLine").classList.toggle("active", tab === 'line');
             document.getElementById("panelAsset").classList.toggle("active", tab === 'asset');
+            if (tab === 'line') drawingLineState = null;
+        }
+
+        window.startDrawingLine = function() {
+            let name = document.getElementById("newLineName").value.trim();
+            let conveyanceType = document.getElementById("newLineType").value;
+            if (!name) {
+                alert("Please enter a conveyance line name.");
+                return;
+            }
+            drawingLineState = { name, conveyanceType, startPoint: null };
+            currentMode = 'draw_line';
+            container.style.cursor = 'crosshair';
+            alert("Click start point on map, then click end point to finish drawing the line.");
         }
 
         function updateTransformString() {
@@ -1059,7 +1086,10 @@
                     if (!matchesName && !matchesCat && !matchesId && !matchesPlc) return false;
                 }
                 if (currentLayer === 'assets') {
-                    return el.type === 'asset';
+                    return el.type === 'asset' || el.type === 'conveyance_line';
+                }
+                if (currentLayer === 'conveyance') {
+                    return el.type === 'conveyance_line' || el.type === 'conveyance_run';
                 }
                 if (currentLayer === 'loto') {
                     return el.type === 'asset' && el.category === 'LOTO Isolation';
@@ -1073,11 +1103,45 @@
 
                 g.addEventListener("click", (e) => {
                     e.stopPropagation();
-                    if (currentMode === 'calc') return; 
+                    if (currentMode === 'calc' || currentMode === 'draw_line') return; 
                     openModal(el);
                 });
 
-                if (el.type === 'asset') {
+                if (el.type === 'conveyance_line') {
+                    let x1 = el.x1 * gridSize;
+                    let y1 = el.y1 * gridSize;
+                    let x2 = el.x2 * gridSize;
+                    let y2 = el.y2 * gridSize;
+
+                    let line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                    line.setAttribute("x1", x1);
+                    line.setAttribute("y1", y1);
+                    line.setAttribute("x2", x2);
+                    line.setAttribute("y2", y2);
+                    line.setAttribute("stroke", el.conveyanceType === 'flex' ? "#fbbf24" : "#22d3ee");
+                    line.setAttribute("stroke-width", el.conveyanceType === 'flex' ? "4" : "6");
+                    if (el.conveyanceType === 'flex') {
+                        line.setAttribute("stroke-dasharray", "6,4");
+                    }
+                    if (el.id === selectedId) {
+                        line.setAttribute("stroke", "#fbbf24");
+                        line.setAttribute("stroke-width", "8");
+                    }
+
+                    let text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                    let midX = (x1 + x2) / 2;
+                    let midY = (y1 + y2) / 2 - 6;
+                    text.setAttribute("x", midX);
+                    text.setAttribute("y", midY);
+                    text.setAttribute("text-anchor", "middle");
+                    text.setAttribute("fill", "#fff");
+                    text.setAttribute("font-size", "10px");
+                    text.setAttribute("font-weight", "bold");
+                    text.textContent = el.name;
+
+                    g.appendChild(line);
+                    g.appendChild(text);
+                } else if (el.type === 'asset') {
                     let cx = (el.x * gridSize) + (gridSize / 2);
                     let cy = (el.y * gridSize) + (gridSize / 2);
                     let catColor = getCategoryColor(el.category);
@@ -1200,7 +1264,7 @@
                 }
 
                 g.addEventListener("mousedown", (e) => {
-                    if (currentMode === 'edit') {
+                    if (currentMode === 'edit' && el.type !== 'conveyance_line') {
                         e.stopPropagation();
                         startDragElement(e, el);
                     }
@@ -1210,7 +1274,7 @@
             });
 
             if (currentMode === 'calc' && calcPoints.length > 0) {
-                calcPoints.forEach((pt, idx) => {
+                calcPoints.forEach((pt) => {
                     let ptCircle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
                     ptCircle.setAttribute("cx", pt.x * gridSize);
                     ptCircle.setAttribute("cy", pt.y * gridSize);
@@ -1305,6 +1369,34 @@
                     document.getElementById("dist-result-display").innerText = "Click second point to complete calculation";
                 }
                 render();
+            } else if (currentMode === 'draw_line' && drawingLineState) {
+                let coords = getCanvasLocalCoords(e.clientX, e.clientY);
+                if (!drawingLineState.startPoint) {
+                    drawingLineState.startPoint = { x: parseFloat(coords.x.toFixed(2)), y: parseFloat(coords.y.toFixed(2)) };
+                    alert("Start point set! Now click the end point for the conveyance line.");
+                } else {
+                    let endPoint = { x: parseFloat(coords.x.toFixed(2)), y: parseFloat(coords.y.toFixed(2)) };
+                    let newLine = {
+                        id: Date.now(),
+                        layer: currentLayer,
+                        name: drawingLineState.name,
+                        type: "conveyance_line",
+                        conveyanceType: drawingLineState.conveyanceType,
+                        x1: drawingLineState.startPoint.x,
+                        y1: drawingLineState.startPoint.y,
+                        x2: endPoint.x,
+                        y2: endPoint.y,
+                        photos: [],
+                        spreadsheetData: [{key: "Conveyance Type", value: drawingLineState.conveyanceType === 'belted' ? "Belted" : "Flex"}]
+                    };
+                    elements.push(newLine);
+                    drawingLineState = null;
+                    currentMode = 'edit';
+                    container.style.cursor = 'default';
+                    render();
+                    saveToFirebase();
+                    alert("Conveyance line successfully added to map!");
+                }
             } else if (currentMode === 'edit') {
                 selectedId = null;
                 render();
@@ -1331,22 +1423,6 @@
                 if (currentMode === 'pan') {
                     isPanning = true;
                     panStart = { x: touch.clientX - viewTransform.x, y: touch.clientY - viewTransform.y };
-                } else if (currentMode === 'calc') {
-                    let coords = getCanvasLocalCoords(touch.clientX, touch.clientY);
-                    if (calcPoints.length >= 2) calcPoints = [];
-                    calcPoints.push({ x: coords.x, y: coords.y });
-
-                    if (calcPoints.length === 2) {
-                        let dx = calcPoints[1].x - calcPoints[0].x;
-                        let dy = calcPoints[1].y - calcPoints[0].y;
-                        let distGrid = Math.sqrt(dx * dx + dy * dy);
-                        let distFeet = distGrid * 25;
-                        document.getElementById("dist-result-display").innerHTML = 
-                            `Dist: <b>${distGrid.toFixed(2)} units</b> (~${distFeet.toFixed(0)} ft)`;
-                    } else {
-                        document.getElementById("dist-result-display").innerText = "Touch second point to measure";
-                    }
-                    render();
                 }
             } else if (e.touches.length === 2) {
                 isPanning = false;
@@ -1414,8 +1490,8 @@
             document.getElementById("modalElementId").value = el.id;
             document.getElementById("modalTitle").innerText = `Edit: ${el.name}`;
             document.getElementById("modalName").value = el.name;
-            document.getElementById("modalX").value = el.x;
-            document.getElementById("modalY").value = el.y;
+            document.getElementById("modalX").value = el.x !== undefined ? el.x : el.x1;
+            document.getElementById("modalY").value = el.y !== undefined ? el.y : el.y1;
 
             if (el.type === 'asset') {
                 document.getElementById("modalSizeContainer").style.display = "none";
@@ -1463,8 +1539,8 @@
                 document.getElementById("modalBomContainer").style.display = "none";
                 document.getElementById("modalTicketsContainer").style.display = "none";
 
-                document.getElementById("modalW").value = el.w;
-                document.getElementById("modalH").value = el.h;
+                document.getElementById("modalW").value = el.w !== undefined ? el.w : (el.x2 - el.x1);
+                document.getElementById("modalH").value = el.h !== undefined ? el.h : (el.y2 - el.y1);
             }
 
             renderPhotos(el);
@@ -1649,8 +1725,16 @@
             let el = elements.find(item => item.id === id);
             if (el) {
                 el.name = document.getElementById("modalName").value;
-                el.x = parseFloat(document.getElementById("modalX").value) || 0;
-                el.y = parseFloat(document.getElementById("modalY").value) || 0;
+                if (el.type === 'conveyance_line') {
+                    el.x1 = parseFloat(document.getElementById("modalX").value) || 0;
+                    el.y1 = parseFloat(document.getElementById("modalY").value) || 0;
+                    el.x2 = el.x1 + (parseFloat(document.getElementById("modalW").value) || 5);
+                    el.y2 = el.y1 + (parseFloat(document.getElementById("modalH").value) || 0);
+                } else {
+                    el.x = parseFloat(document.getElementById("modalX").value) || 0;
+                    el.y = parseFloat(document.getElementById("modalY").value) || 0;
+                }
+
                 if (el.type === 'asset') {
                     el.category = document.getElementById("modalCategory").value;
                     el.status = document.getElementById("modalStatus").value;
@@ -1668,7 +1752,7 @@
                     el.estopZone = document.getElementById("modalEstopZone").value;
                     el.vendorName = document.getElementById("modalVendorName").value;
                     el.vendorContact = document.getElementById("modalVendorContact").value;
-                } else {
+                } else if (el.type !== 'conveyance_line') {
                     el.w = parseFloat(document.getElementById("modalW").value) || 1;
                     el.h = parseFloat(document.getElementById("modalH").value) || 1;
                 }
