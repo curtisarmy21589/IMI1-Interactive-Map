@@ -2,9 +2,11 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <title>Facility Layout Editor & APM Viewer</title>
+    <!-- Mobile PWA & App Manifest Settings -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Facility Layout & Maintenance Hub</title>
-    <!-- html5-qrcode for live camera barcode scanning & AR overlay -->
+    <meta name="theme-color" content="#0b131d">
+    <!-- html5-qrcode for live camera barcode scanning & APM tag scanning -->
     <script src="https://unpkg.com/html5-qrcode"></script>
     <style>
         * {
@@ -23,7 +25,7 @@
             touch-action: none;
         }
         #sidebar {
-            width: 360px;
+            width: 380px;
             background-color: #111b27;
             padding: 15px;
             display: flex;
@@ -98,20 +100,9 @@
             touch-action: manipulation;
         }
         button:hover, button:active { background: #38bdf8; color: #0b131d; }
-        .mode-btn {
-            background: #070d14;
-            border: 2px solid #1e293b;
-            padding: 8px;
-            font-size: 11px;
-        }
-        .mode-btn.active {
-            background: #38bdf8;
-            color: #0b131d;
-            border-color: #fff;
-        }
         .layer-btn {
             flex: 1;
-            padding: 8px 4px;
+            padding: 6px 4px;
             background: #070d14;
             border: 1px solid #1e293b;
             color: #94a3b8;
@@ -122,7 +113,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            min-height: 34px;
+            min-height: 32px;
         }
         .layer-btn.active {
             background: #0284c7;
@@ -130,30 +121,15 @@
             border-color: #38bdf8;
             font-weight: bold;
         }
-        .danger { background: #7f1d1d; border-color: #ef4444; }
-        .danger:hover, .danger:active { background: #ef4444; color: #fff; }
         .tab-bar { display: flex; gap: 4px; margin-bottom: 5px; }
         .tab-btn {
-            flex: 1; padding: 6px 2px; background: #070d14; border: 1px solid #1e293b; color: #94a3b8; font-size: 9.5px; cursor: pointer; border-radius: 4px; text-align: center; min-height: 34px;
+            flex: 1; padding: 6px 2px; background: #070d14; border: 1px solid #1f2d3d; color: #94a3b8; font-size: 9.5px; cursor: pointer; border-radius: 4px; text-align: center; min-height: 34px;
         }
         .tab-btn.active { background: #1e293b; color: #38bdf8; border-color: #38bdf8; }
         .panel { display: none; }
         .panel.active { display: flex; flex-direction: column; gap: 8px; }
-        #canvas-container {
-            flex-grow: 1; position: relative; background-color: #070d14; overflow: hidden; cursor: grab; touch-action: none;
-        }
-        #canvas-container.panning { cursor: grabbing; }
-        svg { position: absolute; top: 0; left: 0; transform-origin: 0 0; }
-        .item-group { cursor: pointer; }
-        .item-shape { transition: stroke 0.2s; }
-        .item-group:hover .item-shape, .item-group:active .item-shape { stroke: #fff; }
-        .item-shape.selected { stroke: #fbbf24; stroke-width: 3; }
-        .asset-popup { opacity: 0; transition: opacity 0.15s ease-in-out; pointer-events: none; }
-        .item-group:hover .asset-popup { opacity: 1; }
-        .grid-line { stroke: #132235; stroke-width: 1; pointer-events: none; }
-        .coord-label { fill: #64748b; font-size: 9px; font-family: monospace; pointer-events: none; }
-        
-        /* EMERGENCY QUICK-FILTER FLOATING BAR */
+
+        /* QUICK-FILTER FLOATING BAR */
         #quick-filter-bar {
             position: absolute;
             top: 10px;
@@ -178,78 +154,120 @@
             align-items: center;
             gap: 4px;
         }
-        .filter-pill.active {
-            background: #0284c7;
-            color: #fff;
-            border-color: #38bdf8;
-        }
+        .filter-pill.active { background: #0284c7; color: #fff; border-color: #38bdf8; }
         .filter-pill.down-pill.active { background: #7f1d1d; border-color: #ef4444; }
         .filter-pill.pm-pill.active { background: #b45309; border-color: #f59e0b; }
+        .filter-pill.loto-pill.active { background: #7e22ce; border-color: #a855f7; }
 
+        #canvas-container {
+            flex-grow: 1;
+            position: relative;
+            background-color: #070d14;
+            overflow: hidden;
+            cursor: grab;
+            touch-action: none;
+        }
+        #canvas-container.panning { cursor: grabbing; }
+        svg {
+            position: absolute;
+            top: 0; left: 0;
+            transform-origin: 0 0;
+            touch-action: none;
+        }
+        .item-group { cursor: pointer; touch-action: none; }
+        .item-shape { transition: stroke 0.2s; }
+        .item-group:hover .item-shape { stroke: #fff; }
+        .asset-popup {
+            opacity: 0;
+            transition: opacity 0.15s ease-in-out;
+            pointer-events: none;
+        }
+        .item-group:hover .asset-popup { opacity: 1; }
+        .grid-line { stroke: #132235; stroke-width: 1; pointer-events: none; }
+        .coord-label { fill: #64748b; font-size: 9px; font-family: monospace; pointer-events: none; }
         #coord-display {
-            background: #070d14; border: 1px solid #1e293b; padding: 6px; border-radius: 4px; font-family: monospace; color: #38bdf8; font-size: 12px; text-align: center;
+            background: #070d14; border: 1px solid #1f2d3d; padding: 6px; border-radius: 4px; font-family: monospace; color: #38bdf8; font-size: 12px; text-align: center;
         }
-        #dist-result-display {
-            background: #0f172a; border: 1px solid #f59e0b; color: #fbbf24; padding: 6px; border-radius: 4px; font-family: monospace; font-size: 11px; text-align: center; display: none;
+        #sync-status {
+            font-size: 10px; text-align: center; color: #10b981; font-weight: bold; margin-top: -4px;
         }
-        #sync-status { font-size: 10px; text-align: center; color: #10b981; font-weight: bold; margin-top: -4px; }
-        #modal-overlay, #category-modal-overlay, #lightbox-overlay, #scanner-modal-overlay, #ar-modal-overlay {
-            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.85); z-index: 1000; justify-content: center; align-items: center; padding: 10px;
+        #modal-overlay, #lightbox-overlay, #scanner-modal-overlay, #ar-modal-overlay, #loto-sim-modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            padding: 10px;
         }
         #lightbox-overlay { z-index: 2000; }
         .modal-content {
-            background: #111b27; border: 1px solid #38bdf8; border-radius: 8px; width: 720px; max-width: 100%; max-height: 92vh; display: flex; flex-direction: column; box-shadow: 0 10px 25px rgba(0,0,0,0.8); overflow: hidden;
+            background: #111b27;
+            border: 1px solid #38bdf8;
+            border-radius: 8px;
+            width: 760px;
+            max-width: 100%;
+            max-height: 92vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.8);
+            overflow: hidden;
         }
-        .modal-header { background: #0b131d; padding: 12px 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1f2d3d; }
-        .modal-body { padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; -webkit-overflow-scrolling: touch; }
-        .modal-footer { background: #0b131d; padding: 10px 15px; display: flex; justify-content: flex-end; gap: 8px; border-top: 1px solid #1f2d3d; }
-        .close-modal { background: none; border: none; color: #94a3b8; font-size: 24px; cursor: pointer; width: auto; min-height: auto; padding: 0 8px; margin: 0; }
-        .close-modal:hover, .close-modal:active { color: #fff; background: none; }
+        .modal-header {
+            background: #0b131d; padding: 12px 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1f2d3d;
+        }
+        .modal-body {
+            padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; -webkit-overflow-scrolling: touch;
+        }
+        .modal-footer {
+            background: #0b131d; padding: 10px 15px; display: flex; justify-content: flex-end; gap: 8px; border-top: 1px solid #1f2d3d;
+        }
+        .close-modal {
+            background: none; border: none; color: #94a3b8; font-size: 24px; cursor: pointer; width: auto; padding: 0 8px; margin: 0;
+        }
+        .close-modal:hover { color: #fff; background: none; }
         .spreadsheet-table { width: 100%; border-collapse: collapse; margin-top: 4px; }
         .spreadsheet-table th, .spreadsheet-table td { border: 1px solid #1f2d3d; padding: 6px; text-align: left; font-size: 11px; }
         .spreadsheet-table th { background: #0b131d; color: #38bdf8; }
         .spreadsheet-table input, .spreadsheet-table select { background: transparent; border: none; color: #fff; width: 100%; padding: 2px; margin: 0; min-height: 28px; }
-        .spreadsheet-table input:focus, .spreadsheet-table select:focus { outline: 1px solid #38bdf8; }
         .photo-gallery { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px; }
-        .photo-thumb-container { position: relative; width: 80px; height: 80px; border: 1px solid #1f2d3d; border-radius: 4px; overflow: hidden; background: #0b131d; cursor: pointer; }
+        .photo-thumb-container {
+            position: relative; width: 80px; height: 80px; border: 1px solid #1f2d3d; border-radius: 4px; overflow: hidden; background: #0b131d; cursor: pointer;
+        }
         .photo-thumb-container img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.2s; }
-        .delete-photo-btn { position: absolute; top: 2px; right: 2px; background: rgba(239, 68, 68, 0.9); color: white; border: none; border-radius: 50%; width: 22px; height: 22px; font-size: 11px; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0; margin: 0; z-index: 5; min-height: auto; }
+        .photo-thumb-container:hover img { transform: scale(1.05); }
         .notes-log-box { background: #070d14; border: 1px solid #1f2d3d; border-radius: 4px; padding: 8px; max-height: 110px; overflow-y: auto; font-size: 11px; display: flex; flex-direction: column; gap: 4px; }
         .note-entry { border-bottom: 1px dotted #1f2d3d; padding-bottom: 3px; }
         .note-timestamp { color: #38bdf8; font-size: 9px; font-weight: bold; }
         @keyframes pmPulse { 0% { r: 7px; opacity: 1; } 50% { r: 12px; opacity: 0.3; } 100% { r: 7px; opacity: 1; } }
         .pm-overdue-pulse { animation: pmPulse 1.5s infinite ease-in-out; stroke: #ef4444; stroke-width: 2; fill: none; }
         .pm-due-pulse { animation: pmPulse 2s infinite ease-in-out; stroke: #f59e0b; stroke-width: 2; fill: none; }
-        .loto-step { display: flex; align-items: center; gap: 6px; font-size: 11px; border-bottom: 1px solid #1f2d3d; padding: 3px 0; }
-        .loto-step input[type="checkbox"] { width: auto; margin: 0; min-height: auto; }
+        .loto-pulse { animation: pmPulse 1.2s infinite ease-in-out; stroke: #a855f7; stroke-width: 3; fill: none; }
+        .loto-step { display: flex; align-items: center; gap: 6px; font-size: 11px; border-bottom: 1px solid #1f2d3d; padding: 4px 0; }
     </style>
 </head>
 <body>
     <div id="mobile-nav-toggle">
-        <h2>Site & Layout Hub</h2>
-        <button class="toggle-btn" onclick="toggleSidebar()">☰ Controls</button>
+        <h2>Facility Layout Editor (APM)</h2>
+        <button class="toggle-btn" onclick="toggleSidebar()">☰ Menu</button>
     </div>
 
     <div id="sidebar" class="collapsed">
-        <h2>Site & Layout Builder</h2>
+        <h2>Facility Layout Editor</h2>
         
         <div>
-            <label>🔍 Asset Search / QR Scanner</label>
+            <label>🔍 Search Asset, APM Tag, or PLC</label>
             <div style="display: flex; gap: 4px;">
-                <input type="text" id="assetSearchInput" placeholder="Search Asset Name, Tag ID, PLC..." oninput="handleSearch(this.value)">
+                <input type="text" id="assetSearchInput" placeholder="APM Tag #, Name, PLC..." oninput="handleSearch(this.value)">
                 <button onclick="openScannerModal()" style="width: auto; padding: 4px 10px; font-size: 11px;">📷 Scan</button>
             </div>
         </div>
         <div id="coord-display">Col: -- | Row: --</div>
-        <div id="dist-result-display">Click 2 points to measure distance</div>
-        <div id="sync-status">Connected to Firebase</div>
+        <div id="sync-status">Connecting to Firebase...</div>
         
-        <!-- GRID SNAPPING TOGGLE -->
         <div>
-            <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
-                <input type="checkbox" id="snapGridToggle" checked style="width:auto; margin:0; min-height:auto;">
-                <span style="color:#38bdf8; font-weight:bold;">🧲 Snap to Grid ($0.5$ Increment)</span>
-            </label>
+            <button onclick="openAddModal()" style="background:#0284c7; color:#fff; border-color:#38bdf8; font-weight:bold;">➕ Add Asset / Zone / Line</button>
         </div>
 
         <!-- HEATMAP OVERLAY TOGGLE -->
@@ -259,9 +277,10 @@
                 <span style="color:#f59e0b; font-weight:bold;">🔥 Show Downtime & Breakdown Heatmap</span>
             </label>
         </div>
+
         <!-- LAYER SELECTION MENU -->
         <div>
-            <label>Active View Layer</label>
+            <label>Active Layout Layer</label>
             <div style="display: flex; gap: 4px; margin-top: 2px;">
                 <button class="layer-btn active" id="layerGroundBtn" onclick="switchLayer('ground')">Ground Floor</button>
                 <button class="layer-btn" id="layerMezzBtn" onclick="switchLayer('mezzanine')">Mezz Floor</button>
@@ -269,11 +288,11 @@
             </div>
             <div style="display: flex; gap: 4px; margin-top: 4px;">
                 <button class="layer-btn" id="layerUisBtn" onclick="switchLayer('uis_sorter')">OPEX UIS Sorter</button>
-                <button class="layer-btn" id="layerAtrBtn" onclick="switchLayer('atr_retrieval')">ATR Tote Retrieval</button>
-                <button class="layer-btn" id="layerConveyanceBtn" onclick="switchLayer('conveyance')">Conveyance Lines</button>
+                <button class="layer-btn" id="layerAtrBtn" onclick="switchLayer('atr_retrieval')">ATR Retrieval</button>
+                <button class="layer-btn" id="layerConveyanceBtn" onclick="switchLayer('conveyance')">Conveyance</button>
             </div>
             <div style="display: flex; gap: 4px; margin-top: 4px;">
-                <button class="layer-btn" id="layerSprinklerBtn" onclick="switchLayer('sprinkler')">Sprinkler Shutoffs</button>
+                <button class="layer-btn" id="layerSprinklerBtn" onclick="switchLayer('sprinkler')">Sprinklers</button>
                 <button class="layer-btn" id="layerWaterBtn" onclick="switchLayer('water')">Water Shutoffs</button>
                 <button class="layer-btn" id="layerGasBtn" onclick="switchLayer('gas')">Gas Shutoffs</button>
             </div>
@@ -286,113 +305,36 @@
                 <button class="layer-btn" id="layerAssetsBtn" onclick="switchLayer('assets')">All Assets & Utilities</button>
             </div>
         </div>
+
         <div>
-            <label>Interaction Mode</label>
-            <div style="display: flex; flex-direction: column; gap: 4px; margin-top: 2px;">
-                <div style="display: flex; gap: 4px;">
-                    <button id="modeEditBtn" class="mode-btn active" style="flex:1;" onclick="setMode('edit')">Edit (Drag)</button>
-                    <button id="modePanBtn" class="mode-btn" style="flex:1;" onclick="setMode('pan')">Pan / Inspect</button>
-                </div>
-                <button id="modeCalcBtn" class="mode-btn" onclick="setMode('calc')">📏 Distance Calculator</button>
-                <button onclick="openARModal()" class="mode-btn" style="background:#0284c7; color:#fff; border-color:#38bdf8;">🕶️ AR Live Camera View</button>
-            </div>
+            <button onclick="openARModal()" style="background:#0284c7; color:#fff; border-color:#38bdf8;">🕶️ AR Field Camera HUD</button>
         </div>
-        <button onclick="exportDataToCSV()" style="background: #0284c7; color: #fff; margin-top: 2px;">📊 Export Asset Inventory (CSV)</button>
+
         <hr style="border-color: #1e293b; margin: 4px 0;">
         <div class="tab-bar">
-            <button class="tab-btn active" id="tabDeptBtn" onclick="switchTab('dept')">Zones</button>
-            <button class="tab-btn" id="tabLineBtn" onclick="switchTab('line')">Lines</button>
-            <button class="tab-btn" id="tabAssetBtn" onclick="switchTab('asset')">Assets</button>
+            <button class="tab-btn active" id="tabInfoBtn" onclick="switchTab('info')">Editor</button>
             <button class="tab-btn" id="tabShiftBtn" onclick="switchTab('shift')">Shift Log</button>
         </div>
-        <div id="panelDept" class="panel active">
-            <h3>Zone / Yard Management</h3>
-            <div>
-                <label>Add New Zone / Yard Area</label>
-                <input type="text" id="newDeptName" value="OPEX UIS Induction Bay">
-                <select id="newDeptType">
-                    <option value="uis_cell">OPEX UIS Sorter Rack (Rect)</option>
-                    <option value="atr_cell">ATR Tote Retrieval Cell (Rect)</option>
-                    <option value="conveyance_run">Conveyance Line Bed (Rect)</option>
-                    <option value="yard">External Yard / Grading (Rect)</option>
-                    <option value="racking">Racking Zone (Rect)</option>
-                    <option value="mezzanine">Mezzanine Floor (Rect)</option>
-                    <option value="general">General Dept / Zone</option>
-                </select>
-                <div style="display: flex; gap: 6px;">
-                    <div style="flex:1;"><label>X Col (-6 to 34)</label><input type="number" id="newDeptX" step="0.5" value="2"></div>
-                    <div style="flex:1;"><label>Y Row (-4 to 18)</label><input type="number" id="newDeptY" step="0.5" value="-4"></div>
-                </div>
-                <div style="display: flex; gap: 6px;">
-                    <div style="flex:1;"><label>Width</label><input type="number" id="newDeptW" step="0.5" value="12"></div>
-                    <div style="flex:1;"><label>Height</label><input type="number" id="newDeptH" step="0.5" value="5"></div>
-                </div>
-                <button onclick="addDepartment()" style="margin-top: 6px;">Add Zone to Map</button>
-            </div>
+        <div id="panelInfo" class="panel active">
+            <p style="font-size: 10px; color: #64748b; margin: 0;">
+                💡 <b>Tip:</b> Click any asset to edit APM tags, specs, LOTO checklists, and photos. Drag to pan, scroll/pinch to zoom.
+            </p>
         </div>
-        <div id="panelLine" class="panel">
-            <h3>Conveyance Line Tool (Bends)</h3>
-            <div>
-                <label>Line Name / ID</label>
-                <input type="text" id="newLineName" value="Mainline Infeed Conveyor 1">
-                <label>Conveyance Type</label>
-                <select id="newLineType">
-                    <option value="belted">Belted Conveyance (Solid Line)</option>
-                    <option value="flex">Flex Conveyance / Expandable (Dashed Line)</option>
-                </select>
-                <button onclick="startDrawingLine()" style="margin-top: 6px; background: #0284c7; color: #fff;">✏️ Draw Multi-Point Line (Double-Click End)</button>
-            </div>
-        </div>
-        <div id="panelAsset" class="panel">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-                <h3>Utility & Automation Assets</h3>
-                <button onclick="openCategoryModal()" style="width: auto; padding: 2px 6px; font-size: 10px; background: #1e293b; color: #38bdf8; min-height: auto;">⚙️ Categories</button>
-            </div>
-            <div>
-                <label>Asset Name</label>
-                <input type="text" id="newAssetName" value="OPEX UIS Scan Tunnel #1">
-                <label>Category</label>
-                <select id="newAssetCategory"></select>
-                <label>Maintenance Status</label>
-                <select id="newAssetStatus">
-                    <option value="operational">Operational</option>
-                    <option value="maintenance">Under Maintenance</option>
-                    <option value="down">Down / Inoperable</option>
-                </select>
-                <label>Dot Icon (Emoji)</label>
-                <input type="text" id="newAssetEmoji" value="🤖" style="text-align: center; font-size: 16px;">
-                <div style="display: flex; gap: 6px; margin-top: 4px;">
-                    <div style="flex:1;"><label>X Col (-6 to 34)</label><input type="number" id="newAssetX" step="0.25" value="5"></div>
-                    <div style="flex:1;"><label>Y Row (-4 to 18)</label><input type="number" id="newAssetY" step="0.25" value="-2"></div>
-                </div>
-                <button onclick="addAsset()" style="margin-top: 6px;">Add Automation Asset</button>
-            </div>
-        </div>
-        <!-- SHIFT HANDOVER LOG PANEL -->
         <div id="panelShift" class="panel">
             <h3>📝 Technician Shift Handover Log</h3>
-            <div>
-                <label>Shift Designation</label>
-                <select id="shiftName">
-                    <option value="Shift A">Shift A (Day)</option>
-                    <option value="Shift B">Shift B (Swing)</option>
-                    <option value="Shift C">Shift C (Night)</option>
-                </select>
-                <label>Handover Note / Parts Waiting in Cage</label>
-                <textarea id="shiftLogText" placeholder="Detailed handoff notes, jams, or parts set aside in cage..." style="height:70px;"></textarea>
-                <button onclick="addShiftLog()" style="margin-top: 6px; background:#0284c7; color:#fff;">+ Post Handover Entry</button>
-            </div>
-            <div class="notes-log-box" id="shiftLogContainer" style="max-height: 200px; margin-top: 6px;"></div>
+            <textarea id="newShiftNote" placeholder="Enter shift handover note..." style="height: 50px;"></textarea>
+            <button onclick="addShiftLog()" style="background:#0284c7; color:#fff;">Post Shift Note</button>
+            <div class="notes-log-box" id="shiftLogContainer" style="max-height: 180px; margin-top: 4px;"></div>
         </div>
     </div>
 
     <div id="canvas-container">
-        <!-- EMERGENCY QUICK-FILTER FLOATING PILLS -->
+        <!-- QUICK-FILTER FLOATING PILLS -->
         <div id="quick-filter-bar">
             <button class="filter-pill down-pill" onclick="toggleQuickFilter('down')">🚨 Down Assets</button>
             <button class="filter-pill pm-pill" onclick="toggleQuickFilter('pm_due')">🔥 Overdue PMs</button>
+            <button class="filter-pill loto-pill" onclick="toggleQuickFilter('loto')">🔒 LOTO Points</button>
             <button class="filter-pill" onclick="toggleQuickFilter('water')">💧 Water Shutoffs</button>
-            <button class="filter-pill" onclick="toggleQuickFilter('estop')">⚡ E-Stop Zones</button>
             <button class="filter-pill active" id="filterAllBtn" onclick="toggleQuickFilter('all')">Show All</button>
         </div>
 
@@ -401,150 +343,225 @@
         </svg>
     </div>
 
-    <!-- MAIN INSPECT & EDIT MODAL -->
+    <!-- ITEM EDIT & INSPECT MODAL -->
     <div id="modal-overlay">
         <div class="modal-content">
             <div class="modal-header">
-                <h3 id="modalTitle" style="color: #38bdf8; margin: 0;">Item Details</h3>
+                <h3 id="modalTitle" style="color: #38bdf8; margin: 0;">Edit Asset / Element</h3>
                 <button class="close-modal" onclick="closeModal()">×</button>
             </div>
             <div class="modal-body">
                 <input type="hidden" id="modalElementId">
-                <div>
-                    <label>Item Name / Designation</label>
-                    <input type="text" id="modalName" oninput="saveModalLiveChanges()">
+                <div style="display: flex; gap: 6px;">
+                    <div style="flex: 2;"><label>Item Name / Designation</label><input type="text" id="modalName"></div>
+                    <div style="flex: 1;"><label>APM Asset Tag #</label><input type="text" id="modalApmTag" placeholder="e.g. APM-CV-1042"></div>
                 </div>
                 <div id="modalAssetFields" style="display: flex; gap: 6px; flex-wrap: wrap;">
                     <div style="flex: 2; min-width: 140px;">
                         <label>Asset Category</label>
-                        <select id="modalCategory" onchange="saveModalLiveChanges()"></select>
+                        <select id="modalCategory">
+                            <option value="OPEX UIS Sorter">OPEX UIS Sorter</option>
+                            <option value="ATR Tote Retrieval">ATR Tote Retrieval</option>
+                            <option value="Conveyance">Conveyance</option>
+                            <option value="Electrical">Electrical</option>
+                            <option value="Fire Safety">Fire Safety</option>
+                            <option value="Plumbing">Plumbing</option>
+                            <option value="Safety">Safety</option>
+                            <option value="HVAC">HVAC</option>
+                            <option value="LOTO Isolation">LOTO Isolation</option>
+                            <option value="General">General</option>
+                        </select>
                     </div>
                     <div style="flex: 2; min-width: 140px;">
                         <label>Maintenance Status</label>
-                        <select id="modalStatus" onchange="saveModalLiveChanges()">
-                            <option value="operational">Operational</option>
-                            <option value="maintenance">Under Maintenance</option>
-                            <option value="down">Down / Inoperable</option>
+                        <select id="modalStatus">
+                            <option value="operational">🟢 Operational</option>
+                            <option value="maintenance">🟡 In Maintenance</option>
+                            <option value="down">🔴 Down / Fault</option>
                         </select>
                     </div>
-                    <div style="flex: 1; min-width: 60px;">
-                        <label>Dot Emoji</label>
-                        <input type="text" id="modalEmoji" oninput="saveModalLiveChanges()" style="text-align: center; font-size: 16px;">
-                    </div>
                 </div>
-                <!-- PARENT/CHILD DEPENDENCY & PLC NODE -->
                 <div id="modalDependencyContainer" style="display: flex; gap: 6px; flex-wrap: wrap;">
                     <div style="flex: 1; min-width: 180px;">
                         <label>Upstream Parent Asset / Power Source</label>
-                        <select id="modalParentAsset" onchange="saveModalLiveChanges()"></select>
+                        <input type="text" id="modalParentAsset" placeholder="Parent APM Tag or Name">
                     </div>
                     <div style="flex: 1; min-width: 180px;">
                         <label>PLC Rack / EtherNet IP Drop / Node ID</label>
-                        <input type="text" id="modalPlcNode" placeholder="PLC-04 Rack 1, Slot 3 (192.168.1.45)" oninput="saveModalLiveChanges()">
+                        <input type="text" id="modalPlcNode" placeholder="e.g. Rack 3 Slot 4 IP 10.50.4.12">
                     </div>
                 </div>
-                <!-- MANUAL LINK -->
                 <div id="modalDocLinkContainer">
                     <label>Equipment Manual / Wiring Schematic (PDF Link)</label>
-                    <div style="display: flex; gap: 4px;">
-                        <input type="url" id="modalManualUrl" placeholder="https://example.com/schematics.pdf" oninput="saveModalLiveChanges()">
-                        <button onclick="openManualUrl()" style="width: auto; padding: 4px 8px;">🔗 Open</button>
-                    </div>
+                    <input type="url" id="modalManualUrl" placeholder="https://..." >
                 </div>
                 <div style="display: flex; gap: 6px;" id="modalCoordContainer">
-                    <div style="flex:1;"><label>X Col</label><input type="number" id="modalX" step="0.25" oninput="saveModalLiveChanges()"></div>
-                    <div style="flex:1;"><label>Y Row</label><input type="number" id="modalY" step="0.25" oninput="saveModalLiveChanges()"></div>
+                    <div style="flex:1;"><label>X Col</label><input type="number" id="modalX"></div>
+                    <div style="flex:1;"><label>Y Row</label><input type="number" id="modalY"></div>
                 </div>
-                <div id="modalSizeContainer" style="display: flex; gap: 6px;">
-                    <div style="flex:1;"><label>Width</label><input type="number" id="modalW" step="0.25" oninput="saveModalLiveChanges()"></div>
-                    <div style="flex:1;"><label>Height</label><input type="number" id="modalH" step="0.25" oninput="saveModalLiveChanges()"></div>
-                </div>
-                <!-- LOTO CHECKLIST -->
+                
+                <!-- LOTO CHECKLIST & SIMULATOR -->
                 <div id="modalLotoContainer">
-                    <h4>🔒 Lockout/Tagout (LOTO) Sequence & ESWC Checklist</h4>
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <h4>🔒 Lockout/Tagout (LOTO) Sequence & ESWC Checklist</h4>
+                        <button onclick="simulateLotoIsolation()" style="background:#7e22ce; color:#fff; width:auto; padding:4px 10px; font-size:11px;">⚡ Simulate LOTO Path</button>
+                    </div>
                     <div id="lotoChecklistList"></div>
-                    <div style="display: flex; gap: 4px; margin-top: 4px;">
-                        <input type="text" id="newLotoStepText" placeholder="Add isolation step (e.g. Open Breaker CB-1)...">
-                        <button onclick="addLotoStep()" style="width: auto; padding: 4px 8px;">+ Add Step</button>
+                    <div style="display: flex; gap: 4px; margin-top: 6px;">
+                        <input type="text" id="newLotoStep" placeholder="Add LOTO isolation step (e.g., Open Breaker QF1)">
+                        <button onclick="addLotoStep()" style="width: auto; padding: 4px 10px;">Add Step</button>
                     </div>
                 </div>
+
                 <!-- PREVENTIVE MAINTENANCE & METERS -->
                 <h4>⏱️ Maintenance & Operating Meters</h4>
                 <div id="modalPmContainer" style="display: flex; gap: 6px; flex-wrap: wrap;">
-                    <div style="flex:1; min-width: 130px;"><label>Last Inspected</label><input type="date" id="modalLastInspect" onchange="saveModalLiveChanges()"></div>
-                    <div style="flex:1; min-width: 130px;"><label>PM Due Date</label><input type="date" id="modalPmDue" onchange="saveModalLiveChanges()"></div>
-                    <div style="flex:1; min-width: 130px;"><label>Run Hours / Meter</label><input type="number" id="modalRunHours" placeholder="e.g. 4250 hrs" oninput="saveModalLiveChanges()"></div>
+                    <div style="flex:1; min-width: 130px;"><label>Last Inspected</label><input type="date" id="modalLastInspect"></div>
+                    <div style="flex:1; min-width: 130px;"><label>PM Due Date</label><input type="date" id="modalPmDue"></div>
+                    <div style="flex:1; min-width: 130px;"><label>Run Hours / Meter</label><input type="text" id="modalRunHours" placeholder="12450 hrs"></div>
                 </div>
                 <!-- PREDICTIVE & LUBRICATION METRICS -->
                 <h4>📊 Predictive Health & Lubrication</h4>
                 <div id="modalPredictiveContainer" style="display: flex; gap: 6px; flex-wrap: wrap;">
-                    <div style="flex:1; min-width: 130px;"><label>Thermal Temp (°F)</label><input type="text" id="modalTemp" placeholder="115°F" oninput="saveModalLiveChanges()"></div>
-                    <div style="flex:1; min-width: 130px;"><label>Vibration (in/s)</label><input type="text" id="modalVibration" placeholder="0.12 in/s" oninput="saveModalLiveChanges()"></div>
-                    <div style="flex:1; min-width: 130px;"><label>Grease / Lube Type</label><input type="text" id="modalLube" placeholder="Mobilith SHC 220" oninput="saveModalLiveChanges()"></div>
+                    <div style="flex:1; min-width: 130px;"><label>Thermal Temp (°F)</label><input type="text" id="modalTemp" placeholder="112°F"></div>
+                    <div style="flex:1; min-width: 130px;"><label>Vibration (in/s)</label><input type="text" id="modalVibration" placeholder="0.04 in/s"></div>
+                    <div style="flex:1; min-width: 130px;"><label>Grease / Lube Type</label><input type="text" id="modalLube" placeholder="Mobilith SHC 100"></div>
                 </div>
                 <!-- UTILITIES & SAFETY INTERLOCKS -->
                 <h4>⚡ Utilities & Safety Interlocks</h4>
                 <div id="modalUtilitiesContainer" style="display: flex; gap: 6px; flex-wrap: wrap;">
-                    <div style="flex:1; min-width: 130px;"><label>Amps/Cal</label><input type="text" id="modalUtilityDraw" placeholder="480V 45A / 12 Cal" oninput="saveModalLiveChanges()"></div>
-                    <div style="flex:1; min-width: 130px;"><label>Safety / E-Stop Zone</label><input type="text" id="modalEstopZone" placeholder="E-Stop Relay Line #2" oninput="saveModalLiveChanges()"></div>
+                    <div style="flex:1; min-width: 130px;"><label>Amps/Cal</label><input type="text" id="modalUtilityDraw" placeholder="45A / Cat 2"></div>
+                    <div style="flex:1; min-width: 130px;"><label>Safety / E-Stop Zone</label><input type="text" id="modalEstopZone" placeholder="Zone 4 Conveyor"></div>
                 </div>
                 <!-- VENDOR DIRECTORY -->
                 <h4>📞 OEM & Vendor Support Contact</h4>
                 <div id="modalVendorContainer" style="display: flex; gap: 6px;">
-                    <div style="flex:1;"><label>Vendor Name / Rep</label><input type="text" id="modalVendorName" placeholder="OPEX / System Integrator Support" oninput="saveModalLiveChanges()"></div>
-                    <div style="flex:1;"><label>Contact Phone / Email</label><input type="text" id="modalVendorContact" placeholder="800-555-0199" oninput="saveModalLiveChanges()"></div>
+                    <div style="flex:1;"><label>Vendor Name / Rep</label><input type="text" id="modalVendorName" placeholder="Dematic / Siemens"></div>
+                    <div style="flex:1;"><label>Contact Phone / Email</label><input type="text" id="modalVendorContact" placeholder="1-800-555-0199"></div>
                 </div>
-                <!-- SPARE PARTS CAGE & BIN LOCATION -->
+                <!-- SPARE PARTS & BIN LOCATION -->
                 <div id="modalBomContainer">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 6px;">
-                        <h4>📦 Spare Parts & Cage Bin Mapping</h4>
-                        <button onclick="addBomRow()" style="width: auto; padding: 2px 8px; font-size: 10px; min-height: auto;">+ Add Spare Part</button>
-                    </div>
+                    <h4 style="margin-top: 6px;">📦 Spare Parts & Cage Bin Mapping</h4>
                     <table class="spreadsheet-table">
                         <thead>
                             <tr>
-                                <th style="width: 30%;">Part Name</th>
+                                <th style="width: 35%;">Part Name</th>
                                 <th style="width: 35%;">Part # / SKU</th>
-                                <th style="width: 25%;">Bin / Shelf Location</th>
-                                <th style="width: 10%;"></th>
+                                <th style="width: 25%;">Bin Loc</th>
+                                <th style="width: 5%;"></th>
                             </tr>
                         </thead>
                         <tbody id="bomBody"></tbody>
                     </table>
+                    <div style="display: flex; gap: 4px; margin-top: 4px;">
+                        <input type="text" id="newPartName" placeholder="Part Name">
+                        <input type="text" id="newPartSku" placeholder="SKU #">
+                        <input type="text" id="newPartBin" placeholder="Bin Location">
+                        <button onclick="addBomPart()" style="width: auto; padding: 4px 10px;">Add Part</button>
+                    </div>
                 </div>
                 <!-- BREAKDOWN WORK TICKETS -->
                 <div id="modalTicketsContainer">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 6px;">
-                        <h4>🛠️ Breakdown & Work Tickets</h4>
-                        <button onclick="addWorkTicket()" style="width: auto; padding: 2px 8px; font-size: 10px; min-height: auto;">+ Raise Ticket</button>
-                    </div>
+                    <h4 style="margin-top: 6px;">🛠️ Open Breakdown Work Tickets</h4>
                     <div class="notes-log-box" id="ticketsBox"></div>
-                </div>
-                <div>
-                    <label>Location Photos (Click photo to enlarge) <span id="upload-status" style="color: #38bdf8; font-weight: normal;"></span></label>
-                    <input type="file" id="photoUploadInput" accept="image/*" multiple onchange="handlePhotoUpload(event)">
-                    <div class="photo-gallery" id="modalPhotoGallery"></div>
-                </div>
-                <div>
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
-                        <label>Spreadsheet Details / Custom Records</label>
-                        <button onclick="addSpreadsheetRow()" style="width: auto; padding: 2px 8px; font-size: 10px; min-height: auto;">+ Add Row</button>
+                    <div style="display: flex; gap: 4px; margin-top: 4px;">
+                        <input type="text" id="newTicketDesc" placeholder="Describe breakdown issue...">
+                        <select id="newTicketPriority" style="width: 90px;"><option value="HIGH">High</option><option value="MED">Med</option><option value="LOW">Low</option></select>
+                        <button onclick="addWorkTicket()" style="width: auto; padding: 4px 10px;">Log Ticket</button>
                     </div>
+                </div>
+                <div>
+                    <label>Location Photos</label>
+                    <div class="photo-gallery" id="modalPhotoGallery"></div>
+                    <input type="url" id="modalNewPhotoUrl" placeholder="Paste image URL here..." style="margin-top: 4px;">
+                    <button onclick="addPhotoUrl()" style="background:#1e293b; color:#38bdf8; margin-top: 2px; width:auto; padding: 4px 10px;">Add Photo URL</button>
+                </div>
+                <div>
+                    <label>Custom Spreadsheet Parameters</label>
                     <table class="spreadsheet-table">
                         <thead>
                             <tr>
-                                <th style="width: 35%;">Parameter / Field</th>
-                                <th style="width: 55%;">Value / Data</th>
+                                <th style="width: 40%;">Parameter</th>
+                                <th style="width: 50%;">Value</th>
                                 <th style="width: 10%;"></th>
                             </tr>
                         </thead>
                         <tbody id="spreadsheetBody"></tbody>
                     </table>
+                    <div style="display: flex; gap: 4px; margin-top: 4px;">
+                        <input type="text" id="newParamKey" placeholder="Parameter Name">
+                        <input type="text" id="newParamVal" placeholder="Value">
+                        <button onclick="addSpreadsheetRow()" style="width: auto; padding: 4px 10px;">Add Field</button>
+                    </div>
                 </div>
             </div>
             <div class="modal-footer">
-                <button class="danger" onclick="deleteItemFromModal()" style="width: auto; padding: 6px 12px;">Delete Item</button>
-                <button onclick="closeModal()" style="width: auto; padding: 6px 12px; background: #38bdf8; color: #0b131d;">Done / Save</button>
+                <button onclick="deleteElement()" style="background: #7f1d1d; color: #fff; width: auto; padding: 6px 12px;">Delete Element</button>
+                <button onclick="saveModalChanges()" style="background: #38bdf8; color: #0b131d; width: auto; padding: 6px 12px;">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- LOTO SIMULATION RESULTS MODAL -->
+    <div id="loto-sim-modal">
+        <div class="modal-content" style="width: 500px;">
+            <div class="modal-header">
+                <h3 style="color: #a855f7; margin: 0;">⚡ LOTO & ESWC Zero-Energy Simulation</h3>
+                <button class="close-modal" onclick="closeLotoSimModal()">×</button>
+            </div>
+            <div class="modal-body" id="lotoSimBody">
+                <!-- Populated dynamically -->
+            </div>
+            <div class="modal-footer">
+                <button onclick="closeLotoSimModal()" style="background: #a855f7; color: #fff; width: auto; padding: 6px 12px;">Close Simulation</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ADD ELEMENT MODAL -->
+    <div id="add-modal-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:1000; justify-content:center; align-items:center; padding:10px;">
+        <div class="modal-content" style="width: 400px;">
+            <div class="modal-header">
+                <h3 style="color: #38bdf8; margin: 0;">Add Facility Element</h3>
+                <button class="close-modal" onclick="closeAddModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <div><label>Element Type</label>
+                    <select id="newElementType" onchange="toggleAddFields(this.value)">
+                        <option value="asset">📍 Asset / Machine / LOTO Point</option>
+                        <option value="conveyance_line">🛤️ Conveyance / Sorter Line Path</option>
+                        <option value="zone">🟦 Facility Zone / Racking Block</option>
+                    </select>
+                </div>
+                <div><label>Name / Designation</label><input type="text" id="newElemName" placeholder="e.g. CV-101 Induct Line"></div>
+                <div><label>APM Asset Tag #</label><input type="text" id="newElemApmTag" placeholder="e.g. APM-CV-101"></div>
+                <div id="addAssetCatContainer">
+                    <label>Category</label>
+                    <select id="newElemCategory">
+                        <option value="OPEX UIS Sorter">OPEX UIS Sorter</option>
+                        <option value="ATR Tote Retrieval">ATR Tote Retrieval</option>
+                        <option value="Conveyance">Conveyance</option>
+                        <option value="Electrical">Electrical</option>
+                        <option value="Fire Safety">Fire Safety</option>
+                        <option value="Plumbing">Plumbing</option>
+                        <option value="Safety">Safety</option>
+                        <option value="HVAC">HVAC</option>
+                        <option value="LOTO Isolation">LOTO Isolation</option>
+                        <option value="General">General</option>
+                    </select>
+                </div>
+                <div id="addCoordFields" style="display:flex; gap:6px;">
+                    <div style="flex:1;"><label>X Col</label><input type="number" id="newElemX" value="5"></div>
+                    <div style="flex:1;"><label>Y Row</label><input type="number" id="newElemY" value="5"></div>
+                </div>
+                <div id="addSizeFields" style="display:none; gap:6px;">
+                    <div style="flex:1;"><label>Width (Cols)</label><input type="number" id="newElemW" value="4"></div>
+                    <div style="flex:1;"><label>Height (Rows)</label><input type="number" id="newElemH" value="3"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button onclick="closeAddModal()" style="width: auto; padding: 6px 12px;">Cancel</button>
+                <button onclick="confirmAddElement()" style="background: #38bdf8; color: #0b131d; width: auto; padding: 6px 12px;">Create Element</button>
             </div>
         </div>
     </div>
@@ -558,11 +575,9 @@
             </div>
             <div class="modal-body" style="position: relative; padding: 0; background: #000; flex-grow: 1; display: flex; align-items: center; justify-content: center; overflow: hidden;">
                 <div id="ar-video-container" style="width: 100%; height: 100%;"></div>
-                <!-- Simulated AR Floating HUD Badge -->
                 <div style="position: absolute; top: 15px; left: 15px; background: rgba(17,27,39,0.85); border: 1px solid #38bdf8; padding: 8px 12px; border-radius: 6px; pointer-events: none;">
-                    <div style="color: #38bdf8; font-weight: bold; font-size: 11px;">OPEX UIS Sure Sort #1</div>
-                    <div style="color: #10b981; font-size: 10px;">Status: Operational | Runtime: 3,120 hrs</div>
-                    <div style="color: #f59e0b; font-size: 9px;">PLC Node: PLC-UIS-01 (192.168.1.101)</div>
+                    <div style="color: #38bdf8; font-weight: bold; font-size: 11px;">Scan APM Tag / Barcode</div>
+                    <div style="color: #10b981; font-size: 10px;">Camera active for plant inspection</div>
                 </div>
             </div>
             <div class="modal-footer">
@@ -571,54 +586,11 @@
         </div>
     </div>
 
-    <!-- LIGHTBOX MODAL -->
-    <div id="lightbox-overlay" onclick="closeLightbox()">
-        <div style="position: relative; max-width: 90vw; max-height: 90vh; display: flex; flex-direction: column; align-items: center;" onclick="event.stopPropagation()">
-            <button onclick="closeLightbox()" style="position: absolute; top: -35px; right: 0; background: none; border: none; color: #fff; font-size: 24px; cursor: pointer;">×</button>
-            <img id="lightboxImage" src="" style="max-width: 85vw; max-height: 80vh; object-fit: contain; border-radius: 4px; border: 1px solid #38bdf8; box-shadow: 0 10px 30px rgba(0,0,0,0.9);">
-            <div id="lightboxCaption" style="margin-top: 8px; color: #38bdf8; font-size: 13px; font-weight: bold;"></div>
-        </div>
-    </div>
-    <!-- CATEGORY MANAGING MODAL -->
-    <div id="category-modal-overlay">
-        <div class="modal-content" style="width: 500px;">
-            <div class="modal-header">
-                <h3 style="color: #38bdf8; margin: 0;">Manage Asset Categories</h3>
-                <button class="close-modal" onclick="closeCategoryModal()">×</button>
-            </div>
-            <div class="modal-body">
-                <div>
-                    <label>Add New Category</label>
-                    <div style="display: flex; gap: 6px; margin-top: 4px;">
-                        <input type="text" id="newCatName" placeholder="Category Name (e.g. OPEX Sorter)" style="flex: 2;">
-                        <input type="color" id="newCatColor" value="#38bdf8" style="flex: 0.5; height: 36px; padding: 0; cursor: pointer;">
-                        <button onclick="addCategory()" style="flex: 1; margin-top: 0;">Add Category</button>
-                    </div>
-                </div>
-                <div style="margin-top: 8px;">
-                    <label>Existing Categories & Accent Colors</label>
-                    <table class="spreadsheet-table" style="margin-top: 6px;">
-                        <thead>
-                            <tr>
-                                <th>Category Name</th>
-                                <th style="width: 70px; text-align: center;">Color</th>
-                                <th style="width: 50px; text-align: center;">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody id="categoryTableBody"></tbody>
-                    </table>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button onclick="closeCategoryModal()" style="width: auto; padding: 6px 12px; background: #38bdf8; color: #0b131d;">Save & Close</button>
-            </div>
-        </div>
-    </div>
     <!-- QR CAMERA SCANNER MODAL -->
     <div id="scanner-modal-overlay">
         <div class="modal-content" style="width: 450px;">
             <div class="modal-header">
-                <h3 style="color: #38bdf8; margin: 0;">📷 Scan Asset Barcode / QR Tag</h3>
+                <h3 style="color: #38bdf8; margin: 0;">📷 Scan APM Barcode / QR Tag</h3>
                 <button class="close-modal" onclick="closeScannerModal()">×</button>
             </div>
             <div class="modal-body">
@@ -627,9 +599,20 @@
         </div>
     </div>
 
+    <!-- LIGHTBOX OVERLAY -->
+    <div id="lightbox-overlay" onclick="closeLightbox()">
+        <div style="position: relative; max-width: 90vw; max-height: 90vh; display: flex; flex-direction: column; align-items: center;" onclick="event.stopPropagation()">
+            <button onclick="closeLightbox()" style="position: absolute; top: -35px; right: 0; background: none; border: none; color: #fff; font-size: 24px; cursor: pointer;">×</button>
+            <img id="lightboxImage" src="" style="max-width: 85vw; max-height: 80vh; object-fit: contain; border-radius: 4px; border: 1px solid #38bdf8; box-shadow: 0 10px 30px rgba(0,0,0,0.9);">
+            <div id="lightboxCaption" style="margin-top: 8px; color: #38bdf8; font-size: 13px; font-weight: bold;"></div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK Imports -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        
         const firebaseConfig = {
             apiKey: "AIzaSyCrKAut8_5nHWTWtYqZZr5HOENGd8mqZxE",
             authDomain: "imi1-interactive-map-8d929.firebaseapp.com",
@@ -641,6 +624,7 @@
         };
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
+        
         const gridSize = 25;
         const minCol = -8;
         const maxCol = 38;
@@ -648,17 +632,15 @@
         const maxRow = 20;
         const buildingCols = 30; 
         const buildingRows = 13; 
-        let currentMode = 'edit'; 
-        let currentTab = 'dept'; 
         let currentLayer = 'ground'; 
+        let currentTab = 'info';
         let searchQuery = '';
         let showHeatmap = false;
         let activeQuickFilter = 'all';
         let html5QrCode = null;
         let arQrCode = null;
-        let calcPoints = []; 
-        let drawingLineState = null; 
-        let draggingVertex = null; 
+        let activeLotoSimElement = null;
+
         let categories = [
             { name: "OPEX UIS Sorter", color: "#ec4899" },
             { name: "ATR Tote Retrieval", color: "#8b5cf6" },
@@ -671,42 +653,19 @@
             { name: "LOTO Isolation", color: "#a855f7" },
             { name: "General", color: "#94a3b8" }
         ];
-        let elements = [
-            { 
-                id: 501, layer: "uis_sorter", name: "OPEX UIS Sure Sort Frame #1", type: "asset", category: "OPEX UIS Sorter", status: "operational", emoji: "🤖", x: 10, y: 4,
-                parentId: "", plcNode: "PLC-UIS-01 (192.168.1.101)", manualUrl: "", runHours: "3120", temp: "95°F", vibration: "0.02 in/s", lube: "iBOT Guide Rail Lube", utilityDraw: "480V 30A / 8 Cal", estopZone: "UIS Bay E-Stop Circuit", vendorName: "OPEX Corporation Support", vendorContact: "800-555-0199",
-                lotoSteps: [{step: "Isolate Main UIS Control Panel Disconnect Switch", done: false}, {step: "Lockout Pneumatic Dump Valve HV-UIS1", done: false}],
-                spareParts: [
-                    {partName: "iBOT Wireless Delivery Vehicle", partNum: "OPEX-IBOT-V3", binLoc: "Aisle 4, Shelf A-2"},
-                    {partName: "6-Sided Barcode Scanner Head", partNum: "OPEX-SCN-6D", binLoc: "Aisle 4, Shelf B-1"}
-                ], 
-                workTickets: [{time: "2026-10-20 09:15", priority: "Medium", desc: "iBOT #14 charging contact wear check."}], lastInspect: "2026-10-01", pmDue: "2026-11-15", photos: [], 
-                spreadsheetData: [{key: "Sorter Throughput", value: "2,400 UPH"}, {key: "iBOT Fleet Count", value: "22 iBOTs"}]
-            },
-            { 
-                id: 601, layer: "atr_retrieval", name: "ATR Stacker / Retrieval Cell #1", type: "asset", category: "ATR Tote Retrieval", status: "operational", emoji: "📦", x: 18, y: 4,
-                parentId: "", plcNode: "PLC-ATR-02 (192.168.1.105)", manualUrl: "", runHours: "1840", temp: "88°F", vibration: "0.05 in/s", lube: "Chain & Linear Rail Grease", utilityDraw: "480V 25A / 4 Cal", estopZone: "ATR Safety Light Curtain", vendorName: "ATR Integration Support", vendorContact: "800-555-0199",
-                lotoSteps: [{step: "Press Cell E-Stop", done: true}, {step: "Apply Lockout Hasp on Power Panel 4", done: true}],
-                spareParts: [{partName: "Tote Lift Pneumatic Cylinder", partNum: "CYL-ATR-80", binLoc: "Aisle 4, Shelf C-3"}], 
-                workTickets: [], lastInspect: "2026-09-28", pmDue: "2026-11-28", photos: [], 
-                spreadsheetData: [{key: "Tote Buffer Capacity", value: "120 Totes"}, {key: "De-stack Cycle Time", value: "3.2 sec"}]
-            },
-            {
-                id: 701, layer: "conveyance", name: "Mainline Infeed Belt #1", type: "conveyance_line", conveyanceType: "belted", points: [{x: 2, y: 2}, {x: 10, y: 2}, {x: 15, y: 6}],
-                photos: [], spreadsheetData: [{key: "Conveyance Type", value: "Belted"}]
-            }
-        ];
-        let shiftLogs = [
-            { time: "2026-11-06 22:30", shift: "Shift C", note: "Infeed belt #1 re-tensioned. 2 spare proximity sensors placed in Cage Aisle 2." }
-        ];
-
+        let elements = [];
+        let shiftLogs = [];
         let selectedId = null;
-        let isDraggingElement = false;
         let isPanning = false;
         let panStart = { x: 0, y: 0 };
         let viewTransform = { x: 250, y: 180, scale: 0.9 };
+        
+        let activePointers = new Map();
         let initialPinchDistance = null;
-        let initialScale = 0.9;
+        let initialPinchScale = 1;
+        let initialPinchCenter = { x: 0, y: 0 };
+        let initialTransform = { x: 0, y: 0 };
+
         const container = document.getElementById("canvas-container");
         const svg = document.getElementById("layoutSvg");
         const viewport = document.getElementById("viewport");
@@ -732,53 +691,36 @@
                     }
                     if (data.categories) categories = data.categories;
                     if (data.shiftLogs) shiftLogs = data.shiftLogs;
-                    syncStatus.innerText = "Loaded from Firebase";
-                    localStorage.setItem("cached_layout", JSON.stringify(data));
+                    syncStatus.innerText = "Connected & Synced";
                 } else {
-                    await saveToFirebase();
+                    syncStatus.innerText = "No Data Found";
                 }
-                populateCategoryDropdowns();
-                populateParentAssetDropdown();
                 renderShiftLogs();
                 render();
             } catch (error) {
                 console.error("Error loading layout:", error);
-                let offlineData = localStorage.getItem("cached_layout");
-                if (offlineData) {
-                    let parsed = JSON.parse(offlineData);
-                    if (parsed.elements) elements = parsed.elements;
-                    if (parsed.categories) categories = parsed.categories;
-                    if (parsed.shiftLogs) shiftLogs = parsed.shiftLogs;
-                    syncStatus.innerText = "Offline Mode (Cached)";
-                } else {
-                    syncStatus.innerText = "Error Loading Database";
-                }
-                syncStatus.style.color = "#f59e0b";
-                populateCategoryDropdowns();
-                populateParentAssetDropdown();
-                renderShiftLogs();
+                syncStatus.innerText = "Error Connecting to DB";
+                syncStatus.style.color = "#ef4444";
                 render();
             }
         }
 
         async function saveToFirebase() {
             try {
-                syncStatus.innerText = "Saving...";
-                syncStatus.style.color = "#fbbf24";
-                let layoutObject = {
+                syncStatus.innerText = "Saving to Firebase...";
+                const docRef = doc(db, "layouts", "facility_main");
+                await setDoc(docRef, {
                     elements: elements,
                     categories: categories,
                     shiftLogs: shiftLogs,
-                    updatedAt: new Date().toISOString()
-                };
-                localStorage.setItem("cached_layout", JSON.stringify(layoutObject));
-                await setDoc(doc(db, "layouts", "facility_main"), layoutObject);
-                syncStatus.innerText = "Synced to Firebase";
-                syncStatus.style.color = "#10b981";
+                    lastUpdated: new Date().toISOString()
+                }, { merge: true });
+                syncStatus.innerText = "Saved & Synced";
+                setTimeout(() => { syncStatus.innerText = "Connected & Synced"; }, 2000);
             } catch (error) {
                 console.error("Error saving layout:", error);
-                syncStatus.innerText = "Saved Locally (Offline)";
-                syncStatus.style.color = "#f59e0b";
+                syncStatus.innerText = "Save Failed!";
+                syncStatus.style.color = "#ef4444";
             }
         }
 
@@ -787,8 +729,8 @@
             document.querySelectorAll('.filter-pill').forEach(btn => btn.classList.remove('active'));
             if (filterType === 'down') document.querySelector('.down-pill').classList.add('active');
             else if (filterType === 'pm_due') document.querySelector('.pm-pill').classList.add('active');
-            else if (filterType === 'water') document.querySelectorAll('.filter-pill')[2].classList.add('active');
-            else if (filterType === 'estop') document.querySelectorAll('.filter-pill')[3].classList.add('active');
+            else if (filterType === 'loto') document.querySelector('.loto-pill').classList.add('active');
+            else if (filterType === 'water') document.querySelectorAll('.filter-pill')[3].classList.add('active');
             else document.getElementById('filterAllBtn').classList.add('active');
             render();
         }
@@ -804,7 +746,7 @@
                     handleSearch(decodedText);
                     closeARModal();
                 },
-                (err) => {}
+                () => {}
             ).catch(err => console.error("AR Camera error:", err));
         }
 
@@ -821,16 +763,59 @@
             }
         }
 
-        window.addShiftLog = function() {
-            let shift = document.getElementById("shiftName").value;
-            let note = document.getElementById("shiftLogText").value.trim();
-            if (!note) {
-                alert("Please enter handover notes.");
-                return;
+        window.openScannerModal = function() {
+            document.getElementById("scanner-modal-overlay").style.display = "flex";
+            html5QrCode = new Html5Qrcode("qr-reader");
+            html5QrCode.start(
+                { facingMode: "environment" },
+                { fps: 10, qrbox: { width: 250, height: 250 } },
+                (decodedText) => {
+                    closeScannerModal();
+                    document.getElementById("assetSearchInput").value = decodedText;
+                    handleSearch(decodedText);
+                },
+                () => {}
+            ).catch(err => console.error("Scanner error:", err));
+        }
+
+        window.closeScannerModal = function() {
+            if (html5QrCode) {
+                html5QrCode.stop().then(() => {
+                    html5QrCode.clear();
+                    document.getElementById("scanner-modal-overlay").style.display = "none";
+                }).catch(() => {
+                    document.getElementById("scanner-modal-overlay").style.display = "none";
+                });
+            } else {
+                document.getElementById("scanner-modal-overlay").style.display = "none";
             }
-            let timestamp = new Date().toISOString().replace('T', ' ').slice(0, 16);
-            shiftLogs.unshift({ time: timestamp, shift: shift, note: note });
-            document.getElementById("shiftLogText").value = "";
+        }
+
+        window.handleSearch = function(val) {
+            searchQuery = val.trim().toLowerCase();
+            render();
+        }
+
+        window.toggleHeatmap = function(checked) {
+            showHeatmap = checked;
+            render();
+        }
+
+        window.switchTab = function(tab) {
+            currentTab = tab;
+            document.getElementById("tabInfoBtn").classList.toggle("active", tab === 'info');
+            document.getElementById("tabShiftBtn").classList.toggle("active", tab === 'shift');
+            document.getElementById("panelInfo").classList.toggle("active", tab === 'info');
+            document.getElementById("panelShift").classList.toggle("active", tab === 'shift');
+        }
+
+        window.addShiftNote = function() {
+            let note = document.getElementById("newShiftNote").value.trim();
+            if (!note) return;
+            let now = new Date();
+            let timeStr = `${now.getMonth()+1}/${now.getDate()} ${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`;
+            shiftLogs.unshift({ shift: "Shift Handover", time: timeStr, note: note });
+            document.getElementById("newShiftNote").value = "";
             renderShiftLogs();
             saveToFirebase();
         }
@@ -839,8 +824,8 @@
             let box = document.getElementById("shiftLogContainer");
             if (!box) return;
             box.innerHTML = "";
-            if (shiftLogs.length === 0) {
-                box.innerHTML = `<span style="color:#64748b; font-style:italic;">No shift handover entries.</span>`;
+            if (!shiftLogs || shiftLogs.length === 0) {
+                box.innerHTML = `<span style="color:#64748b; font-style:italic;">No shift notes logged.</span>`;
                 return;
             }
             shiftLogs.forEach(s => {
@@ -849,39 +834,6 @@
                 div.innerHTML = `<span class="note-timestamp">[${s.time}] ${s.shift}:</span> ${s.note}`;
                 box.appendChild(div);
             });
-        }
-
-        function populateCategoryDropdowns(selectedVal1 = null, selectedVal2 = null) {
-            let select1 = document.getElementById("newAssetCategory");
-            let select2 = document.getElementById("modalCategory");
-            let val1 = selectedVal1 || select1.value;
-            let val2 = selectedVal2 || select2.value;
-            select1.innerHTML = "";
-            select2.innerHTML = "";
-            categories.forEach(cat => {
-                let opt1 = document.createElement("option");
-                opt1.value = cat.name;
-                opt1.textContent = cat.name;
-                select1.appendChild(opt1);
-                let opt2 = document.createElement("option");
-                opt2.value = cat.name;
-                opt2.textContent = cat.name;
-                select2.appendChild(opt2);
-            });
-            if (val1 && categories.some(c => c.name === val1)) select1.value = val1;
-            if (val2 && categories.some(c => c.name === val2)) select2.value = val2;
-        }
-
-        function populateParentAssetDropdown(selectedParentId = null) {
-            let select = document.getElementById("modalParentAsset");
-            select.innerHTML = '<option value="">None / Standalone Asset</option>';
-            elements.filter(e => e.type === 'asset').forEach(el => {
-                let opt = document.createElement("option");
-                opt.value = el.id;
-                opt.textContent = `${el.name} (ID: ${el.id})`;
-                select.appendChild(opt);
-            });
-            if (selectedParentId) select.value = selectedParentId;
         }
 
         function getCategoryColor(catName) {
@@ -905,150 +857,10 @@
             return 'none';
         }
 
-        window.handleSearch = function(val) {
-            searchQuery = val.trim().toLowerCase();
-            render();
-        }
-
-        window.toggleHeatmap = function(checked) {
-            showHeatmap = checked;
-            render();
-        }
-
-        window.openScannerModal = function() {
-            document.getElementById("scanner-modal-overlay").style.display = "flex";
-            html5QrCode = new Html5Qrcode("qr-reader");
-            html5QrCode.start(
-                { facingMode: "environment" },
-                { fps: 10, qrbox: { width: 250, height: 250 } },
-                (decodedText) => {
-                    closeScannerModal();
-                    document.getElementById("assetSearchInput").value = decodedText;
-                    handleSearch(decodedText);
-                },
-                () => {}
-            ).catch(err => console.error("Camera access error:", err));
-        }
-
-        window.closeScannerModal = function() {
-            if (html5QrCode) {
-                html5QrCode.stop().then(() => {
-                    html5QrCode.clear();
-                    document.getElementById("scanner-modal-overlay").style.display = "none";
-                }).catch(() => {
-                    document.getElementById("scanner-modal-overlay").style.display = "none";
-                });
-            } else {
-                document.getElementById("scanner-modal-overlay").style.display = "none";
-            }
-        }
-
-        window.exportDataToCSV = function() {
-            let csvRows = [["ID", "Name", "Type / Conveyance", "Category / Details", "Status", "PLC Node", "X / Vertex Info", "Y Info", "W / Details", "H"]];
-            elements.forEach(el => {
-                if (el.type === 'conveyance_line') {
-                    let ptsStr = (el.points || []).map(p => `(${p.x},${p.y})`).join(" -> ");
-                    csvRows.push([el.id, `"${(el.name || '').replace(/"/g, '""')}"`, el.conveyanceType, `"${ptsStr}"`, "N/A", "N/A", el.points[0].x, el.points[0].y, "", ""]);
-                } else if (el.type === 'asset') {
-                    csvRows.push([el.id, `"${(el.name || '').replace(/"/g, '""')}"`, el.type, el.category || "N/A", el.status || "N/A", `"${(el.plcNode || '').replace(/"/g, '""')}"`, el.x, el.y, "", ""]);
-                } else {
-                    csvRows.push([el.id, `"${(el.name || '').replace(/"/g, '""')}"`, el.type, "Zone / Area", "N/A", "N/A", el.x, el.y, el.w || "", el.h || ""]);
-                }
-            });
-            let csvString = csvRows.map(row => row.join(",")).join("\n");
-            let blob = new Blob([csvString], { type: "text/csv" });
-            let url = URL.createObjectURL(blob);
-            let a = document.createElement("a");
-            a.href = url;
-            a.download = `Facility_Inventory_${new Date().toISOString().slice(0, 10)}.csv`;
-            a.click();
-            URL.revokeObjectURL(url);
-        }
-
-        window.openCategoryModal = function() {
-            renderCategoryTable();
-            document.getElementById("category-modal-overlay").style.display = "flex";
-        }
-        window.closeCategoryModal = function() {
-            document.getElementById("category-modal-overlay").style.display = "none";
-            populateCategoryDropdowns();
-            render();
-            saveToFirebase();
-        }
-
-        function renderCategoryTable() {
-            let tbody = document.getElementById("categoryTableBody");
-            tbody.innerHTML = "";
-            categories.forEach((cat, index) => {
-                let tr = document.createElement("tr");
-                let tdName = document.createElement("td");
-                let inputName = document.createElement("input");
-                inputName.type = "text";
-                inputName.value = cat.name;
-                inputName.oninput = function() {
-                    cat.name = inputName.value;
-                    populateCategoryDropdowns();
-                };
-                tdName.appendChild(inputName);
-                let tdColor = document.createElement("td");
-                tdColor.style.textAlign = "center";
-                let inputColor = document.createElement("input");
-                inputColor.type = "color";
-                inputColor.value = cat.color;
-                inputColor.style.width = "40px";
-                inputColor.style.height = "24px";
-                inputColor.style.padding = "0";
-                inputColor.style.border = "none";
-                inputColor.style.cursor = "pointer";
-                inputColor.oninput = function() { cat.color = inputColor.value; };
-                tdColor.appendChild(inputColor);
-                let tdAction = document.createElement("td");
-                tdAction.style.textAlign = "center";
-                let delBtn = document.createElement("button");
-                delBtn.className = "danger";
-                delBtn.style.padding = "2px 6px";
-                delBtn.style.fontSize = "10px";
-                delBtn.style.minHeight = "auto";
-                delBtn.innerText = "X";
-                delBtn.onclick = function() {
-                    if (categories.length <= 1) {
-                        alert("You must keep at least one category.");
-                        return;
-                    }
-                    categories.splice(index, 1);
-                    renderCategoryTable();
-                    populateCategoryDropdowns();
-                };
-                tdAction.appendChild(delBtn);
-                tr.appendChild(tdName);
-                tr.appendChild(tdColor);
-                tr.appendChild(tdAction);
-                tbody.appendChild(tr);
-            });
-        }
-
-        window.addCategory = function() {
-            let nameInput = document.getElementById("newCatName");
-            let colorInput = document.getElementById("newCatColor");
-            let name = nameInput.value.trim();
-            if (!name) {
-                alert("Please enter a category name.");
-                return;
-            }
-            if (categories.some(c => c.name.toLowerCase() === name.toLowerCase())) {
-                alert("Category already exists.");
-                return;
-            }
-            categories.push({ name: name, color: colorInput.value });
-            nameInput.value = "";
-            renderCategoryTable();
-            populateCategoryDropdowns();
-        }
-
         function getRowLabel(r) {
             if (r < 0) return "N" + Math.abs(r);
             let adjustedIndex = r;
-            if (adjustedIndex >= 8) adjustedIndex += 1; 
+            if (adjustedIndex >= 8) adjustedIndex += 1;
             return String.fromCharCode(65 + adjustedIndex); 
         }
 
@@ -1077,53 +889,6 @@
             render();
         }
 
-        window.setMode = function(mode) {
-            currentMode = mode;
-            drawingLineState = null;
-            document.getElementById("modeEditBtn").classList.toggle("active", mode === 'edit');
-            document.getElementById("modePanBtn").classList.toggle("active", mode === 'pan');
-            document.getElementById("modeCalcBtn").classList.toggle("active", mode === 'calc');
-            
-            let distDisplay = document.getElementById("dist-result-display");
-            if (mode === 'calc') {
-                distDisplay.style.display = 'block';
-                calcPoints = [];
-                distDisplay.innerText = "Click 2 points to measure distance";
-            } else {
-                distDisplay.style.display = 'none';
-                calcPoints = [];
-            }
-            container.style.cursor = (mode === 'pan' || mode === 'calc') ? 'crosshair' : 'default';
-            selectedId = null;
-            render();
-        }
-
-        window.switchTab = function(tab) {
-            currentTab = tab;
-            document.getElementById("tabDeptBtn").classList.toggle("active", tab === 'dept');
-            document.getElementById("tabLineBtn").classList.toggle("active", tab === 'line');
-            document.getElementById("tabAssetBtn").classList.toggle("active", tab === 'asset');
-            document.getElementById("tabShiftBtn").classList.toggle("active", tab === 'shift');
-            document.getElementById("panelDept").classList.toggle("active", tab === 'dept');
-            document.getElementById("panelLine").classList.toggle("active", tab === 'line');
-            document.getElementById("panelAsset").classList.toggle("active", tab === 'asset');
-            document.getElementById("panelShift").classList.toggle("active", tab === 'shift');
-            if (tab === 'line') drawingLineState = null;
-        }
-
-        window.startDrawingLine = function() {
-            let name = document.getElementById("newLineName").value.trim();
-            let conveyanceType = document.getElementById("newLineType").value;
-            if (!name) {
-                alert("Please enter a conveyance line name.");
-                return;
-            }
-            drawingLineState = { name, conveyanceType, points: [] };
-            currentMode = 'draw_line';
-            container.style.cursor = 'crosshair';
-            alert("Click points on the map to create line bends. DOUBLE-CLICK anywhere to finish drawing.");
-        }
-
         function updateTransformString() {
             viewport.setAttribute("transform", `translate(${viewTransform.x}, ${viewTransform.y}) scale(${viewTransform.scale})`);
         }
@@ -1131,6 +896,8 @@
         function render() {
             viewport.innerHTML = "";
             updateTransformString();
+            
+            // Site Background
             let siteBackground = document.createElementNS("http://www.w3.org/2000/svg", "g");
             let earthGrading = document.createElementNS("http://www.w3.org/2000/svg", "rect");
             earthGrading.setAttribute("x", minCol * gridSize);
@@ -1147,9 +914,11 @@
             siteLabel.setAttribute("fill", "#854d0e");
             siteLabel.setAttribute("font-size", "12px");
             siteLabel.setAttribute("font-weight", "bold");
-            siteLabel.textContent = "▼ 6500 W MT HOPE HWY — SURROUNDING SITE EARTHWORK & AUTOMATION FOOTPRINT";
+            siteLabel.textContent = "▼ 6500 W MT HOPE HWY — SITE EARTHWORK & AUTOMATION FOOTPRINT (APM INTEGRATED)";
             siteBackground.appendChild(siteLabel);
             viewport.appendChild(siteBackground);
+
+            // Grid Lines & Labels
             for (let c = minCol; c <= maxCol; c++) {
                 let line = document.createElementNS("http://www.w3.org/2000/svg", "line");
                 line.setAttribute("x1", c * gridSize);
@@ -1182,6 +951,8 @@
                 text.textContent = getRowLabel(r);
                 viewport.appendChild(text);
             }
+
+            // Building Footprint
             let buildingWall = document.createElementNS("http://www.w3.org/2000/svg", "rect");
             buildingWall.setAttribute("x", 0);
             buildingWall.setAttribute("y", 0);
@@ -1192,6 +963,7 @@
             buildingWall.setAttribute("stroke", "#38bdf8");
             buildingWall.setAttribute("stroke-width", "2");
             viewport.appendChild(buildingWall);
+
             let layerTitleName = currentLayer.toUpperCase();
             let topLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
             topLabel.setAttribute("x", 0.5 * gridSize);
@@ -1210,29 +982,7 @@
             bottomLabel.textContent = `NORTH WALL - ROW N ▼`;
             viewport.appendChild(bottomLabel);
 
-            // Draw Upstream/Downstream dependency lines
-            elements.forEach(el => {
-                if (el.parentId) {
-                    let parent = elements.find(p => p.id == el.parentId);
-                    if (parent) {
-                        let px = (parent.x * gridSize) + (gridSize / 2);
-                        let py = (parent.y * gridSize) + (gridSize / 2);
-                        let cx = (el.x * gridSize) + (gridSize / 2);
-                        let cy = (el.y * gridSize) + (gridSize / 2);
-                        let depLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
-                        depLine.setAttribute("x1", px);
-                        depLine.setAttribute("y1", py);
-                        depLine.setAttribute("x2", cx);
-                        depLine.setAttribute("y2", cy);
-                        depLine.setAttribute("stroke", "#a855f7");
-                        depLine.setAttribute("stroke-width", "1.5");
-                        depLine.setAttribute("stroke-dasharray", "3");
-                        viewport.appendChild(depLine);
-                    }
-                }
-            });
-
-            // Draw Heatmap Overlay Circles if enabled
+            // Heatmap Overlay
             if (showHeatmap) {
                 elements.forEach(el => {
                     let ticketCount = (el.workTickets || []).length;
@@ -1251,48 +1001,37 @@
                 });
             }
 
+            // Render Elements
             let visibleElements = elements.filter(el => {
                 if (searchQuery) {
                     let matchesName = el.name.toLowerCase().includes(searchQuery);
                     let matchesCat = el.category && el.category.toLowerCase().includes(searchQuery);
+                    let matchesTag = el.apmTag && el.apmTag.toLowerCase().includes(searchQuery);
                     let matchesId = el.id.toString().includes(searchQuery);
                     let matchesPlc = el.plcNode && el.plcNode.toLowerCase().includes(searchQuery);
-                    if (!matchesName && !matchesCat && !matchesId && !matchesPlc) return false;
-                }
-                // Quick-Filter Pill conditions
-                if (activeQuickFilter === 'down') {
-                    return el.status === 'down';
-                }
-                if (activeQuickFilter === 'pm_due') {
-                    return getPmAlertStatus(el.pmDue) === 'overdue';
-                }
-                if (activeQuickFilter === 'water') {
-                    return el.layer === 'water' || (el.category && el.category.toLowerCase().includes('water'));
-                }
-                if (activeQuickFilter === 'estop') {
-                    return el.estopZone || (el.category && el.category.toLowerCase().includes('safety'));
+                    if (!matchesName && !matchesCat && !matchesTag && !matchesId && !matchesPlc) return false;
                 }
 
-                if (currentLayer === 'assets') {
-                    return el.type === 'asset' || el.type === 'conveyance_line';
-                }
-                if (currentLayer === 'conveyance') {
-                    return el.type === 'conveyance_line' || el.type === 'conveyance_run';
-                }
-                if (currentLayer === 'loto') {
-                    return el.type === 'asset' && el.category === 'LOTO Isolation';
-                }
+                if (activeQuickFilter === 'down') return el.status === 'down';
+                if (activeQuickFilter === 'pm_due') return getPmAlertStatus(el.pmDue) === 'overdue';
+                if (activeQuickFilter === 'loto') return el.category === 'LOTO Isolation';
+                if (activeQuickFilter === 'water') return el.layer === 'water' || (el.category && el.category.toLowerCase().includes('water'));
+
+                if (currentLayer === 'assets') return el.type === 'asset' || el.type === 'conveyance_line';
+                if (currentLayer === 'conveyance') return el.type === 'conveyance_line' || el.type === 'conveyance_run';
+                if (currentLayer === 'loto') return el.type === 'asset' && el.category === 'LOTO Isolation';
+
                 return (el.layer || 'ground') === currentLayer;
             });
 
             visibleElements.forEach(el => {
                 let g = document.createElementNS("http://www.w3.org/2000/svg", "g");
                 g.setAttribute("class", "item-group");
-                g.addEventListener("click", (e) => {
+                g.addEventListener("pointerdown", (e) => {
                     e.stopPropagation();
-                    if (currentMode === 'calc' || currentMode === 'draw_line') return; 
                     openModal(el);
                 });
+
                 if (el.type === 'conveyance_line') {
                     let pts = el.points || [];
                     if (pts.length >= 2) {
@@ -1306,10 +1045,7 @@
                         path.setAttribute("stroke", el.conveyanceType === 'flex' ? "#fbbf24" : "#22d3ee");
                         path.setAttribute("stroke-width", el.conveyanceType === 'flex' ? "4" : "6");
                         if (el.conveyanceType === 'flex') path.setAttribute("stroke-dasharray", "6,4");
-                        if (el.id === selectedId) {
-                            path.setAttribute("stroke", "#fbbf24");
-                            path.setAttribute("stroke-width", "8");
-                        }
+                        
                         let text = document.createElementNS("http://www.w3.org/2000/svg", "text");
                         let midPt = pts[Math.floor(pts.length / 2)];
                         text.setAttribute("x", midPt.x * gridSize);
@@ -1318,31 +1054,9 @@
                         text.setAttribute("fill", "#fff");
                         text.setAttribute("font-size", "10px");
                         text.setAttribute("font-weight", "bold");
-                        text.textContent = el.name;
+                        text.textContent = el.apmTag ? `${el.name} [${el.apmTag}]` : el.name;
                         g.appendChild(path);
                         g.appendChild(text);
-
-                        if (el.id === selectedId) {
-                            pts.forEach((pt, pIdx) => {
-                                let vCircle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-                                vCircle.setAttribute("cx", pt.x * gridSize);
-                                vCircle.setAttribute("cy", pt.y * gridSize);
-                                vCircle.setAttribute("r", 8);
-                                vCircle.setAttribute("fill", "#fbbf24");
-                                vCircle.setAttribute("stroke", "#0b131d");
-                                vCircle.setAttribute("stroke-width", "1.5");
-                                vCircle.style.cursor = "pointer";
-                                vCircle.addEventListener("mousedown", (e) => {
-                                    e.stopPropagation();
-                                    startDragVertex(e, el.id, pIdx);
-                                });
-                                vCircle.addEventListener("touchstart", (e) => {
-                                    e.stopPropagation();
-                                    startDragVertex(e.touches[0], el.id, pIdx);
-                                });
-                                g.appendChild(vCircle);
-                            });
-                        }
                     }
                 } else if (el.type === 'asset') {
                     let cx = (el.x * gridSize) + (gridSize / 2);
@@ -1350,6 +1064,7 @@
                     let catColor = getCategoryColor(el.category);
                     let statusColor = getStatusColor(el.status || 'operational');
                     let pmAlert = getPmAlertStatus(el.pmDue);
+
                     if (pmAlert !== 'none') {
                         let pulseRing = document.createElementNS("http://www.w3.org/2000/svg", "circle");
                         pulseRing.setAttribute("cx", cx);
@@ -1357,32 +1072,44 @@
                         pulseRing.setAttribute("class", pmAlert === 'overdue' ? 'pm-overdue-pulse' : 'pm-due-pulse');
                         g.appendChild(pulseRing);
                     }
+
+                    if (activeLotoSimElement && (el.id === activeLotoSimElement || el.parentId === activeLotoSimElement)) {
+                        let lotoRing = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                        lotoRing.setAttribute("cx", cx);
+                        lotoRing.setAttribute("cy", cy);
+                        lotoRing.setAttribute("class", "loto-pulse");
+                        g.appendChild(lotoRing);
+                    }
+
                     let circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
                     circle.setAttribute("cx", cx);
                     circle.setAttribute("cy", cy);
-                    circle.setAttribute("r", 9); 
-                    circle.setAttribute("class", `item-shape ${el.id === selectedId ? 'selected' : ''}`);
+                    circle.setAttribute("r", 7); 
                     circle.setAttribute("fill", "#111b27");
                     circle.setAttribute("stroke", catColor);
                     circle.setAttribute("stroke-width", "2");
+
                     let statusDot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-                    statusDot.setAttribute("cx", cx + 7);
-                    statusDot.setAttribute("cy", cy - 7);
-                    statusDot.setAttribute("r", 4);
+                    statusDot.setAttribute("cx", cx + 6);
+                    statusDot.setAttribute("cy", cy - 6);
+                    statusDot.setAttribute("r", 3);
                     statusDot.setAttribute("fill", statusColor);
                     statusDot.setAttribute("stroke", "#0b131d");
                     statusDot.setAttribute("stroke-width", "1");
+
                     let emojiText = document.createElementNS("http://www.w3.org/2000/svg", "text");
                     emojiText.setAttribute("x", cx);
                     emojiText.setAttribute("y", cy + 1);
                     emojiText.setAttribute("text-anchor", "middle");
                     emojiText.setAttribute("dominant-baseline", "central");
-                    emojiText.setAttribute("font-size", "10px");
+                    emojiText.setAttribute("font-size", "9px");
                     emojiText.style.pointerEvents = "none";
-                    emojiText.textContent = el.emoji || "📍";
+                    emojiText.textContent = el.emoji || (el.category === 'LOTO Isolation' ? '🔒' : '📍');
+
                     let popupGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
                     popupGroup.setAttribute("class", "asset-popup");
-                    let boxWidth = (el.name.length * 6.5) + 12;
+                    let displayName = el.apmTag ? `${el.name} (${el.apmTag})` : el.name;
+                    let boxWidth = (displayName.length * 6.5) + 12;
                     let popupBg = document.createElementNS("http://www.w3.org/2000/svg", "rect");
                     popupBg.setAttribute("x", cx - (boxWidth / 2));
                     popupBg.setAttribute("y", cy - 28);
@@ -1392,6 +1119,7 @@
                     popupBg.setAttribute("fill", "#0b131d");
                     popupBg.setAttribute("stroke", catColor);
                     popupBg.setAttribute("stroke-width", "1.5");
+
                     let popupText = document.createElementNS("http://www.w3.org/2000/svg", "text");
                     popupText.setAttribute("x", cx);
                     popupText.setAttribute("y", cy - 16);
@@ -1399,7 +1127,8 @@
                     popupText.setAttribute("fill", "#ffffff");
                     popupText.setAttribute("font-size", "10px");
                     popupText.setAttribute("font-weight", "bold");
-                    popupText.textContent = el.name;
+                    popupText.textContent = displayName;
+
                     popupGroup.appendChild(popupBg);
                     popupGroup.appendChild(popupText);
                     g.appendChild(circle);
@@ -1412,11 +1141,18 @@
                     rect.setAttribute("y", el.y * gridSize);
                     rect.setAttribute("width", el.w * gridSize);
                     rect.setAttribute("height", el.h * gridSize);
-                    rect.setAttribute("class", `item-shape ${el.id === selectedId ? 'selected' : ''}`);
-                    rect.setAttribute("fill", "#0284c7");
-                    rect.setAttribute("fill-opacity", "0.35");
-                    rect.setAttribute("stroke", "#38bdf8");
+                    
+                    if (el.type === 'yard') {
+                        rect.setAttribute("fill", "#b45309"); rect.setAttribute("fill-opacity", "0.3"); rect.setAttribute("stroke", "#d97706");
+                    } else if (el.type === 'racking') {
+                        rect.setAttribute("fill", "#d97706"); rect.setAttribute("fill-opacity", "0.35"); rect.setAttribute("stroke", "#f59e0b");
+                    } else if (el.type === 'mezzanine') {
+                        rect.setAttribute("fill", "#10b981"); rect.setAttribute("fill-opacity", "0.35"); rect.setAttribute("stroke", "#34d399");
+                    } else {
+                        rect.setAttribute("fill", "#0284c7"); rect.setAttribute("fill-opacity", "0.35"); rect.setAttribute("stroke", "#38bdf8");
+                    }
                     rect.setAttribute("stroke-width", "1");
+                    
                     let text = document.createElementNS("http://www.w3.org/2000/svg", "text");
                     text.setAttribute("x", (el.x * gridSize) + 6);
                     text.setAttribute("y", (el.y * gridSize) + 16);
@@ -1424,164 +1160,98 @@
                     text.setAttribute("font-size", "10px");
                     text.setAttribute("font-weight", "bold");
                     text.style.pointerEvents = "none";
-                    text.textContent = el.name;
+                    text.textContent = el.apmTag ? `${el.name} [${el.apmTag}]` : el.name;
                     g.appendChild(rect);
                     g.appendChild(text);
                 }
-
-                const handleStart = (e) => {
-                    if (currentMode === 'edit' && el.type !== 'conveyance_line') {
-                        e.stopPropagation();
-                        startDragElement(e, el);
-                    } else if (currentMode === 'edit' && el.type === 'conveyance_line') {
-                        e.stopPropagation();
-                        selectedId = el.id;
-                        render();
-                    }
-                };
-                g.addEventListener("mousedown", handleStart);
-                g.addEventListener("touchstart", handleStart, { passive: false });
                 viewport.appendChild(g);
             });
-
-            if (currentMode === 'calc' && calcPoints.length > 0) {
-                calcPoints.forEach((pt) => {
-                    let ptCircle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-                    ptCircle.setAttribute("cx", pt.x * gridSize);
-                    ptCircle.setAttribute("cy", pt.y * gridSize);
-                    ptCircle.setAttribute("r", 6);
-                    ptCircle.setAttribute("fill", "#f59e0b");
-                    ptCircle.setAttribute("stroke", "#fff");
-                    ptCircle.setAttribute("stroke-width", "2");
-                    viewport.appendChild(ptCircle);
-                });
-                if (calcPoints.length === 2) {
-                    let line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-                    line.setAttribute("x1", calcPoints[0].x * gridSize);
-                    line.setAttribute("y1", calcPoints[0].y * gridSize);
-                    line.setAttribute("x2", calcPoints[1].x * gridSize);
-                    line.setAttribute("y2", calcPoints[1].y * gridSize);
-                    line.setAttribute("stroke", "#f59e0b");
-                    line.setAttribute("stroke-width", "2.5");
-                    line.setAttribute("stroke-dasharray", "4");
-                    viewport.appendChild(line);
-                }
-            }
         }
 
-        function getCanvasLocalCoords(clientX, clientY) {
+        function getPinchDistance(p1, p2) {
+            let dx = p1.clientX - p2.clientX;
+            let dy = p1.clientY - p2.clientY;
+            return Math.sqrt(dx * dx + dy * dy);
+        }
+        function getPinchCenter(p1, p2) {
+            return { x: (p1.clientX + p2.clientX) / 2, y: (p1.clientY + p2.clientY) / 2 };
+        }
+        function updateCoordinates(clientX, clientY) {
             let rect = container.getBoundingClientRect();
             let mouseX = clientX - rect.left;
             let mouseY = clientY - rect.top;
             let localX = (mouseX - viewTransform.x) / viewTransform.scale;
             let localY = (mouseY - viewTransform.y) / viewTransform.scale;
-            return {
-                x: localX / gridSize,
-                y: localY / gridSize,
-                rawX: localX,
-                rawY: localY
-            };
-        }
-
-        function handlePointerMove(clientX, clientY) {
-            let coords = getCanvasLocalCoords(clientX, clientY);
             let coordDisplay = document.getElementById("coord-display");
-            let rowIdx = Math.floor(coords.y);
-            let preciseColNum = (coords.x + 1).toFixed(2);
+            let exactCol = localX / gridSize;
+            let rowIdx = Math.floor(localY / gridSize);
+            let preciseColNum = (exactCol + 1).toFixed(2);
             let rowLabel = getRowLabel(rowIdx);
             coordDisplay.innerHTML = `Grid: <b>Row ${rowLabel}, Col ${preciseColNum}</b>`;
         }
 
-        container.addEventListener("mousemove", (e) => {
-            handlePointerMove(e.clientX, e.clientY);
-            if (isPanning) {
-                viewTransform.x = e.clientX - panStart.x;
-                viewTransform.y = e.clientY - panStart.y;
-                render();
+        container.addEventListener("pointerdown", (e) => {
+            activePointers.set(e.pointerId, e);
+            if (activePointers.size === 1) {
+                isPanning = true;
+                container.classList.add("panning");
+                panStart = { x: e.clientX - viewTransform.x, y: e.clientY - viewTransform.y };
+            } else if (activePointers.size === 2) {
+                isPanning = false;
+                container.classList.remove("panning");
+                let points = Array.from(activePointers.values());
+                initialPinchDistance = getPinchDistance(points[0], points[1]);
+                initialPinchScale = viewTransform.scale;
+                initialPinchCenter = getPinchCenter(points[0], points[1]);
+                initialTransform = { x: viewTransform.x, y: viewTransform.y };
             }
         });
 
-        function getTouchDistance(touches) {
-            let dx = touches[0].clientX - touches[1].clientX;
-            let dy = touches[0].clientY - touches[1].clientY;
-            return Math.sqrt(dx * dx + dy * dy);
-        }
-
-        container.addEventListener("touchstart", (e) => {
-            if (e.touches.length === 2) {
-                isPanning = false;
-                initialPinchDistance = getTouchDistance(e.touches);
-                initialScale = viewTransform.scale;
-            } else if (e.touches.length === 1) {
-                let touch = e.touches[0];
-                handlePointerMove(touch.clientX, touch.clientY);
-                if (currentMode === 'pan') {
-                    isPanning = true;
-                    panStart = { x: touch.clientX - viewTransform.x, y: touch.clientY - viewTransform.y };
-                } else if (currentMode === 'calc') {
-                    let coords = getCanvasLocalCoords(touch.clientX, touch.clientY);
-                    if (calcPoints.length >= 2) calcPoints = [];
-                    calcPoints.push({ x: coords.x, y: coords.y });
-                    if (calcPoints.length === 2) {
-                        let dx = calcPoints[1].x - calcPoints[0].x;
-                        let dy = calcPoints[1].y - calcPoints[0].y;
-                        let distGrid = Math.sqrt(dx * dx + dy * dy);
-                        let distFeet = distGrid * 25; 
-                        document.getElementById("dist-result-display").innerHTML = 
-                            `Dist: <b>${distGrid.toFixed(2)} units</b> (~${distFeet.toFixed(0)} ft)`;
-                    } else {
-                        document.getElementById("dist-result-display").innerText = "Click second point to complete calculation";
-                    }
-                    render();
-                } else if (currentMode === 'draw_line' && drawingLineState) {
-                    let coords = getCanvasLocalCoords(touch.clientX, touch.clientY);
-                    drawingLineState.points.push({ x: parseFloat(coords.x.toFixed(2)), y: parseFloat(coords.y.toFixed(2)) });
-                    render();
-                } else if (currentMode === 'edit') {
-                    selectedId = null;
+        container.addEventListener("pointermove", (e) => {
+            if (activePointers.has(e.pointerId)) activePointers.set(e.pointerId, e);
+            if (activePointers.size === 1) {
+                updateCoordinates(e.clientX, e.clientY);
+                if (isPanning) {
+                    viewTransform.x = e.clientX - panStart.x;
+                    viewTransform.y = e.clientY - panStart.y;
                     render();
                 }
-            }
-        }, { passive: false });
-
-        container.addEventListener("touchmove", (e) => {
-            if (e.touches.length === 2 && initialPinchDistance) {
-                e.preventDefault();
-                let currentDistance = getTouchDistance(e.touches);
-                let factor = currentDistance / initialPinchDistance;
-                let oldScale = viewTransform.scale;
-                let newScale = Math.min(Math.max(initialScale * factor, 0.3), 3.0);
-                let midX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
-                let midY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+            } else if (activePointers.size === 2 && initialPinchDistance) {
+                let points = Array.from(activePointers.values());
+                let currentDistance = getPinchDistance(points[0], points[1]);
+                let currentCenter = getPinchCenter(points[0], points[1]);
+                let scaleFactor = currentDistance / initialPinchDistance;
+                let targetScale = Math.min(Math.max(initialPinchScale * scaleFactor, 0.25), 4.0);
                 let rect = container.getBoundingClientRect();
-                let touchX = midX - rect.left;
-                let touchY = midY - rect.top;
-                viewTransform.scale = newScale;
-                viewTransform.x = touchX - (touchX - viewTransform.x) * (newScale / oldScale);
-                viewTransform.y = touchY - (touchY - viewTransform.y) * (newScale / oldScale);
-                render();
-            } else if (e.touches.length === 1 && isPanning) {
-                e.preventDefault();
-                let touch = e.touches[0];
-                viewTransform.x = touch.clientX - panStart.x;
-                viewTransform.y = touch.clientY - panStart.y;
+                let centerX = initialPinchCenter.x - rect.left;
+                let centerY = initialPinchCenter.y - rect.top;
+                viewTransform.scale = targetScale;
+                viewTransform.x = currentCenter.x - rect.left - (centerX - initialTransform.x) * (targetScale / initialPinchScale);
+                viewTransform.y = currentCenter.y - rect.top - (centerY - initialTransform.y) * (targetScale / initialPinchScale);
                 render();
             }
-        }, { passive: false });
-
-        container.addEventListener("touchend", (e) => {
-            if (e.touches.length < 2) initialPinchDistance = null;
-            if (e.touches.length === 0) isPanning = false;
         });
+
+        const handlePointerEnd = (e) => {
+            activePointers.delete(e.pointerId);
+            if (activePointers.size < 2) initialPinchDistance = null;
+            if (activePointers.size === 0 && isPanning) {
+                isPanning = false;
+                container.classList.remove("panning");
+            }
+        };
+        container.addEventListener("pointerup", handlePointerEnd);
+        container.addEventListener("pointercancel", handlePointerEnd);
+        container.addEventListener("pointerleave", handlePointerEnd);
 
         container.addEventListener("wheel", (e) => {
             e.preventDefault();
             let zoomIntensity = 0.1;
             let oldScale = viewTransform.scale;
             if (e.deltaY < 0) {
-                viewTransform.scale = Math.min(viewTransform.scale * (1 + zoomIntensity), 3.0);
+                viewTransform.scale = Math.min(viewTransform.scale * (1 + zoomIntensity), 4.0);
             } else {
-                viewTransform.scale = Math.max(viewTransform.scale * (1 - zoomIntensity), 0.3);
+                viewTransform.scale = Math.max(viewTransform.scale * (1 - zoomIntensity), 0.25);
             }
             let rect = container.getBoundingClientRect();
             let mouseX = e.clientX - rect.left;
@@ -1591,171 +1261,14 @@
             render();
         }, { passive: false });
 
-        container.addEventListener("mousedown", (e) => {
-            if (currentMode === 'pan') {
-                isPanning = true;
-                container.classList.add("panning");
-                panStart = { x: e.clientX - viewTransform.x, y: e.clientY - viewTransform.y };
-            } else if (currentMode === 'calc') {
-                let coords = getCanvasLocalCoords(e.clientX, e.clientY);
-                if (calcPoints.length >= 2) calcPoints = [];
-                calcPoints.push({ x: coords.x, y: coords.y });
-                if (calcPoints.length === 2) {
-                    let dx = calcPoints[1].x - calcPoints[0].x;
-                    let dy = calcPoints[1].y - calcPoints[0].y;
-                    let distGrid = Math.sqrt(dx * dx + dy * dy);
-                    let distFeet = distGrid * 25; 
-                    document.getElementById("dist-result-display").innerHTML = 
-                        `Dist: <b>${distGrid.toFixed(2)} units</b> (~${distFeet.toFixed(0)} ft)`;
-                } else {
-                    document.getElementById("dist-result-display").innerText = "Click second point to complete calculation";
-                }
-                render();
-            } else if (currentMode === 'draw_line' && drawingLineState) {
-                let coords = getCanvasLocalCoords(e.clientX, e.clientY);
-                drawingLineState.points.push({ x: parseFloat(coords.x.toFixed(2)), y: parseFloat(coords.y.toFixed(2)) });
-                render();
-            } else if (currentMode === 'edit') {
-                selectedId = null;
-                render();
-            }
-        });
-
-        container.addEventListener("dblclick", () => {
-            if (currentMode === 'draw_line' && drawingLineState && drawingLineState.points.length >= 2) {
-                let newLine = {
-                    id: Date.now(),
-                    layer: currentLayer,
-                    name: drawingLineState.name,
-                    type: "conveyance_line",
-                    conveyanceType: drawingLineState.conveyanceType,
-                    points: drawingLineState.points,
-                    photos: [],
-                    spreadsheetData: [{key: "Conveyance Type", value: drawingLineState.conveyanceType === 'belted' ? "Belted" : "Flex"}]
-                };
-                elements.push(newLine);
-                drawingLineState = null;
-                currentMode = 'edit';
-                container.style.cursor = 'default';
-                render();
-                saveToFirebase();
-                alert("Conveyance line with bends created successfully!");
-            }
-        });
-
-        window.addEventListener("mouseup", () => {
-            if (isPanning) {
-                isPanning = false;
-                container.classList.remove("panning");
-            }
-            if (draggingVertex) {
-                draggingVertex = null;
-                saveToFirebase();
-            }
-        });
-
-        function startDragVertex(e, lineId, vertexIndex) {
-            draggingVertex = { lineId, vertexIndex };
-            let lineEl = elements.find(el => el.id === lineId);
-            if (!lineEl) return;
-            let startX = e.clientX || (e.touches && e.touches[0].clientX);
-            let startY = e.clientY || (e.touches && e.touches[0].clientY);
-            let origPt = lineEl.points[vertexIndex];
-            let origX = origPt.x;
-            let origY = origPt.y;
-            let snapEnabled = document.getElementById("snapGridToggle").checked;
-
-            function onMove(ev) {
-                if (!draggingVertex) return;
-                let clientX = ev.clientX || (ev.touches && ev.touches[0].clientX);
-                let clientY = ev.clientY || (ev.touches && ev.touches[0].clientY);
-                let dx = (clientX - startX) / viewTransform.scale;
-                let dy = (clientY - startY) / viewTransform.scale;
-                let nx = origX + (dx / gridSize);
-                let ny = origY + (dy / gridSize);
-                if (snapEnabled) {
-                    nx = Math.round(nx * 2) / 2;
-                    ny = Math.round(ny * 2) / 2;
-                }
-                origPt.x = parseFloat(nx.toFixed(2));
-                origPt.y = parseFloat(ny.toFixed(2));
-                render();
-            }
-            function onEnd() {
-                draggingVertex = null;
-                window.removeEventListener("mousemove", onMove);
-                window.removeEventListener("mouseup", onEnd);
-                window.removeEventListener("touchmove", onMove);
-                window.removeEventListener("touchend", onEnd);
-                saveToFirebase();
-            }
-            window.addEventListener("mousemove", onMove);
-            window.addEventListener("mouseup", onEnd);
-            window.addEventListener("touchmove", onMove);
-            window.addEventListener("touchend", onEnd);
-        }
-
-        function startDragElement(e, el) {
-            selectedId = el.id;
-            isDraggingElement = true;
-            let startX = e.clientX || (e.touches && e.touches[0].clientX);
-            let startY = e.clientY || (e.touches && e.touches[0].clientY);
-            let origX = el.x;
-            let origY = el.y;
-            let snapEnabled = document.getElementById("snapGridToggle").checked;
-
-            function onMouseMove(ev) {
-                if (!isDraggingElement) return;
-                let clientX = ev.clientX || (ev.touches && ev.touches[0].clientX);
-                let clientY = ev.clientY || (ev.touches && ev.touches[0].clientY);
-                let dx = (clientX - startX) / viewTransform.scale;
-                let dy = (clientY - startY) / viewTransform.scale;
-                let nx = origX + (dx / gridSize);
-                let ny = origY + (dy / gridSize);
-                if (snapEnabled) {
-                    nx = Math.round(nx * 2) / 2;
-                    ny = Math.round(ny * 2) / 2;
-                }
-                el.x = parseFloat(nx.toFixed(2));
-                el.y = parseFloat(ny.toFixed(2));
-                render();
-            }
-            function onMouseUp() {
-                isDraggingElement = false;
-                window.removeEventListener("mousemove", onMouseMove);
-                window.removeEventListener("mouseup", onMouseUp);
-                window.removeEventListener("touchmove", onMouseMove);
-                window.removeEventListener("touchend", onMouseUp);
-                saveToFirebase(); 
-            }
-            window.addEventListener("mousemove", onMouseMove);
-            window.addEventListener("mouseup", onMouseUp);
-            window.addEventListener("touchmove", onMouseMove);
-            window.addEventListener("touchend", onMouseUp);
-            render();
-        }
-
         function openModal(el) {
             selectedId = el.id;
             document.getElementById("modalElementId").value = el.id;
-            document.getElementById("modalTitle").innerText = `Edit: ${el.name}`;
+            document.getElementById("modalTitle").innerText = `Edit: ${el.name} ${el.apmTag ? '['+el.apmTag+']':''}`;
             document.getElementById("modalName").value = el.name;
-            if (el.type === 'conveyance_line') {
-                document.getElementById("modalCoordContainer").style.display = "none";
-                document.getElementById("modalSizeContainer").style.display = "none";
-                document.getElementById("modalAssetFields").style.display = "none";
-                document.getElementById("modalDependencyContainer").style.display = "none";
-                document.getElementById("modalDocLinkContainer").style.display = "none";
-                document.getElementById("modalLotoContainer").style.display = "none";
-                document.getElementById("modalPmContainer").style.display = "none";
-                document.getElementById("modalPredictiveContainer").style.display = "none";
-                document.getElementById("modalUtilitiesContainer").style.display = "none";
-                document.getElementById("modalVendorContainer").style.display = "none";
-                document.getElementById("modalBomContainer").style.display = "none";
-                document.getElementById("modalTicketsContainer").style.display = "none";
-            } else if (el.type === 'asset') {
-                document.getElementById("modalCoordContainer").style.display = "flex";
-                document.getElementById("modalSizeContainer").style.display = "none";
+            document.getElementById("modalApmTag").value = el.apmTag || "";
+            
+            if (el.type === 'asset') {
                 document.getElementById("modalAssetFields").style.display = "flex";
                 document.getElementById("modalDependencyContainer").style.display = "flex";
                 document.getElementById("modalDocLinkContainer").style.display = "block";
@@ -1766,16 +1279,17 @@
                 document.getElementById("modalVendorContainer").style.display = "flex";
                 document.getElementById("modalBomContainer").style.display = "block";
                 document.getElementById("modalTicketsContainer").style.display = "block";
+                document.getElementById("modalCoordContainer").style.display = "flex";
+
+                document.getElementById("modalCategory").value = el.category || "General";
+                document.getElementById("modalStatus").value = el.status || "operational";
+                document.getElementById("modalParentAsset").value = el.parentId || "";
+                document.getElementById("modalPlcNode").value = el.plcNode || "";
+                document.getElementById("modalManualUrl").value = el.manualUrl || "";
                 document.getElementById("modalX").value = el.x;
                 document.getElementById("modalY").value = el.y;
-                populateCategoryDropdowns(null, el.category);
-                populateParentAssetDropdown(el.parentId);
-                document.getElementById("modalStatus").value = el.status || "operational";
-                document.getElementById("modalEmoji").value = el.emoji || "📍";
-                document.getElementById("modalPlcNode").value = el.plcNode || "";
                 document.getElementById("modalLastInspect").value = el.lastInspect || "";
                 document.getElementById("modalPmDue").value = el.pmDue || "";
-                document.getElementById("modalManualUrl").value = el.manualUrl || "";
                 document.getElementById("modalRunHours").value = el.runHours || "";
                 document.getElementById("modalTemp").value = el.temp || "";
                 document.getElementById("modalVibration").value = el.vibration || "";
@@ -1784,12 +1298,11 @@
                 document.getElementById("modalEstopZone").value = el.estopZone || "";
                 document.getElementById("modalVendorName").value = el.vendorName || "";
                 document.getElementById("modalVendorContact").value = el.vendorContact || "";
+
                 renderLotoChecklist(el);
                 renderBomTable(el);
                 renderWorkTickets(el);
             } else {
-                document.getElementById("modalCoordContainer").style.display = "flex";
-                document.getElementById("modalSizeContainer").style.display = "flex";
                 document.getElementById("modalAssetFields").style.display = "none";
                 document.getElementById("modalDependencyContainer").style.display = "none";
                 document.getElementById("modalDocLinkContainer").style.display = "none";
@@ -1800,270 +1313,298 @@
                 document.getElementById("modalVendorContainer").style.display = "none";
                 document.getElementById("modalBomContainer").style.display = "none";
                 document.getElementById("modalTicketsContainer").style.display = "none";
+                document.getElementById("modalCoordContainer").style.display = "flex";
                 document.getElementById("modalX").value = el.x;
                 document.getElementById("modalY").value = el.y;
-                document.getElementById("modalW").value = el.w;
-                document.getElementById("modalH").value = el.h;
             }
+
             renderPhotos(el);
             renderSpreadsheet(el);
             document.getElementById("modal-overlay").style.display = "flex";
-            render();
-        }
-
-        window.openManualUrl = function() {
-            let url = document.getElementById("modalManualUrl").value;
-            if (url) window.open(url, '_blank');
-            else alert("No URL/Manual link entered.");
-        }
-
-        function renderLotoChecklist(el) {
-            let container = document.getElementById("lotoChecklistList");
-            container.innerHTML = "";
-            if (!el.lotoSteps) el.lotoSteps = [];
-            if (el.lotoSteps.length === 0) {
-                container.innerHTML = `<span style="color: #64748b; font-style: italic;">No LOTO steps added.</span>`;
-                return;
-            }
-            el.lotoSteps.forEach((s, idx) => {
-                let div = document.createElement("div");
-                div.className = "loto-step";
-                div.innerHTML = `<input type="checkbox" ${s.done ? 'checked' : ''} onchange="toggleLotoStep(${idx}, this.checked)">
-                <span style="${s.done ? 'text-decoration: line-through; color: #64748b;' : 'color: #fff;'}">${s.step}</span>
-                <button onclick="deleteLotoStep(${idx})" style="width: auto; padding: 1px 4px; font-size: 9px; margin-left: auto; min-height: auto;" class="danger">X</button>`;
-                container.appendChild(div);
-            });
-        }
-
-        window.addLotoStep = function() {
-            let id = parseInt(document.getElementById("modalElementId").value);
-            let el = elements.find(item => item.id === id);
-            let input = document.getElementById("newLotoStepText");
-            let text = input.value.trim();
-            if (el && text) {
-                if (!el.lotoSteps) el.lotoSteps = [];
-                el.lotoSteps.push({ step: text, done: false });
-                input.value = "";
-                renderLotoChecklist(el);
-                saveToFirebase();
-            }
-        }
-
-        window.toggleLotoStep = function(index, checked) {
-            let id = parseInt(document.getElementById("modalElementId").value);
-            let el = elements.find(item => item.id === id);
-            if (el && el.lotoSteps[index]) {
-                el.lotoSteps[index].done = checked;
-                renderLotoChecklist(el);
-                saveToFirebase();
-            }
-        }
-
-        window.deleteLotoStep = function(index) {
-            let id = parseInt(document.getElementById("modalElementId").value);
-            let el = elements.find(item => item.id === id);
-            if (el && el.lotoSteps) {
-                el.lotoSteps.splice(index, 1);
-                renderLotoChecklist(el);
-                saveToFirebase();
-            }
-        }
-
-        function renderBomTable(el) {
-            let tbody = document.getElementById("bomBody");
-            tbody.innerHTML = "";
-            if (!el.spareParts) el.spareParts = [];
-            el.spareParts.forEach((part, index) => {
-                let tr = document.createElement("tr");
-                let tdName = document.createElement("td");
-                let inputName = document.createElement("input");
-                inputName.type = "text";
-                inputName.value = part.partName;
-                inputName.oninput = function() { part.partName = inputName.value; saveToFirebase(); };
-                tdName.appendChild(inputName);
-                let tdNum = document.createElement("td");
-                let inputNum = document.createElement("input");
-                inputNum.type = "text";
-                inputNum.value = part.partNum;
-                inputNum.oninput = function() { part.partNum = inputNum.value; saveToFirebase(); };
-                tdNum.appendChild(inputNum);
-                let tdBin = document.createElement("td");
-                let inputBin = document.createElement("input");
-                inputBin.type = "text";
-                inputBin.value = part.binLoc || "";
-                inputBin.oninput = function() { part.binLoc = inputBin.value; saveToFirebase(); };
-                tdBin.appendChild(inputBin);
-                let tdAction = document.createElement("td");
-                tdAction.style.textAlign = "center";
-                let delBtn = document.createElement("button");
-                delBtn.className = "danger";
-                delBtn.style.padding = "2px 6px";
-                delBtn.style.fontSize = "10px";
-                delBtn.style.minHeight = "auto";
-                delBtn.innerText = "X";
-                delBtn.onclick = function() {
-                    el.spareParts.splice(index, 1);
-                    renderBomTable(el);
-                    saveToFirebase();
-                };
-                tdAction.appendChild(delBtn);
-                tr.appendChild(tdName);
-                tr.appendChild(tdNum);
-                tr.appendChild(tdBin);
-                tr.appendChild(tdAction);
-                tbody.appendChild(tr);
-            });
-        }
-
-        window.addBomRow = function() {
-            let id = parseInt(document.getElementById("modalElementId").value);
-            let el = elements.find(item => item.id === id);
-            if (el) {
-                if (!el.spareParts) el.spareParts = [];
-                el.spareParts.push({ partName: "Spare Part / Belt / Relay", partNum: "PART-101", binLoc: "Aisle 1, Bin A-1" });
-                renderBomTable(el);
-                saveToFirebase();
-            }
-        }
-
-        function renderWorkTickets(el) {
-            let box = document.getElementById("ticketsBox");
-            box.innerHTML = "";
-            if (!el.workTickets) el.workTickets = [];
-            if (el.workTickets.length === 0) {
-                box.innerHTML = `<span style="color: #64748b; font-style: italic;">No open breakdown tickets.</span>`;
-                return;
-            }
-            el.workTickets.forEach((t, idx) => {
-                let div = document.createElement("div");
-                div.className = "note-entry";
-                div.innerHTML = `<span class="note-timestamp">[${t.time}] PRIORITY: ${t.priority}</span> - ${t.desc} 
-                <button onclick="resolveWorkTicket(${idx})" style="width: auto; padding: 1px 4px; font-size: 9px; float: right; background: #10b981; min-height: auto;">Resolve</button>`;
-                box.appendChild(div);
-            });
-        }
-
-        window.addWorkTicket = function() {
-            let id = parseInt(document.getElementById("modalElementId").value);
-            let el = elements.find(item => item.id === id);
-            let desc = prompt("Enter breakdown / work order issue description:");
-            let priority = prompt("Enter priority (High, Medium, Low):", "High");
-            if (el && desc) {
-                if (!el.workTickets) el.workTickets = [];
-                let timestamp = new Date().toISOString().replace('T', ' ').slice(0, 16);
-                el.workTickets.unshift({ time: timestamp, priority: priority || "High", desc: desc });
-                renderWorkTickets(el);
-                saveToFirebase();
-            }
-        }
-
-        window.resolveWorkTicket = function(index) {
-            let id = parseInt(document.getElementById("modalElementId").value);
-            let el = elements.find(item => item.id === id);
-            if (el && el.workTickets) {
-                el.workTickets.splice(index, 1);
-                renderWorkTickets(el);
-                saveToFirebase();
-            }
         }
 
         window.closeModal = function() {
             document.getElementById("modal-overlay").style.display = "none";
             selectedId = null;
+            activeLotoSimElement = null;
+            render();
+        }
+
+        window.saveModalChanges = function() {
+            let el = elements.find(item => item.id == selectedId);
+            if (!el) return;
+            el.name = document.getElementById("modalName").value.trim() || el.name;
+            el.apmTag = document.getElementById("modalApmTag").value.trim();
+            el.x = parseInt(document.getElementById("modalX").value) || el.x;
+            el.y = parseInt(document.getElementById("modalY").value) || el.y;
+
+            if (el.type === 'asset') {
+                el.category = document.getElementById("modalCategory").value;
+                el.status = document.getElementById("modalStatus").value;
+                el.parentId = document.getElementById("modalParentAsset").value.trim();
+                el.plcNode = document.getElementById("modalPlcNode").value.trim();
+                el.manualUrl = document.getElementById("modalManualUrl").value.trim();
+                el.lastInspect = document.getElementById("modalLastInspect").value;
+                el.pmDue = document.getElementById("modalPmDue").value;
+                el.runHours = document.getElementById("modalRunHours").value.trim();
+                el.temp = document.getElementById("modalTemp").value.trim();
+                el.vibration = document.getElementById("modalVibration").value.trim();
+                el.lube = document.getElementById("modalLube").value.trim();
+                el.utilityDraw = document.getElementById("modalUtilityDraw").value.trim();
+                el.estopZone = document.getElementById("modalEstopZone").value.trim();
+                el.vendorName = document.getElementById("modalVendorName").value.trim();
+                el.vendorContact = document.getElementById("modalVendorContact").value.trim();
+            }
+
+            closeModal();
             render();
             saveToFirebase();
         }
 
-        window.saveModalLiveChanges = function() {
-            let id = parseInt(document.getElementById("modalElementId").value);
-            let el = elements.find(item => item.id === id);
-            if (el) {
-                el.name = document.getElementById("modalName").value;
-                if (el.type !== 'conveyance_line') {
-                    el.x = parseFloat(document.getElementById("modalX").value) || 0;
-                    el.y = parseFloat(document.getElementById("modalY").value) || 0;
-                }
-                if (el.type === 'asset') {
-                    el.category = document.getElementById("modalCategory").value;
-                    el.status = document.getElementById("modalStatus").value;
-                    el.parentId = document.getElementById("modalParentAsset").value;
-                    el.plcNode = document.getElementById("modalPlcNode").value;
-                    el.emoji = document.getElementById("modalEmoji").value || "📍";
-                    el.lastInspect = document.getElementById("modalLastInspect").value;
-                    el.pmDue = document.getElementById("modalPmDue").value;
-                    el.manualUrl = document.getElementById("modalManualUrl").value;
-                    el.runHours = document.getElementById("modalRunHours").value;
-                    el.temp = document.getElementById("modalTemp").value;
-                    el.vibration = document.getElementById("modalVibration").value;
-                    el.lube = document.getElementById("modalLube").value;
-                    el.utilityDraw = document.getElementById("modalUtilityDraw").value;
-                    el.estopZone = document.getElementById("modalEstopZone").value;
-                    el.vendorName = document.getElementById("modalVendorName").value;
-                    el.vendorContact = document.getElementById("modalVendorContact").value;
-                } else if (el.type !== 'conveyance_line') {
-                    el.w = parseFloat(document.getElementById("modalW").value) || 1;
-                    el.h = parseFloat(document.getElementById("modalH").value) || 1;
-                }
-                document.getElementById("modalTitle").innerText = `Edit: ${el.name}`;
-                render();
-            }
+        window.deleteElement = function() {
+            if (!confirm("Are you sure you want to delete this element from the layout?")) return;
+            elements = elements.filter(item => item.id != selectedId);
+            closeModal();
+            render();
+            saveToFirebase();
         }
 
-        window.handlePhotoUpload = async function(event) {
-            let id = parseInt(document.getElementById("modalElementId").value);
-            let el = elements.find(item => item.id === id);
+        // LOTO SIMULATION LOGIC
+        window.simulateLotoIsolation = function() {
+            let el = elements.find(item => item.id == selectedId);
             if (!el) return;
-            if (!el.photos) el.photos = [];
-            let files = event.target.files;
-            let statusSpan = document.getElementById("upload-status");
-            for (let file of files) {
-                try {
-                    statusSpan.innerText = `(Uploading ${file.name}...)`;
-                    let formData = new FormData();
-                    formData.append("file", file);
-                    let response = await fetch("https://imi1-map-uploader.curtisarmy21589.workers.dev", { method: "POST", body: formData });
-                    if (!response.ok) throw new Error("Upload failed");
-                    let result = await response.json();
-                    let photoUrl = result.url || result.fileUrl || (typeof result === 'string' ? result : null);
-                    if (!photoUrl) photoUrl = await response.text();
-                    if (photoUrl) {
-                        el.photos.push(photoUrl);
-                        renderPhotos(el);
-                        saveToFirebase();
-                    }
-                } catch (error) {
-                    console.error("Upload error:", error);
-                    alert("Failed to upload photo.");
-                }
+            activeLotoSimElement = el.id;
+            
+            let simModalBody = document.getElementById("lotoSimBody");
+            let lotoStepsHtml = "";
+            if (el.lotoSteps && el.lotoSteps.length > 0) {
+                lotoStepsHtml = el.lotoSteps.map((s, idx) => `<div><b>Step ${idx+1}:</b> ${s.step}</div>`).join('');
+            } else {
+                lotoStepsHtml = `<div><i>Standard ESWC Protocol: Disconnect main breaker, apply padlock and danger tag, verify zero voltage with calibrated meter.</i></div>`;
             }
-            statusSpan.innerText = "";
-            event.target.value = "";
+
+            let upstreamParent = elements.find(item => item.apmTag === el.parentId || item.name === el.parentId);
+            let upstreamInfo = upstreamParent ? `<div style="color:#38bdf8; margin-top:8px;"><b>Upstream Energy Feed:</b> ${upstreamParent.name} [APM Tag: ${upstreamParent.apmTag || 'N/A'}] at Row ${getRowLabel(upstreamParent.y)}, Col ${upstreamParent.x+1}</div>` : `<div style="color:#94a3b8; margin-top:8px;"><b>Upstream Feed:</b> Direct feed / Main distribution panel.</div>`;
+
+            simModalBody.innerHTML = `
+                <div style="font-size:12px; color:#e0e1dd; display:flex; flex-direction:column; gap:8px;">
+                    <div style="background:#070d14; border:1px solid #7e22ce; padding:10px; border-radius:6px;">
+                        <h4 style="color:#a855f7; margin-top:0;">Target Asset: ${el.name} [APM Tag: ${el.apmTag || 'None'}]</h4>
+                        ${upstreamInfo}
+                        <div style="margin-top:8px;"><b>E-Stop / Safety Zone:</b> ${el.estopZone || 'Standard Plant Safety Interlock'}</div>
+                    </div>
+                    <div>
+                        <h4 style="color:#38bdf8;">Required Zero-Energy State (ESWC) Steps:</h4>
+                        <div style="background:#070d14; border:1px solid #1f2d3d; padding:8px; border-radius:4px; max-height:150px; overflow-y:auto;">
+                            ${lotoStepsHtml}
+                        </div>
+                    </div>
+                    <div style="color:#10b981; font-size:11px; font-weight:bold;">✨ Map simulation active: Upstream isolation points are highlighted with pulsing purple rings on the facility floor.</div>
+                </div>
+            `;
+            document.getElementById("loto-sim-modal").style.display = "flex";
+            render();
         }
 
+        window.closeLotoSimModal = function() {
+            document.getElementById("loto-sim-modal").style.display = "none";
+        }
+
+        // ADD ELEMENT HELPERS
+        window.openAddModal = function() {
+            document.getElementById("add-modal-overlay").style.display = "flex";
+        }
+        window.closeAddModal = function() {
+            document.getElementById("add-modal-overlay").style.display = "none";
+        }
+        window.toggleAddFields = function(val) {
+            if (val === 'zone') {
+                document.getElementById("addSizeFields").style.display = "flex";
+                document.getElementById("addAssetCatContainer").style.display = "none";
+            } else if (val === 'asset') {
+                document.getElementById("addSizeFields").style.display = "none";
+                document.getElementById("addAssetCatContainer").style.display = "block";
+            } else {
+                document.getElementById("addSizeFields").style.display = "none";
+                document.getElementById("addAssetCatContainer").style.display = "none";
+            }
+        }
+        window.confirmAddElement = function() {
+            let type = document.getElementById("newElementType").value;
+            let name = document.getElementById("newElemName").value.trim() || "New Element";
+            let apmTag = document.getElementById("newElemApmTag").value.trim();
+            let x = parseInt(document.getElementById("newElemX").value) || 0;
+            let y = parseInt(document.getElementById("newElemY").value) || 0;
+
+            let newObj = { id: Date.now(), type: type, name: name, apmTag: apmTag, x: x, y: y };
+            if (type === 'asset') {
+                newObj.category = document.getElementById("newElemCategory").value;
+                newObj.status = 'operational';
+                newObj.lotoSteps = [];
+                newObj.spareParts = [];
+                newObj.workTickets = [];
+                newObj.photos = [];
+                newObj.spreadsheetData = [];
+            } else if (type === 'zone') {
+                newObj.w = parseInt(document.getElementById("newElemW").value) || 4;
+                newObj.h = parseInt(document.getElementById("newElemH").value) || 3;
+            } else if (type === 'conveyance_line') {
+                newObj.points = [{x: x, y: y}, {x: x + 4, y: y}];
+            }
+
+            elements.push(newObj);
+            closeAddModal();
+            render();
+            saveToFirebase();
+        }
+
+        // LOTO CHECKLIST EDITOR IN MODAL
+        function renderLotoChecklist(el) {
+            let container = document.getElementById("lotoChecklistList");
+            container.innerHTML = "";
+            if (!el.lotoSteps || el.lotoSteps.length === 0) {
+                container.innerHTML = `<span style="color: #64748b; font-style: italic;">No LOTO steps documented.</span>`;
+                return;
+            }
+            el.lotoSteps.forEach((s, idx) => {
+                let div = document.createElement("div");
+                div.className = "loto-step";
+                div.innerHTML = `<input type="checkbox" ${s.done ? 'checked' : ''} onchange="toggleLotoStep(${idx})">
+                <span style="${s.done ? 'text-decoration: line-through; color: #64748b;' : 'color: #fff;'}">${s.step}</span>
+                <button onclick="deleteLotoStep(${idx})" style="background:none; border:none; color:#ef4444; cursor:pointer; margin-left:auto; width:auto; padding:0;">×</button>`;
+                container.appendChild(div);
+            });
+        }
+        window.addLotoStep = function() {
+            let stepInput = document.getElementById("newLotoStep");
+            let text = stepInput.value.trim();
+            if (!text) return;
+            let el = elements.find(item => item.id == selectedId);
+            if (!el) return;
+            if (!el.lotoSteps) el.lotoSteps = [];
+            el.lotoSteps.push({ step: text, done: false });
+            stepInput.value = "";
+            renderLotoChecklist(el);
+            saveToFirebase();
+        }
+        window.toggleLotoStep = function(idx) {
+            let el = elements.find(item => item.id == selectedId);
+            if (!el || !el.lotoSteps[idx]) return;
+            el.lotoSteps[idx].done = !el.lotoSteps[idx].done;
+            renderLotoChecklist(el);
+            saveToFirebase();
+        }
+        window.deleteLotoStep = function(idx) {
+            let el = elements.find(item => item.id == selectedId);
+            if (!el || !el.lotoSteps) return;
+            el.lotoSteps.splice(idx, 1);
+            renderLotoChecklist(el);
+            saveToFirebase();
+        }
+
+        // SPARE PARTS BOM
+        function renderBomTable(el) {
+            let tbody = document.getElementById("bomBody");
+            tbody.innerHTML = "";
+            if (!el.spareParts || el.spareParts.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" style="color: #64748b; font-style: italic;">No spare parts mapped.</td></tr>`;
+                return;
+            }
+            el.spareParts.forEach((part, idx) => {
+                let tr = document.createElement("tr");
+                tr.innerHTML = `<td>${part.partName}</td><td>${part.partNum}</td><td>${part.binLoc || 'N/A'}</td><td><button onclick="deleteBomPart(${idx})" style="background:none; border:none; color:#ef4444; cursor:pointer; width:auto; padding:0;">×</button></td>`;
+                tbody.appendChild(tr);
+            });
+        }
+        window.addBomPart = function() {
+            let name = document.getElementById("newPartName").value.trim();
+            let sku = document.getElementById("newPartSku").value.trim();
+            let bin = document.getElementById("newPartBin").value.trim();
+            if (!name || !sku) return;
+            let el = elements.find(item => item.id == selectedId);
+            if (!el) return;
+            if (!el.spareParts) el.spareParts = [];
+            el.spareParts.push({ partName: name, partNum: sku, binLoc: bin });
+            document.getElementById("newPartName").value = "";
+            document.getElementById("newPartSku").value = "";
+            document.getElementById("newPartBin").value = "";
+            renderBomTable(el);
+            saveToFirebase();
+        }
+        window.deleteBomPart = function(idx) {
+            let el = elements.find(item => item.id == selectedId);
+            if (!el || !el.spareParts) return;
+            el.spareParts.splice(idx, 1);
+            renderBomTable(el);
+            saveToFirebase();
+        }
+
+        // WORK TICKETS
+        function renderWorkTickets(el) {
+            let box = document.getElementById("ticketsBox");
+            box.innerHTML = "";
+            if (!el.workTickets || el.workTickets.length === 0) {
+                box.innerHTML = `<span style="color: #64748b; font-style: italic;">No active breakdown tickets.</span>`;
+                return;
+            }
+            el.workTickets.forEach((t, idx) => {
+                let div = document.createElement("div");
+                div.className = "note-entry";
+                div.innerHTML = `<span class="note-timestamp">[${t.time}] PRIORITY: ${t.priority}</span> - ${t.desc} <button onclick="deleteWorkTicket(${idx})" style="background:none; border:none; color:#ef4444; cursor:pointer; float:right; width:auto; padding:0;">×</button>`;
+                box.appendChild(div);
+            });
+        }
+        window.addWorkTicket = function() {
+            let desc = document.getElementById("newTicketDesc").value.trim();
+            let priority = document.getElementById("newTicketPriority").value;
+            if (!desc) return;
+            let el = elements.find(item => item.id == selectedId);
+            if (!el) return;
+            if (!el.workTickets) el.workTickets = [];
+            let now = new Date();
+            let timeStr = `${now.getMonth()+1}/${now.getDate()} ${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`;
+            el.workTickets.push({ desc: desc, priority: priority, time: timeStr });
+            document.getElementById("newTicketDesc").value = "";
+            renderWorkTickets(el);
+            saveToFirebase();
+        }
+        window.deleteWorkTicket = function(idx) {
+            let el = elements.find(item => item.id == selectedId);
+            if (!el || !el.workTickets) return;
+            el.workTickets.splice(idx, 1);
+            renderWorkTickets(el);
+            saveToFirebase();
+        }
+
+        // PHOTOS & SPREADSHEET
         function renderPhotos(el) {
             let gallery = document.getElementById("modalPhotoGallery");
             gallery.innerHTML = "";
-            if (!el.photos) el.photos = [];
-            el.photos.forEach((photoUrl, index) => {
+            if (!el.photos || el.photos.length === 0) {
+                gallery.innerHTML = `<span style="color: #64748b; font-style: italic; font-size: 11px;">No photos uploaded.</span>`;
+                return;
+            }
+            el.photos.forEach((photoUrl, idx) => {
                 let containerDiv = document.createElement("div");
                 containerDiv.className = "photo-thumb-container";
                 containerDiv.title = "Click to enlarge photo";
                 containerDiv.onclick = () => openLightbox(photoUrl, el.name);
                 let img = document.createElement("img");
                 img.src = photoUrl;
-                let delBtn = document.createElement("button");
-                delBtn.className = "delete-photo-btn";
-                delBtn.innerHTML = "×";
-                delBtn.onclick = (e) => {
-                    e.stopPropagation();
-                    el.photos.splice(index, 1);
-                    renderPhotos(el);
-                    saveToFirebase();
-                };
                 containerDiv.appendChild(img);
-                containerDiv.appendChild(delBtn);
                 gallery.appendChild(containerDiv);
             });
+        }
+        window.addPhotoUrl = function() {
+            let url = document.getElementById("modalNewPhotoUrl").value.trim();
+            if (!url) return;
+            let el = elements.find(item => item.id == selectedId);
+            if (!el) return;
+            if (!el.photos) el.photos = [];
+            el.photos.push(url);
+            document.getElementById("modalNewPhotoUrl").value = "";
+            renderPhotos(el);
+            saveToFirebase();
         }
 
         window.openLightbox = function(url, itemName) {
@@ -2079,96 +1620,37 @@
             let tbody = document.getElementById("spreadsheetBody");
             tbody.innerHTML = "";
             if (!el.spreadsheetData) el.spreadsheetData = [];
-            el.spreadsheetData.forEach((row, index) => {
+            let rowsData = el.spreadsheetData.rows || el.spreadsheetData;
+            if (rowsData.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="3" style="color: #64748b; font-style: italic;">No custom records.</td></tr>`;
+                return;
+            }
+            rowsData.forEach((row, idx) => {
                 let tr = document.createElement("tr");
-                let tdKey = document.createElement("td");
-                let inputKey = document.createElement("input");
-                inputKey.type = "text";
-                inputKey.value = row.key;
-                inputKey.oninput = function() { row.key = inputKey.value; saveToFirebase(); };
-                tdKey.appendChild(inputKey);
-                let tdVal = document.createElement("td");
-                let inputVal = document.createElement("input");
-                inputVal.type = "text";
-                inputVal.value = row.value;
-                inputVal.oninput = function() { row.value = inputVal.value; saveToFirebase(); };
-                tdVal.appendChild(inputVal);
-                let tdAction = document.createElement("td");
-                tdAction.style.textAlign = "center";
-                let delRowBtn = document.createElement("button");
-                delRowBtn.className = "danger";
-                delRowBtn.style.padding = "2px 6px";
-                delRowBtn.style.fontSize = "10px";
-                delRowBtn.style.minHeight = "auto";
-                delRowBtn.innerText = "X";
-                delRowBtn.onclick = function() {
-                    el.spreadsheetData.splice(index, 1);
-                    renderSpreadsheet(el);
-                    saveToFirebase();
-                };
-                tdAction.appendChild(delRowBtn);
-                tr.appendChild(tdKey);
-                tr.appendChild(tdVal);
-                tr.appendChild(tdAction);
+                tr.innerHTML = `<td>${row.key}</td><td>${row.value}</td><td><button onclick="deleteSpreadsheetRow(${idx})" style="background:none; border:none; color:#ef4444; cursor:pointer; width:auto; padding:0;">×</button></td>`;
                 tbody.appendChild(tr);
             });
         }
-
         window.addSpreadsheetRow = function() {
-            let id = parseInt(document.getElementById("modalElementId").value);
-            let el = elements.find(item => item.id === id);
-            if (el) {
-                if (!el.spreadsheetData) el.spreadsheetData = [];
-                el.spreadsheetData.push({ key: "New Field", value: "Value" });
-                renderSpreadsheet(el);
-                saveToFirebase();
-            }
-        }
-
-        window.deleteItemFromModal = function() {
-            let id = parseInt(document.getElementById("modalElementId").value);
-            if (confirm("Are you sure you want to delete this item?")) {
-                elements = elements.filter(item => item.id !== id);
-                closeModal();
-                saveToFirebase();
-            }
-        }
-
-        window.addDepartment = function() {
-            let newEl = {
-                id: Date.now(),
-                layer: currentLayer, 
-                name: document.getElementById("newDeptName").value,
-                type: document.getElementById("newDeptType").value,
-                x: parseFloat(document.getElementById("newDeptX").value) || 0,
-                y: parseFloat(document.getElementById("newDeptY").value) || 0,
-                w: parseFloat(document.getElementById("newDeptW").value) || 5,
-                h: parseFloat(document.getElementById("newDeptH").value) || 5,
-                photos: [],
-                spreadsheetData: [{key: "Status", value: "Active"}]
-            };
-            elements.push(newEl);
-            render();
+            let key = document.getElementById("newParamKey").value.trim();
+            let val = document.getElementById("newParamVal").value.trim();
+            if (!key || !val) return;
+            let el = elements.find(item => item.id == selectedId);
+            if (!el) return;
+            if (!el.spreadsheetData) el.spreadsheetData = { rows: [] };
+            if (!el.spreadsheetData.rows) el.spreadsheetData.rows = [];
+            el.spreadsheetData.rows.push({ key: key, value: val });
+            document.getElementById("newParamKey").value = "";
+            document.getElementById("newParamVal").value = "";
+            renderSpreadsheet(el);
             saveToFirebase();
         }
-
-        window.addAsset = function() {
-            let newEl = {
-                id: Date.now(),
-                layer: currentLayer, 
-                name: document.getElementById("newAssetName").value,
-                type: "asset",
-                category: document.getElementById("newAssetCategory").value,
-                status: document.getElementById("newAssetStatus").value || "operational",
-                emoji: document.getElementById("newAssetEmoji").value || "📍",
-                x: parseFloat(document.getElementById("newAssetX").value) || 0,
-                y: parseFloat(document.getElementById("newAssetY").value) || 0,
-                parentId: "", plcNode: "", manualUrl: "", runHours: "", temp: "", vibration: "", lube: "", utilityDraw: "", estopZone: "", vendorName: "", vendorContact: "",
-                lotoSteps: [], spareParts: [], workTickets: [], lastInspect: "", pmDue: "", photos: [],
-                spreadsheetData: [{key: "Asset Type", value: "Automation System Node"}]
-            };
-            elements.push(newEl);
-            render();
+        window.deleteSpreadsheetRow = function(idx) {
+            let el = elements.find(item => item.id == selectedId);
+            if (!el || !el.spreadsheetData) return;
+            let rowsData = el.spreadsheetData.rows || el.spreadsheetData;
+            rowsData.splice(idx, 1);
+            renderSpreadsheet(el);
             saveToFirebase();
         }
 
