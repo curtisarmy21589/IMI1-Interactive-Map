@@ -214,8 +214,8 @@
 
         <hr style="border-color: #1e293b; margin: 4px 0;">
         <div class="tab-bar">
-            <button class="tab-btn active" id="tabDeptBtn" onclick="switchTab('dept')">Zones & Yard</button>
-            <button class="tab-btn" id="tabLineBtn" onclick="switchTab('line')">Conveyance Lines</button>
+            <button class="tab-btn active" id="tabDeptBtn" onclick="switchTab('dept')">Zones</button>
+            <button class="tab-btn" id="tabLineBtn" onclick="switchTab('line')">Lines (Bends)</button>
             <button class="tab-btn" id="tabAssetBtn" onclick="switchTab('asset')">Assets</button>
         </div>
         <div id="panelDept" class="panel active">
@@ -244,7 +244,7 @@
             </div>
         </div>
         <div id="panelLine" class="panel">
-            <h3>Conveyance Line Tool</h3>
+            <h3>Conveyance Line Tool (Bends)</h3>
             <div>
                 <label>Line Name / ID</label>
                 <input type="text" id="newLineName" value="Mainline Infeed Conveyor 1">
@@ -253,7 +253,7 @@
                     <option value="belted">Belted Conveyance (Solid Line)</option>
                     <option value="flex">Flex Conveyance / Expandable (Dashed Line)</option>
                 </select>
-                <button onclick="startDrawingLine()" style="margin-top: 6px; background: #0284c7; color: #fff;">✏️ Draw Line on Map (Click Start & End)</button>
+                <button onclick="startDrawingLine()" style="margin-top: 6px; background: #0284c7; color: #fff;">✏️ Draw Multi-Point Line (Double-Click End)</button>
             </div>
         </div>
         <div id="panelAsset" class="panel">
@@ -342,7 +342,7 @@
                     </div>
                 </div>
 
-                <div style="display: flex; gap: 6px;">
+                <div style="display: flex; gap: 6px;" id="modalCoordContainer">
                     <div style="flex:1;"><label>X Col</label><input type="number" id="modalX" step="0.25" oninput="saveModalLiveChanges()"></div>
                     <div style="flex:1;"><label>Y Row</label><input type="number" id="modalY" step="0.25" oninput="saveModalLiveChanges()"></div>
                 </div>
@@ -539,7 +539,8 @@
         let html5QrCode = null;
 
         let calcPoints = []; 
-        let drawingLineState = null; // { name, type, startX, startY }
+        let drawingLineState = null; // { name, type, points: [] }
+        let draggingVertex = null; // { lineId, vertexIndex }
 
         let categories = [
             { name: "OPEX UIS Sorter", color: "#ec4899" },
@@ -575,7 +576,7 @@
                 spreadsheetData: [{key: "Tote Buffer Capacity", value: "120 Totes"}, {key: "De-stack Cycle Time", value: "3.2 sec"}]
             },
             {
-                id: 701, layer: "conveyance", name: "Mainline Infeed Belt #1", type: "conveyance_line", conveyanceType: "belted", x1: 2, y1: 2, x2: 15, y2: 2,
+                id: 701, layer: "conveyance", name: "Mainline Infeed Belt #1", type: "conveyance_line", conveyanceType: "belted", points: [{x: 2, y: 2}, {x: 10, y: 2}, {x: 15, y: 6}],
                 photos: [], spreadsheetData: [{key: "Conveyance Type", value: "Belted"}]
             }
         ];
@@ -600,7 +601,14 @@
                 const docSnap = await getDoc(docRef);
                 if (docSnap.exists()) {
                     let data = docSnap.data();
-                    if (data.elements) elements = data.elements;
+                    if (data.elements) {
+                        elements = data.elements.map(el => {
+                            if (el.type === 'conveyance_line' && !el.points && el.x1 !== undefined) {
+                                el.points = [{x: el.x1, y: el.y1}, {x: el.x2, y: el.y2}];
+                            }
+                            return el;
+                        });
+                    }
                     if (data.categories) categories = data.categories;
                     syncStatus.innerText = "Loaded from Firebase";
                     localStorage.setItem("cached_layout", JSON.stringify(data));
@@ -741,10 +749,11 @@
         }
 
         window.exportDataToCSV = function() {
-            let csvRows = [["ID", "Name", "Type / Conveyance", "Category / Details", "Status", "PLC Node", "X1/X", "Y1/Y", "X2 (Lines)", "Y2 (Lines)"]];
+            let csvRows = [["ID", "Name", "Type / Conveyance", "Category / Details", "Status", "PLC Node", "X / Vertex Info", "Y Info", "W / Details", "H"]];
             elements.forEach(el => {
                 if (el.type === 'conveyance_line') {
-                    csvRows.push([el.id, `"${(el.name || '').replace(/"/g, '""')}"`, el.conveyanceType, "Conveyance Line", "N/A", "N/A", el.x1, el.y1, el.x2, el.y2]);
+                    let ptsStr = (el.points || []).map(p => `(${p.x},${p.y})`).join(" -> ");
+                    csvRows.push([el.id, `"${(el.name || '').replace(/"/g, '""')}"`, el.conveyanceType, `"${ptsStr}"`, "N/A", "N/A", el.points[0].x, el.points[0].y, "", ""]);
                 } else if (el.type === 'asset') {
                     csvRows.push([el.id, `"${(el.name || '').replace(/"/g, '""')}"`, el.type, el.category || "N/A", el.status || "N/A", `"${(el.plcNode || '').replace(/"/g, '""')}"`, el.x, el.y, "", ""]);
                 } else {
@@ -932,10 +941,10 @@
                 alert("Please enter a conveyance line name.");
                 return;
             }
-            drawingLineState = { name, conveyanceType, startPoint: null };
+            drawingLineState = { name, conveyanceType, points: [] };
             currentMode = 'draw_line';
             container.style.cursor = 'crosshair';
-            alert("Click start point on map, then click end point to finish drawing the line.");
+            alert("Click points on the map to create line bends. DOUBLE-CLICK anywhere to finish drawing.");
         }
 
         function updateTransformString() {
@@ -1108,39 +1117,58 @@
                 });
 
                 if (el.type === 'conveyance_line') {
-                    let x1 = el.x1 * gridSize;
-                    let y1 = el.y1 * gridSize;
-                    let x2 = el.x2 * gridSize;
-                    let y2 = el.y2 * gridSize;
+                    let pts = el.points || [];
+                    if (pts.length >= 2) {
+                        let pathStr = `M ${pts[0].x * gridSize} ${pts[0].y * gridSize}`;
+                        for (let i = 1; i < pts.length; i++) {
+                            pathStr += ` L ${pts[i].x * gridSize} ${pts[i].y * gridSize}`;
+                        }
 
-                    let line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-                    line.setAttribute("x1", x1);
-                    line.setAttribute("y1", y1);
-                    line.setAttribute("x2", x2);
-                    line.setAttribute("y2", y2);
-                    line.setAttribute("stroke", el.conveyanceType === 'flex' ? "#fbbf24" : "#22d3ee");
-                    line.setAttribute("stroke-width", el.conveyanceType === 'flex' ? "4" : "6");
-                    if (el.conveyanceType === 'flex') {
-                        line.setAttribute("stroke-dasharray", "6,4");
+                        let path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                        path.setAttribute("d", pathStr);
+                        path.setAttribute("fill", "none");
+                        path.setAttribute("stroke", el.conveyanceType === 'flex' ? "#fbbf24" : "#22d3ee");
+                        path.setAttribute("stroke-width", el.conveyanceType === 'flex' ? "4" : "6");
+                        if (el.conveyanceType === 'flex') {
+                            path.setAttribute("stroke-dasharray", "6,4");
+                        }
+                        if (el.id === selectedId) {
+                            path.setAttribute("stroke", "#fbbf24");
+                            path.setAttribute("stroke-width", "8");
+                        }
+
+                        let text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                        let midPt = pts[Math.floor(pts.length / 2)];
+                        text.setAttribute("x", midPt.x * gridSize);
+                        text.setAttribute("y", (midPt.y * gridSize) - 6);
+                        text.setAttribute("text-anchor", "middle");
+                        text.setAttribute("fill", "#fff");
+                        text.setAttribute("font-size", "10px");
+                        text.setAttribute("font-weight", "bold");
+                        text.textContent = el.name;
+
+                        g.appendChild(path);
+                        g.appendChild(text);
+
+                        // If selected, render draggable vertex handles for bending/moving
+                        if (el.id === selectedId) {
+                            pts.forEach((pt, pIdx) => {
+                                let vCircle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                                vCircle.setAttribute("cx", pt.x * gridSize);
+                                vCircle.setAttribute("cy", pt.y * gridSize);
+                                vCircle.setAttribute("r", 5);
+                                vCircle.setAttribute("fill", "#fbbf24");
+                                vCircle.setAttribute("stroke", "#0b131d");
+                                vCircle.setAttribute("stroke-width", "1.5");
+                                vCircle.style.cursor = "pointer";
+                                vCircle.addEventListener("mousedown", (e) => {
+                                    e.stopPropagation();
+                                    startDragVertex(e, el.id, pIdx);
+                                });
+                                g.appendChild(vCircle);
+                            });
+                        }
                     }
-                    if (el.id === selectedId) {
-                        line.setAttribute("stroke", "#fbbf24");
-                        line.setAttribute("stroke-width", "8");
-                    }
-
-                    let text = document.createElementNS("http://www.w3.org/2000/svg", "text");
-                    let midX = (x1 + x2) / 2;
-                    let midY = (y1 + y2) / 2 - 6;
-                    text.setAttribute("x", midX);
-                    text.setAttribute("y", midY);
-                    text.setAttribute("text-anchor", "middle");
-                    text.setAttribute("fill", "#fff");
-                    text.setAttribute("font-size", "10px");
-                    text.setAttribute("font-weight", "bold");
-                    text.textContent = el.name;
-
-                    g.appendChild(line);
-                    g.appendChild(text);
                 } else if (el.type === 'asset') {
                     let cx = (el.x * gridSize) + (gridSize / 2);
                     let cy = (el.y * gridSize) + (gridSize / 2);
@@ -1267,6 +1295,10 @@
                     if (currentMode === 'edit' && el.type !== 'conveyance_line') {
                         e.stopPropagation();
                         startDragElement(e, el);
+                    } else if (currentMode === 'edit' && el.type === 'conveyance_line') {
+                        e.stopPropagation();
+                        selectedId = el.id;
+                        render();
                     }
                 });
 
@@ -1371,35 +1403,33 @@
                 render();
             } else if (currentMode === 'draw_line' && drawingLineState) {
                 let coords = getCanvasLocalCoords(e.clientX, e.clientY);
-                if (!drawingLineState.startPoint) {
-                    drawingLineState.startPoint = { x: parseFloat(coords.x.toFixed(2)), y: parseFloat(coords.y.toFixed(2)) };
-                    alert("Start point set! Now click the end point for the conveyance line.");
-                } else {
-                    let endPoint = { x: parseFloat(coords.x.toFixed(2)), y: parseFloat(coords.y.toFixed(2)) };
-                    let newLine = {
-                        id: Date.now(),
-                        layer: currentLayer,
-                        name: drawingLineState.name,
-                        type: "conveyance_line",
-                        conveyanceType: drawingLineState.conveyanceType,
-                        x1: drawingLineState.startPoint.x,
-                        y1: drawingLineState.startPoint.y,
-                        x2: endPoint.x,
-                        y2: endPoint.y,
-                        photos: [],
-                        spreadsheetData: [{key: "Conveyance Type", value: drawingLineState.conveyanceType === 'belted' ? "Belted" : "Flex"}]
-                    };
-                    elements.push(newLine);
-                    drawingLineState = null;
-                    currentMode = 'edit';
-                    container.style.cursor = 'default';
-                    render();
-                    saveToFirebase();
-                    alert("Conveyance line successfully added to map!");
-                }
+                drawingLineState.points.push({ x: parseFloat(coords.x.toFixed(2)), y: parseFloat(coords.y.toFixed(2)) });
+                render();
             } else if (currentMode === 'edit') {
                 selectedId = null;
                 render();
+            }
+        });
+
+        container.addEventListener("dblclick", (e) => {
+            if (currentMode === 'draw_line' && drawingLineState && drawingLineState.points.length >= 2) {
+                let newLine = {
+                    id: Date.now(),
+                    layer: currentLayer,
+                    name: drawingLineState.name,
+                    type: "conveyance_line",
+                    conveyanceType: drawingLineState.conveyanceType,
+                    points: drawingLineState.points,
+                    photos: [],
+                    spreadsheetData: [{key: "Conveyance Type", value: drawingLineState.conveyanceType === 'belted' ? "Belted" : "Flex"}]
+                };
+                elements.push(newLine);
+                drawingLineState = null;
+                currentMode = 'edit';
+                container.style.cursor = 'default';
+                render();
+                saveToFirebase();
+                alert("Conveyance line with bends created successfully!");
             }
         });
 
@@ -1408,47 +1438,42 @@
                 isPanning = false;
                 container.classList.remove("panning");
             }
+            if (draggingVertex) {
+                draggingVertex = null;
+                saveToFirebase();
+            }
         });
 
-        function getTouchDistance(touches) {
-            let dx = touches[0].clientX - touches[1].clientX;
-            let dy = touches[0].clientY - touches[1].clientY;
-            return Math.sqrt(dx * dx + dy * dy);
+        function startDragVertex(e, lineId, vertexIndex) {
+            draggingVertex = { lineId, vertexIndex };
+            let lineEl = elements.find(el => el.id === lineId);
+            if (!lineEl) return;
+
+            let startX = e.clientX;
+            let startY = e.clientY;
+            let origPt = lineEl.points[vertexIndex];
+            let origX = origPt.x;
+            let origY = origPt.y;
+
+            function onMouseMove(e) {
+                if (!draggingVertex) return;
+                let dx = (e.clientX - startX) / viewTransform.scale;
+                let dy = (e.clientY - startY) / viewTransform.scale;
+                origPt.x = parseFloat((origX + (dx / gridSize)).toFixed(2));
+                origPt.y = parseFloat((origY + (dy / gridSize)).toFixed(2));
+                render();
+            }
+
+            function onMouseUp() {
+                draggingVertex = null;
+                window.removeEventListener("mousemove", onMouseMove);
+                window.removeEventListener("mouseup", onMouseUp);
+                saveToFirebase();
+            }
+
+            window.addEventListener("mousemove", onMouseMove);
+            window.addEventListener("mouseup", onMouseUp);
         }
-
-        container.addEventListener("touchstart", (e) => {
-            if (e.touches.length === 1) {
-                let touch = e.touches[0];
-                handlePointerMove(touch.clientX, touch.clientY);
-                if (currentMode === 'pan') {
-                    isPanning = true;
-                    panStart = { x: touch.clientX - viewTransform.x, y: touch.clientY - viewTransform.y };
-                }
-            } else if (e.touches.length === 2) {
-                isPanning = false;
-                initialPinchDistance = getTouchDistance(e.touches);
-                initialScale = viewTransform.scale;
-            }
-        }, { passive: true });
-
-        container.addEventListener("touchmove", (e) => {
-            if (e.touches.length === 1 && isPanning) {
-                let touch = e.touches[0];
-                viewTransform.x = touch.clientX - panStart.x;
-                viewTransform.y = touch.clientY - panStart.y;
-                render();
-            } else if (e.touches.length === 2 && initialPinchDistance) {
-                let currentDistance = getTouchDistance(e.touches);
-                let scaleRatio = currentDistance / initialPinchDistance;
-                viewTransform.scale = Math.min(Math.max(initialScale * scaleRatio, 0.3), 3.0);
-                render();
-            }
-        }, { passive: true });
-
-        container.addEventListener("touchend", () => {
-            isPanning = false;
-            initialPinchDistance = null;
-        });
 
         function startDragElement(e, el) {
             selectedId = el.id;
@@ -1490,10 +1515,22 @@
             document.getElementById("modalElementId").value = el.id;
             document.getElementById("modalTitle").innerText = `Edit: ${el.name}`;
             document.getElementById("modalName").value = el.name;
-            document.getElementById("modalX").value = el.x !== undefined ? el.x : el.x1;
-            document.getElementById("modalY").value = el.y !== undefined ? el.y : el.y1;
 
-            if (el.type === 'asset') {
+            if (el.type === 'conveyance_line') {
+                document.getElementById("modalCoordContainer").style.display = "none";
+                document.getElementById("modalSizeContainer").style.display = "none";
+                document.getElementById("modalAssetFields").style.display = "none";
+                document.getElementById("modalDependencyContainer").style.display = "none";
+                document.getElementById("modalDocLinkContainer").style.display = "none";
+                document.getElementById("modalLotoContainer").style.display = "none";
+                document.getElementById("modalPmContainer").style.display = "none";
+                document.getElementById("modalPredictiveContainer").style.display = "none";
+                document.getElementById("modalUtilitiesContainer").style.display = "none";
+                document.getElementById("modalVendorContainer").style.display = "none";
+                document.getElementById("modalBomContainer").style.display = "none";
+                document.getElementById("modalTicketsContainer").style.display = "none";
+            } else if (el.type === 'asset') {
+                document.getElementById("modalCoordContainer").style.display = "flex";
                 document.getElementById("modalSizeContainer").style.display = "none";
                 document.getElementById("modalAssetFields").style.display = "flex";
                 document.getElementById("modalDependencyContainer").style.display = "flex";
@@ -1506,6 +1543,8 @@
                 document.getElementById("modalBomContainer").style.display = "block";
                 document.getElementById("modalTicketsContainer").style.display = "block";
 
+                document.getElementById("modalX").value = el.x;
+                document.getElementById("modalY").value = el.y;
                 populateCategoryDropdowns(null, el.category);
                 populateParentAssetDropdown(el.parentId);
                 document.getElementById("modalStatus").value = el.status || "operational";
@@ -1527,6 +1566,7 @@
                 renderBomTable(el);
                 renderWorkTickets(el);
             } else {
+                document.getElementById("modalCoordContainer").style.display = "flex";
                 document.getElementById("modalSizeContainer").style.display = "flex";
                 document.getElementById("modalAssetFields").style.display = "none";
                 document.getElementById("modalDependencyContainer").style.display = "none";
@@ -1539,8 +1579,10 @@
                 document.getElementById("modalBomContainer").style.display = "none";
                 document.getElementById("modalTicketsContainer").style.display = "none";
 
-                document.getElementById("modalW").value = el.w !== undefined ? el.w : (el.x2 - el.x1);
-                document.getElementById("modalH").value = el.h !== undefined ? el.h : (el.y2 - el.y1);
+                document.getElementById("modalX").value = el.x;
+                document.getElementById("modalY").value = el.y;
+                document.getElementById("modalW").value = el.w;
+                document.getElementById("modalH").value = el.h;
             }
 
             renderPhotos(el);
@@ -1725,12 +1767,7 @@
             let el = elements.find(item => item.id === id);
             if (el) {
                 el.name = document.getElementById("modalName").value;
-                if (el.type === 'conveyance_line') {
-                    el.x1 = parseFloat(document.getElementById("modalX").value) || 0;
-                    el.y1 = parseFloat(document.getElementById("modalY").value) || 0;
-                    el.x2 = el.x1 + (parseFloat(document.getElementById("modalW").value) || 5);
-                    el.y2 = el.y1 + (parseFloat(document.getElementById("modalH").value) || 0);
-                } else {
+                if (el.type !== 'conveyance_line') {
                     el.x = parseFloat(document.getElementById("modalX").value) || 0;
                     el.y = parseFloat(document.getElementById("modalY").value) || 0;
                 }
