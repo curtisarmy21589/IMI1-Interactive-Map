@@ -3,7 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Facility Layout & Site Builder - Pan/Zoom Inspect & Touch</title>
+    <title>Facility Layout & Maintenance Hub</title>
+    <!-- html5-qrcode for live camera barcode scanning -->
+    <script src="https://unpkg.com/html5-qrcode"></script>
     <style>
         body {
             background-color: #0b131d;
@@ -16,7 +18,7 @@
             touch-action: none;
         }
         #sidebar {
-            width: 340px;
+            width: 360px;
             background-color: #111b27;
             padding: 15px;
             display: flex;
@@ -33,7 +35,8 @@
             #sidebar { width: 100%; height: 40vh; border-right: none; border-bottom: 1px solid #1f2d3d; }
             #canvas-container { height: 60vh; }
         }
-        h2, h3 { margin: 0 0 5px 0; color: #38bdf8; font-size: 15px; }
+        h2, h3, h4 { margin: 0 0 5px 0; color: #38bdf8; font-size: 15px; }
+        h4 { color: #f59e0b; font-size: 12px; margin-top: 8px; border-bottom: 1px solid #1f2d3d; padding-bottom: 2px; }
         label { font-size: 11px; color: #94a3b8; }
         input, select, button, textarea {
             width: 100%;
@@ -46,7 +49,7 @@
             margin-top: 2px;
             font-size: 12px;
         }
-        textarea { resize: vertical; height: 60px; font-family: sans-serif; }
+        textarea { resize: vertical; height: 50px; font-family: sans-serif; }
         button {
             background: #1e293b;
             font-weight: bold;
@@ -122,36 +125,14 @@
             left: 0;
             transform-origin: 0 0;
         }
-        .item-group {
-            cursor: pointer;
-        }
-        .item-shape {
-            transition: stroke 0.2s;
-        }
+        .item-group { cursor: pointer; }
+        .item-shape { transition: stroke 0.2s; }
         .item-group:hover .item-shape { stroke: #fff; }
-        .item-shape.selected {
-            stroke: #fbbf24;
-            stroke-width: 3;
-        }
-        .asset-popup {
-            opacity: 0;
-            transition: opacity 0.15s ease-in-out;
-            pointer-events: none;
-        }
-        .item-group:hover .asset-popup {
-            opacity: 1;
-        }
-        .grid-line {
-            stroke: #132235;
-            stroke-width: 1;
-            pointer-events: none;
-        }
-        .coord-label {
-            fill: #64748b;
-            font-size: 9px;
-            font-family: monospace;
-            pointer-events: none;
-        }
+        .item-shape.selected { stroke: #fbbf24; stroke-width: 3; }
+        .asset-popup { opacity: 0; transition: opacity 0.15s ease-in-out; pointer-events: none; }
+        .item-group:hover .asset-popup { opacity: 1; }
+        .grid-line { stroke: #132235; stroke-width: 1; pointer-events: none; }
+        .coord-label { fill: #64748b; font-size: 9px; font-family: monospace; pointer-events: none; }
         #coord-display {
             background: #070d14;
             border: 1px solid #1e293b;
@@ -180,25 +161,7 @@
             font-weight: bold;
             margin-top: -4px;
         }
-        #presence-bar {
-            font-size: 10px;
-            background: #070d14;
-            padding: 4px 6px;
-            border-radius: 4px;
-            border: 1px solid #1e293b;
-            color: #a855f7;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .presence-dot {
-            width: 6px;
-            height: 6px;
-            background-color: #10b981;
-            border-radius: 50%;
-            display: inline-block;
-        }
-        #modal-overlay, #category-modal-overlay, #lightbox-overlay {
+        #modal-overlay, #category-modal-overlay, #lightbox-overlay, #scanner-modal-overlay {
             display: none;
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -207,14 +170,12 @@
             justify-content: center;
             align-items: center;
         }
-        #lightbox-overlay {
-            z-index: 2000;
-        }
+        #lightbox-overlay { z-index: 2000; }
         .modal-content {
             background: #111b27;
             border: 1px solid #38bdf8;
             border-radius: 8px;
-            width: 650px;
+            width: 700px;
             max-width: 95vw;
             max-height: 90vh;
             display: flex;
@@ -247,119 +208,59 @@
             border-top: 1px solid #1f2d3d;
         }
         .close-modal {
-            background: none;
-            border: none;
-            color: #94a3b8;
-            font-size: 18px;
-            cursor: pointer;
-            width: auto;
-            padding: 0;
-            margin: 0;
+            background: none; border: none; color: #94a3b8; font-size: 18px; cursor: pointer; width: auto; padding: 0; margin: 0;
         }
         .close-modal:hover { color: #fff; background: none; }
         .spreadsheet-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 4px;
+            width: 100%; border-collapse: collapse; margin-top: 4px;
         }
         .spreadsheet-table th, .spreadsheet-table td {
-            border: 1px solid #1f2d3d;
-            padding: 6px;
-            text-align: left;
-            font-size: 11px;
+            border: 1px solid #1f2d3d; padding: 6px; text-align: left; font-size: 11px;
         }
-        .spreadsheet-table th {
-            background: #0b131d;
-            color: #38bdf8;
-        }
+        .spreadsheet-table th { background: #0b131d; color: #38bdf8; }
         .spreadsheet-table input, .spreadsheet-table select {
-            background: transparent;
-            border: none;
-            color: #fff;
-            width: 100%;
-            padding: 2px;
-            margin: 0;
+            background: transparent; border: none; color: #fff; width: 100%; padding: 2px; margin: 0;
         }
         .spreadsheet-table input:focus, .spreadsheet-table select:focus { outline: 1px solid #38bdf8; }
-        .photo-gallery {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-            margin-top: 4px;
-        }
+        .photo-gallery { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px; }
         .photo-thumb-container {
-            position: relative;
-            width: 90px;
-            height: 90px;
-            border: 1px solid #1f2d3d;
-            border-radius: 4px;
-            overflow: hidden;
-            background: #0b131d;
-            cursor: pointer;
+            position: relative; width: 80px; height: 80px; border: 1px solid #1f2d3d; border-radius: 4px; overflow: hidden; background: #0b131d; cursor: pointer;
         }
-        .photo-thumb-container img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            transition: transform 0.2s;
-        }
-        .photo-thumb-container:hover img {
-            transform: scale(1.05);
-        }
+        .photo-thumb-container img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.2s; }
+        .photo-thumb-container:hover img { transform: scale(1.05); }
         .delete-photo-btn {
-            position: absolute;
-            top: 2px; right: 2px;
-            background: rgba(239, 68, 68, 0.9);
-            color: white;
-            border: none;
-            border-radius: 50%;
-            width: 20px; height: 20px;
-            font-size: 11px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 0;
-            margin: 0;
-            z-index: 5;
+            position: absolute; top: 2px; right: 2px; background: rgba(239, 68, 68, 0.9); color: white; border: none; border-radius: 50%; width: 20px; height: 20px; font-size: 11px; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0; margin: 0; z-index: 5;
         }
         .notes-log-box {
-            background: #070d14;
-            border: 1px solid #1f2d3d;
-            border-radius: 4px;
-            padding: 8px;
-            max-height: 120px;
-            overflow-y: auto;
-            font-size: 11px;
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
+            background: #070d14; border: 1px solid #1f2d3d; border-radius: 4px; padding: 8px; max-height: 100px; overflow-y: auto; font-size: 11px; display: flex; flex-direction: column; gap: 4px;
         }
-        .note-entry {
-            border-bottom: 1px dotted #1f2d3d;
-            padding-bottom: 3px;
+        .note-entry { border-bottom: 1px dotted #1f2d3d; padding-bottom: 3px; }
+        .note-timestamp { color: #38bdf8; font-size: 9px; font-weight: bold; }
+        @keyframes pmPulse {
+            0% { r: 7px; opacity: 1; }
+            50% { r: 12px; opacity: 0.3; }
+            100% { r: 7px; opacity: 1; }
         }
-        .note-timestamp {
-            color: #38bdf8;
-            font-size: 9px;
-            font-weight: bold;
-        }
+        .pm-overdue-pulse { animation: pmPulse 1.5s infinite ease-in-out; stroke: #ef4444; stroke-width: 2; fill: none; }
+        .pm-due-pulse { animation: pmPulse 2s infinite ease-in-out; stroke: #f59e0b; stroke-width: 2; fill: none; }
     </style>
 </head>
 <body>
     <div id="sidebar">
         <h2>Site & Layout Builder</h2>
         
-        <!-- QUICK SEARCH BAR -->
+        <!-- SEARCH & QR SCANNER BUTTON -->
         <div>
-            <label>🔍 Quick Asset Search</label>
-            <input type="text" id="assetSearchInput" placeholder="Search MDP-1, Fire Hydrant, etc..." oninput="handleSearch(this.value)">
+            <label>🔍 Asset Search / QR Scanner</label>
+            <div style="display: flex; gap: 4px;">
+                <input type="text" id="assetSearchInput" placeholder="Search Asset Name, Tag ID, PLC..." oninput="handleSearch(this.value)">
+                <button onclick="openScannerModal()" style="width: auto; padding: 4px 8px; font-size: 11px;">📷 Scan</button>
+            </div>
         </div>
 
         <div id="coord-display">Col: -- | Row: --</div>
         <div id="dist-result-display">Click 2 points to measure distance</div>
         <div id="sync-status">Connected to Firebase</div>
-        <div id="presence-bar"><span class="presence-dot"></span> Active Users Online: <b id="activeUsersCount">1</b></div>
         
         <!-- LAYER SELECTION MENU -->
         <div>
@@ -380,7 +281,7 @@
                 <button class="layer-btn" id="layerHvacBtn" onclick="switchLayer('hvac')">HVAC</button>
             </div>
             <div style="display: flex; gap: 4px; margin-top: 4px;">
-                <button class="layer-btn" id="layerLotoBtn" onclick="switchLayer('loto')">LOTO Isolation Points</button>
+                <button class="layer-btn" id="layerLotoBtn" onclick="switchLayer('loto')">LOTO Isolation</button>
                 <button class="layer-btn" id="layerAssetsBtn" onclick="switchLayer('assets')">Assets & Utilities</button>
             </div>
         </div>
@@ -396,7 +297,7 @@
             </div>
         </div>
 
-        <button onclick="exportDataToCSV()" style="background: #0284c7; color: #fff; margin-top: 2px;">📊 Export Asset & Maintenance Log (CSV)</button>
+        <button onclick="exportDataToCSV()" style="background: #0284c7; color: #fff; margin-top: 2px;">📊 Export Asset Inventory (CSV)</button>
 
         <hr style="border-color: #1e293b; margin: 4px 0;">
         <div class="tab-bar">
@@ -458,7 +359,7 @@
         </svg>
     </div>
 
-    <!-- MAIN EDIT & INSPECT MODAL -->
+    <!-- MAIN INSPECT & EDIT MODAL -->
     <div id="modal-overlay">
         <div class="modal-content">
             <div class="modal-header">
@@ -490,9 +391,15 @@
                     </div>
                 </div>
 
+                <!-- PARENT/CHILD ASSET DEPENDENCY -->
+                <div id="modalDependencyContainer">
+                    <label>Upstream Parent Asset / Power Source</label>
+                    <select id="modalParentAsset" onchange="saveModalLiveChanges()"></select>
+                </div>
+
                 <!-- MANUAL & SCHEMATIC QUICK LINK -->
                 <div id="modalDocLinkContainer">
-                    <label>Equipment Manual / Wiring Schematic (PDF Link / URL)</label>
+                    <label>Equipment Manual / Wiring Schematic (PDF / Web Link)</label>
                     <div style="display: flex; gap: 4px;">
                         <input type="url" id="modalManualUrl" placeholder="https://example.com/schematics.pdf" oninput="saveModalLiveChanges()">
                         <button onclick="openManualUrl()" style="width: auto; padding: 4px 8px;">🔗 Open</button>
@@ -507,22 +414,49 @@
                     <div style="flex:1;"><label>Width</label><input type="number" id="modalW" step="0.25" oninput="saveModalLiveChanges()"></div>
                     <div style="flex:1;"><label>Height</label><input type="number" id="modalH" step="0.25" oninput="saveModalLiveChanges()"></div>
                 </div>
-                <div id="modalPmContainer" style="display: flex; gap: 6px;">
-                    <div style="flex:1;"><label>Last Inspected Date</label><input type="date" id="modalLastInspect" onchange="saveModalLiveChanges()"></div>
-                    <div style="flex:1;"><label>PM Due Date / Interval</label><input type="date" id="modalPmDue" onchange="saveModalLiveChanges()"></div>
+
+                <!-- PREVENTIVE MAINTENANCE & RUNTIME METER -->
+                <h4>⏱️ Maintenance & Operating Meters</h4>
+                <div id="modalPmContainer" style="display: flex; gap: 6px; flex-wrap: wrap;">
+                    <div style="flex:1; min-width: 130px;"><label>Last Inspected</label><input type="date" id="modalLastInspect" onchange="saveModalLiveChanges()"></div>
+                    <div style="flex:1; min-width: 130px;"><label>PM Due Date</label><input type="date" id="modalPmDue" onchange="saveModalLiveChanges()"></div>
+                    <div style="flex:1; min-width: 130px;"><label>Run Hours / Meter</label><input type="number" id="modalRunHours" placeholder="e.g. 4250 hrs" oninput="saveModalLiveChanges()"></div>
                 </div>
 
-                <!-- SPARE PARTS / BOM CROSS-REFERENCE -->
+                <!-- PREDICTIVE & LUBRICATION METRICS -->
+                <h4>📊 Predictive Health & Lubrication</h4>
+                <div id="modalPredictiveContainer" style="display: flex; gap: 6px; flex-wrap: wrap;">
+                    <div style="flex:1; min-width: 130px;"><label>Thermal Temp (°F)</label><input type="text" id="modalTemp" placeholder="115°F" oninput="saveModalLiveChanges()"></div>
+                    <div style="flex:1; min-width: 130px;"><label>Vibration (in/s)</label><input type="text" id="modalVibration" placeholder="0.12 in/s" oninput="saveModalLiveChanges()"></div>
+                    <div style="flex:1; min-width: 130px;"><label>Grease / Lube Type</label><input type="text" id="modalLube" placeholder="Mobilith SHC 220" oninput="saveModalLiveChanges()"></div>
+                </div>
+
+                <!-- UTILITIES & SAFETY INTERLOCKS -->
+                <h4>⚡ Utilities & Safety Interlocks</h4>
+                <div id="modalUtilitiesContainer" style="display: flex; gap: 6px; flex-wrap: wrap;">
+                    <div style="flex:1; min-width: 130px;"><label>Utility Draw (Amps/CFM)</label><input type="text" id="modalUtilityDraw" placeholder="480V 45A / 12 CFM" oninput="saveModalLiveChanges()"></div>
+                    <div style="flex:1; min-width: 130px;"><label>Safety / E-Stop Zone</label><input type="text" id="modalEstopZone" placeholder="E-Stop Relay Line #2" oninput="saveModalLiveChanges()"></div>
+                </div>
+
+                <!-- VENDOR DIRECTORY -->
+                <h4>📞 OEM & Vendor Support Contact</h4>
+                <div id="modalVendorContainer" style="display: flex; gap: 6px;">
+                    <div style="flex:1;"><label>Vendor Name / Rep</label><input type="text" id="modalVendorName" placeholder="OEM Support / Rep Name" oninput="saveModalLiveChanges()"></div>
+                    <div style="flex:1;"><label>Contact Phone / Email</label><input type="text" id="modalVendorContact" placeholder="800-555-0199" oninput="saveModalLiveChanges()"></div>
+                </div>
+
+                <!-- SPARE PARTS CAGE & BIN LOCATION -->
                 <div id="modalBomContainer">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
-                        <label>Spare Parts / Bill of Materials (BOM)</label>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 6px;">
+                        <h4>📦 Spare Parts & Cage Bin Mapping</h4>
                         <button onclick="addBomRow()" style="width: auto; padding: 2px 8px; font-size: 10px;">+ Add Spare Part</button>
                     </div>
                     <table class="spreadsheet-table">
                         <thead>
                             <tr>
-                                <th style="width: 40%;">Part Name / Specs</th>
-                                <th style="width: 50%;">Part Number / SKU</th>
+                                <th style="width: 30%;">Part Name</th>
+                                <th style="width: 35%;">Part # / SKU</th>
+                                <th style="width: 25%;">Bin / Shelf Location</th>
                                 <th style="width: 10%;"></th>
                             </tr>
                         </thead>
@@ -530,12 +464,21 @@
                     </table>
                 </div>
 
+                <!-- BREAKDOWN WORK TICKETS -->
+                <div id="modalTicketsContainer">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 6px;">
+                        <h4>🛠️ Breakdown & Work Tickets</h4>
+                        <button onclick="addWorkTicket()" style="width: auto; padding: 2px 8px; font-size: 10px;">+ Raise Ticket</button>
+                    </div>
+                    <div class="notes-log-box" id="ticketsBox"></div>
+                </div>
+
                 <!-- SHIFT HANDOVER LOG NOTES -->
                 <div id="modalHandoverContainer">
-                    <label>Shift Handover & Maintenance Activity Log</label>
+                    <h4>📝 Shift Handover Log</h4>
                     <div class="notes-log-box" id="handoverNotesBox"></div>
                     <div style="display: flex; gap: 4px; margin-top: 4px;">
-                        <input type="text" id="newHandoverNote" placeholder="Add shift note (e.g., Replaced fuse at 02:00)...">
+                        <input type="text" id="newHandoverNote" placeholder="Add shift note (e.g., Checked alignment at 02:00)...">
                         <button onclick="addHandoverNote()" style="width: auto; padding: 4px 10px;">Add Note</button>
                     </div>
                 </div>
@@ -569,6 +512,7 @@
         </div>
     </div>
 
+    <!-- LIGHTBOX MODAL -->
     <div id="lightbox-overlay" onclick="closeLightbox()">
         <div style="position: relative; max-width: 90vw; max-height: 90vh; display: flex; flex-direction: column; align-items: center;" onclick="event.stopPropagation()">
             <button onclick="closeLightbox()" style="position: absolute; top: -35px; right: 0; background: none; border: none; color: #fff; font-size: 24px; cursor: pointer;">×</button>
@@ -577,6 +521,7 @@
         </div>
     </div>
 
+    <!-- CATEGORY MANAGING MODAL -->
     <div id="category-modal-overlay">
         <div class="modal-content" style="width: 500px;">
             <div class="modal-header">
@@ -612,6 +557,19 @@
         </div>
     </div>
 
+    <!-- QR CAMERA SCANNER MODAL -->
+    <div id="scanner-modal-overlay">
+        <div class="modal-content" style="width: 450px;">
+            <div class="modal-header">
+                <h3 style="color: #38bdf8; margin: 0;">📷 Scan Asset Barcode / QR Tag</h3>
+                <button class="close-modal" onclick="closeScannerModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <div id="qr-reader" style="width: 100%;"></div>
+            </div>
+        </div>
+    </div>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
@@ -641,6 +599,7 @@
         let currentTab = 'dept'; 
         let currentLayer = 'ground'; 
         let searchQuery = '';
+        let html5QrCode = null;
 
         let calcPoints = []; 
 
@@ -657,47 +616,19 @@
         let elements = [
             { 
                 id: 101, layer: "ground", name: "North Yard Fire Hydrant #1", type: "asset", category: "Fire Safety", status: "operational", emoji: "🧯", x: 4, y: -3,
-                manualUrl: "", spareParts: [], handoverNotes: [], lastInspect: "", pmDue: "", photos: [], spreadsheetData: [{key: "Flow Rate", value: "1,500 GPM"}, {key: "Inspection", value: "Passed Q2"}]
-            },
-            { 
-                id: 102, layer: "ground", name: "North Yard Fire Hydrant #2", type: "asset", category: "Fire Safety", status: "operational", emoji: "🧯", x: 22, y: -3,
-                manualUrl: "", spareParts: [], handoverNotes: [], lastInspect: "", pmDue: "", photos: [], spreadsheetData: [{key: "Flow Rate", value: "1,500 GPM"}, {key: "Inspection", value: "Passed Q2"}]
-            },
-            { 
-                id: 103, layer: "ground", name: "East Retention Pond #1", type: "yard", x: 31, y: -4, w: 6, h: 6,
-                photos: [], spreadsheetData: [{key: "Capacity", value: "1.2 Million Gal"}]
-            },
-            { 
-                id: 104, layer: "ground", name: "North Truck Yard & Trailer Parking", type: "yard", x: 2, y: -5, w: 26, h: 4,
-                photos: [], spreadsheetData: [{key: "Stall Count", value: "45 Trailer Docks"}]
-            },
-            { 
-                id: 1, layer: "ground", name: "MAIN RACKING AREA #1", type: "racking", x: 4, y: 2, w: 4, h: 8,
-                photos: [], spreadsheetData: [{key: "Bay Count", value: "24 Bays"}, {key: "Weight Capacity", value: "3,500 lbs"}]
-            },
-            { 
-                id: 2, layer: "ground", name: "RACKING #2", type: "racking", x: 18, y: 5, w: 4, h: 4,
-                photos: [], spreadsheetData: [{key: "Bay Count", value: "12 Bays"}, {key: "Weight Capacity", value: "2,000 lbs"}]
-            },
-            { 
-                id: 3, layer: "ground", name: "MEZZANINE FLOOR", type: "mezzanine", x: 2, y: 9, w: 10, h: 4,
-                photos: [], spreadsheetData: [{key: "Level", value: "Ground Footprint"}]
+                parentId: "", manualUrl: "", runHours: "", temp: "", vibration: "", lube: "", utilityDraw: "", estopZone: "", vendorName: "", vendorContact: "",
+                spareParts: [], workTickets: [], handoverNotes: [], lastInspect: "", pmDue: "2026-11-01", photos: [], spreadsheetData: [{key: "Flow Rate", value: "1,500 GPM"}]
             },
             { 
                 id: 4, layer: "ground", name: "Main Distribution Panel MDP-1", type: "asset", category: "Electrical", status: "operational", emoji: "⚡", x: 6, y: 3,
-                manualUrl: "", spareParts: [{partName: "Main Breaker 800A", partNum: "SQD-MGL36800"}], handoverNotes: [{time: "2026-10-01 08:30", note: "Thermal inspection clear."}], lastInspect: "", pmDue: "", photos: [], spreadsheetData: [{key: "Voltage", value: "480V 3-Phase"}, {key: "Amperage", value: "800A"}]
+                parentId: "", manualUrl: "", runHours: "12500", temp: "108°F", vibration: "0.04 in/s", lube: "N/A", utilityDraw: "480V 800A", estopZone: "Main Electrical Room", vendorName: "Square D OEM", vendorContact: "800-555-0199",
+                spareParts: [{partName: "Main Breaker 800A", partNum: "SQD-MGL36800", binLoc: "Aisle 2, Shelf C-1"}],
+                workTickets: [], handoverNotes: [{time: "2026-10-01 08:30", note: "Thermal camera check normal."}], lastInspect: "2026-09-15", pmDue: "2026-12-15", photos: [], spreadsheetData: [{key: "Voltage", value: "480V 3-Phase"}]
             },
             { 
-                id: 5, layer: "ground", name: "Water Main Shutoff", type: "asset", category: "Plumbing", status: "operational", emoji: "🚰", x: 9, y: 3,
-                manualUrl: "", spareParts: [], handoverNotes: [], lastInspect: "", pmDue: "", photos: [], spreadsheetData: [{key: "Valve Type", value: "Quarter-turn Butterfly"}]
-            },
-            { 
-                id: 6, layer: "mezzanine", name: "Mezzanine Level Office & Storage", type: "mezzanine", x: 2, y: 2, w: 12, h: 10,
-                photos: [], spreadsheetData: [{key: "Occupancy", value: "Max 15 Personnel"}]
-            },
-            { 
-                id: 7, layer: "roof", name: "Roof HVAC Unit & Solar Array Zone", type: "general", x: 5, y: 3, w: 8, h: 6,
-                photos: [], spreadsheetData: [{key: "Unit Model", value: "ICP CA5524VKD3"}]
+                id: 5, layer: "ground", name: "Water Main Shutoff", type: "asset", category: "Plumbing", status: "operational", emoji: "𚰞", x: 9, y: 3,
+                parentId: 4, manualUrl: "", runHours: "", temp: "", vibration: "", lube: "", utilityDraw: "", estopZone: "", vendorName: "", vendorContact: "",
+                spareParts: [], workTickets: [], handoverNotes: [], lastInspect: "", pmDue: "", photos: [], spreadsheetData: [{key: "Valve Type", value: "Quarter-turn Butterfly"}]
             }
         ];
 
@@ -729,6 +660,7 @@
                     await saveToFirebase();
                 }
                 populateCategoryDropdowns();
+                populateParentAssetDropdown();
                 render();
             } catch (error) {
                 console.error("Error loading layout, using offline fallback:", error);
@@ -743,6 +675,7 @@
                 }
                 syncStatus.style.color = "#f59e0b";
                 populateCategoryDropdowns();
+                populateParentAssetDropdown();
                 render();
             }
         }
@@ -788,6 +721,18 @@
             if (val2 && categories.some(c => c.name === val2)) select2.value = val2;
         }
 
+        function populateParentAssetDropdown(selectedParentId = null) {
+            let select = document.getElementById("modalParentAsset");
+            select.innerHTML = '<option value="">None / Standalone Asset</option>';
+            elements.filter(e => e.type === 'asset').forEach(el => {
+                let opt = document.createElement("option");
+                opt.value = el.id;
+                opt.textContent = `${el.name} (ID: ${el.id})`;
+                select.appendChild(opt);
+            });
+            if (selectedParentId) select.value = selectedParentId;
+        }
+
         function getCategoryColor(catName) {
             let found = categories.find(c => c.name === catName);
             return found ? found.color : "#38bdf8";
@@ -799,25 +744,66 @@
             return "#10b981";
         }
 
+        function getPmAlertStatus(pmDueStr) {
+            if (!pmDueStr) return 'none';
+            let due = new Date(pmDueStr);
+            let today = new Date();
+            let diffDays = (due - today) / (1000 * 3600 * 24);
+            if (diffDays < 0) return 'overdue';
+            if (diffDays <= 7) return 'due_soon';
+            return 'none';
+        }
+
         window.handleSearch = function(val) {
             searchQuery = val.trim().toLowerCase();
             render();
         }
 
+        window.openScannerModal = function() {
+            document.getElementById("scanner-modal-overlay").style.display = "flex";
+            html5QrCode = new Html5Qrcode("qr-reader");
+            html5QrCode.start(
+                { facingMode: "environment" },
+                { fps: 10, qrbox: { width: 250, height: 250 } },
+                (decodedText) => {
+                    closeScannerModal();
+                    document.getElementById("assetSearchInput").value = decodedText;
+                    handleSearch(decodedText);
+                },
+                (errorMessage) => {}
+            ).catch(err => console.error("Camera access error:", err));
+        }
+
+        window.closeScannerModal = function() {
+            if (html5QrCode) {
+                html5QrCode.stop().then(() => {
+                    html5QrCode.clear();
+                    document.getElementById("scanner-modal-overlay").style.display = "none";
+                }).catch(err => {
+                    document.getElementById("scanner-modal-overlay").style.display = "none";
+                });
+            } else {
+                document.getElementById("scanner-modal-overlay").style.display = "none";
+            }
+        }
+
         window.exportDataToCSV = function() {
-            let csvRows = [["Asset ID", "Name", "Type", "Category", "Status", "X Col", "Y Row", "Last Inspected", "PM Due", "Manual URL"]];
+            let csvRows = [["Asset ID", "Name", "Type", "Category", "Status", "Parent ID", "X Col", "Y Row", "Last Inspected", "PM Due", "Run Hours", "Estop Zone", "Vendor"]];
             elements.forEach(el => {
                 csvRows.push([
                     el.id,
-                    `"${el.name.replace(/"/g, '""')}"`,
+                    `"${(el.name || '').replace(/"/g, '""')}"`,
                     el.type,
                     el.category || "N/A",
                     el.status || "N/A",
+                    el.parentId || "N/A",
                     el.x,
                     el.y,
                     el.lastInspect || "",
                     el.pmDue || "",
-                    el.manualUrl || ""
+                    el.runHours || "",
+                    `"${(el.estopZone || '').replace(/"/g, '""')}"`,
+                    `"${(el.vendorName || '').replace(/"/g, '""')}"`
                 ]);
             });
 
@@ -826,7 +812,7 @@
             let url = URL.createObjectURL(blob);
             let a = document.createElement("a");
             a.href = url;
-            a.download = `Facility_Asset_Log_${new Date().toISOString().slice(0, 10)}.csv`;
+            a.download = `Facility_Asset_Inventory_${new Date().toISOString().slice(0, 10)}.csv`;
             a.click();
             URL.revokeObjectURL(url);
         }
@@ -1083,11 +1069,35 @@
             bottomLabel.textContent = `NORTH WALL - ROW N ▼`;
             viewport.appendChild(bottomLabel);
 
+            // Draw Upstream/Downstream dependency lines
+            elements.forEach(el => {
+                if (el.parentId) {
+                    let parent = elements.find(p => p.id == el.parentId);
+                    if (parent) {
+                        let px = (parent.x * gridSize) + (gridSize / 2);
+                        let py = (parent.y * gridSize) + (gridSize / 2);
+                        let cx = (el.x * gridSize) + (gridSize / 2);
+                        let cy = (el.y * gridSize) + (gridSize / 2);
+
+                        let depLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                        depLine.setAttribute("x1", px);
+                        depLine.setAttribute("y1", py);
+                        depLine.setAttribute("x2", cx);
+                        depLine.setAttribute("y2", cy);
+                        depLine.setAttribute("stroke", "#a855f7");
+                        depLine.setAttribute("stroke-width", "1.5");
+                        depLine.setAttribute("stroke-dasharray", "3");
+                        viewport.appendChild(depLine);
+                    }
+                }
+            });
+
             let visibleElements = elements.filter(el => {
                 if (searchQuery) {
                     let matchesName = el.name.toLowerCase().includes(searchQuery);
                     let matchesCat = el.category && el.category.toLowerCase().includes(searchQuery);
-                    if (!matchesName && !matchesCat) return false;
+                    let matchesId = el.id.toString().includes(searchQuery);
+                    if (!matchesName && !matchesCat && !matchesId) return false;
                 }
                 if (currentLayer === 'assets') {
                     return el.type === 'asset';
@@ -1113,6 +1123,16 @@
                     let cy = (el.y * gridSize) + (gridSize / 2);
                     let catColor = getCategoryColor(el.category);
                     let statusColor = getStatusColor(el.status || 'operational');
+
+                    // PM Expiry Pulsing ring check
+                    let pmAlert = getPmAlertStatus(el.pmDue);
+                    if (pmAlert !== 'none') {
+                        let pulseRing = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                        pulseRing.setAttribute("cx", cx);
+                        pulseRing.setAttribute("cy", cy);
+                        pulseRing.setAttribute("class", pmAlert === 'overdue' ? 'pm-overdue-pulse' : 'pm-due-pulse');
+                        g.appendChild(pulseRing);
+                    }
 
                     let circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
                     circle.setAttribute("cx", cx);
@@ -1430,26 +1450,46 @@
             if (el.type === 'asset') {
                 document.getElementById("modalSizeContainer").style.display = "none";
                 document.getElementById("modalAssetFields").style.display = "flex";
-                document.getElementById("modalPmContainer").style.display = "flex";
+                document.getElementById("modalDependencyContainer").style.display = "block";
                 document.getElementById("modalDocLinkContainer").style.display = "block";
+                document.getElementById("modalPmContainer").style.display = "flex";
+                document.getElementById("modalPredictiveContainer").style.display = "flex";
+                document.getElementById("modalUtilitiesContainer").style.display = "flex";
+                document.getElementById("modalVendorContainer").style.display = "flex";
                 document.getElementById("modalBomContainer").style.display = "block";
+                document.getElementById("modalTicketsContainer").style.display = "block";
                 document.getElementById("modalHandoverContainer").style.display = "block";
 
                 populateCategoryDropdowns(null, el.category);
+                populateParentAssetDropdown(el.parentId);
                 document.getElementById("modalStatus").value = el.status || "operational";
                 document.getElementById("modalEmoji").value = el.emoji || "📍";
                 document.getElementById("modalLastInspect").value = el.lastInspect || "";
                 document.getElementById("modalPmDue").value = el.pmDue || "";
                 document.getElementById("modalManualUrl").value = el.manualUrl || "";
+                document.getElementById("modalRunHours").value = el.runHours || "";
+                document.getElementById("modalTemp").value = el.temp || "";
+                document.getElementById("modalVibration").value = el.vibration || "";
+                document.getElementById("modalLube").value = el.lube || "";
+                document.getElementById("modalUtilityDraw").value = el.utilityDraw || "";
+                document.getElementById("modalEstopZone").value = el.estopZone || "";
+                document.getElementById("modalVendorName").value = el.vendorName || "";
+                document.getElementById("modalVendorContact").value = el.vendorContact || "";
 
                 renderBomTable(el);
+                renderWorkTickets(el);
                 renderHandoverNotes(el);
             } else {
                 document.getElementById("modalSizeContainer").style.display = "flex";
                 document.getElementById("modalAssetFields").style.display = "none";
-                document.getElementById("modalPmContainer").style.display = "none";
+                document.getElementById("modalDependencyContainer").style.display = "none";
                 document.getElementById("modalDocLinkContainer").style.display = "none";
+                document.getElementById("modalPmContainer").style.display = "none";
+                document.getElementById("modalPredictiveContainer").style.display = "none";
+                document.getElementById("modalUtilitiesContainer").style.display = "none";
+                document.getElementById("modalVendorContainer").style.display = "none";
                 document.getElementById("modalBomContainer").style.display = "none";
+                document.getElementById("modalTicketsContainer").style.display = "none";
                 document.getElementById("modalHandoverContainer").style.display = "none";
 
                 document.getElementById("modalW").value = el.w;
@@ -1477,25 +1517,28 @@
             if (!el.spareParts) el.spareParts = [];
             el.spareParts.forEach((part, index) => {
                 let tr = document.createElement("tr");
+
                 let tdName = document.createElement("td");
                 let inputName = document.createElement("input");
                 inputName.type = "text";
                 inputName.value = part.partName;
-                inputName.oninput = function() {
-                    part.partName = inputName.value;
-                    saveToFirebase();
-                };
+                inputName.oninput = function() { part.partName = inputName.value; saveToFirebase(); };
                 tdName.appendChild(inputName);
 
                 let tdNum = document.createElement("td");
                 let inputNum = document.createElement("input");
                 inputNum.type = "text";
                 inputNum.value = part.partNum;
-                inputNum.oninput = function() {
-                    part.partNum = inputNum.value;
-                    saveToFirebase();
-                };
+                inputNum.oninput = function() { part.partNum = inputNum.value; saveToFirebase(); };
                 tdNum.appendChild(inputNum);
+
+                let tdBin = document.createElement("td");
+                let inputBin = document.createElement("input");
+                inputBin.type = "text";
+                inputBin.value = part.binLoc || "";
+                inputBin.placeholder = "Aisle 1, Bin B-3";
+                inputBin.oninput = function() { part.binLoc = inputBin.value; saveToFirebase(); };
+                tdBin.appendChild(inputBin);
 
                 let tdAction = document.createElement("td");
                 tdAction.style.textAlign = "center";
@@ -1513,6 +1556,7 @@
 
                 tr.appendChild(tdName);
                 tr.appendChild(tdNum);
+                tr.appendChild(tdBin);
                 tr.appendChild(tdAction);
                 tbody.appendChild(tr);
             });
@@ -1523,8 +1567,49 @@
             let el = elements.find(item => item.id === id);
             if (el) {
                 if (!el.spareParts) el.spareParts = [];
-                el.spareParts.push({ partName: "Filter / Relay / Belt", partNum: "PART-1234" });
+                el.spareParts.push({ partName: "Spare Part / Belt / Relay", partNum: "PART-101", binLoc: "Aisle 1, Bin A-1" });
                 renderBomTable(el);
+                saveToFirebase();
+            }
+        }
+
+        function renderWorkTickets(el) {
+            let box = document.getElementById("ticketsBox");
+            box.innerHTML = "";
+            if (!el.workTickets) el.workTickets = [];
+            if (el.workTickets.length === 0) {
+                box.innerHTML = `<span style="color: #64748b; font-style: italic;">No open breakdown tickets.</span>`;
+                return;
+            }
+            el.workTickets.forEach((t, idx) => {
+                let div = document.createElement("div");
+                div.className = "note-entry";
+                div.innerHTML = `<span class="note-timestamp">[${t.time}] PRIORITY: ${t.priority}</span> - ${t.desc} 
+                <button onclick="resolveWorkTicket(${idx})" style="width: auto; padding: 1px 4px; font-size: 9px; float: right; background: #10b981;">Resolve</button>`;
+                box.appendChild(div);
+            });
+        }
+
+        window.addWorkTicket = function() {
+            let id = parseInt(document.getElementById("modalElementId").value);
+            let el = elements.find(item => item.id === id);
+            let desc = prompt("Enter breakdown / work order issue description:");
+            let priority = prompt("Enter priority (High, Medium, Low):", "High");
+            if (el && desc) {
+                if (!el.workTickets) el.workTickets = [];
+                let timestamp = new Date().toISOString().replace('T', ' ').slice(0, 16);
+                el.workTickets.unshift({ time: timestamp, priority: priority || "High", desc: desc });
+                renderWorkTickets(el);
+                saveToFirebase();
+            }
+        }
+
+        window.resolveWorkTicket = function(index) {
+            let id = parseInt(document.getElementById("modalElementId").value);
+            let el = elements.find(item => item.id === id);
+            if (el && el.workTickets) {
+                el.workTickets.splice(index, 1);
+                renderWorkTickets(el);
                 saveToFirebase();
             }
         }
@@ -1577,10 +1662,19 @@
                 if (el.type === 'asset') {
                     el.category = document.getElementById("modalCategory").value;
                     el.status = document.getElementById("modalStatus").value;
+                    el.parentId = document.getElementById("modalParentAsset").value;
                     el.emoji = document.getElementById("modalEmoji").value || "📍";
                     el.lastInspect = document.getElementById("modalLastInspect").value;
                     el.pmDue = document.getElementById("modalPmDue").value;
                     el.manualUrl = document.getElementById("modalManualUrl").value;
+                    el.runHours = document.getElementById("modalRunHours").value;
+                    el.temp = document.getElementById("modalTemp").value;
+                    el.vibration = document.getElementById("modalVibration").value;
+                    el.lube = document.getElementById("modalLube").value;
+                    el.utilityDraw = document.getElementById("modalUtilityDraw").value;
+                    el.estopZone = document.getElementById("modalEstopZone").value;
+                    el.vendorName = document.getElementById("modalVendorName").value;
+                    el.vendorContact = document.getElementById("modalVendorContact").value;
                 } else {
                     el.w = parseFloat(document.getElementById("modalW").value) || 1;
                     el.h = parseFloat(document.getElementById("modalH").value) || 1;
@@ -1757,12 +1851,8 @@
                 emoji: document.getElementById("newAssetEmoji").value || "🧯",
                 x: parseFloat(document.getElementById("newAssetX").value) || 0,
                 y: parseFloat(document.getElementById("newAssetY").value) || 0,
-                manualUrl: "",
-                spareParts: [],
-                handoverNotes: [],
-                lastInspect: "",
-                pmDue: "",
-                photos: [],
+                parentId: "", manualUrl: "", runHours: "", temp: "", vibration: "", lube: "", utilityDraw: "", estopZone: "", vendorName: "", vendorContact: "",
+                spareParts: [], workTickets: [], handoverNotes: [], lastInspect: "", pmDue: "", photos: [],
                 spreadsheetData: [{key: "Asset Type", value: "Safety/Fire Node"}]
             };
             elements.push(newEl);
