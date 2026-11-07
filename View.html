@@ -188,7 +188,7 @@
         #sync-status {
             font-size: 10px; text-align: center; color: #10b981; font-weight: bold; margin-top: -4px;
         }
-        #modal-overlay, #lightbox-overlay, #scanner-modal-overlay, #ar-modal-overlay, #shift-manager-modal-overlay {
+        #modal-overlay, #lightbox-overlay, #scanner-modal-overlay, #ar-modal-overlay, #shift-manager-modal-overlay, #electrical-training-modal-overlay {
             display: none;
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -244,6 +244,13 @@
         .action-item-row { display: flex; align-items: center; gap: 6px; font-size: 11px; border-bottom: 1px solid #1f2d3d; padding: 2px 0; }
         .danger { background: #7f1d1d; border-color: #ef4444; color: white; }
         .danger:hover { background: #ef4444; }
+
+        /* ELECTRICAL SIMULATOR STYLES */
+        .test-point-btn {
+            background: #1e293b; border: 1px solid #38bdf8; color: #38bdf8; padding: 4px 8px; border-radius: 4px; font-size: 10px; cursor: pointer; text-align: left; transition: all 0.2s;
+        }
+        .test-point-btn:hover { background: #0284c7; color: #fff; }
+        .test-point-btn.selected-probe { background: #eab308; color: #000; font-weight: bold; border-color: #fff; }
     </style>
 </head>
 <body>
@@ -298,8 +305,9 @@
                 <button class="layer-btn" id="layerAssetsBtn" onclick="switchLayer('assets')">All Assets & Utilities</button>
             </div>
         </div>
-        <div>
+        <div style="display: flex; flex-direction: column; gap: 4px;">
             <button onclick="openARModal()" style="background:#0284c7; color:#fff; border-color:#38bdf8;">🕶️ AR Live Camera View</button>
+            <button onclick="openElectricalTrainingModal()" style="background:#f59e0b; color:#0b131d; border-color:#fbbf24; font-weight: bold;">⚡ Electrical Training & Simulator</button>
         </div>
         <hr style="border-color: #1e293b; margin: 4px 0;">
         <div class="tab-bar">
@@ -577,6 +585,97 @@
             </div>
         </div>
     </div>
+    <!-- ELECTRICAL DIAGNOSTIC TRAINING SIMULATOR MODAL -->
+    <div id="electrical-training-modal-overlay">
+        <div class="modal-content" style="width: 850px; max-width: 96vw;">
+            <div class="modal-header" style="background: #0f172a;">
+                <h3 style="color: #f59e0b; margin: 0; display: flex; align-items: center; gap: 8px;">
+                    ⚡ Industrial Electrical Diagnostic Training Simulator
+                </h3>
+                <button class="close-modal" onclick="closeElectricalTrainingModal()">×</button>
+            </div>
+            <div class="modal-body" style="background: #0b131d; font-size: 12px; gap: 10px;">
+                <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+                    <label style="color: #f59e0b; font-weight: bold;">Select Training Scenario:</label>
+                    <select id="simScenarioSelect" onchange="loadScenario(this.value)" style="flex: 1; border-color: #f59e0b;">
+                        <option value="scenario1">Scenario 1: Open Fuse FU-1 (24VDC Control Power Fault)</option>
+                        <option value="scenario2">Scenario 2: Failed Contactor Coil M1 (Main Motor Won't Pick Up)</option>
+                        <option value="scenario3">Scenario 3: Corroded High-Resistance Wire Connection (Line Voltage Drop)</option>
+                        <option value="scenario4">Scenario 4: Failed E-Stop Contact (Intermittent Line Open)</option>
+                        <option value="scenario5">Scenario 5: Shorted Solenoid Coil (24V Power Supply Tripping)</option>
+                        <option value="scenario6">Scenario 6: Failed PNP Photoeye Sensor (PLC Input Dark State)</option>
+                    </select>
+                </div>
+
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    <!-- LEFT COLUMN: MULTIMETER & TEST POINTS -->
+                    <div style="flex: 1; min-width: 280px; background: #111b27; padding: 10px; border-radius: 6px; border: 1px solid #1f2d3d;">
+                        <h4 style="color: #38bdf8; margin: 0 0 6px 0;">📟 Multimeter & Test Leads</h4>
+                        
+                        <div style="background: #000; border: 2px solid #38bdf8; border-radius: 6px; padding: 8px; text-align: center; margin-bottom: 8px;">
+                            <div style="font-size: 9px; color: #94a3b8; text-transform: uppercase;">Digital Multimeter Reading</div>
+                            <div id="meterDisplayValue" style="font-family: monospace; font-size: 24px; color: #10b981; font-weight: bold;">0.00 VDC</div>
+                            <div id="meterModeText" style="font-size: 10px; color: #38bdf8; margin-top: 2px;">Mode: VDC Volts</div>
+                        </div>
+
+                        <div style="display: flex; gap: 4px; margin-bottom: 8px;">
+                            <button onclick="setMeterMode('VDC')" style="flex:1; font-size:10px; padding:4px;">VDC (Volts)</button>
+                            <button onclick="setMeterMode('VAC')" style="flex:1; font-size:10px; padding:4px;">VAC (Volts)</button>
+                            <button onclick="setMeterMode('OHM')" style="flex:1; font-size:10px; padding:4px;">Ω (Ohms)</button>
+                        </div>
+
+                        <div style="display: flex; gap: 6px; margin-bottom: 6px;">
+                            <div style="flex:1; background:#0b131d; padding:4px; border-radius:4px; border:1px solid #ef4444;">
+                                <span style="color:#ef4444; font-weight:bold; font-size:10px;">🔴 Red Probe (+)</span>
+                                <div id="redProbeText" style="font-size:10px; color:#fff; overflow:hidden; text-overflow:ellipsis;">Not Connected</div>
+                            </div>
+                            <div style="flex:1; background:#0b131d; padding:4px; border-radius:4px; border:1px solid #64748b;">
+                                <span style="color:#94a3b8; font-weight:bold; font-size:10px;">⚫ Black Probe (-)</span>
+                                <div id="blackProbeText" style="font-size:10px; color:#fff; overflow:hidden; text-overflow:ellipsis;">Not Connected</div>
+                            </div>
+                        </div>
+
+                        <label style="color: #38bdf8; font-weight: bold; font-size: 11px;">Select Circuit Test Point to Probe:</label>
+                        <div id="testPointsContainer" style="display: flex; flex-direction: column; gap: 4px; max-height: 180px; overflow-y: auto; margin-top: 4px; padding-right: 4px;"></div>
+                    </div>
+
+                    <!-- RIGHT COLUMN: SCHEMATIC & SYMPTOMS -->
+                    <div style="flex: 1.3; min-width: 300px; display: flex; flex-direction: column; gap: 10px;">
+                        <div style="background: #111b27; padding: 10px; border-radius: 6px; border: 1px solid #1f2d3d;">
+                            <h4 style="color: #f59e0b; margin: 0 0 4px 0;">🚨 Problem Description & Symptoms</h4>
+                            <div id="scenarioSymptomText" style="color: #e0e1dd; font-size: 11px; line-height: 1.4;">Select a scenario above to begin troubleshooting.</div>
+                        </div>
+
+                        <div style="background: #111b27; padding: 10px; border-radius: 6px; border: 1px solid #1f2d3d;">
+                            <h4 style="color: #38bdf8; margin: 0 0 4px 0;">📐 Electrical Ladder Schematic</h4>
+                            <div id="schematicDiagramBox" style="background: #070d14; border: 1px solid #1f2d3d; border-radius: 4px; padding: 8px; font-family: monospace; font-size: 10px; color: #38bdf8; white-space: pre; overflow-x: auto;"></div>
+                        </div>
+
+                        <div style="background: #111b27; padding: 10px; border-radius: 6px; border: 1px solid #1f2d3d;">
+                            <h4 style="color: #10b981; margin: 0 0 4px 0;">💡 Submit Root Cause Diagnosis</h4>
+                            <div style="display: flex; gap: 6px;">
+                                <select id="diagnosisAnswerSelect" style="flex:1;">
+                                    <option value="">Select Root Cause...</option>
+                                    <option value="open_fuse">Blown Fuse FU-1</option>
+                                    <option value="open_estop">Failed E-Stop PB-1 Contacts</option>
+                                    <option value="failed_relay">Failed Relay / Contactor Coil</option>
+                                    <option value="high_res_wire">High-Resistance Corroded Wire Terminal</option>
+                                    <option value="shorted_coil">Shorted Solenoid Coil</option>
+                                    <option value="failed_sensor">Failed Sensor Output (NPN/PNP)</option>
+                                </select>
+                                <button onclick="checkDiagnosis()" style="width: auto; padding: 4px 12px; background: #10b981; color: #0b131d;">Verify Answer</button>
+                            </div>
+                            <div id="diagnosisFeedback" style="margin-top: 6px; font-weight: bold; font-size: 11px;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer" style="background: #0f172a;">
+                <button onclick="closeElectricalTrainingModal()" style="width: auto; padding: 6px 12px; background: #38bdf8; color: #0b131d;">Exit Training</button>
+            </div>
+        </div>
+    </div>
+
     <!-- SHIFT MANAGER MODAL -->
     <div id="shift-manager-modal-overlay">
         <div class="modal-content" style="width: 450px;">
@@ -649,6 +748,7 @@
             <div id="lightboxCaption" style="margin-top: 8px; color: #38bdf8; font-size: 13px; font-weight: bold;"></div>
         </div>
     </div>
+
     <!-- Firebase SDK Imports -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -707,6 +807,94 @@
         let tomActions = [];
         let activeShiftCategory = 'tech';
 
+        /* SIMULATOR VARIABLES */
+        let currentMeterMode = 'VDC';
+        let activeRedProbe = null;
+        let activeBlackProbe = null;
+        let activeScenarioKey = 'scenario1';
+
+        const simulatorScenarios = {
+            scenario1: {
+                title: "Scenario 1: Open Fuse FU-1 (24VDC Control Power Fault)",
+                symptoms: "The main conveyance drive motor does not start when pressing the Start PB-2 button. The power supply LED is ON (24VDC), but the control circuit has no voltage past the fuse block.",
+                correctAnswer: "open_fuse",
+                schematic: `+24VDC [24V Terminal] ------ (FU-1 2A) ------ (E-Stop PB-1) ------ (Start PB-2) ------ [Coil M1] ------ 0VDC (GND)`,
+                points: [
+                    { id: "24V", name: "24V Power Supply Output", volts: 24.0, ohm: 0.2 },
+                    { id: "FU1_IN", name: "Fuse FU-1 Line Side (In)", volts: 24.0, ohm: 0.2 },
+                    { id: "FU1_OUT", name: "Fuse FU-1 Load Side (Out)", volts: 0.0, ohm: 999999 },
+                    { id: "ESTOP_IN", name: "E-Stop PB-1 Terminal 1", volts: 0.0, ohm: 999999 },
+                    { id: "COIL_A1", name: "Contactor Coil M1 (A1)", volts: 0.0, ohm: 120.0 },
+                    { id: "GND", name: "0VDC Power Supply Ground", volts: 0.0, ohm: 0.0 }
+                ]
+            },
+            scenario2: {
+                title: "Scenario 2: Failed Contactor Coil M1 (Main Motor Won't Pick Up)",
+                symptoms: "The start button is pressed, voltage is confirmed present at coil terminal A1 (24VDC), but the contactor mechanically fails to pick up or pull in.",
+                correctAnswer: "failed_relay",
+                schematic: `+24VDC ------ (FU-1) ------ (E-Stop PB-1) ------ (Start PB-2) ------ [Coil M1 (OPEN COIL)] ------ 0VDC (GND)`,
+                points: [
+                    { id: "24V", name: "24V Power Supply Output", volts: 24.0, ohm: 0.2 },
+                    { id: "FU1_OUT", name: "Fuse FU-1 Load Side", volts: 24.0, ohm: 0.2 },
+                    { id: "ESTOP_OUT", name: "E-Stop PB-1 Terminal 2", volts: 24.0, ohm: 0.3 },
+                    { id: "START_OUT", name: "Start PB-2 Output Terminal", volts: 24.0, ohm: 0.4 },
+                    { id: "COIL_A1", name: "Contactor Coil M1 (A1)", volts: 24.0, ohm: 999999 },
+                    { id: "GND", name: "0VDC Power Supply Ground", volts: 0.0, ohm: 0.0 }
+                ]
+            },
+            scenario3: {
+                title: "Scenario 3: Corroded High-Resistance Wire Connection",
+                symptoms: "The contactor chatters intermittently and drops out under load. Voltage drops significantly across Terminal Block TB2 when current flows.",
+                correctAnswer: "high_res_wire",
+                schematic: `+24VDC ------ (FU-1) ------ [TB2 High Resistance Term] ------ (Start PB) ------ [Coil M1] ------ 0VDC`,
+                points: [
+                    { id: "24V", name: "24V Power Supply Output", volts: 24.0, ohm: 0.2 },
+                    { id: "TB2_IN", name: "Terminal Block TB2 Inbound", volts: 24.0, ohm: 0.2 },
+                    { id: "TB2_OUT", name: "Terminal Block TB2 Outbound (Corroded)", volts: 8.5, ohm: 450.0 },
+                    { id: "COIL_A1", name: "Contactor Coil M1 (A1)", volts: 8.5, ohm: 120.0 },
+                    { id: "GND", name: "0VDC Power Supply Ground", volts: 0.0, ohm: 0.0 }
+                ]
+            },
+            scenario4: {
+                title: "Scenario 4: Failed E-Stop Contact (Intermittent Line Open)",
+                symptoms: "The safety relay trips continuously with an Emergency Stop fault, even though all physical mushroom buttons are pulled out and reset.",
+                correctAnswer: "open_estop",
+                schematic: `+24VDC ------ (FU-1) ------ (E-Stop PB-1 OPEN N.C.) ------ (Safety Relay A1) ------ 0VDC`,
+                points: [
+                    { id: "24V", name: "24V Power Supply Output", volts: 24.0, ohm: 0.2 },
+                    { id: "FU1_OUT", name: "Fuse FU-1 Load Side", volts: 24.0, ohm: 0.2 },
+                    { id: "ESTOP_IN", name: "E-Stop PB-1 NC Contact In", volts: 24.0, ohm: 0.2 },
+                    { id: "ESTOP_OUT", name: "E-Stop PB-1 NC Contact Out (Open Fault)", volts: 0.0, ohm: 999999 },
+                    { id: "SAFETY_A1", name: "Safety Relay Input Terminal A1", volts: 0.0, ohm: 999999 },
+                    { id: "GND", name: "0VDC Power Supply Ground", volts: 0.0, ohm: 0.0 }
+                ]
+            },
+            scenario5: {
+                title: "Scenario 5: Shorted Solenoid Coil (Power Supply Tripping)",
+                symptoms: "The moment a diverter arm solenoid is actuated, the 24VDC control circuit power supply trips into over-current foldback mode (0V).",
+                correctAnswer: "shorted_coil",
+                schematic: `+24VDC ------ (Fuse 5A) ------ [Diverter Solenoid SOL-1 (SHORTED COIL)] ------ 0VDC`,
+                points: [
+                    { id: "24V", name: "24V Power Supply Output (Foldback)", volts: 2.1, ohm: 0.05 },
+                    { id: "FU5_OUT", name: "Fuse 5A Load Side", volts: 2.1, ohm: 0.05 },
+                    { id: "SOL1_A1", name: "Solenoid SOL-1 Coil (+)", volts: 2.1, ohm: 0.1 },
+                    { id: "GND", name: "0VDC Power Supply Ground", volts: 0.0, ohm: 0.0 }
+                ]
+            },
+            scenario6: {
+                title: "Scenario 6: Failed PNP Photoeye Sensor (PLC Input Dark State)",
+                symptoms: "Totes block the optical sensor reflector, but the PLC input indicator LED does not turn ON, stalling the conveyance line bed.",
+                correctAnswer: "failed_sensor",
+                schematic: `+24VDC (Brown) ------ [PNP Photoeye Sensor PE-01] ------ (Black Out) ------ [PLC Input I:0/4]`,
+                points: [
+                    { id: "PE_BROWN", name: "Sensor Pin 1 (Brown +24V)", volts: 24.0, ohm: 0.2 },
+                    { id: "PE_BLUE", name: "Sensor Pin 3 (Blue 0V GND)", volts: 0.0, ohm: 0.0 },
+                    { id: "PE_BLACK", name: "Sensor Pin 4 (Black Output Triggered)", volts: 0.2, ohm: 999999 },
+                    { id: "PLC_IN4", name: "PLC Input Card Terminal I:0/4", volts: 0.2, ohm: 999999 }
+                ]
+            }
+        };
+
         let selectedId = null;
         let isPanning = false;
         let panStart = { x: 0, y: 0 };
@@ -721,6 +909,115 @@
 
         window.toggleSidebar = function() {
             document.getElementById("sidebar").classList.toggle("collapsed");
+        };
+
+        /* SIMULATOR FUNCTIONS */
+        window.openElectricalTrainingModal = function() {
+            document.getElementById("electrical-training-modal-overlay").style.display = "flex";
+            loadScenario('scenario1');
+        };
+
+        window.closeElectricalTrainingModal = function() {
+            document.getElementById("electrical-training-modal-overlay").style.display = "none";
+        };
+
+        window.loadScenario = function(scenKey) {
+            activeScenarioKey = scenKey;
+            let scen = simulatorScenarios[scenKey];
+            if (!scen) return;
+
+            document.getElementById("scenarioSymptomText").innerText = scen.symptoms;
+            document.getElementById("schematicDiagramBox").innerText = scen.schematic;
+            document.getElementById("diagnosisFeedback").innerText = "";
+            document.getElementById("diagnosisAnswerSelect").value = "";
+
+            activeRedProbe = null;
+            activeBlackProbe = null;
+            updateProbeTextDisplays();
+            updateMultimeterDisplay();
+
+            let container = document.getElementById("testPointsContainer");
+            container.innerHTML = "";
+            scen.points.forEach(pt => {
+                let div = document.createElement("div");
+                div.style.display = "flex";
+                div.style.gap = "4px";
+
+                let redBtn = document.createElement("button");
+                redBtn.className = "test-point-btn";
+                redBtn.style.flex = "1";
+                redBtn.innerText = `🔴 ${pt.name}`;
+                redBtn.onclick = () => selectProbe('red', pt);
+
+                let blackBtn = document.createElement("button");
+                blackBtn.className = "test-point-btn";
+                blackBtn.style.flex = "1";
+                blackBtn.innerText = `⚫ ${pt.name}`;
+                blackBtn.onclick = () => selectProbe('black', pt);
+
+                div.appendChild(redBtn);
+                div.appendChild(blackBtn);
+                container.appendChild(div);
+            });
+        };
+
+        window.setMeterMode = function(mode) {
+            currentMeterMode = mode;
+            document.getElementById("meterModeText").innerText = `Mode: ${mode}`;
+            updateMultimeterDisplay();
+        };
+
+        function selectProbe(color, pt) {
+            if (color === 'red') activeRedProbe = pt;
+            else activeBlackProbe = pt;
+            updateProbeTextDisplays();
+            updateMultimeterDisplay();
+        }
+
+        function updateProbeTextDisplays() {
+            document.getElementById("redProbeText").innerText = activeRedProbe ? activeRedProbe.name : "Not Connected";
+            document.getElementById("blackProbeText").innerText = activeBlackProbe ? activeBlackProbe.name : "Not Connected";
+        }
+
+        function updateMultimeterDisplay() {
+            let display = document.getElementById("meterDisplayValue");
+            if (!activeRedProbe || !activeBlackProbe) {
+                display.innerText = "0.00 VDC";
+                return;
+            }
+
+            if (currentMeterMode === 'VDC') {
+                let voltageDiff = Math.abs(activeRedProbe.volts - activeBlackProbe.volts);
+                display.innerText = `${voltageDiff.toFixed(2)} VDC`;
+            } else if (currentMeterMode === 'VAC') {
+                display.innerText = "0.00 VAC";
+            } else if (currentMeterMode === 'OHM') {
+                if (activeRedProbe.id === activeBlackProbe.id) {
+                    display.innerText = "0.1 Ω";
+                } else {
+                    let totalOhm = Math.abs(activeRedProbe.ohm + activeBlackProbe.ohm);
+                    if (totalOhm >= 99999) display.innerText = "O.L (OPEN)";
+                    else display.innerText = `${totalOhm.toFixed(1)} Ω`;
+                }
+            }
+        }
+
+        window.checkDiagnosis = function() {
+            let userVal = document.getElementById("diagnosisAnswerSelect").value;
+            let scen = simulatorScenarios[activeScenarioKey];
+            let feedback = document.getElementById("diagnosisFeedback");
+            if (!userVal) {
+                feedback.innerText = "Please select a root cause diagnosis.";
+                feedback.style.color = "#ef4444";
+                return;
+            }
+            if (userVal === scen.correctAnswer) {
+                feedback.innerText = "🎉 CORRECT! Excellent diagnostic troubleshooting.";
+                feedback.style.color = "#10b981";
+            } else {
+                feedback.innerText = "❌ Incorrect diagnosis. Take voltage drop measurements between test points.";
+                feedback.style.color = "#ef4444";
+            }
         };
 
         async function loadFromFirebase() {
