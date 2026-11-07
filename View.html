@@ -128,7 +128,6 @@
         .tab-btn.active { background: #1e293b; color: #38bdf8; border-color: #38bdf8; }
         .panel { display: none; }
         .panel.active { display: flex; flex-direction: column; gap: 8px; }
-
         /* EMERGENCY QUICK-FILTER FLOATING BAR */
         #quick-filter-bar {
             position: absolute;
@@ -157,7 +156,6 @@
         .filter-pill.active { background: #0284c7; color: #fff; border-color: #38bdf8; }
         .filter-pill.down-pill.active { background: #7f1d1d; border-color: #ef4444; }
         .filter-pill.pm-pill.active { background: #b45309; border-color: #f59e0b; }
-
         #canvas-container {
             flex-grow: 1;
             position: relative;
@@ -250,7 +248,6 @@
         <h2>Facility Viewer (View Only)</h2>
         <button class="toggle-btn" onclick="toggleSidebar()">☰ Menu</button>
     </div>
-
     <div id="sidebar" class="collapsed">
         <h2>Facility Viewer (View Only)</h2>
         
@@ -271,7 +268,6 @@
                 <span style="color:#f59e0b; font-weight:bold;">🔥 Show Downtime & Breakdown Heatmap</span>
             </label>
         </div>
-
         <!-- LAYER SELECTION MENU -->
         <div>
             <label>Active View Layer</label>
@@ -299,11 +295,9 @@
                 <button class="layer-btn" id="layerAssetsBtn" onclick="switchLayer('assets')">All Assets & Utilities</button>
             </div>
         </div>
-
         <div>
             <button onclick="openARModal()" style="background:#0284c7; color:#fff; border-color:#38bdf8;">🕶️ AR Live Camera View</button>
         </div>
-
         <hr style="border-color: #1e293b; margin: 4px 0;">
         <div class="tab-bar">
             <button class="tab-btn active" id="tabInfoBtn" onclick="switchTab('info')">Info</button>
@@ -316,10 +310,20 @@
         </div>
         <div id="panelShift" class="panel">
             <h3>📝 Technician Shift Handover Log</h3>
-            <div class="notes-log-box" id="shiftLogContainer" style="max-height: 250px;"></div>
+            <div style="margin-bottom: 6px;">
+                <label>Filter/Select Shift Log View</label>
+                <select id="shiftFilterSelect" onchange="filterShiftLogs(this.value)">
+                    <option value="ALL">All Shifts</option>
+                    <option value="FHD">FHD</option>
+                    <option value="BHD">BHD</option>
+                    <option value="FHN">FHN</option>
+                    <option value="BHN">BHN</option>
+                    <option value="BBM">BBM</option>
+                </select>
+            </div>
+            <div class="notes-log-box" id="shiftLogContainer" style="max-height: 220px;"></div>
         </div>
     </div>
-
     <div id="canvas-container">
         <!-- EMERGENCY QUICK-FILTER FLOATING PILLS -->
         <div id="quick-filter-bar">
@@ -329,12 +333,10 @@
             <button class="filter-pill" onclick="toggleQuickFilter('estop')">⚡ E-Stop Zones</button>
             <button class="filter-pill active" id="filterAllBtn" onclick="toggleQuickFilter('all')">Show All</button>
         </div>
-
         <svg id="layoutSvg" width="2200" height="1400">
             <g id="viewport"></g>
         </svg>
     </div>
-
     <!-- ITEM DETAILS & INSPECT MODAL -->
     <div id="modal-overlay">
         <div class="modal-content">
@@ -451,7 +453,6 @@
             </div>
         </div>
     </div>
-
     <!-- AR LIVE CAMERA OVERLAY MODAL -->
     <div id="ar-modal-overlay">
         <div class="modal-content" style="width: 500px; height: 500px;">
@@ -471,7 +472,6 @@
             </div>
         </div>
     </div>
-
     <!-- QR CAMERA SCANNER MODAL -->
     <div id="scanner-modal-overlay">
         <div class="modal-content" style="width: 450px;">
@@ -484,7 +484,6 @@
             </div>
         </div>
     </div>
-
     <!-- LIGHTBOX OVERLAY -->
     <div id="lightbox-overlay" onclick="closeLightbox()">
         <div style="position: relative; max-width: 90vw; max-height: 90vh; display: flex; flex-direction: column; align-items: center;" onclick="event.stopPropagation()">
@@ -493,7 +492,6 @@
             <div id="lightboxCaption" style="margin-top: 8px; color: #38bdf8; font-size: 13px; font-weight: bold;"></div>
         </div>
     </div>
-
     <!-- Firebase SDK Imports -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -517,7 +515,7 @@
         const minRow = -6;
         const maxRow = 20;
         const buildingCols = 30; 
-        const buildingRows = 13; // Matched to main map code
+        const buildingRows = 13; 
         let currentLayer = 'ground'; 
         let currentTab = 'info';
         let searchQuery = '';
@@ -525,7 +523,6 @@
         let activeQuickFilter = 'all';
         let html5QrCode = null;
         let arQrCode = null;
-
         let categories = [
             { name: "OPEX UIS Sorter", color: "#ec4899" },
             { name: "ATR Tote Retrieval", color: "#8b5cf6" },
@@ -550,16 +547,13 @@
         let initialPinchScale = 1;
         let initialPinchCenter = { x: 0, y: 0 };
         let initialTransform = { x: 0, y: 0 };
-
         const container = document.getElementById("canvas-container");
         const svg = document.getElementById("layoutSvg");
         const viewport = document.getElementById("viewport");
         const syncStatus = document.getElementById("sync-status");
-
         window.toggleSidebar = function() {
             document.getElementById("sidebar").classList.toggle("collapsed");
         };
-
         async function loadFromFirebase() {
             try {
                 const docRef = doc(db, "layouts", "facility_main");
@@ -589,7 +583,6 @@
                 render();
             }
         }
-
         window.toggleQuickFilter = function(filterType) {
             activeQuickFilter = filterType;
             document.querySelectorAll('.filter-pill').forEach(btn => btn.classList.remove('active'));
@@ -600,7 +593,6 @@
             else document.getElementById('filterAllBtn').classList.add('active');
             render();
         }
-
         window.openARModal = function() {
             document.getElementById("ar-modal-overlay").style.display = "flex";
             arQrCode = new Html5Qrcode("ar-video-container");
@@ -615,7 +607,6 @@
                 () => {}
             ).catch(err => console.error("AR Camera error:", err));
         }
-
         window.closeARModal = function() {
             if (arQrCode) {
                 arQrCode.stop().then(() => {
@@ -628,7 +619,6 @@
                 document.getElementById("ar-modal-overlay").style.display = "none";
             }
         }
-
         window.openScannerModal = function() {
             document.getElementById("scanner-modal-overlay").style.display = "flex";
             html5QrCode = new Html5Qrcode("qr-reader");
@@ -643,7 +633,6 @@
                 () => {}
             ).catch(err => console.error("Scanner error:", err));
         }
-
         window.closeScannerModal = function() {
             if (html5QrCode) {
                 html5QrCode.stop().then(() => {
@@ -656,17 +645,14 @@
                 document.getElementById("scanner-modal-overlay").style.display = "none";
             }
         }
-
         window.handleSearch = function(val) {
             searchQuery = val.trim().toLowerCase();
             render();
         }
-
         window.toggleHeatmap = function(checked) {
             showHeatmap = checked;
             render();
         }
-
         window.switchTab = function(tab) {
             currentTab = tab;
             document.getElementById("tabInfoBtn").classList.toggle("active", tab === 'info');
@@ -674,34 +660,37 @@
             document.getElementById("panelInfo").classList.toggle("active", tab === 'info');
             document.getElementById("panelShift").classList.toggle("active", tab === 'shift');
         }
-
-        function renderShiftLogs() {
+        window.filterShiftLogs = function(selectedShift) {
+            renderShiftLogs(selectedShift);
+        }
+        function renderShiftLogs(filterShift = "ALL") {
             let box = document.getElementById("shiftLogContainer");
             if (!box) return;
             box.innerHTML = "";
-            if (!shiftLogs || shiftLogs.length === 0) {
-                box.innerHTML = `<span style="color:#64748b; font-style:italic;">No shift handover entries.</span>`;
+            let logsToDisplay = shiftLogs;
+            if (filterShift && filterShift !== "ALL") {
+                logsToDisplay = shiftLogs.filter(s => s.shift === filterShift);
+            }
+            if (!logsToDisplay || logsToDisplay.length === 0) {
+                box.innerHTML = `<span style="color:#64748b; font-style:italic;">No shift handover entries found for ${filterShift}.</span>`;
                 return;
             }
-            shiftLogs.forEach(s => {
+            logsToDisplay.forEach(s => {
                 let div = document.createElement("div");
                 div.className = "note-entry";
                 div.innerHTML = `<span class="note-timestamp">[${s.time}] ${s.shift}:</span> ${s.note}`;
                 box.appendChild(div);
             });
         }
-
         function getCategoryColor(catName) {
             let found = categories.find(c => c.name === catName);
             return found ? found.color : "#38bdf8";
         }
-
         function getStatusColor(status) {
             if (status === 'maintenance') return "#f59e0b";
             if (status === 'down') return "#ef4444";
             return "#10b981";
         }
-
         function getPmAlertStatus(pmDueStr) {
             if (!pmDueStr) return 'none';
             let due = new Date(pmDueStr);
@@ -711,7 +700,6 @@
             if (diffDays <= 7) return 'due_soon';
             return 'none';
         }
-
         function getRowLabel(r) {
             if (r < 0) {
                 return "N" + Math.abs(r);
@@ -722,7 +710,6 @@
             }
             return String.fromCharCode(65 + adjustedIndex); 
         }
-
         window.switchLayer = function(layerName) {
             currentLayer = layerName;
             let layerButtons = [
@@ -748,11 +735,9 @@
             selectedId = null;
             render();
         }
-
         function updateTransformString() {
             viewport.setAttribute("transform", `translate(${viewTransform.x}, ${viewTransform.y}) scale(${viewTransform.scale})`);
         }
-
         function render() {
             viewport.innerHTML = "";
             updateTransformString();
@@ -777,8 +762,7 @@
             siteLabel.textContent = "▼ 6500 W MT HOPE HWY — SURROUNDING SITE EARTHWORK & AUTOMATION FOOTPRINT";
             siteBackground.appendChild(siteLabel);
             viewport.appendChild(siteBackground);
-
-            // Grid Lines & Labels (Matching main map loop)
+            // Grid Lines & Labels
             for (let c = minCol; c <= maxCol; c++) {
                 let line = document.createElementNS("http://www.w3.org/2000/svg", "line");
                 line.setAttribute("x1", c * gridSize);
@@ -811,7 +795,6 @@
                 text.textContent = getRowLabel(r);
                 viewport.appendChild(text);
             }
-
             // Building Footprint
             let buildingWall = document.createElementNS("http://www.w3.org/2000/svg", "rect");
             buildingWall.setAttribute("x", 0);
@@ -823,7 +806,6 @@
             buildingWall.setAttribute("stroke", "#38bdf8");
             buildingWall.setAttribute("stroke-width", "2");
             viewport.appendChild(buildingWall);
-
             let layerTitleName = currentLayer.toUpperCase();
             let topLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
             topLabel.setAttribute("x", 0.5 * gridSize);
@@ -841,7 +823,6 @@
             bottomLabel.setAttribute("font-weight", "bold");
             bottomLabel.textContent = `NORTH WALL - ROW N ▼`;
             viewport.appendChild(bottomLabel);
-
             // Draw Heatmap Overlay Circles if enabled
             if (showHeatmap) {
                 elements.forEach(el => {
@@ -860,7 +841,6 @@
                     }
                 });
             }
-
             // Render Elements with Search & Quick-Filter Filtering
             let visibleElements = elements.filter(el => {
                 if (searchQuery) {
@@ -870,19 +850,15 @@
                     let matchesPlc = el.plcNode && el.plcNode.toLowerCase().includes(searchQuery);
                     if (!matchesName && !matchesCat && !matchesId && !matchesPlc) return false;
                 }
-
                 if (activeQuickFilter === 'down') return el.status === 'down';
                 if (activeQuickFilter === 'pm_due') return getPmAlertStatus(el.pmDue) === 'overdue';
                 if (activeQuickFilter === 'water') return el.layer === 'water' || (el.category && el.category.toLowerCase().includes('water'));
                 if (activeQuickFilter === 'estop') return el.estopZone || (el.category && el.category.toLowerCase().includes('safety'));
-
                 if (currentLayer === 'assets') return el.type === 'asset' || el.type === 'conveyance_line';
                 if (currentLayer === 'conveyance') return el.type === 'conveyance_line' || el.type === 'conveyance_run';
                 if (currentLayer === 'loto') return el.type === 'asset' && el.category === 'LOTO Isolation';
-
                 return (el.layer || 'ground') === currentLayer;
             });
-
             visibleElements.forEach(el => {
                 let g = document.createElementNS("http://www.w3.org/2000/svg", "g");
                 g.setAttribute("class", "item-group");
@@ -890,7 +866,6 @@
                     e.stopPropagation();
                     openModal(el);
                 });
-
                 if (el.type === 'conveyance_line') {
                     let pts = el.points || [];
                     if (pts.length >= 2) {
@@ -923,7 +898,6 @@
                     let catColor = getCategoryColor(el.category);
                     let statusColor = getStatusColor(el.status || 'operational');
                     let pmAlert = getPmAlertStatus(el.pmDue);
-
                     if (pmAlert !== 'none') {
                         let pulseRing = document.createElementNS("http://www.w3.org/2000/svg", "circle");
                         pulseRing.setAttribute("cx", cx);
@@ -931,7 +905,6 @@
                         pulseRing.setAttribute("class", pmAlert === 'overdue' ? 'pm-overdue-pulse' : 'pm-due-pulse');
                         g.appendChild(pulseRing);
                     }
-
                     let circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
                     circle.setAttribute("cx", cx);
                     circle.setAttribute("cy", cy);
@@ -939,7 +912,6 @@
                     circle.setAttribute("fill", "#111b27");
                     circle.setAttribute("stroke", catColor);
                     circle.setAttribute("stroke-width", "2");
-
                     let statusDot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
                     statusDot.setAttribute("cx", cx + 6);
                     statusDot.setAttribute("cy", cy - 6);
@@ -947,7 +919,6 @@
                     statusDot.setAttribute("fill", statusColor);
                     statusDot.setAttribute("stroke", "#0b131d");
                     statusDot.setAttribute("stroke-width", "1");
-
                     let emojiText = document.createElementNS("http://www.w3.org/2000/svg", "text");
                     emojiText.setAttribute("x", cx);
                     emojiText.setAttribute("y", cy + 1);
@@ -956,7 +927,6 @@
                     emojiText.setAttribute("font-size", "9px");
                     emojiText.style.pointerEvents = "none";
                     emojiText.textContent = el.emoji || "📍";
-
                     let popupGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
                     popupGroup.setAttribute("class", "asset-popup");
                     let boxWidth = (el.name.length * 6.5) + 12;
@@ -969,7 +939,6 @@
                     popupBg.setAttribute("fill", "#0b131d");
                     popupBg.setAttribute("stroke", catColor);
                     popupBg.setAttribute("stroke-width", "1.5");
-
                     let popupText = document.createElementNS("http://www.w3.org/2000/svg", "text");
                     popupText.setAttribute("x", cx);
                     popupText.setAttribute("y", cy - 16);
@@ -978,7 +947,6 @@
                     popupText.setAttribute("font-size", "10px");
                     popupText.setAttribute("font-weight", "bold");
                     popupText.textContent = el.name;
-
                     popupGroup.appendChild(popupBg);
                     popupGroup.appendChild(popupText);
                     g.appendChild(circle);
@@ -1017,7 +985,6 @@
                 viewport.appendChild(g);
             });
         }
-
         function getPinchDistance(p1, p2) {
             let dx = p1.clientX - p2.clientX;
             let dy = p1.clientY - p2.clientY;
@@ -1039,7 +1006,6 @@
             let rowLabel = getRowLabel(rowIdx);
             coordDisplay.innerHTML = `Grid: <b>Row ${rowLabel}, Col ${preciseColNum}</b>`;
         }
-
         container.addEventListener("pointerdown", (e) => {
             activePointers.set(e.pointerId, e);
             if (activePointers.size === 1) {
@@ -1056,7 +1022,6 @@
                 initialTransform = { x: viewTransform.x, y: viewTransform.y };
             }
         });
-
         container.addEventListener("pointermove", (e) => {
             if (activePointers.has(e.pointerId)) activePointers.set(e.pointerId, e);
             if (activePointers.size === 1) {
@@ -1081,7 +1046,6 @@
                 render();
             }
         });
-
         const handlePointerEnd = (e) => {
             activePointers.delete(e.pointerId);
             if (activePointers.size < 2) initialPinchDistance = null;
@@ -1093,7 +1057,6 @@
         container.addEventListener("pointerup", handlePointerEnd);
         container.addEventListener("pointercancel", handlePointerEnd);
         container.addEventListener("pointerleave", handlePointerEnd);
-
         container.addEventListener("wheel", (e) => {
             e.preventDefault();
             let zoomIntensity = 0.1;
@@ -1110,7 +1073,6 @@
             viewTransform.y = mouseY - (mouseY - viewTransform.y) * (viewTransform.scale / oldScale);
             render();
         }, { passive: false });
-
         function openModal(el) {
             selectedId = el.id;
             document.getElementById("modalElementId").value = el.id;
@@ -1129,7 +1091,6 @@
                 document.getElementById("modalBomContainer").style.display = "block";
                 document.getElementById("modalTicketsContainer").style.display = "block";
                 document.getElementById("modalCoordContainer").style.display = "flex";
-
                 document.getElementById("modalCategory").value = el.category || "General";
                 document.getElementById("modalStatus").value = el.status || "operational";
                 document.getElementById("modalParentAsset").value = el.parentId ? `Parent ID: ${el.parentId}` : "None / Standalone";
@@ -1147,7 +1108,6 @@
                 document.getElementById("modalEstopZone").value = el.estopZone || "";
                 document.getElementById("modalVendorName").value = el.vendorName || "";
                 document.getElementById("modalVendorContact").value = el.vendorContact || "";
-
                 renderLotoChecklist(el);
                 renderBomTable(el);
                 renderWorkTickets(el);
@@ -1166,18 +1126,15 @@
                 document.getElementById("modalX").value = el.x;
                 document.getElementById("modalY").value = el.y;
             }
-
             renderPhotos(el);
             renderSpreadsheet(el);
             document.getElementById("modal-overlay").style.display = "flex";
         }
-
         window.openManualUrl = function() {
             let url = document.getElementById("modalManualUrl").value;
             if (url) window.open(url, '_blank');
             else alert("No manual link available for this asset.");
         }
-
         function renderLotoChecklist(el) {
             let container = document.getElementById("lotoChecklistList");
             container.innerHTML = "";
@@ -1193,7 +1150,6 @@
                 container.appendChild(div);
             });
         }
-
         function renderBomTable(el) {
             let tbody = document.getElementById("bomBody");
             tbody.innerHTML = "";
@@ -1207,7 +1163,6 @@
                 tbody.appendChild(tr);
             });
         }
-
         function renderWorkTickets(el) {
             let box = document.getElementById("ticketsBox");
             box.innerHTML = "";
@@ -1222,12 +1177,10 @@
                 box.appendChild(div);
             });
         }
-
         window.closeModal = function() {
             document.getElementById("modal-overlay").style.display = "none";
             selectedId = null;
         }
-
         function renderPhotos(el) {
             let gallery = document.getElementById("modalPhotoGallery");
             gallery.innerHTML = "";
@@ -1246,7 +1199,6 @@
                 gallery.appendChild(containerDiv);
             });
         }
-
         window.openLightbox = function(url, itemName) {
             document.getElementById("lightboxImage").src = url;
             document.getElementById("lightboxCaption").innerText = itemName || "Photo Preview";
@@ -1255,7 +1207,6 @@
         window.closeLightbox = function() {
             document.getElementById("lightbox-overlay").style.display = "none";
         }
-
         function renderSpreadsheet(el) {
             let tbody = document.getElementById("spreadsheetBody");
             tbody.innerHTML = "";
@@ -1276,7 +1227,6 @@
                 tbody.appendChild(tr);
             });
         }
-
         loadFromFirebase();
     </script>
 </body>
