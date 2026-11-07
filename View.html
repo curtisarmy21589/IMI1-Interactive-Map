@@ -292,12 +292,11 @@
             </div>
             <div style="display: flex; gap: 4px; margin-top: 4px;">
                 <button class="layer-btn" id="layerDockDoorsBtn" onclick="switchLayer('dock_doors')">Dock Doors</button>
-                <button class="layer-btn" id="layerUnderMezzSprinklersBtn" onclick="switchLayer('under_mezz_sprinklers')">Under Mezz</button>
                 <button class="layer-btn" id="layerHvacBtn" onclick="switchLayer('hvac')">HVAC</button>
+                <button class="layer-btn" id="layerLotoBtn" onclick="switchLayer('loto')">LOTO Isolation</button>
             </div>
             <div style="display: flex; gap: 4px; margin-top: 4px;">
-                <button class="layer-btn" id="layerLotoBtn" onclick="switchLayer('loto')">LOTO Isolation</button>
-                <button class="layer-btn" id="layerAssetsBtn" onclick="switchLayer('assets')">All Assets</button>
+                <button class="layer-btn" id="layerAssetsBtn" onclick="switchLayer('assets')">All Assets & Utilities</button>
             </div>
         </div>
 
@@ -518,7 +517,7 @@
         const minRow = -6;
         const maxRow = 20;
         const buildingCols = 30; 
-        const buildingRows = 14; 
+        const buildingRows = 13; // Matched to main map code
         let currentLayer = 'ground'; 
         let currentTab = 'info';
         let searchQuery = '';
@@ -714,11 +713,14 @@
         }
 
         function getRowLabel(r) {
-            if (r === buildingRows - 2) return "M.9"; 
-            let index = r;
-            if (index > buildingRows - 2) index -= 1;
-            if (index < 0) return "N" + Math.abs(index);
-            return String.fromCharCode(65 + index); 
+            if (r < 0) {
+                return "N" + Math.abs(r);
+            }
+            let adjustedIndex = r;
+            if (adjustedIndex >= 8) {
+                adjustedIndex += 1; 
+            }
+            return String.fromCharCode(65 + adjustedIndex); 
         }
 
         window.switchLayer = function(layerName) {
@@ -772,11 +774,11 @@
             siteLabel.setAttribute("fill", "#854d0e");
             siteLabel.setAttribute("font-size", "12px");
             siteLabel.setAttribute("font-weight", "bold");
-            siteLabel.textContent = "▼ 6500 W MT HOPE HWY — SURROUNDING SITE EARTHWORK & FIRE HYDRANT PERIMETER";
+            siteLabel.textContent = "▼ 6500 W MT HOPE HWY — SURROUNDING SITE EARTHWORK & AUTOMATION FOOTPRINT";
             siteBackground.appendChild(siteLabel);
             viewport.appendChild(siteBackground);
 
-            // Grid Lines & Labels
+            // Grid Lines & Labels (Matching main map loop)
             for (let c = minCol; c <= maxCol; c++) {
                 let line = document.createElementNS("http://www.w3.org/2000/svg", "line");
                 line.setAttribute("x1", c * gridSize);
@@ -793,28 +795,19 @@
                 text.textContent = c + 1; 
                 viewport.appendChild(text);
             }
-            for (let r = minRow; r <= maxRow; r++) {
+            for (let r = 0; r < buildingRows; r++) {
                 let line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-                line.setAttribute("x1", minCol * gridSize);
+                line.setAttribute("x1", 0);
                 line.setAttribute("y1", r * gridSize);
-                line.setAttribute("x2", maxCol * gridSize);
+                line.setAttribute("x2", buildingCols * gridSize);
                 line.setAttribute("y2", r * gridSize);
-                if (r === buildingRows - 2) {
-                    line.setAttribute("stroke", "#f43f5e");
-                    line.setAttribute("stroke-dasharray", "2,2");
-                } else {
-                    line.setAttribute("class", "grid-line");
-                }
+                line.setAttribute("class", "grid-line");
                 viewport.appendChild(line);
                 let text = document.createElementNS("http://www.w3.org/2000/svg", "text");
-                text.setAttribute("x", (minCol * gridSize) - 10);
+                text.setAttribute("x", -10);
                 text.setAttribute("y", (r * gridSize) + (gridSize / 2) + 3);
                 text.setAttribute("text-anchor", "end");
                 text.setAttribute("class", "coord-label");
-                if (r === buildingRows - 2) {
-                    text.setAttribute("fill", "#f43f5e");
-                    text.setAttribute("font-weight", "bold");
-                }
                 text.textContent = getRowLabel(r);
                 viewport.appendChild(text);
             }
@@ -834,11 +827,11 @@
             let layerTitleName = currentLayer.toUpperCase();
             let topLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
             topLabel.setAttribute("x", 0.5 * gridSize);
-            topLabel.setAttribute("y", -22);
+            topLabel.setAttribute("y", -8);
             topLabel.setAttribute("fill", "#38bdf8");
             topLabel.setAttribute("font-size", "10px");
             topLabel.setAttribute("font-weight", "bold");
-            topLabel.textContent = `BUILDING SOUTH WALL (${layerTitleName} LAYER) ▲`;
+            topLabel.textContent = `SOUTH WALL - ROW A (${layerTitleName} LAYER) ▲`;
             viewport.appendChild(topLabel);
             let bottomLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
             bottomLabel.setAttribute("x", 0.5 * gridSize);
@@ -846,7 +839,7 @@
             bottomLabel.setAttribute("fill", "#38bdf8");
             bottomLabel.setAttribute("font-size", "10px");
             bottomLabel.setAttribute("font-weight", "bold");
-            bottomLabel.textContent = `BUILDING NORTH WALL ▼`;
+            bottomLabel.textContent = `NORTH WALL - ROW N ▼`;
             viewport.appendChild(bottomLabel);
 
             // Draw Heatmap Overlay Circles if enabled
