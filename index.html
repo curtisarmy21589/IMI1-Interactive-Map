@@ -180,18 +180,22 @@
                 <button class="layer-btn" id="layerRoofBtn" onclick="switchLayer('roof')">Roof Layer</button>
             </div>
             <div style="display: flex; gap: 4px; margin-top: 4px;">
+                <button class="layer-btn" id="layerUisBtn" onclick="switchLayer('uis_sorter')">OPEX UIS Sorter</button>
+                <button class="layer-btn" id="layerAtrBtn" onclick="switchLayer('atr_retrieval')">ATR Tote Retrieval</button>
+                <button class="layer-btn" id="layerConveyanceBtn" onclick="switchLayer('conveyance')">Conveyance Lines</button>
+            </div>
+            <div style="display: flex; gap: 4px; margin-top: 4px;">
                 <button class="layer-btn" id="layerSprinklerBtn" onclick="switchLayer('sprinkler')">Sprinkler Shutoffs</button>
                 <button class="layer-btn" id="layerWaterBtn" onclick="switchLayer('water')">Water Shutoffs</button>
                 <button class="layer-btn" id="layerGasBtn" onclick="switchLayer('gas')">Gas Shutoffs</button>
             </div>
             <div style="display: flex; gap: 4px; margin-top: 4px;">
                 <button class="layer-btn" id="layerDockDoorsBtn" onclick="switchLayer('dock_doors')">Dock Doors</button>
-                <button class="layer-btn" id="layerUnderMezzSprinklersBtn" onclick="switchLayer('under_mezz_sprinklers')">Under Mezz Sprinklers</button>
                 <button class="layer-btn" id="layerHvacBtn" onclick="switchLayer('hvac')">HVAC</button>
+                <button class="layer-btn" id="layerLotoBtn" onclick="switchLayer('loto')">LOTO Isolation</button>
             </div>
             <div style="display: flex; gap: 4px; margin-top: 4px;">
-                <button class="layer-btn" id="layerLotoBtn" onclick="switchLayer('loto')">LOTO Isolation</button>
-                <button class="layer-btn" id="layerAssetsBtn" onclick="switchLayer('assets')">Assets & Utilities</button>
+                <button class="layer-btn" id="layerAssetsBtn" onclick="switchLayer('assets')">All Assets & Utilities</button>
             </div>
         </div>
 
@@ -217,12 +221,15 @@
             <h3>Zone / Yard Management</h3>
             <div>
                 <label>Add New Zone / Yard Area</label>
-                <input type="text" id="newDeptName" value="North Yard Area">
+                <input type="text" id="newDeptName" value="OPEX UIS Induction Bay">
                 <select id="newDeptType">
+                    <option value="uis_cell">OPEX UIS Sorter Rack (Rect)</option>
+                    <option value="atr_cell">ATR Tote Retrieval Cell (Rect)</option>
+                    <option value="conveyance_run">Conveyance Line Bed (Rect)</option>
                     <option value="yard">External Yard / Grading (Rect)</option>
                     <option value="racking">Racking Zone (Rect)</option>
                     <option value="mezzanine">Mezzanine Floor (Rect)</option>
-                    <option value="general">General Dept / Roof Unit</option>
+                    <option value="general">General Dept / Zone</option>
                 </select>
                 <div style="display: flex; gap: 6px;">
                     <div style="flex:1;"><label>X Col (-6 to 34)</label><input type="number" id="newDeptX" step="0.5" value="2"></div>
@@ -237,12 +244,12 @@
         </div>
         <div id="panelAsset" class="panel">
             <div style="display: flex; justify-content: space-between; align-items: center;">
-                <h3>Utility & Fire Assets</h3>
+                <h3>Utility & Automation Assets</h3>
                 <button onclick="openCategoryModal()" style="width: auto; padding: 2px 6px; font-size: 10px; background: #1e293b; color: #38bdf8;">⚙️ Categories</button>
             </div>
             <div>
                 <label>Asset Name</label>
-                <input type="text" id="newAssetName" value="Fire Hydrant #1">
+                <input type="text" id="newAssetName" value="OPEX UIS Scan Tunnel #1">
                 <label>Category</label>
                 <select id="newAssetCategory"></select>
                 <label>Maintenance Status</label>
@@ -252,12 +259,12 @@
                     <option value="down">Down / Inoperable</option>
                 </select>
                 <label>Dot Icon (Emoji)</label>
-                <input type="text" id="newAssetEmoji" value="🧯" style="text-align: center; font-size: 16px;">
+                <input type="text" id="newAssetEmoji" value="🤖" style="text-align: center; font-size: 16px;">
                 <div style="display: flex; gap: 6px; margin-top: 4px;">
                     <div style="flex:1;"><label>X Col (-6 to 34)</label><input type="number" id="newAssetX" step="0.25" value="5"></div>
                     <div style="flex:1;"><label>Y Row (-4 to 18)</label><input type="number" id="newAssetY" step="0.25" value="-2"></div>
                 </div>
-                <button onclick="addAsset()" style="margin-top: 6px;">Add Fire/Utility Asset</button>
+                <button onclick="addAsset()" style="margin-top: 6px;">Add Automation Asset</button>
             </div>
         </div>
     </div>
@@ -300,10 +307,16 @@
                     </div>
                 </div>
 
-                <!-- PARENT/CHILD DEPENDENCY -->
-                <div id="modalDependencyContainer">
-                    <label>Upstream Parent Asset / Power Source</label>
-                    <select id="modalParentAsset" onchange="saveModalLiveChanges()"></select>
+                <!-- PARENT/CHILD DEPENDENCY & PLC NODE -->
+                <div id="modalDependencyContainer" style="display: flex; gap: 6px; flex-wrap: wrap;">
+                    <div style="flex: 1; min-width: 180px;">
+                        <label>Upstream Parent Asset / Power Source</label>
+                        <select id="modalParentAsset" onchange="saveModalLiveChanges()"></select>
+                    </div>
+                    <div style="flex: 1; min-width: 180px;">
+                        <label>PLC Rack / EtherNet IP Drop / Node ID</label>
+                        <input type="text" id="modalPlcNode" placeholder="PLC-04 Rack 1, Slot 3 (192.168.1.45)" oninput="saveModalLiveChanges()">
+                    </div>
                 </div>
 
                 <!-- MANUAL LINK -->
@@ -353,14 +366,14 @@
                 <!-- UTILITIES & SAFETY INTERLOCKS -->
                 <h4>⚡ Utilities & Safety Interlocks</h4>
                 <div id="modalUtilitiesContainer" style="display: flex; gap: 6px; flex-wrap: wrap;">
-                    <div style="flex:1; min-width: 130px;"><label>Utility Draw (Amps/Cal)</label><input type="text" id="modalUtilityDraw" placeholder="480V 45A / 12 Cal" oninput="saveModalLiveChanges()"></div>
+                    <div style="flex:1; min-width: 130px;"><label>Amps/Cal</label><input type="text" id="modalUtilityDraw" placeholder="480V 45A / 12 Cal" oninput="saveModalLiveChanges()"></div>
                     <div style="flex:1; min-width: 130px;"><label>Safety / E-Stop Zone</label><input type="text" id="modalEstopZone" placeholder="E-Stop Relay Line #2" oninput="saveModalLiveChanges()"></div>
                 </div>
 
                 <!-- VENDOR DIRECTORY -->
                 <h4>📞 OEM & Vendor Support Contact</h4>
                 <div id="modalVendorContainer" style="display: flex; gap: 6px;">
-                    <div style="flex:1;"><label>Vendor Name / Rep</label><input type="text" id="modalVendorName" placeholder="OEM Support / Rep Name" oninput="saveModalLiveChanges()"></div>
+                    <div style="flex:1;"><label>Vendor Name / Rep</label><input type="text" id="modalVendorName" placeholder="OPEX / System Integrator Support" oninput="saveModalLiveChanges()"></div>
                     <div style="flex:1;"><label>Contact Phone / Email</label><input type="text" id="modalVendorContact" placeholder="800-555-0199" oninput="saveModalLiveChanges()"></div>
                 </div>
 
@@ -441,7 +454,7 @@
                 <div>
                     <label>Add New Category</label>
                     <div style="display: flex; gap: 6px; margin-top: 4px;">
-                        <input type="text" id="newCatName" placeholder="Category Name (e.g. Water Main)" style="flex: 2;">
+                        <input type="text" id="newCatName" placeholder="Category Name (e.g. OPEX Sorter)" style="flex: 2;">
                         <input type="color" id="newCatColor" value="#38bdf8" style="flex: 0.5; height: 30px; padding: 0; cursor: pointer;">
                         <button onclick="addCategory()" style="flex: 1; margin-top: 0;">Add Category</button>
                     </div>
@@ -514,8 +527,11 @@
         let calcPoints = []; 
 
         let categories = [
-            { name: "Fire Safety", color: "#ef4444" },
+            { name: "OPEX UIS Sorter", color: "#ec4899" },
+            { name: "ATR Tote Retrieval", color: "#8b5cf6" },
+            { name: "Conveyance", color: "#06b6d4" },
             { name: "Electrical", color: "#f97316" },
+            { name: "Fire Safety", color: "#ef4444" },
             { name: "Plumbing", color: "#38bdf8" },
             { name: "Safety", color: "#fbbf24" },
             { name: "HVAC", color: "#34d399" },
@@ -525,17 +541,23 @@
 
         let elements = [
             { 
-                id: 101, layer: "ground", name: "North Yard Fire Hydrant #1", type: "asset", category: "Fire Safety", status: "operational", emoji: "🧯", x: 4, y: -3,
-                parentId: "", manualUrl: "", runHours: "", temp: "", vibration: "", lube: "", utilityDraw: "", estopZone: "", vendorName: "", vendorContact: "",
-                lotoSteps: [{step: "Close Valve HV-1", done: false}],
-                spareParts: [], workTickets: [], lastInspect: "", pmDue: "2026-11-01", photos: [], spreadsheetData: [{key: "Flow Rate", value: "1,500 GPM"}]
+                id: 501, layer: "uis_sorter", name: "OPEX UIS Sure Sort Frame #1", type: "asset", category: "OPEX UIS Sorter", status: "operational", emoji: "🤖", x: 10, y: 4,
+                parentId: "", plcNode: "PLC-UIS-01 (192.168.1.101)", manualUrl: "", runHours: "3120", temp: "95°F", vibration: "0.02 in/s", lube: "iBOT Guide Rail Lube", utilityDraw: "480V 30A / 8 Cal", estopZone: "UIS Bay E-Stop Circuit", vendorName: "OPEX Corporation Support", vendorContact: "800-555-0199",
+                lotoSteps: [{step: "Isolate Main UIS Control Panel Disconnect Switch", done: false}, {step: "Lockout Pneumatic Dump Valve HV-UIS1", done: false}],
+                spareParts: [
+                    {partName: "iBOT Wireless Delivery Vehicle", partNum: "OPEX-IBOT-V3", binLoc: "Aisle 4, Shelf A-2"},
+                    {partName: "6-Sided Barcode Scanner Head", partNum: "OPEX-SCN-6D", binLoc: "Aisle 4, Shelf B-1"}
+                ], 
+                workTickets: [{time: "2026-10-20 09:15", priority: "Medium", desc: "iBOT #14 charging contact wear check."}], lastInspect: "2026-10-01", pmDue: "2026-11-15", photos: [], 
+                spreadsheetData: [{key: "Sorter Throughput", value: "2,400 UPH"}, {key: "iBOT Fleet Count", value: "22 iBOTs"}]
             },
             { 
-                id: 4, layer: "ground", name: "Main Distribution Panel MDP-1", type: "asset", category: "Electrical", status: "operational", emoji: "⚡", x: 6, y: 3,
-                parentId: "", manualUrl: "", runHours: "12500", temp: "108°F", vibration: "0.04 in/s", lube: "N/A", utilityDraw: "480V 800A", estopZone: "Main Electrical Room", vendorName: "Square D OEM", vendorContact: "800-555-0199",
-                lotoSteps: [{step: "Turn off Main Breaker 800A", done: true}, {step: "Apply Hasp & Padlock", done: true}],
-                spareParts: [{partName: "Main Breaker 800A", partNum: "SQD-MGL36800", binLoc: "Aisle 2, Shelf C-1"}],
-                workTickets: [{time: "2026-10-15 14:00", priority: "High", desc: "Thermal inspection hotspot."}], lastInspect: "2026-09-15", pmDue: "2026-12-15", photos: [], spreadsheetData: [{key: "Voltage", value: "480V 3-Phase"}]
+                id: 601, layer: "atr_retrieval", name: "ATR Stacker / Retrieval Cell #1", type: "asset", category: "ATR Tote Retrieval", status: "operational", emoji: "📦", x: 18, y: 4,
+                parentId: "", plcNode: "PLC-ATR-02 (192.168.1.105)", manualUrl: "", runHours: "1840", temp: "88°F", vibration: "0.05 in/s", lube: "Chain & Linear Rail Grease", utilityDraw: "480V 25A / 4 Cal", estopZone: "ATR Safety Light Curtain", vendorName: "ATR Integration Support", vendorContact: "800-555-0199",
+                lotoSteps: [{step: "Press Cell E-Stop", done: true}, {step: "Apply Lockout Hasp on Power Panel 4", done: true}],
+                spareParts: [{partName: "Tote Lift Pneumatic Cylinder", partNum: "CYL-ATR-80", binLoc: "Aisle 4, Shelf C-3"}], 
+                workTickets: [], lastInspect: "2026-09-28", pmDue: "2026-11-28", photos: [], 
+                spreadsheetData: [{key: "Tote Buffer Capacity", value: "120 Totes"}, {key: "De-stack Cycle Time", value: "3.2 sec"}]
             }
         ];
 
@@ -700,7 +722,7 @@
         }
 
         window.exportDataToCSV = function() {
-            let csvRows = [["Asset ID", "Name", "Type", "Category", "Status", "Parent ID", "X Col", "Y Row", "Last Inspected", "PM Due", "Run Hours", "Estop Zone", "Vendor"]];
+            let csvRows = [["Asset ID", "Name", "Type", "Category", "Status", "PLC Node", "Parent ID", "X Col", "Y Row", "Last Inspected", "PM Due", "Run Hours", "Estop Zone", "Vendor"]];
             elements.forEach(el => {
                 csvRows.push([
                     el.id,
@@ -708,6 +730,7 @@
                     el.type,
                     el.category || "N/A",
                     el.status || "N/A",
+                    `"${(el.plcNode || '').replace(/"/g, '""')}"`,
                     el.parentId || "N/A",
                     el.x,
                     el.y,
@@ -826,9 +849,9 @@
             currentLayer = layerName;
             let layerButtons = [
                 'layerGroundBtn', 'layerMezzBtn', 'layerRoofBtn', 
+                'layerUisBtn', 'layerAtrBtn', 'layerConveyanceBtn',
                 'layerSprinklerBtn', 'layerWaterBtn', 'layerGasBtn', 
-                'layerDockDoorsBtn', 'layerUnderMezzSprinklersBtn', 'layerHvacBtn',
-                'layerLotoBtn', 'layerAssetsBtn'
+                'layerDockDoorsBtn', 'layerHvacBtn', 'layerLotoBtn', 'layerAssetsBtn'
             ];
             layerButtons.forEach(btnId => {
                 let btn = document.getElementById(btnId);
@@ -839,11 +862,13 @@
                 'ground': 'layerGroundBtn',
                 'mezzanine': 'layerMezzBtn',
                 'roof': 'layerRoofBtn',
+                'uis_sorter': 'layerUisBtn',
+                'atr_retrieval': 'layerAtrBtn',
+                'conveyance': 'layerConveyanceBtn',
                 'sprinkler': 'layerSprinklerBtn',
                 'water': 'layerWaterBtn',
                 'gas': 'layerGasBtn',
                 'dock_doors': 'layerDockDoorsBtn',
-                'under_mezz_sprinklers': 'layerUnderMezzSprinklersBtn',
                 'hvac': 'layerHvacBtn',
                 'loto': 'layerLotoBtn',
                 'assets': 'layerAssetsBtn'
@@ -911,7 +936,7 @@
             siteLabel.setAttribute("fill", "#854d0e");
             siteLabel.setAttribute("font-size", "12px");
             siteLabel.setAttribute("font-weight", "bold");
-            siteLabel.textContent = "▼ 6500 W MT HOPE HWY — SURROUNDING SITE EARTHWORK & FIRE HYDRANT PERIMETER";
+            siteLabel.textContent = "▼ 6500 W MT HOPE HWY — SURROUNDING SITE EARTHWORK & AUTOMATION FOOTPRINT";
             siteBackground.appendChild(siteLabel);
             viewport.appendChild(siteBackground);
 
@@ -1030,7 +1055,8 @@
                     let matchesName = el.name.toLowerCase().includes(searchQuery);
                     let matchesCat = el.category && el.category.toLowerCase().includes(searchQuery);
                     let matchesId = el.id.toString().includes(searchQuery);
-                    if (!matchesName && !matchesCat && !matchesId) return false;
+                    let matchesPlc = el.plcNode && el.plcNode.toLowerCase().includes(searchQuery);
+                    if (!matchesName && !matchesCat && !matchesId && !matchesPlc) return false;
                 }
                 if (currentLayer === 'assets') {
                     return el.type === 'asset';
@@ -1129,7 +1155,19 @@
                     rect.setAttribute("height", el.h * gridSize);
                     rect.setAttribute("class", `item-shape ${el.id === selectedId ? 'selected' : ''}`);
 
-                    if (el.type === 'yard') {
+                    if (el.type === 'uis_cell') {
+                        rect.setAttribute("fill", "#ec4899");
+                        rect.setAttribute("fill-opacity", "0.35");
+                        rect.setAttribute("stroke", "#f472b6");
+                    } else if (el.type === 'atr_cell') {
+                        rect.setAttribute("fill", "#8b5cf6");
+                        rect.setAttribute("fill-opacity", "0.35");
+                        rect.setAttribute("stroke", "#a78bfa");
+                    } else if (el.type === 'conveyance_run') {
+                        rect.setAttribute("fill", "#06b6d4");
+                        rect.setAttribute("fill-opacity", "0.35");
+                        rect.setAttribute("stroke", "#22d3ee");
+                    } else if (el.type === 'yard') {
                         rect.setAttribute("fill", "#b45309");
                         rect.setAttribute("fill-opacity", "0.3");
                         rect.setAttribute("stroke", "#d97706");
@@ -1382,7 +1420,7 @@
             if (el.type === 'asset') {
                 document.getElementById("modalSizeContainer").style.display = "none";
                 document.getElementById("modalAssetFields").style.display = "flex";
-                document.getElementById("modalDependencyContainer").style.display = "block";
+                document.getElementById("modalDependencyContainer").style.display = "flex";
                 document.getElementById("modalDocLinkContainer").style.display = "block";
                 document.getElementById("modalLotoContainer").style.display = "block";
                 document.getElementById("modalPmContainer").style.display = "flex";
@@ -1396,6 +1434,7 @@
                 populateParentAssetDropdown(el.parentId);
                 document.getElementById("modalStatus").value = el.status || "operational";
                 document.getElementById("modalEmoji").value = el.emoji || "📍";
+                document.getElementById("modalPlcNode").value = el.plcNode || "";
                 document.getElementById("modalLastInspect").value = el.lastInspect || "";
                 document.getElementById("modalPmDue").value = el.pmDue || "";
                 document.getElementById("modalManualUrl").value = el.manualUrl || "";
@@ -1616,6 +1655,7 @@
                     el.category = document.getElementById("modalCategory").value;
                     el.status = document.getElementById("modalStatus").value;
                     el.parentId = document.getElementById("modalParentAsset").value;
+                    el.plcNode = document.getElementById("modalPlcNode").value;
                     el.emoji = document.getElementById("modalEmoji").value || "📍";
                     el.lastInspect = document.getElementById("modalLastInspect").value;
                     el.pmDue = document.getElementById("modalPmDue").value;
@@ -1801,12 +1841,12 @@
                 type: "asset",
                 category: document.getElementById("newAssetCategory").value,
                 status: document.getElementById("newAssetStatus").value || "operational",
-                emoji: document.getElementById("newAssetEmoji").value || "🧯",
+                emoji: document.getElementById("newAssetEmoji").value || "📍",
                 x: parseFloat(document.getElementById("newAssetX").value) || 0,
                 y: parseFloat(document.getElementById("newAssetY").value) || 0,
-                parentId: "", manualUrl: "", runHours: "", temp: "", vibration: "", lube: "", utilityDraw: "", estopZone: "", vendorName: "", vendorContact: "",
+                parentId: "", plcNode: "", manualUrl: "", runHours: "", temp: "", vibration: "", lube: "", utilityDraw: "", estopZone: "", vendorName: "", vendorContact: "",
                 lotoSteps: [], spareParts: [], workTickets: [], lastInspect: "", pmDue: "", photos: [],
-                spreadsheetData: [{key: "Asset Type", value: "Safety/Fire Node"}]
+                spreadsheetData: [{key: "Asset Type", value: "Automation System Node"}]
             };
             elements.push(newEl);
             render();
