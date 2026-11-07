@@ -392,27 +392,6 @@
                     <div class="notes-log-box" id="ticketsBox"></div>
                 </div>
 
-                <!-- SHIFT HANDOVER LOG, SIGN-OFF & VOICE MEMOS -->
-                <div id="modalHandoverContainer">
-                    <h4>📝 Shift Handover Log & Audio Memos</h4>
-                    <div class="notes-log-box" id="handoverNotesBox"></div>
-                    <div style="display: flex; gap: 4px; margin-top: 4px;">
-                        <input type="text" id="newHandoverNote" placeholder="Add shift note...">
-                        <button onclick="addHandoverNote()" style="width: auto; padding: 4px 10px;">Add Note</button>
-                    </div>
-                    
-                    <div style="display: flex; gap: 6px; margin-top: 6px; flex-wrap: wrap;">
-                        <div style="flex:1; min-width: 160px;">
-                            <label>Shift Supervisor Sign-off</label>
-                            <input type="text" id="modalHandoverSignoff" placeholder="Signed by: J. Doe Lead" oninput="saveModalLiveChanges()">
-                        </div>
-                        <div style="flex:1; min-width: 160px;">
-                            <label>Audio Voice Memo (Audio URL / Link)</label>
-                            <input type="url" id="modalAudioMemoUrl" placeholder="https://example.com/memo.mp3" oninput="saveModalLiveChanges()">
-                        </div>
-                    </div>
-                </div>
-
                 <div>
                     <label>Location Photos (Click photo to enlarge) <span id="upload-status" style="color: #38bdf8; font-weight: normal;"></span></label>
                     <input type="file" id="photoUploadInput" accept="image/*" multiple onchange="handlePhotoUpload(event)">
@@ -548,15 +527,15 @@
             { 
                 id: 101, layer: "ground", name: "North Yard Fire Hydrant #1", type: "asset", category: "Fire Safety", status: "operational", emoji: "🧯", x: 4, y: -3,
                 parentId: "", manualUrl: "", runHours: "", temp: "", vibration: "", lube: "", utilityDraw: "", estopZone: "", vendorName: "", vendorContact: "",
-                lotoSteps: [{step: "Close Valve HV-1", done: false}], handoverSignoff: "", audioMemoUrl: "",
-                spareParts: [], workTickets: [], handoverNotes: [], lastInspect: "", pmDue: "2026-11-01", photos: [], spreadsheetData: [{key: "Flow Rate", value: "1,500 GPM"}]
+                lotoSteps: [{step: "Close Valve HV-1", done: false}],
+                spareParts: [], workTickets: [], lastInspect: "", pmDue: "2026-11-01", photos: [], spreadsheetData: [{key: "Flow Rate", value: "1,500 GPM"}]
             },
             { 
                 id: 4, layer: "ground", name: "Main Distribution Panel MDP-1", type: "asset", category: "Electrical", status: "operational", emoji: "⚡", x: 6, y: 3,
                 parentId: "", manualUrl: "", runHours: "12500", temp: "108°F", vibration: "0.04 in/s", lube: "N/A", utilityDraw: "480V 800A", estopZone: "Main Electrical Room", vendorName: "Square D OEM", vendorContact: "800-555-0199",
-                lotoSteps: [{step: "Turn off Main Breaker 800A", done: true}, {step: "Apply Hasp & Padlock", done: true}], handoverSignoff: "R. Curtis AMM", audioMemoUrl: "",
+                lotoSteps: [{step: "Turn off Main Breaker 800A", done: true}, {step: "Apply Hasp & Padlock", done: true}],
                 spareParts: [{partName: "Main Breaker 800A", partNum: "SQD-MGL36800", binLoc: "Aisle 2, Shelf C-1"}],
-                workTickets: [{time: "2026-10-15 14:00", priority: "High", desc: "Thermal inspection hotspot."}], handoverNotes: [{time: "2026-10-01 08:30", note: "Thermal camera check normal."}], lastInspect: "2026-09-15", pmDue: "2026-12-15", photos: [], spreadsheetData: [{key: "Voltage", value: "480V 3-Phase"}]
+                workTickets: [{time: "2026-10-15 14:00", priority: "High", desc: "Thermal inspection hotspot."}], lastInspect: "2026-09-15", pmDue: "2026-12-15", photos: [], spreadsheetData: [{key: "Voltage", value: "480V 3-Phase"}]
             }
         ];
 
@@ -1412,7 +1391,6 @@
                 document.getElementById("modalVendorContainer").style.display = "flex";
                 document.getElementById("modalBomContainer").style.display = "block";
                 document.getElementById("modalTicketsContainer").style.display = "block";
-                document.getElementById("modalHandoverContainer").style.display = "block";
 
                 populateCategoryDropdowns(null, el.category);
                 populateParentAssetDropdown(el.parentId);
@@ -1429,13 +1407,10 @@
                 document.getElementById("modalEstopZone").value = el.estopZone || "";
                 document.getElementById("modalVendorName").value = el.vendorName || "";
                 document.getElementById("modalVendorContact").value = el.vendorContact || "";
-                document.getElementById("modalHandoverSignoff").value = el.handoverSignoff || "";
-                document.getElementById("modalAudioMemoUrl").value = el.audioMemoUrl || "";
 
                 renderLotoChecklist(el);
                 renderBomTable(el);
                 renderWorkTickets(el);
-                renderHandoverNotes(el);
             } else {
                 document.getElementById("modalSizeContainer").style.display = "flex";
                 document.getElementById("modalAssetFields").style.display = "none";
@@ -1448,7 +1423,6 @@
                 document.getElementById("modalVendorContainer").style.display = "none";
                 document.getElementById("modalBomContainer").style.display = "none";
                 document.getElementById("modalTicketsContainer").style.display = "none";
-                document.getElementById("modalHandoverContainer").style.display = "none";
 
                 document.getElementById("modalW").value = el.w;
                 document.getElementById("modalH").value = el.h;
@@ -1624,43 +1598,6 @@
             }
         }
 
-        function renderHandoverNotes(el) {
-            let box = document.getElementById("handoverNotesBox");
-            box.innerHTML = "";
-            if (!el.handoverNotes) el.handoverNotes = [];
-            if (el.handoverNotes.length === 0 && !el.audioMemoUrl) {
-                box.innerHTML = `<span style="color: #64748b; font-style: italic;">No shift notes recorded yet.</span>`;
-                return;
-            }
-            if (el.audioMemoUrl) {
-                let audioDiv = document.createElement("div");
-                audioDiv.className = "note-entry";
-                audioDiv.innerHTML = `<span class="note-timestamp">🎙️ Audio Memo:</span> <a href="${el.audioMemoUrl}" target="_blank" style="color:#38bdf8;">Play Audio File</a>`;
-                box.appendChild(audioDiv);
-            }
-            el.handoverNotes.forEach(n => {
-                let div = document.createElement("div");
-                div.className = "note-entry";
-                div.innerHTML = `<span class="note-timestamp">[${n.time}]</span> ${n.note}`;
-                box.appendChild(div);
-            });
-        }
-
-        window.addHandoverNote = function() {
-            let id = parseInt(document.getElementById("modalElementId").value);
-            let el = elements.find(item => item.id === id);
-            let input = document.getElementById("newHandoverNote");
-            let text = input.value.trim();
-            if (el && text) {
-                if (!el.handoverNotes) el.handoverNotes = [];
-                let timestamp = new Date().toISOString().replace('T', ' ').slice(0, 16);
-                el.handoverNotes.unshift({ time: timestamp, note: text });
-                input.value = "";
-                renderHandoverNotes(el);
-                saveToFirebase();
-            }
-        }
-
         window.closeModal = function() {
             document.getElementById("modal-overlay").style.display = "none";
             selectedId = null;
@@ -1691,8 +1628,6 @@
                     el.estopZone = document.getElementById("modalEstopZone").value;
                     el.vendorName = document.getElementById("modalVendorName").value;
                     el.vendorContact = document.getElementById("modalVendorContact").value;
-                    el.handoverSignoff = document.getElementById("modalHandoverSignoff").value;
-                    el.audioMemoUrl = document.getElementById("modalAudioMemoUrl").value;
                 } else {
                     el.w = parseFloat(document.getElementById("modalW").value) || 1;
                     el.h = parseFloat(document.getElementById("modalH").value) || 1;
@@ -1870,7 +1805,7 @@
                 x: parseFloat(document.getElementById("newAssetX").value) || 0,
                 y: parseFloat(document.getElementById("newAssetY").value) || 0,
                 parentId: "", manualUrl: "", runHours: "", temp: "", vibration: "", lube: "", utilityDraw: "", estopZone: "", vendorName: "", vendorContact: "",
-                lotoSteps: [], handoverSignoff: "", audioMemoUrl: "", spareParts: [], workTickets: [], handoverNotes: [], lastInspect: "", pmDue: "", photos: [],
+                lotoSteps: [], spareParts: [], workTickets: [], lastInspect: "", pmDue: "", photos: [],
                 spreadsheetData: [{key: "Asset Type", value: "Safety/Fire Node"}]
             };
             elements.push(newEl);
