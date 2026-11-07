@@ -2,77 +2,30 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Facility Layout Editor & APM Viewer</title>
-    <!-- Mobile PWA & App Manifest Settings -->
+    <title>Facility Layout Editor & Digital Twin - APM & 3D Isometric</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="theme-color" content="#0b131d">
-    <!-- html5-qrcode for live camera barcode scanning & APM tag scanning -->
     <script src="https://unpkg.com/html5-qrcode"></script>
     <style>
-        * {
-            box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
-        }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body {
-            background-color: #0b131d;
-            color: #e0e1dd;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            margin: 0;
-            display: flex;
-            height: 100vh;
-            height: 100dvh;
-            overflow: hidden;
-            touch-action: none;
+            background-color: #0b131d; color: #e0e1dd; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            margin: 0; display: flex; height: 100vh; height: 100dvh; overflow: hidden; touch-action: none;
         }
         #sidebar {
-            width: 380px;
-            background-color: #111b27;
-            padding: 15px;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            box-shadow: 2px 0 10px rgba(0,0,0,0.7);
-            z-index: 20;
-            overflow-y: auto;
-            border-right: 1px solid #1f2d3d;
-            -webkit-overflow-scrolling: touch;
-            transition: transform 0.3s ease;
+            width: 380px; background-color: #111b27; padding: 15px; display: flex; flex-direction: column; gap: 12px;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.7); z-index: 20; overflow-y: auto; border-right: 1px solid #1f2d3d;
+            -webkit-overflow-scrolling: touch; transition: transform 0.3s ease;
         }
         #mobile-nav-toggle {
-            display: none;
-            background: #111b27;
-            border-bottom: 1px solid #1f2d3d;
-            padding: 10px 15px;
-            z-index: 30;
-            justify-content: space-between;
-            align-items: center;
+            display: none; background: #111b27; border-bottom: 1px solid #1f2d3d; padding: 10px 15px; z-index: 30; justify-content: space-between; align-items: center;
         }
-        #mobile-nav-toggle h2 {
-            margin: 0;
-            font-size: 16px;
-            color: #38bdf8;
-        }
-        .toggle-btn {
-            background: #0284c7;
-            color: #fff;
-            border: none;
-            padding: 6px 12px;
-            border-radius: 4px;
-            font-weight: bold;
-            font-size: 12px;
-            cursor: pointer;
-            width: auto;
-        }
+        #mobile-nav-toggle h2 { margin: 0; font-size: 16px; color: #38bdf8; }
+        .toggle-btn { background: #0284c7; color: #fff; border: none; padding: 6px 12px; border-radius: 4px; font-weight: bold; font-size: 12px; cursor: pointer; width: auto; }
         @media (max-width: 768px) {
             body { flex-direction: column; }
             #mobile-nav-toggle { display: flex; }
-            #sidebar { 
-                width: 100%; 
-                max-height: 50vh; 
-                border-right: none; 
-                border-bottom: 1px solid #1f2d3d;
-                box-shadow: 0 4px 10px rgba(0,0,0,0.5);
-            }
+            #sidebar { width: 100%; max-height: 50vh; border-right: none; border-bottom: 1px solid #1f2d3d; }
             #sidebar.collapsed { display: none; }
             #canvas-container { height: 100%; flex-grow: 1; }
         }
@@ -80,176 +33,89 @@
         h4 { color: #f59e0b; font-size: 12px; margin-top: 8px; border-bottom: 1px solid #1f2d3d; padding-bottom: 2px; }
         label { font-size: 11px; color: #94a3b8; }
         input, select, button, textarea {
-            width: 100%;
-            padding: 8px;
-            background: #0b131d;
-            border: 1px solid #38bdf8;
-            color: #fff;
-            border-radius: 4px;
-            box-sizing: border-box;
-            margin-top: 2px;
-            font-size: 12px;
-            min-height: 36px;
+            width: 100%; padding: 8px; background: #0b131d; border: 1px solid #38bdf8; color: #fff; border-radius: 4px;
+            box-sizing: border-box; margin-top: 2px; font-size: 12px; min-height: 36px;
         }
         textarea { resize: vertical; height: 50px; font-family: sans-serif; }
-        button {
-            background: #1e293b;
-            font-weight: bold;
-            cursor: pointer;
-            transition: background 0.2s;
-            touch-action: manipulation;
-        }
+        button { background: #1e293b; font-weight: bold; cursor: pointer; transition: background 0.2s; touch-action: manipulation; }
         button:hover, button:active { background: #38bdf8; color: #0b131d; }
         .layer-btn {
-            flex: 1;
-            padding: 6px 4px;
-            background: #070d14;
-            border: 1px solid #1e293b;
-            color: #94a3b8;
-            font-size: 10px;
-            cursor: pointer;
-            border-radius: 4px;
-            text-align: center;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 32px;
+            flex: 1; padding: 6px 4px; background: #070d14; border: 1px solid #1e293b; color: #94a3b8; font-size: 10px;
+            cursor: pointer; border-radius: 4px; text-align: center; display: flex; align-items: center; justify-content: center; min-height: 32px;
         }
-        .layer-btn.active {
-            background: #0284c7;
-            color: #fff;
-            border-color: #38bdf8;
-            font-weight: bold;
-        }
+        .layer-btn.active { background: #0284c7; color: #fff; border-color: #38bdf8; font-weight: bold; }
         .tab-bar { display: flex; gap: 4px; margin-bottom: 5px; }
-        .tab-btn {
-            flex: 1; padding: 6px 2px; background: #070d14; border: 1px solid #1f2d3d; color: #94a3b8; font-size: 9.5px; cursor: pointer; border-radius: 4px; text-align: center; min-height: 34px;
-        }
+        .tab-btn { flex: 1; padding: 6px 2px; background: #070d14; border: 1px solid #1f2d3d; color: #94a3b8; font-size: 9.5px; cursor: pointer; border-radius: 4px; text-align: center; min-height: 34px; }
         .tab-btn.active { background: #1e293b; color: #38bdf8; border-color: #38bdf8; }
         .panel { display: none; }
         .panel.active { display: flex; flex-direction: column; gap: 8px; }
 
-        /* QUICK-FILTER FLOATING BAR */
         #quick-filter-bar {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            z-index: 10;
-            display: flex;
-            gap: 6px;
-            flex-wrap: wrap;
-            pointer-events: auto;
+            position: absolute; top: 10px; left: 10px; z-index: 10; display: flex; gap: 6px; flex-wrap: wrap; pointer-events: auto;
         }
         .filter-pill {
-            background: #111b27;
-            border: 1px solid #1f2d3d;
-            color: #94a3b8;
-            padding: 6px 10px;
-            border-radius: 20px;
-            font-size: 11px;
-            font-weight: bold;
-            cursor: pointer;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.4);
-            display: flex;
-            align-items: center;
-            gap: 4px;
+            background: #111b27; border: 1px solid #1f2d3d; color: #94a3b8; padding: 6px 10px; border-radius: 20px; font-size: 11px;
+            font-weight: bold; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.4); display: flex; align-items: center; gap: 4px;
         }
         .filter-pill.active { background: #0284c7; color: #fff; border-color: #38bdf8; }
         .filter-pill.down-pill.active { background: #7f1d1d; border-color: #ef4444; }
         .filter-pill.pm-pill.active { background: #b45309; border-color: #f59e0b; }
-        .filter-pill.loto-pill.active { background: #7e22ce; border-color: #a855f7; }
 
-        #canvas-container {
-            flex-grow: 1;
-            position: relative;
-            background-color: #070d14;
-            overflow: hidden;
-            cursor: grab;
-            touch-action: none;
-        }
+        #canvas-container { flex-grow: 1; position: relative; background-color: #070d14; overflow: hidden; cursor: grab; touch-action: none; }
         #canvas-container.panning { cursor: grabbing; }
         svg {
-            position: absolute;
-            top: 0; left: 0;
-            transform-origin: 0 0;
-            touch-action: none;
+            position: absolute; top: 0; left: 0; transform-origin: 0 0; touch-action: none;
+            transition: transform 0.5s ease;
         }
+        /* ISOMETRIC 3.5D VIEW MODE CLASS */
+        svg.isometric-view {
+            transform: perspective(1200px) rotateX(42deg) rotateZ(-30deg) scale(0.85);
+        }
+
         .item-group { cursor: pointer; touch-action: none; }
         .item-shape { transition: stroke 0.2s; }
         .item-group:hover .item-shape { stroke: #fff; }
-        .asset-popup {
-            opacity: 0;
-            transition: opacity 0.15s ease-in-out;
-            pointer-events: none;
-        }
+        .asset-popup { opacity: 0; transition: opacity 0.15s ease-in-out; pointer-events: none; }
         .item-group:hover .asset-popup { opacity: 1; }
         .grid-line { stroke: #132235; stroke-width: 1; pointer-events: none; }
         .coord-label { fill: #64748b; font-size: 9px; font-family: monospace; pointer-events: none; }
-        #coord-display {
-            background: #070d14; border: 1px solid #1f2d3d; padding: 6px; border-radius: 4px; font-family: monospace; color: #38bdf8; font-size: 12px; text-align: center;
-        }
-        #sync-status {
-            font-size: 10px; text-align: center; color: #10b981; font-weight: bold; margin-top: -4px;
-        }
-        #modal-overlay, #lightbox-overlay, #scanner-modal-overlay, #ar-modal-overlay, #loto-sim-modal {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.85);
-            z-index: 1000;
-            justify-content: center;
-            align-items: center;
-            padding: 10px;
+        #coord-display { background: #070d14; border: 1px solid #1f2d3d; padding: 6px; border-radius: 4px; font-family: monospace; color: #38bdf8; font-size: 12px; text-align: center; }
+        #sync-status { font-size: 10px; text-align: center; color: #10b981; font-weight: bold; margin-top: -4px; }
+        
+        #modal-overlay, #lightbox-overlay, #scanner-modal-overlay, #ar-modal-overlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.85); z-index: 1000; justify-content: center; align-items: center; padding: 10px;
         }
         #lightbox-overlay { z-index: 2000; }
         .modal-content {
-            background: #111b27;
-            border: 1px solid #38bdf8;
-            border-radius: 8px;
-            width: 760px;
-            max-width: 100%;
-            max-height: 92vh;
-            display: flex;
-            flex-direction: column;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.8);
-            overflow: hidden;
+            background: #111b27; border: 1px solid #38bdf8; border-radius: 8px; width: 720px; max-width: 100%; max-height: 92vh;
+            display: flex; flex-direction: column; box-shadow: 0 10px 25px rgba(0,0,0,0.8); overflow: hidden;
         }
-        .modal-header {
-            background: #0b131d; padding: 12px 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1f2d3d;
-        }
-        .modal-body {
-            padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; -webkit-overflow-scrolling: touch;
-        }
-        .modal-footer {
-            background: #0b131d; padding: 10px 15px; display: flex; justify-content: flex-end; gap: 8px; border-top: 1px solid #1f2d3d;
-        }
-        .close-modal {
-            background: none; border: none; color: #94a3b8; font-size: 24px; cursor: pointer; width: auto; padding: 0 8px; margin: 0;
-        }
+        .modal-header { background: #0b131d; padding: 12px 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1f2d3d; }
+        .modal-body { padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; -webkit-overflow-scrolling: touch; }
+        .modal-footer { background: #0b131d; padding: 10px 15px; display: flex; justify-content: flex-end; gap: 8px; border-top: 1px solid #1f2d3d; }
+        .close-modal { background: none; border: none; color: #94a3b8; font-size: 24px; cursor: pointer; width: auto; padding: 0 8px; margin: 0; }
         .close-modal:hover { color: #fff; background: none; }
         .spreadsheet-table { width: 100%; border-collapse: collapse; margin-top: 4px; }
         .spreadsheet-table th, .spreadsheet-table td { border: 1px solid #1f2d3d; padding: 6px; text-align: left; font-size: 11px; }
         .spreadsheet-table th { background: #0b131d; color: #38bdf8; }
-        .spreadsheet-table input, .spreadsheet-table select { background: transparent; border: none; color: #fff; width: 100%; padding: 2px; margin: 0; min-height: 28px; }
+        .spreadsheet-table input, .spreadsheet-table select { background: transparent; border: 1px solid #1f2d3d; color: #fff; width: 100%; padding: 4px; margin: 0; min-height: 28px; }
         .photo-gallery { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px; }
-        .photo-thumb-container {
-            position: relative; width: 80px; height: 80px; border: 1px solid #1f2d3d; border-radius: 4px; overflow: hidden; background: #0b131d; cursor: pointer;
-        }
+        .photo-thumb-container { position: relative; width: 80px; height: 80px; border: 1px solid #1f2d3d; border-radius: 4px; overflow: hidden; background: #0b131d; cursor: pointer; }
         .photo-thumb-container img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.2s; }
-        .photo-thumb-container:hover img { transform: scale(1.05); }
         .notes-log-box { background: #070d14; border: 1px solid #1f2d3d; border-radius: 4px; padding: 8px; max-height: 110px; overflow-y: auto; font-size: 11px; display: flex; flex-direction: column; gap: 4px; }
         .note-entry { border-bottom: 1px dotted #1f2d3d; padding-bottom: 3px; }
         .note-timestamp { color: #38bdf8; font-size: 9px; font-weight: bold; }
-        @keyframes pmPulse { 0% { r: 7px; opacity: 1; } 50% { r: 12px; opacity: 0.3; } 100% { r: 7px; opacity: 1; } }
-        .pm-overdue-pulse { animation: pmPulse 1.5s infinite ease-in-out; stroke: #ef4444; stroke-width: 2; fill: none; }
-        .pm-due-pulse { animation: pmPulse 2s infinite ease-in-out; stroke: #f59e0b; stroke-width: 2; fill: none; }
-        .loto-pulse { animation: pmPulse 1.2s infinite ease-in-out; stroke: #a855f7; stroke-width: 3; fill: none; }
-        .loto-step { display: flex; align-items: center; gap: 6px; font-size: 11px; border-bottom: 1px solid #1f2d3d; padding: 4px 0; }
+        @keyframes pmPulse { 0% { r: 7px; opacity: 1; } 50% { r: 14px; opacity: 0.2; } 100% { r: 7px; opacity: 1; } }
+        .pm-overdue-pulse { animation: pmPulse 1.5s infinite ease-in-out; stroke: #ef4444; stroke-width: 2.5; fill: none; }
+        .pm-due-pulse { animation: pmPulse 2s infinite ease-in-out; stroke: #f59e0b; stroke-width: 2.5; fill: none; }
+        @keyframes lotoTraceGlow { 0% { stroke: #a855f7; stroke-width: 3; opacity: 1; } 50% { stroke: #38bdf8; stroke-width: 6; opacity: 0.5; } 100% { stroke: #a855f7; stroke-width: 3; opacity: 1; } }
+        .loto-trace-line { animation: lotoTraceGlow 1.2s infinite ease-in-out; fill: none; stroke-dasharray: 8,4; }
     </style>
 </head>
 <body>
     <div id="mobile-nav-toggle">
-        <h2>Facility Layout Editor (APM)</h2>
+        <h2>Facility Layout Editor</h2>
         <button class="toggle-btn" onclick="toggleSidebar()">☰ Menu</button>
     </div>
 
@@ -257,24 +123,24 @@
         <h2>Facility Layout Editor</h2>
         
         <div>
-            <label>🔍 Search Asset, APM Tag, or PLC</label>
+            <label>🔍 Search APM Tag, Name, PLC</label>
             <div style="display: flex; gap: 4px;">
-                <input type="text" id="assetSearchInput" placeholder="APM Tag #, Name, PLC..." oninput="handleSearch(this.value)">
+                <input type="text" id="assetSearchInput" placeholder="APM-CONV-104, PLC-02..." oninput="handleSearch(this.value)">
                 <button onclick="openScannerModal()" style="width: auto; padding: 4px 10px; font-size: 11px;">📷 Scan</button>
             </div>
         </div>
         <div id="coord-display">Col: -- | Row: --</div>
         <div id="sync-status">Connecting to Firebase...</div>
         
-        <div>
-            <button onclick="openAddModal()" style="background:#0284c7; color:#fff; border-color:#38bdf8; font-weight:bold;">➕ Add Asset / Zone / Line</button>
-        </div>
-
-        <!-- HEATMAP OVERLAY TOGGLE -->
-        <div>
+        <!-- 3.5D ISOMETRIC TILT & HEATMAP TOGGLES -->
+        <div style="display: flex; flex-direction: column; gap: 6px; background: #070d14; padding: 8px; border: 1px solid #1f2d3d; border-radius: 4px;">
+            <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+                <input type="checkbox" id="isometricToggle" onchange="toggleIsometricView(this.checked)" style="width:auto; margin:0; min-height:auto;">
+                <span style="color:#38bdf8; font-weight:bold;">🌐 3.5D Isometric Tilt View</span>
+            </label>
             <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
                 <input type="checkbox" id="heatmapToggle" onchange="toggleHeatmap(this.checked)" style="width:auto; margin:0; min-height:auto;">
-                <span style="color:#f59e0b; font-weight:bold;">🔥 Show Downtime & Breakdown Heatmap</span>
+                <span style="color:#f59e0b; font-weight:bold;">🔥 Downtime & Breakdown Heatmap</span>
             </label>
         </div>
 
@@ -312,29 +178,37 @@
 
         <hr style="border-color: #1e293b; margin: 4px 0;">
         <div class="tab-bar">
-            <button class="tab-btn active" id="tabInfoBtn" onclick="switchTab('info')">Editor</button>
-            <button class="tab-btn" id="tabShiftBtn" onclick="switchTab('shift')">Shift Log</button>
+            <button class="tab-btn active" id="tabInfoBtn" onclick="switchTab('info')">Editor Tools</button>
+            <button class="tab-btn" id="tabShiftBtn" onclick="switchTab('shift')">Shift Handover</button>
         </div>
         <div id="panelInfo" class="panel active">
-            <p style="font-size: 10px; color: #64748b; margin: 0;">
-                💡 <b>Tip:</b> Click any asset to edit APM tags, specs, LOTO checklists, and photos. Drag to pan, scroll/pinch to zoom.
-            </p>
+            <button onclick="addNewAsset()" style="background:#10b981; color:#0b131d; font-weight:bold;">➕ Add New APM Asset</button>
+            <button onclick="addConveyanceLine()" style="background:#06b6d4; color:#0b131d; font-weight:bold;">🔗 Add Conveyance Run</button>
+            <button onclick="saveToFirebase()" style="background:#38bdf8; color:#0b131d; font-weight:bold;">💾 Save Layout to Cloud</button>
         </div>
         <div id="panelShift" class="panel">
             <h3>📝 Technician Shift Handover Log</h3>
-            <textarea id="newShiftNote" placeholder="Enter shift handover note..." style="height: 50px;"></textarea>
-            <button onclick="addShiftLog()" style="background:#0284c7; color:#fff;">Post Shift Note</button>
-            <div class="notes-log-box" id="shiftLogContainer" style="max-height: 180px; margin-top: 4px;"></div>
+            <textarea id="newShiftNote" placeholder="Enter shift handover note / breakdown update..."></textarea>
+            <div style="display:flex; gap:4px;">
+                <select id="shiftSelect" style="flex:1;">
+                    <option value="Shift A">Shift A</option>
+                    <option value="Shift B">Shift B</option>
+                    <option value="Shift C">Shift C</option>
+                    <option value="Shift D">Shift D</option>
+                </select>
+                <button onclick="addShiftLog()" style="width:auto; padding:0 12px; background:#10b981; color:#0b131d;">Post Note</button>
+            </div>
+            <div class="notes-log-box" id="shiftLogContainer" style="max-height: 180px; margin-top:6px;"></div>
         </div>
     </div>
 
     <div id="canvas-container">
-        <!-- QUICK-FILTER FLOATING PILLS -->
+        <!-- EMERGENCY QUICK-FILTER FLOATING PILLS -->
         <div id="quick-filter-bar">
             <button class="filter-pill down-pill" onclick="toggleQuickFilter('down')">🚨 Down Assets</button>
             <button class="filter-pill pm-pill" onclick="toggleQuickFilter('pm_due')">🔥 Overdue PMs</button>
-            <button class="filter-pill loto-pill" onclick="toggleQuickFilter('loto')">🔒 LOTO Points</button>
             <button class="filter-pill" onclick="toggleQuickFilter('water')">💧 Water Shutoffs</button>
+            <button class="filter-pill" onclick="toggleQuickFilter('estop')">⚡ E-Stop Zones</button>
             <button class="filter-pill active" id="filterAllBtn" onclick="toggleQuickFilter('all')">Show All</button>
         </div>
 
@@ -343,18 +217,18 @@
         </svg>
     </div>
 
-    <!-- ITEM EDIT & INSPECT MODAL -->
+    <!-- ITEM DETAILS & APM EDIT MODAL -->
     <div id="modal-overlay">
         <div class="modal-content">
             <div class="modal-header">
-                <h3 id="modalTitle" style="color: #38bdf8; margin: 0;">Edit Asset / Element</h3>
+                <h3 id="modalTitle" style="color: #38bdf8; margin: 0;">APM Asset Edit & Inspection</h3>
                 <button class="close-modal" onclick="closeModal()">×</button>
             </div>
             <div class="modal-body">
                 <input type="hidden" id="modalElementId">
                 <div style="display: flex; gap: 6px;">
                     <div style="flex: 2;"><label>Item Name / Designation</label><input type="text" id="modalName"></div>
-                    <div style="flex: 1;"><label>APM Asset Tag #</label><input type="text" id="modalApmTag" placeholder="e.g. APM-CV-1042"></div>
+                    <div style="flex: 1;"><label>APM Tag Number</label><input type="text" id="modalApmTag" placeholder="e.g. APM-CV-101"></div>
                 </div>
                 <div id="modalAssetFields" style="display: flex; gap: 6px; flex-wrap: wrap;">
                     <div style="flex: 2; min-width: 140px;">
@@ -376,40 +250,39 @@
                         <label>Maintenance Status</label>
                         <select id="modalStatus">
                             <option value="operational">🟢 Operational</option>
-                            <option value="maintenance">🟡 In Maintenance</option>
-                            <option value="down">🔴 Down / Fault</option>
+                            <option value="maintenance">🟠 Scheduled PM / Service</option>
+                            <option value="down">🔴 Down / Faulted</option>
                         </select>
                     </div>
                 </div>
                 <div id="modalDependencyContainer" style="display: flex; gap: 6px; flex-wrap: wrap;">
-                    <div style="flex: 1; min-width: 180px;">
-                        <label>Upstream Parent Asset / Power Source</label>
-                        <input type="text" id="modalParentAsset" placeholder="Parent APM Tag or Name">
-                    </div>
-                    <div style="flex: 1; min-width: 180px;">
-                        <label>PLC Rack / EtherNet IP Drop / Node ID</label>
-                        <input type="text" id="modalPlcNode" placeholder="e.g. Rack 3 Slot 4 IP 10.50.4.12">
-                    </div>
+                    <div style="flex: 1; min-width: 180px;"><label>Upstream Parent Asset ID</label><input type="text" id="modalParentId" placeholder="Parent Equipment ID"></div>
+                    <div style="flex: 1; min-width: 180px;"><label>PLC Rack / EtherNet IP Drop / Node ID</label><input type="text" id="modalPlcNode" placeholder="e.g. RACK-04-NODE-12"></div>
                 </div>
-                <div id="modalDocLinkContainer">
+                <div>
                     <label>Equipment Manual / Wiring Schematic (PDF Link)</label>
-                    <input type="url" id="modalManualUrl" placeholder="https://..." >
+                    <input type="url" id="modalManualUrl" placeholder="https://cloud.internal/manuals/cv101.pdf">
                 </div>
+                
+                <!-- LOTO SIMULATION & ISOLATION TRACE -->
+                <div style="background: #070d14; border: 1px solid #38bdf8; padding: 10px; border-radius: 6px; display: flex; flex-direction: column; gap: 6px;">
+                    <h4 style="margin:0; color:#38bdf8;">⚡ LOTO Energy Isolation Simulation</h4>
+                    <p style="font-size: 11px; color:#94a3b8; margin:0;">Simulate zero-energy state verification by tracing connected upstream breakers and safety disconnects.</p>
+                    <button onclick="simulateLotoTrace()" style="background:#a855f7; color:#fff; border:none; padding:6px; font-weight:bold;">🔍 Trace LOTO Isolation Path on Map</button>
+                </div>
+
                 <div style="display: flex; gap: 6px;" id="modalCoordContainer">
                     <div style="flex:1;"><label>X Col</label><input type="number" id="modalX"></div>
                     <div style="flex:1;"><label>Y Row</label><input type="number" id="modalY"></div>
                 </div>
                 
-                <!-- LOTO CHECKLIST & SIMULATOR -->
+                <!-- LOTO CHECKLIST -->
                 <div id="modalLotoContainer">
-                    <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <h4>🔒 Lockout/Tagout (LOTO) Sequence & ESWC Checklist</h4>
-                        <button onclick="simulateLotoIsolation()" style="background:#7e22ce; color:#fff; width:auto; padding:4px 10px; font-size:11px;">⚡ Simulate LOTO Path</button>
-                    </div>
+                    <h4>🔒 Lockout/Tagout (LOTO) & ESWC Steps</h4>
                     <div id="lotoChecklistList"></div>
-                    <div style="display: flex; gap: 4px; margin-top: 6px;">
-                        <input type="text" id="newLotoStep" placeholder="Add LOTO isolation step (e.g., Open Breaker QF1)">
-                        <button onclick="addLotoStep()" style="width: auto; padding: 4px 10px;">Add Step</button>
+                    <div style="display:flex; gap:4px; margin-top:4px;">
+                        <input type="text" id="newLotoStepText" placeholder="Add energy isolation step (e.g. Open Breaker QF4)...">
+                        <button onclick="addLotoStep()" style="width:auto; padding:0 10px; background:#10b981; color:#0b131d;">Add Step</button>
                     </div>
                 </div>
 
@@ -418,28 +291,18 @@
                 <div id="modalPmContainer" style="display: flex; gap: 6px; flex-wrap: wrap;">
                     <div style="flex:1; min-width: 130px;"><label>Last Inspected</label><input type="date" id="modalLastInspect"></div>
                     <div style="flex:1; min-width: 130px;"><label>PM Due Date</label><input type="date" id="modalPmDue"></div>
-                    <div style="flex:1; min-width: 130px;"><label>Run Hours / Meter</label><input type="text" id="modalRunHours" placeholder="12450 hrs"></div>
+                    <div style="flex:1; min-width: 130px;"><label>Run Hours / Meter</label><input type="text" id="modalRunHours" placeholder="4,250 hrs"></div>
                 </div>
+
                 <!-- PREDICTIVE & LUBRICATION METRICS -->
                 <h4>📊 Predictive Health & Lubrication</h4>
                 <div id="modalPredictiveContainer" style="display: flex; gap: 6px; flex-wrap: wrap;">
-                    <div style="flex:1; min-width: 130px;"><label>Thermal Temp (°F)</label><input type="text" id="modalTemp" placeholder="112°F"></div>
+                    <div style="flex:1; min-width: 130px;"><label>Thermal Temp (°F)</label><input type="text" id="modalTemp" placeholder="128°F"></div>
                     <div style="flex:1; min-width: 130px;"><label>Vibration (in/s)</label><input type="text" id="modalVibration" placeholder="0.04 in/s"></div>
                     <div style="flex:1; min-width: 130px;"><label>Grease / Lube Type</label><input type="text" id="modalLube" placeholder="Mobilith SHC 100"></div>
                 </div>
-                <!-- UTILITIES & SAFETY INTERLOCKS -->
-                <h4>⚡ Utilities & Safety Interlocks</h4>
-                <div id="modalUtilitiesContainer" style="display: flex; gap: 6px; flex-wrap: wrap;">
-                    <div style="flex:1; min-width: 130px;"><label>Amps/Cal</label><input type="text" id="modalUtilityDraw" placeholder="45A / Cat 2"></div>
-                    <div style="flex:1; min-width: 130px;"><label>Safety / E-Stop Zone</label><input type="text" id="modalEstopZone" placeholder="Zone 4 Conveyor"></div>
-                </div>
-                <!-- VENDOR DIRECTORY -->
-                <h4>📞 OEM & Vendor Support Contact</h4>
-                <div id="modalVendorContainer" style="display: flex; gap: 6px;">
-                    <div style="flex:1;"><label>Vendor Name / Rep</label><input type="text" id="modalVendorName" placeholder="Dematic / Siemens"></div>
-                    <div style="flex:1;"><label>Contact Phone / Email</label><input type="text" id="modalVendorContact" placeholder="1-800-555-0199"></div>
-                </div>
-                <!-- SPARE PARTS & BIN LOCATION -->
+
+                <!-- SPARE PARTS BOM -->
                 <div id="modalBomContainer">
                     <h4 style="margin-top: 6px;">📦 Spare Parts & Cage Bin Mapping</h4>
                     <table class="spreadsheet-table">
@@ -447,121 +310,61 @@
                             <tr>
                                 <th style="width: 35%;">Part Name</th>
                                 <th style="width: 35%;">Part # / SKU</th>
-                                <th style="width: 25%;">Bin Loc</th>
-                                <th style="width: 5%;"></th>
+                                <th style="width: 30%;">Bin / Shelf</th>
                             </tr>
                         </thead>
                         <tbody id="bomBody"></tbody>
                     </table>
-                    <div style="display: flex; gap: 4px; margin-top: 4px;">
-                        <input type="text" id="newPartName" placeholder="Part Name">
-                        <input type="text" id="newPartSku" placeholder="SKU #">
-                        <input type="text" id="newPartBin" placeholder="Bin Location">
-                        <button onclick="addBomPart()" style="width: auto; padding: 4px 10px;">Add Part</button>
+                    <div style="display:flex; gap:4px; margin-top:4px;">
+                        <input type="text" id="newPartName" placeholder="Part Name" style="flex:1;">
+                        <input type="text" id="newPartNum" placeholder="SKU#" style="flex:1;">
+                        <input type="text" id="newBinLoc" placeholder="Bin Location" style="flex:1;">
+                        <button onclick="addSparePart()" style="width:auto; padding:0 8px; background:#10b981; color:#0b131d;">Add Part</button>
                     </div>
                 </div>
+
                 <!-- BREAKDOWN WORK TICKETS -->
                 <div id="modalTicketsContainer">
                     <h4 style="margin-top: 6px;">🛠️ Open Breakdown Work Tickets</h4>
                     <div class="notes-log-box" id="ticketsBox"></div>
-                    <div style="display: flex; gap: 4px; margin-top: 4px;">
-                        <input type="text" id="newTicketDesc" placeholder="Describe breakdown issue...">
-                        <select id="newTicketPriority" style="width: 90px;"><option value="HIGH">High</option><option value="MED">Med</option><option value="LOW">Low</option></select>
-                        <button onclick="addWorkTicket()" style="width: auto; padding: 4px 10px;">Log Ticket</button>
+                    <div style="display:flex; gap:4px; margin-top:4px;">
+                        <input type="text" id="newTicketDesc" placeholder="Enter breakdown ticket or fault note..." style="flex:2;">
+                        <select id="newTicketPriority" style="flex:1;">
+                            <option value="High">🔴 High</option>
+                            <option value="Medium">🟠 Medium</option>
+                            <option value="Low">🟢 Low</option>
+                        </select>
+                        <button onclick="addWorkTicket()" style="width:auto; padding:0 8px; background:#ef4444; color:#fff;">Create Ticket</button>
                     </div>
                 </div>
+
                 <div>
-                    <label>Location Photos</label>
+                    <label>Location Photos (Paste Image URL)</label>
+                    <div style="display: flex; gap: 4px; margin-bottom: 4px;">
+                        <input type="url" id="newPhotoUrl" placeholder="https://images.internal/photos/asset.jpg" style="flex:1;">
+                        <button onclick="addPhotoToAsset()" style="width:auto; padding:0 10px; background:#38bdf8; color:#0b131d;">Add Photo</button>
+                    </div>
                     <div class="photo-gallery" id="modalPhotoGallery"></div>
-                    <input type="url" id="modalNewPhotoUrl" placeholder="Paste image URL here..." style="margin-top: 4px;">
-                    <button onclick="addPhotoUrl()" style="background:#1e293b; color:#38bdf8; margin-top: 2px; width:auto; padding: 4px 10px;">Add Photo URL</button>
                 </div>
+
                 <div>
-                    <label>Custom Spreadsheet Parameters</label>
+                    <label>Spreadsheet Details / Custom Records</label>
                     <table class="spreadsheet-table">
                         <thead>
                             <tr>
-                                <th style="width: 40%;">Parameter</th>
-                                <th style="width: 50%;">Value</th>
-                                <th style="width: 10%;"></th>
+                                <th style="width: 40%;">Parameter / Field</th>
+                                <th style="width: 50%;">Value / Data</th>
+                                <th style="width: 10%;">Action</th>
                             </tr>
                         </thead>
                         <tbody id="spreadsheetBody"></tbody>
                     </table>
-                    <div style="display: flex; gap: 4px; margin-top: 4px;">
-                        <input type="text" id="newParamKey" placeholder="Parameter Name">
-                        <input type="text" id="newParamVal" placeholder="Value">
-                        <button onclick="addSpreadsheetRow()" style="width: auto; padding: 4px 10px;">Add Field</button>
-                    </div>
+                    <button onclick="addSpreadsheetRow()" style="margin-top: 4px; background: #1e293b; color: #38bdf8;">+ Add Custom Field</button>
                 </div>
             </div>
             <div class="modal-footer">
-                <button onclick="deleteElement()" style="background: #7f1d1d; color: #fff; width: auto; padding: 6px 12px;">Delete Element</button>
-                <button onclick="saveModalChanges()" style="background: #38bdf8; color: #0b131d; width: auto; padding: 6px 12px;">Save Changes</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- LOTO SIMULATION RESULTS MODAL -->
-    <div id="loto-sim-modal">
-        <div class="modal-content" style="width: 500px;">
-            <div class="modal-header">
-                <h3 style="color: #a855f7; margin: 0;">⚡ LOTO & ESWC Zero-Energy Simulation</h3>
-                <button class="close-modal" onclick="closeLotoSimModal()">×</button>
-            </div>
-            <div class="modal-body" id="lotoSimBody">
-                <!-- Populated dynamically -->
-            </div>
-            <div class="modal-footer">
-                <button onclick="closeLotoSimModal()" style="background: #a855f7; color: #fff; width: auto; padding: 6px 12px;">Close Simulation</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- ADD ELEMENT MODAL -->
-    <div id="add-modal-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:1000; justify-content:center; align-items:center; padding:10px;">
-        <div class="modal-content" style="width: 400px;">
-            <div class="modal-header">
-                <h3 style="color: #38bdf8; margin: 0;">Add Facility Element</h3>
-                <button class="close-modal" onclick="closeAddModal()">×</button>
-            </div>
-            <div class="modal-body">
-                <div><label>Element Type</label>
-                    <select id="newElementType" onchange="toggleAddFields(this.value)">
-                        <option value="asset">📍 Asset / Machine / LOTO Point</option>
-                        <option value="conveyance_line">🛤️ Conveyance / Sorter Line Path</option>
-                        <option value="zone">🟦 Facility Zone / Racking Block</option>
-                    </select>
-                </div>
-                <div><label>Name / Designation</label><input type="text" id="newElemName" placeholder="e.g. CV-101 Induct Line"></div>
-                <div><label>APM Asset Tag #</label><input type="text" id="newElemApmTag" placeholder="e.g. APM-CV-101"></div>
-                <div id="addAssetCatContainer">
-                    <label>Category</label>
-                    <select id="newElemCategory">
-                        <option value="OPEX UIS Sorter">OPEX UIS Sorter</option>
-                        <option value="ATR Tote Retrieval">ATR Tote Retrieval</option>
-                        <option value="Conveyance">Conveyance</option>
-                        <option value="Electrical">Electrical</option>
-                        <option value="Fire Safety">Fire Safety</option>
-                        <option value="Plumbing">Plumbing</option>
-                        <option value="Safety">Safety</option>
-                        <option value="HVAC">HVAC</option>
-                        <option value="LOTO Isolation">LOTO Isolation</option>
-                        <option value="General">General</option>
-                    </select>
-                </div>
-                <div id="addCoordFields" style="display:flex; gap:6px;">
-                    <div style="flex:1;"><label>X Col</label><input type="number" id="newElemX" value="5"></div>
-                    <div style="flex:1;"><label>Y Row</label><input type="number" id="newElemY" value="5"></div>
-                </div>
-                <div id="addSizeFields" style="display:none; gap:6px;">
-                    <div style="flex:1;"><label>Width (Cols)</label><input type="number" id="newElemW" value="4"></div>
-                    <div style="flex:1;"><label>Height (Rows)</label><input type="number" id="newElemH" value="3"></div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button onclick="closeAddModal()" style="width: auto; padding: 6px 12px;">Cancel</button>
-                <button onclick="confirmAddElement()" style="background: #38bdf8; color: #0b131d; width: auto; padding: 6px 12px;">Create Element</button>
+                <button onclick="deleteCurrentElement()" style="background: #7f1d1d; color: #fca5a5; width: auto; padding: 6px 12px;">Delete Asset</button>
+                <button onclick="saveModalChanges()" style="background: #10b981; color: #0b131d; width: auto; padding: 6px 12px; font-weight: bold;">Save & Close</button>
             </div>
         </div>
     </div>
@@ -577,7 +380,7 @@
                 <div id="ar-video-container" style="width: 100%; height: 100%;"></div>
                 <div style="position: absolute; top: 15px; left: 15px; background: rgba(17,27,39,0.85); border: 1px solid #38bdf8; padding: 8px 12px; border-radius: 6px; pointer-events: none;">
                     <div style="color: #38bdf8; font-weight: bold; font-size: 11px;">Scan APM Tag / Barcode</div>
-                    <div style="color: #10b981; font-size: 10px;">Camera active for plant inspection</div>
+                    <div style="color: #10b981; font-size: 10px;">Camera active for plant floor inspection</div>
                 </div>
             </div>
             <div class="modal-footer">
@@ -586,7 +389,7 @@
         </div>
     </div>
 
-    <!-- QR CAMERA SCANNER MODAL -->
+    <!-- QR SCANNER MODAL -->
     <div id="scanner-modal-overlay">
         <div class="modal-content" style="width: 450px;">
             <div class="modal-header">
@@ -603,12 +406,11 @@
     <div id="lightbox-overlay" onclick="closeLightbox()">
         <div style="position: relative; max-width: 90vw; max-height: 90vh; display: flex; flex-direction: column; align-items: center;" onclick="event.stopPropagation()">
             <button onclick="closeLightbox()" style="position: absolute; top: -35px; right: 0; background: none; border: none; color: #fff; font-size: 24px; cursor: pointer;">×</button>
-            <img id="lightboxImage" src="" style="max-width: 85vw; max-height: 80vh; object-fit: contain; border-radius: 4px; border: 1px solid #38bdf8; box-shadow: 0 10px 30px rgba(0,0,0,0.9);">
+            <img id="lightboxImage" src="" style="max-width: 85vw; max-height: 80vh; object-fit: contain; border-radius: 4px; border: 1px solid #38bdf8;">
             <div id="lightboxCaption" style="margin-top: 8px; color: #38bdf8; font-size: 13px; font-weight: bold;"></div>
         </div>
     </div>
 
-    <!-- Firebase SDK Imports -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
@@ -636,10 +438,11 @@
         let currentTab = 'info';
         let searchQuery = '';
         let showHeatmap = false;
+        let isIsometric = false;
         let activeQuickFilter = 'all';
+        let activeLotoTraceId = null;
         let html5QrCode = null;
         let arQrCode = null;
-        let activeLotoSimElement = null;
 
         let categories = [
             { name: "OPEX UIS Sorter", color: "#ec4899" },
@@ -691,37 +494,42 @@
                     }
                     if (data.categories) categories = data.categories;
                     if (data.shiftLogs) shiftLogs = data.shiftLogs;
-                    syncStatus.innerText = "Connected & Synced";
+                    syncStatus.innerText = "Connected & Synchronized";
                 } else {
-                    syncStatus.innerText = "No Data Found";
+                    syncStatus.innerText = "No Remote Data - Ready";
                 }
                 renderShiftLogs();
                 render();
             } catch (error) {
-                console.error("Error loading layout:", error);
-                syncStatus.innerText = "Error Connecting to DB";
+                console.error("Firebase error:", error);
+                syncStatus.innerText = "Offline Mode / Error";
                 syncStatus.style.color = "#ef4444";
                 render();
             }
         }
 
         async function saveToFirebase() {
+            syncStatus.innerText = "Saving to Cloud...";
             try {
-                syncStatus.innerText = "Saving to Firebase...";
-                const docRef = doc(db, "layouts", "facility_main");
-                await setDoc(docRef, {
+                await setDoc(doc(db, "layouts", "facility_main"), {
                     elements: elements,
                     categories: categories,
                     shiftLogs: shiftLogs,
-                    lastUpdated: new Date().toISOString()
-                }, { merge: true });
-                syncStatus.innerText = "Saved & Synced";
-                setTimeout(() => { syncStatus.innerText = "Connected & Synced"; }, 2000);
+                    updatedAt: new Date().toISOString()
+                });
+                syncStatus.innerText = "Saved Successfully!";
+                setTimeout(() => { syncStatus.innerText = "Connected & Synchronized"; }, 2500);
             } catch (error) {
-                console.error("Error saving layout:", error);
+                console.error("Save error:", error);
                 syncStatus.innerText = "Save Failed!";
                 syncStatus.style.color = "#ef4444";
             }
+        }
+
+        window.toggleIsometricView = function(checked) {
+            isIsometric = checked;
+            if (checked) svg.classList.add("isometric-view");
+            else svg.classList.remove("isometric-view");
         }
 
         window.toggleQuickFilter = function(filterType) {
@@ -729,10 +537,18 @@
             document.querySelectorAll('.filter-pill').forEach(btn => btn.classList.remove('active'));
             if (filterType === 'down') document.querySelector('.down-pill').classList.add('active');
             else if (filterType === 'pm_due') document.querySelector('.pm-pill').classList.add('active');
-            else if (filterType === 'loto') document.querySelector('.loto-pill').classList.add('active');
-            else if (filterType === 'water') document.querySelectorAll('.filter-pill')[3].classList.add('active');
+            else if (filterType === 'water') document.querySelectorAll('.filter-pill')[2].classList.add('active');
+            else if (filterType === 'estop') document.querySelectorAll('.filter-pill')[3].classList.add('active');
             else document.getElementById('filterAllBtn').classList.add('active');
             render();
+        }
+
+        window.simulateLotoTrace = function() {
+            let elId = document.getElementById("modalElementId").value;
+            activeLotoTraceId = elId;
+            closeModal();
+            render();
+            syncStatus.innerText = "⚡ LOTO Zero-Energy Simulation Active";
         }
 
         window.openARModal = function() {
@@ -747,20 +563,13 @@
                     closeARModal();
                 },
                 () => {}
-            ).catch(err => console.error("AR Camera error:", err));
+            ).catch(err => console.error("AR error:", err));
         }
 
         window.closeARModal = function() {
             if (arQrCode) {
-                arQrCode.stop().then(() => {
-                    arQrCode.clear();
-                    document.getElementById("ar-modal-overlay").style.display = "none";
-                }).catch(() => {
-                    document.getElementById("ar-modal-overlay").style.display = "none";
-                });
-            } else {
-                document.getElementById("ar-modal-overlay").style.display = "none";
-            }
+                arQrCode.stop().then(() => { arQrCode.clear(); document.getElementById("ar-modal-overlay").style.display = "none"; }).catch(() => { document.getElementById("ar-modal-overlay").style.display = "none"; });
+            } else { document.getElementById("ar-modal-overlay").style.display = "none"; }
         }
 
         window.openScannerModal = function() {
@@ -780,15 +589,8 @@
 
         window.closeScannerModal = function() {
             if (html5QrCode) {
-                html5QrCode.stop().then(() => {
-                    html5QrCode.clear();
-                    document.getElementById("scanner-modal-overlay").style.display = "none";
-                }).catch(() => {
-                    document.getElementById("scanner-modal-overlay").style.display = "none";
-                });
-            } else {
-                document.getElementById("scanner-modal-overlay").style.display = "none";
-            }
+                html5QrCode.stop().then(() => { html5QrCode.clear(); document.getElementById("scanner-modal-overlay").style.display = "none"; }).catch(() => { document.getElementById("scanner-modal-overlay").style.display = "none"; });
+            } else { document.getElementById("scanner-modal-overlay").style.display = "none"; }
         }
 
         window.handleSearch = function(val) {
@@ -809,12 +611,12 @@
             document.getElementById("panelShift").classList.toggle("active", tab === 'shift');
         }
 
-        window.addShiftNote = function() {
+        window.addShiftLog = function() {
             let note = document.getElementById("newShiftNote").value.trim();
+            let shift = document.getElementById("shiftSelect").value;
             if (!note) return;
-            let now = new Date();
-            let timeStr = `${now.getMonth()+1}/${now.getDate()} ${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`;
-            shiftLogs.unshift({ shift: "Shift Handover", time: timeStr, note: note });
+            let timeStr = new Date().toLocaleString([], {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'});
+            shiftLogs.unshift({ shift, note, time: timeStr });
             document.getElementById("newShiftNote").value = "";
             renderShiftLogs();
             saveToFirebase();
@@ -825,7 +627,7 @@
             if (!box) return;
             box.innerHTML = "";
             if (!shiftLogs || shiftLogs.length === 0) {
-                box.innerHTML = `<span style="color:#64748b; font-style:italic;">No shift notes logged.</span>`;
+                box.innerHTML = `<span style="color:#64748b; font-style:italic;">No shift handover entries.</span>`;
                 return;
             }
             shiftLogs.forEach(s => {
@@ -834,6 +636,57 @@
                 div.innerHTML = `<span class="note-timestamp">[${s.time}] ${s.shift}:</span> ${s.note}`;
                 box.appendChild(div);
             });
+        }
+
+        window.addNewAsset = function() {
+            let newEl = {
+                id: 'asset_' + Date.now(),
+                type: 'asset',
+                name: 'New APM Asset',
+                apmTag: 'APM-NEW-' + Math.floor(Math.random()*900+100),
+                category: 'General',
+                status: 'operational',
+                layer: currentLayer,
+                x: 2, y: 2,
+                emoji: '⚙️',
+                parentId: '',
+                plcNode: '',
+                manualUrl: '',
+                lastInspect: new Date().toISOString().split('T')[0],
+                pmDue: '',
+                runHours: '0 hrs',
+                temp: '72°F',
+                vibration: '0.01 in/s',
+                lube: 'Standard',
+                utilityDraw: '15A',
+                estopZone: 'Zone-1',
+                vendorName: 'OEM Supplier',
+                vendorContact: '555-0199',
+                lotoSteps: [{ step: 'Verify breaker is locked out', done: false }],
+                spareParts: [],
+                workTickets: [],
+                photos: [],
+                spreadsheetData: [{ key: 'Serial Number', value: 'SN-' + Math.floor(Math.random()*90000+10000) }]
+            };
+            elements.push(newEl);
+            openModal(newEl);
+            render();
+        }
+
+        window.addConveyanceLine = function() {
+            let newEl = {
+                id: 'conv_' + Date.now(),
+                type: 'conveyance_line',
+                name: 'Main Conveyance Line',
+                apmTag: 'APM-CV-LN-' + Math.floor(Math.random()*90+10),
+                layer: currentLayer,
+                conveyanceType: 'belt',
+                points: [{x: 2, y: 2}, {x: 10, y: 2}],
+                spreadsheetData: [{ key: 'Belt Speed', value: '120 FPM' }]
+            };
+            elements.push(newEl);
+            openModal(newEl);
+            render();
         }
 
         function getCategoryColor(catName) {
@@ -860,7 +713,7 @@
         function getRowLabel(r) {
             if (r < 0) return "N" + Math.abs(r);
             let adjustedIndex = r;
-            if (adjustedIndex >= 8) adjustedIndex += 1;
+            if (adjustedIndex >= 8) adjustedIndex += 1; 
             return String.fromCharCode(65 + adjustedIndex); 
         }
 
@@ -914,7 +767,7 @@
             siteLabel.setAttribute("fill", "#854d0e");
             siteLabel.setAttribute("font-size", "12px");
             siteLabel.setAttribute("font-weight", "bold");
-            siteLabel.textContent = "▼ 6500 W MT HOPE HWY — SITE EARTHWORK & AUTOMATION FOOTPRINT (APM INTEGRATED)";
+            siteLabel.textContent = "▼ 6500 W MT HOPE HWY — SITE & APM DIGITAL TWIN INFRASTRUCTURE";
             siteBackground.appendChild(siteLabel);
             viewport.appendChild(siteBackground);
 
@@ -982,7 +835,7 @@
             bottomLabel.textContent = `NORTH WALL - ROW N ▼`;
             viewport.appendChild(bottomLabel);
 
-            // Heatmap Overlay
+            // Heatmap Circles
             if (showHeatmap) {
                 elements.forEach(el => {
                     let ticketCount = (el.workTickets || []).length;
@@ -1001,21 +854,46 @@
                 });
             }
 
-            // Render Elements
+            // LOTO Trace Simulation Overlay Lines
+            if (activeLotoTraceId) {
+                let targetEl = elements.find(e => e.id === activeLotoTraceId);
+                if (targetEl && targetEl.x !== undefined) {
+                    let tx = (targetEl.x * gridSize) + (gridSize / 2);
+                    let ty = (targetEl.y * gridSize) + (gridSize / 2);
+                    
+                    elements.forEach(other => {
+                        if (other.id !== activeLotoTraceId && other.x !== undefined) {
+                            if (other.category === 'Electrical' || other.category === 'LOTO Isolation' || other.id === targetEl.parentId) {
+                                let ox = (other.x * gridSize) + (gridSize / 2);
+                                let oy = (other.y * gridSize) + (gridSize / 2);
+                                let traceLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                                traceLine.setAttribute("x1", tx);
+                                traceLine.setAttribute("y1", ty);
+                                traceLine.setAttribute("x2", ox);
+                                traceLine.setAttribute("y2", oy);
+                                traceLine.setAttribute("class", "loto-trace-line");
+                                viewport.appendChild(traceLine);
+                            }
+                        }
+                    });
+                }
+            }
+
+            // Render Elements with Search & Quick-Filter Filtering
             let visibleElements = elements.filter(el => {
                 if (searchQuery) {
                     let matchesName = el.name.toLowerCase().includes(searchQuery);
+                    let matchesApm = el.apmTag && el.apmTag.toLowerCase().includes(searchQuery);
                     let matchesCat = el.category && el.category.toLowerCase().includes(searchQuery);
-                    let matchesTag = el.apmTag && el.apmTag.toLowerCase().includes(searchQuery);
                     let matchesId = el.id.toString().includes(searchQuery);
                     let matchesPlc = el.plcNode && el.plcNode.toLowerCase().includes(searchQuery);
-                    if (!matchesName && !matchesCat && !matchesTag && !matchesId && !matchesPlc) return false;
+                    if (!matchesName && !matchesApm && !matchesCat && !matchesId && !matchesPlc) return false;
                 }
 
                 if (activeQuickFilter === 'down') return el.status === 'down';
                 if (activeQuickFilter === 'pm_due') return getPmAlertStatus(el.pmDue) === 'overdue';
-                if (activeQuickFilter === 'loto') return el.category === 'LOTO Isolation';
                 if (activeQuickFilter === 'water') return el.layer === 'water' || (el.category && el.category.toLowerCase().includes('water'));
+                if (activeQuickFilter === 'estop') return el.estopZone || (el.category && el.category.toLowerCase().includes('safety'));
 
                 if (currentLayer === 'assets') return el.type === 'asset' || el.type === 'conveyance_line';
                 if (currentLayer === 'conveyance') return el.type === 'conveyance_line' || el.type === 'conveyance_run';
@@ -1027,6 +905,7 @@
             visibleElements.forEach(el => {
                 let g = document.createElementNS("http://www.w3.org/2000/svg", "g");
                 g.setAttribute("class", "item-group");
+                
                 g.addEventListener("pointerdown", (e) => {
                     e.stopPropagation();
                     openModal(el);
@@ -1054,7 +933,7 @@
                         text.setAttribute("fill", "#fff");
                         text.setAttribute("font-size", "10px");
                         text.setAttribute("font-weight", "bold");
-                        text.textContent = el.apmTag ? `${el.name} [${el.apmTag}]` : el.name;
+                        text.textContent = `${el.name} [${el.apmTag || 'N/A'}]`;
                         g.appendChild(path);
                         g.appendChild(text);
                     }
@@ -1071,14 +950,6 @@
                         pulseRing.setAttribute("cy", cy);
                         pulseRing.setAttribute("class", pmAlert === 'overdue' ? 'pm-overdue-pulse' : 'pm-due-pulse');
                         g.appendChild(pulseRing);
-                    }
-
-                    if (activeLotoSimElement && (el.id === activeLotoSimElement || el.parentId === activeLotoSimElement)) {
-                        let lotoRing = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-                        lotoRing.setAttribute("cx", cx);
-                        lotoRing.setAttribute("cy", cy);
-                        lotoRing.setAttribute("class", "loto-pulse");
-                        g.appendChild(lotoRing);
                     }
 
                     let circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
@@ -1104,12 +975,12 @@
                     emojiText.setAttribute("dominant-baseline", "central");
                     emojiText.setAttribute("font-size", "9px");
                     emojiText.style.pointerEvents = "none";
-                    emojiText.textContent = el.emoji || (el.category === 'LOTO Isolation' ? '🔒' : '📍');
+                    emojiText.textContent = el.emoji || "📍";
 
                     let popupGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
                     popupGroup.setAttribute("class", "asset-popup");
-                    let displayName = el.apmTag ? `${el.name} (${el.apmTag})` : el.name;
-                    let boxWidth = (displayName.length * 6.5) + 12;
+                    let labelText = `${el.apmTag ? '[' + el.apmTag + '] ' : ''}${el.name}`;
+                    let boxWidth = (labelText.length * 6) + 12;
                     let popupBg = document.createElementNS("http://www.w3.org/2000/svg", "rect");
                     popupBg.setAttribute("x", cx - (boxWidth / 2));
                     popupBg.setAttribute("y", cy - 28);
@@ -1125,9 +996,9 @@
                     popupText.setAttribute("y", cy - 16);
                     popupText.setAttribute("text-anchor", "middle");
                     popupText.setAttribute("fill", "#ffffff");
-                    popupText.setAttribute("font-size", "10px");
+                    popupText.setAttribute("font-size", "9.5px");
                     popupText.setAttribute("font-weight", "bold");
-                    popupText.textContent = displayName;
+                    popupText.textContent = labelText;
 
                     popupGroup.appendChild(popupBg);
                     popupGroup.appendChild(popupText);
@@ -1141,16 +1012,9 @@
                     rect.setAttribute("y", el.y * gridSize);
                     rect.setAttribute("width", el.w * gridSize);
                     rect.setAttribute("height", el.h * gridSize);
-                    
-                    if (el.type === 'yard') {
-                        rect.setAttribute("fill", "#b45309"); rect.setAttribute("fill-opacity", "0.3"); rect.setAttribute("stroke", "#d97706");
-                    } else if (el.type === 'racking') {
-                        rect.setAttribute("fill", "#d97706"); rect.setAttribute("fill-opacity", "0.35"); rect.setAttribute("stroke", "#f59e0b");
-                    } else if (el.type === 'mezzanine') {
-                        rect.setAttribute("fill", "#10b981"); rect.setAttribute("fill-opacity", "0.35"); rect.setAttribute("stroke", "#34d399");
-                    } else {
-                        rect.setAttribute("fill", "#0284c7"); rect.setAttribute("fill-opacity", "0.35"); rect.setAttribute("stroke", "#38bdf8");
-                    }
+                    rect.setAttribute("fill", "#0284c7");
+                    rect.setAttribute("fill-opacity", "0.35");
+                    rect.setAttribute("stroke", "#38bdf8");
                     rect.setAttribute("stroke-width", "1");
                     
                     let text = document.createElementNS("http://www.w3.org/2000/svg", "text");
@@ -1160,7 +1024,7 @@
                     text.setAttribute("font-size", "10px");
                     text.setAttribute("font-weight", "bold");
                     text.style.pointerEvents = "none";
-                    text.textContent = el.apmTag ? `${el.name} [${el.apmTag}]` : el.name;
+                    text.textContent = `${el.name} [${el.apmTag || ''}]`;
                     g.appendChild(rect);
                     g.appendChild(text);
                 }
@@ -1264,26 +1128,23 @@
         function openModal(el) {
             selectedId = el.id;
             document.getElementById("modalElementId").value = el.id;
-            document.getElementById("modalTitle").innerText = `Edit: ${el.name} ${el.apmTag ? '['+el.apmTag+']':''}`;
+            document.getElementById("modalTitle").innerText = `APM Edit: ${el.name} [${el.apmTag || ''}]`;
             document.getElementById("modalName").value = el.name;
             document.getElementById("modalApmTag").value = el.apmTag || "";
             
             if (el.type === 'asset') {
                 document.getElementById("modalAssetFields").style.display = "flex";
                 document.getElementById("modalDependencyContainer").style.display = "flex";
-                document.getElementById("modalDocLinkContainer").style.display = "block";
                 document.getElementById("modalLotoContainer").style.display = "block";
                 document.getElementById("modalPmContainer").style.display = "flex";
                 document.getElementById("modalPredictiveContainer").style.display = "flex";
-                document.getElementById("modalUtilitiesContainer").style.display = "flex";
-                document.getElementById("modalVendorContainer").style.display = "flex";
                 document.getElementById("modalBomContainer").style.display = "block";
                 document.getElementById("modalTicketsContainer").style.display = "block";
                 document.getElementById("modalCoordContainer").style.display = "flex";
 
                 document.getElementById("modalCategory").value = el.category || "General";
                 document.getElementById("modalStatus").value = el.status || "operational";
-                document.getElementById("modalParentAsset").value = el.parentId || "";
+                document.getElementById("modalParentId").value = el.parentId || "";
                 document.getElementById("modalPlcNode").value = el.plcNode || "";
                 document.getElementById("modalManualUrl").value = el.manualUrl || "";
                 document.getElementById("modalX").value = el.x;
@@ -1294,10 +1155,6 @@
                 document.getElementById("modalTemp").value = el.temp || "";
                 document.getElementById("modalVibration").value = el.vibration || "";
                 document.getElementById("modalLube").value = el.lube || "";
-                document.getElementById("modalUtilityDraw").value = el.utilityDraw || "";
-                document.getElementById("modalEstopZone").value = el.estopZone || "";
-                document.getElementById("modalVendorName").value = el.vendorName || "";
-                document.getElementById("modalVendorContact").value = el.vendorContact || "";
 
                 renderLotoChecklist(el);
                 renderBomTable(el);
@@ -1305,17 +1162,14 @@
             } else {
                 document.getElementById("modalAssetFields").style.display = "none";
                 document.getElementById("modalDependencyContainer").style.display = "none";
-                document.getElementById("modalDocLinkContainer").style.display = "none";
                 document.getElementById("modalLotoContainer").style.display = "none";
                 document.getElementById("modalPmContainer").style.display = "none";
                 document.getElementById("modalPredictiveContainer").style.display = "none";
-                document.getElementById("modalUtilitiesContainer").style.display = "none";
-                document.getElementById("modalVendorContainer").style.display = "none";
                 document.getElementById("modalBomContainer").style.display = "none";
                 document.getElementById("modalTicketsContainer").style.display = "none";
                 document.getElementById("modalCoordContainer").style.display = "flex";
-                document.getElementById("modalX").value = el.x;
-                document.getElementById("modalY").value = el.y;
+                document.getElementById("modalX").value = el.x || 0;
+                document.getElementById("modalY").value = el.y || 0;
             }
 
             renderPhotos(el);
@@ -1323,37 +1177,28 @@
             document.getElementById("modal-overlay").style.display = "flex";
         }
 
-        window.closeModal = function() {
-            document.getElementById("modal-overlay").style.display = "none";
-            selectedId = null;
-            activeLotoSimElement = null;
-            render();
-        }
-
         window.saveModalChanges = function() {
-            let el = elements.find(item => item.id == selectedId);
-            if (!el) return;
-            el.name = document.getElementById("modalName").value.trim() || el.name;
-            el.apmTag = document.getElementById("modalApmTag").value.trim();
+            let id = document.getElementById("modalElementId").value;
+            let el = elements.find(e => e.id === id);
+            if (!el) { closeModal(); return; }
+
+            el.name = document.getElementById("modalName").value;
+            el.apmTag = document.getElementById("modalApmTag").value;
             el.x = parseInt(document.getElementById("modalX").value) || el.x;
             el.y = parseInt(document.getElementById("modalY").value) || el.y;
 
             if (el.type === 'asset') {
                 el.category = document.getElementById("modalCategory").value;
                 el.status = document.getElementById("modalStatus").value;
-                el.parentId = document.getElementById("modalParentAsset").value.trim();
-                el.plcNode = document.getElementById("modalPlcNode").value.trim();
-                el.manualUrl = document.getElementById("modalManualUrl").value.trim();
+                el.parentId = document.getElementById("modalParentId").value;
+                el.plcNode = document.getElementById("modalPlcNode").value;
+                el.manualUrl = document.getElementById("modalManualUrl").value;
                 el.lastInspect = document.getElementById("modalLastInspect").value;
                 el.pmDue = document.getElementById("modalPmDue").value;
-                el.runHours = document.getElementById("modalRunHours").value.trim();
-                el.temp = document.getElementById("modalTemp").value.trim();
-                el.vibration = document.getElementById("modalVibration").value.trim();
-                el.lube = document.getElementById("modalLube").value.trim();
-                el.utilityDraw = document.getElementById("modalUtilityDraw").value.trim();
-                el.estopZone = document.getElementById("modalEstopZone").value.trim();
-                el.vendorName = document.getElementById("modalVendorName").value.trim();
-                el.vendorContact = document.getElementById("modalVendorContact").value.trim();
+                el.runHours = document.getElementById("modalRunHours").value;
+                el.temp = document.getElementById("modalTemp").value;
+                el.vibration = document.getElementById("modalVibration").value;
+                el.lube = document.getElementById("modalLube").value;
             }
 
             closeModal();
@@ -1361,104 +1206,35 @@
             saveToFirebase();
         }
 
-        window.deleteElement = function() {
-            if (!confirm("Are you sure you want to delete this element from the layout?")) return;
-            elements = elements.filter(item => item.id != selectedId);
-            closeModal();
-            render();
-            saveToFirebase();
+        window.deleteCurrentElement = function() {
+            let id = document.getElementById("modalElementId").value;
+            if (confirm("Are you sure you want to delete this asset from the digital twin map?")) {
+                elements = elements.filter(e => e.id !== id);
+                closeModal();
+                render();
+                saveToFirebase();
+            }
         }
 
-        // LOTO SIMULATION LOGIC
-        window.simulateLotoIsolation = function() {
-            let el = elements.find(item => item.id == selectedId);
+        window.addLotoStep = function() {
+            let text = document.getElementById("newLotoStepText").value.trim();
+            if (!text) return;
+            let el = elements.find(e => e.id === selectedId);
             if (!el) return;
-            activeLotoSimElement = el.id;
-            
-            let simModalBody = document.getElementById("lotoSimBody");
-            let lotoStepsHtml = "";
-            if (el.lotoSteps && el.lotoSteps.length > 0) {
-                lotoStepsHtml = el.lotoSteps.map((s, idx) => `<div><b>Step ${idx+1}:</b> ${s.step}</div>`).join('');
-            } else {
-                lotoStepsHtml = `<div><i>Standard ESWC Protocol: Disconnect main breaker, apply padlock and danger tag, verify zero voltage with calibrated meter.</i></div>`;
-            }
-
-            let upstreamParent = elements.find(item => item.apmTag === el.parentId || item.name === el.parentId);
-            let upstreamInfo = upstreamParent ? `<div style="color:#38bdf8; margin-top:8px;"><b>Upstream Energy Feed:</b> ${upstreamParent.name} [APM Tag: ${upstreamParent.apmTag || 'N/A'}] at Row ${getRowLabel(upstreamParent.y)}, Col ${upstreamParent.x+1}</div>` : `<div style="color:#94a3b8; margin-top:8px;"><b>Upstream Feed:</b> Direct feed / Main distribution panel.</div>`;
-
-            simModalBody.innerHTML = `
-                <div style="font-size:12px; color:#e0e1dd; display:flex; flex-direction:column; gap:8px;">
-                    <div style="background:#070d14; border:1px solid #7e22ce; padding:10px; border-radius:6px;">
-                        <h4 style="color:#a855f7; margin-top:0;">Target Asset: ${el.name} [APM Tag: ${el.apmTag || 'None'}]</h4>
-                        ${upstreamInfo}
-                        <div style="margin-top:8px;"><b>E-Stop / Safety Zone:</b> ${el.estopZone || 'Standard Plant Safety Interlock'}</div>
-                    </div>
-                    <div>
-                        <h4 style="color:#38bdf8;">Required Zero-Energy State (ESWC) Steps:</h4>
-                        <div style="background:#070d14; border:1px solid #1f2d3d; padding:8px; border-radius:4px; max-height:150px; overflow-y:auto;">
-                            ${lotoStepsHtml}
-                        </div>
-                    </div>
-                    <div style="color:#10b981; font-size:11px; font-weight:bold;">✨ Map simulation active: Upstream isolation points are highlighted with pulsing purple rings on the facility floor.</div>
-                </div>
-            `;
-            document.getElementById("loto-sim-modal").style.display = "flex";
-            render();
+            if (!el.lotoSteps) el.lotoSteps = [];
+            el.lotoSteps.push({ step: text, done: false });
+            document.getElementById("newLotoStepText").value = "";
+            renderLotoChecklist(el);
         }
 
-        window.closeLotoSimModal = function() {
-            document.getElementById("loto-sim-modal").style.display = "none";
-        }
-
-        // ADD ELEMENT HELPERS
-        window.openAddModal = function() {
-            document.getElementById("add-modal-overlay").style.display = "flex";
-        }
-        window.closeAddModal = function() {
-            document.getElementById("add-modal-overlay").style.display = "none";
-        }
-        window.toggleAddFields = function(val) {
-            if (val === 'zone') {
-                document.getElementById("addSizeFields").style.display = "flex";
-                document.getElementById("addAssetCatContainer").style.display = "none";
-            } else if (val === 'asset') {
-                document.getElementById("addSizeFields").style.display = "none";
-                document.getElementById("addAssetCatContainer").style.display = "block";
-            } else {
-                document.getElementById("addSizeFields").style.display = "none";
-                document.getElementById("addAssetCatContainer").style.display = "none";
+        window.toggleLotoStep = function(idx) {
+            let el = elements.find(e => e.id === selectedId);
+            if (el && el.lotoSteps[idx]) {
+                el.lotoSteps[idx].done = !el.lotoSteps[idx].done;
+                renderLotoChecklist(el);
             }
         }
-        window.confirmAddElement = function() {
-            let type = document.getElementById("newElementType").value;
-            let name = document.getElementById("newElemName").value.trim() || "New Element";
-            let apmTag = document.getElementById("newElemApmTag").value.trim();
-            let x = parseInt(document.getElementById("newElemX").value) || 0;
-            let y = parseInt(document.getElementById("newElemY").value) || 0;
 
-            let newObj = { id: Date.now(), type: type, name: name, apmTag: apmTag, x: x, y: y };
-            if (type === 'asset') {
-                newObj.category = document.getElementById("newElemCategory").value;
-                newObj.status = 'operational';
-                newObj.lotoSteps = [];
-                newObj.spareParts = [];
-                newObj.workTickets = [];
-                newObj.photos = [];
-                newObj.spreadsheetData = [];
-            } else if (type === 'zone') {
-                newObj.w = parseInt(document.getElementById("newElemW").value) || 4;
-                newObj.h = parseInt(document.getElementById("newElemH").value) || 3;
-            } else if (type === 'conveyance_line') {
-                newObj.points = [{x: x, y: y}, {x: x + 4, y: y}];
-            }
-
-            elements.push(newObj);
-            closeAddModal();
-            render();
-            saveToFirebase();
-        }
-
-        // LOTO CHECKLIST EDITOR IN MODAL
         function renderLotoChecklist(el) {
             let container = document.getElementById("lotoChecklistList");
             container.innerHTML = "";
@@ -1466,117 +1242,83 @@
                 container.innerHTML = `<span style="color: #64748b; font-style: italic;">No LOTO steps documented.</span>`;
                 return;
             }
-            el.lotoSteps.forEach((s, idx) => {
+            el.lotoSteps.forEach((s, i) => {
                 let div = document.createElement("div");
                 div.className = "loto-step";
-                div.innerHTML = `<input type="checkbox" ${s.done ? 'checked' : ''} onchange="toggleLotoStep(${idx})">
-                <span style="${s.done ? 'text-decoration: line-through; color: #64748b;' : 'color: #fff;'}">${s.step}</span>
-                <button onclick="deleteLotoStep(${idx})" style="background:none; border:none; color:#ef4444; cursor:pointer; margin-left:auto; width:auto; padding:0;">×</button>`;
+                div.innerHTML = `<input type="checkbox" ${s.done ? 'checked' : ''} onchange="toggleLotoStep(${i})" style="width:auto; min-height:auto;">
+                <span style="${s.done ? 'text-decoration: line-through; color: #64748b;' : 'color: #fff;'}">${s.step}</span>`;
                 container.appendChild(div);
             });
         }
-        window.addLotoStep = function() {
-            let stepInput = document.getElementById("newLotoStep");
-            let text = stepInput.value.trim();
-            if (!text) return;
-            let el = elements.find(item => item.id == selectedId);
+
+        window.addSparePart = function() {
+            let partName = document.getElementById("newPartName").value.trim();
+            let partNum = document.getElementById("newPartNum").value.trim();
+            let binLoc = document.getElementById("newBinLoc").value.trim();
+            if (!partName) return;
+            let el = elements.find(e => e.id === selectedId);
             if (!el) return;
-            if (!el.lotoSteps) el.lotoSteps = [];
-            el.lotoSteps.push({ step: text, done: false });
-            stepInput.value = "";
-            renderLotoChecklist(el);
-            saveToFirebase();
-        }
-        window.toggleLotoStep = function(idx) {
-            let el = elements.find(item => item.id == selectedId);
-            if (!el || !el.lotoSteps[idx]) return;
-            el.lotoSteps[idx].done = !el.lotoSteps[idx].done;
-            renderLotoChecklist(el);
-            saveToFirebase();
-        }
-        window.deleteLotoStep = function(idx) {
-            let el = elements.find(item => item.id == selectedId);
-            if (!el || !el.lotoSteps) return;
-            el.lotoSteps.splice(idx, 1);
-            renderLotoChecklist(el);
-            saveToFirebase();
+            if (!el.spareParts) el.spareParts = [];
+            el.spareParts.push({ partName, partNum, binLoc });
+            document.getElementById("newPartName").value = "";
+            document.getElementById("newPartNum").value = "";
+            document.getElementById("newBinLoc").value = "";
+            renderBomTable(el);
         }
 
-        // SPARE PARTS BOM
         function renderBomTable(el) {
             let tbody = document.getElementById("bomBody");
             tbody.innerHTML = "";
             if (!el.spareParts || el.spareParts.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="4" style="color: #64748b; font-style: italic;">No spare parts mapped.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="3" style="color: #64748b; font-style: italic;">No spare parts mapped.</td></tr>`;
                 return;
             }
-            el.spareParts.forEach((part, idx) => {
+            el.spareParts.forEach(part => {
                 let tr = document.createElement("tr");
-                tr.innerHTML = `<td>${part.partName}</td><td>${part.partNum}</td><td>${part.binLoc || 'N/A'}</td><td><button onclick="deleteBomPart(${idx})" style="background:none; border:none; color:#ef4444; cursor:pointer; width:auto; padding:0;">×</button></td>`;
+                tr.innerHTML = `<td>${part.partName}</td><td>${part.partNum}</td><td>${part.binLoc || 'N/A'}</td>`;
                 tbody.appendChild(tr);
             });
         }
-        window.addBomPart = function() {
-            let name = document.getElementById("newPartName").value.trim();
-            let sku = document.getElementById("newPartSku").value.trim();
-            let bin = document.getElementById("newPartBin").value.trim();
-            if (!name || !sku) return;
-            let el = elements.find(item => item.id == selectedId);
-            if (!el) return;
-            if (!el.spareParts) el.spareParts = [];
-            el.spareParts.push({ partName: name, partNum: sku, binLoc: bin });
-            document.getElementById("newPartName").value = "";
-            document.getElementById("newPartSku").value = "";
-            document.getElementById("newPartBin").value = "";
-            renderBomTable(el);
-            saveToFirebase();
-        }
-        window.deleteBomPart = function(idx) {
-            let el = elements.find(item => item.id == selectedId);
-            if (!el || !el.spareParts) return;
-            el.spareParts.splice(idx, 1);
-            renderBomTable(el);
-            saveToFirebase();
-        }
 
-        // WORK TICKETS
-        function renderWorkTickets(el) {
-            let box = document.getElementById("ticketsBox");
-            box.innerHTML = "";
-            if (!el.workTickets || el.workTickets.length === 0) {
-                box.innerHTML = `<span style="color: #64748b; font-style: italic;">No active breakdown tickets.</span>`;
-                return;
-            }
-            el.workTickets.forEach((t, idx) => {
-                let div = document.createElement("div");
-                div.className = "note-entry";
-                div.innerHTML = `<span class="note-timestamp">[${t.time}] PRIORITY: ${t.priority}</span> - ${t.desc} <button onclick="deleteWorkTicket(${idx})" style="background:none; border:none; color:#ef4444; cursor:pointer; float:right; width:auto; padding:0;">×</button>`;
-                box.appendChild(div);
-            });
-        }
         window.addWorkTicket = function() {
             let desc = document.getElementById("newTicketDesc").value.trim();
             let priority = document.getElementById("newTicketPriority").value;
             if (!desc) return;
-            let el = elements.find(item => item.id == selectedId);
+            let el = elements.find(e => e.id === selectedId);
             if (!el) return;
             if (!el.workTickets) el.workTickets = [];
-            let now = new Date();
-            let timeStr = `${now.getMonth()+1}/${now.getDate()} ${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`;
-            el.workTickets.push({ desc: desc, priority: priority, time: timeStr });
+            let timeStr = new Date().toLocaleString([], {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'});
+            el.workTickets.unshift({ desc, priority, time: timeStr });
             document.getElementById("newTicketDesc").value = "";
             renderWorkTickets(el);
-            saveToFirebase();
-        }
-        window.deleteWorkTicket = function(idx) {
-            let el = elements.find(item => item.id == selectedId);
-            if (!el || !el.workTickets) return;
-            el.workTickets.splice(idx, 1);
-            renderWorkTickets(el);
-            saveToFirebase();
         }
 
-        // PHOTOS & SPREADSHEET
+        function renderWorkTickets(el) {
+            let box = document.getElementById("ticketsBox");
+            box.innerHTML = "";
+            if (!el.workTickets || el.workTickets.length === 0) {
+                box.innerHTML = `<span style="color: #64748b; font-style: italic;">No open breakdown tickets.</span>`;
+                return;
+            }
+            el.workTickets.forEach(t => {
+                let div = document.createElement("div");
+                div.className = "note-entry";
+                div.innerHTML = `<span class="note-timestamp">[${t.time}] PRIORITY: ${t.priority}</span> - ${t.desc}`;
+                box.appendChild(div);
+            });
+        }
+
+        window.addPhotoToAsset = function() {
+            let url = document.getElementById("newPhotoUrl").value.trim();
+            if (!url) return;
+            let el = elements.find(e => e.id === selectedId);
+            if (!el) return;
+            if (!el.photos) el.photos = [];
+            el.photos.push(url);
+            document.getElementById("newPhotoUrl").value = "";
+            renderPhotos(el);
+        }
+
         function renderPhotos(el) {
             let gallery = document.getElementById("modalPhotoGallery");
             gallery.innerHTML = "";
@@ -1584,7 +1326,7 @@
                 gallery.innerHTML = `<span style="color: #64748b; font-style: italic; font-size: 11px;">No photos uploaded.</span>`;
                 return;
             }
-            el.photos.forEach((photoUrl, idx) => {
+            el.photos.forEach((photoUrl) => {
                 let containerDiv = document.createElement("div");
                 containerDiv.className = "photo-thumb-container";
                 containerDiv.title = "Click to enlarge photo";
@@ -1595,17 +1337,6 @@
                 gallery.appendChild(containerDiv);
             });
         }
-        window.addPhotoUrl = function() {
-            let url = document.getElementById("modalNewPhotoUrl").value.trim();
-            if (!url) return;
-            let el = elements.find(item => item.id == selectedId);
-            if (!el) return;
-            if (!el.photos) el.photos = [];
-            el.photos.push(url);
-            document.getElementById("modalNewPhotoUrl").value = "";
-            renderPhotos(el);
-            saveToFirebase();
-        }
 
         window.openLightbox = function(url, itemName) {
             document.getElementById("lightboxImage").src = url;
@@ -1614,6 +1345,22 @@
         }
         window.closeLightbox = function() {
             document.getElementById("lightbox-overlay").style.display = "none";
+        }
+
+        window.addSpreadsheetRow = function() {
+            let el = elements.find(e => e.id === selectedId);
+            if (!el) return;
+            if (!el.spreadsheetData) el.spreadsheetData = [];
+            el.spreadsheetData.push({ key: 'New Parameter', value: 'Value' });
+            renderSpreadsheet(el);
+        }
+
+        window.removeSpreadsheetRow = function(idx) {
+            let el = elements.find(e => e.id === selectedId);
+            if (el && el.spreadsheetData) {
+                el.spreadsheetData.splice(idx, 1);
+                renderSpreadsheet(el);
+            }
         }
 
         function renderSpreadsheet(el) {
@@ -1627,31 +1374,27 @@
             }
             rowsData.forEach((row, idx) => {
                 let tr = document.createElement("tr");
-                tr.innerHTML = `<td>${row.key}</td><td>${row.value}</td><td><button onclick="deleteSpreadsheetRow(${idx})" style="background:none; border:none; color:#ef4444; cursor:pointer; width:auto; padding:0;">×</button></td>`;
+                tr.innerHTML = `
+                    <td><input type="text" value="${row.key}" onchange="updateRowKey(${idx}, this.value)"></td>
+                    <td><input type="text" value="${row.value}" onchange="updateRowVal(${idx}, this.value)"></td>
+                    <td><button onclick="removeSpreadsheetRow(${idx})" style="background:#7f1d1d; color:#fff; padding:2px 6px; min-height:auto;">×</button></td>
+                `;
                 tbody.appendChild(tr);
             });
         }
-        window.addSpreadsheetRow = function() {
-            let key = document.getElementById("newParamKey").value.trim();
-            let val = document.getElementById("newParamVal").value.trim();
-            if (!key || !val) return;
-            let el = elements.find(item => item.id == selectedId);
-            if (!el) return;
-            if (!el.spreadsheetData) el.spreadsheetData = { rows: [] };
-            if (!el.spreadsheetData.rows) el.spreadsheetData.rows = [];
-            el.spreadsheetData.rows.push({ key: key, value: val });
-            document.getElementById("newParamKey").value = "";
-            document.getElementById("newParamVal").value = "";
-            renderSpreadsheet(el);
-            saveToFirebase();
+
+        window.updateRowKey = function(idx, val) {
+            let el = elements.find(e => e.id === selectedId);
+            if (el && el.spreadsheetData) el.spreadsheetData[idx].key = val;
         }
-        window.deleteSpreadsheetRow = function(idx) {
-            let el = elements.find(item => item.id == selectedId);
-            if (!el || !el.spreadsheetData) return;
-            let rowsData = el.spreadsheetData.rows || el.spreadsheetData;
-            rowsData.splice(idx, 1);
-            renderSpreadsheet(el);
-            saveToFirebase();
+        window.updateRowVal = function(idx, val) {
+            let el = elements.find(e => e.id === selectedId);
+            if (el && el.spreadsheetData) el.spreadsheetData[idx].value = val;
+        }
+
+        window.closeModal = function() {
+            document.getElementById("modal-overlay").style.display = "none";
+            selectedId = null;
         }
 
         loadFromFirebase();
