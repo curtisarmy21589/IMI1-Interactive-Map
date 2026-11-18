@@ -379,7 +379,14 @@
                     <option value="belted">Belted Conveyance (Solid Line)</option>
                     <option value="flex">Flex Conveyance / Expandable (Dashed Line)</option>
                 </select>
-                <button onclick="startDrawingLine()" style="margin-top: 8px; background: #0284c7; color: #fff; min-height: 42px;">✏️ Draw Multi-Point Line (Double-Tap End)</button>
+                <button onclick="startDrawingLine()" style="margin-top: 8px; background: #0284c7; color: #fff; min-height: 42px;">✏️ Draw Multi-Point Line</button>
+                <div id="draw-controls" style="display: none; background: #070d14; border: 1px solid #38bdf8; padding: 8px; border-radius: 6px; margin-top: 8px;">
+                    <div style="font-size: 11px; color: #38bdf8; font-weight: bold; margin-bottom: 4px;">✏️ Drawing Active (Tap map to add bends)</div>
+                    <div style="display: flex; gap: 6px;">
+                        <button onclick="finishDrawingLine()" style="background: #10b981; color: #0b131d; font-weight: bold;">✅ Finish & Save Line</button>
+                        <button onclick="cancelDrawingLine()" class="danger" style="width: auto;">Cancel</button>
+                    </div>
+                </div>
             </div>
         </div>
         <div id="panelAsset" class="panel">
@@ -553,6 +560,15 @@
             <button class="filter-pill" onclick="toggleQuickFilter('water')">💧 Water Shutoffs</button>
             <button class="filter-pill" onclick="toggleQuickFilter('estop')">⚡ E-Stop Zones</button>
             <button class="filter-pill active" id="filterAllBtn" onclick="toggleQuickFilter('all')">Show All</button>
+        </div>
+
+        <!-- FLOATING FLOATING DRAWING BAR FOR CANVAS (WORKS EVEN WHEN SIDEBAR COLLAPSED) -->
+        <div id="canvas-draw-banner" style="display: none; position: absolute; top: 60px; left: 50%; transform: translateX(-50%); z-index: 30; background: #111b27; border: 2px solid #38bdf8; border-radius: 12px; padding: 10px 16px; box-shadow: 0 8px 25px rgba(0,0,0,0.85); text-align: center; min-width: 260px;">
+            <div style="color: #38bdf8; font-size: 12px; font-weight: bold; margin-bottom: 6px;">✏️ Tap Map to Place Line Bends</div>
+            <div style="display: flex; gap: 8px; justify-content: center;">
+                <button onclick="finishDrawingLine()" style="background: #10b981; color: #0b131d; font-weight: bold; padding: 6px 14px; min-height: 36px; width: auto;">✅ Finish & Save</button>
+                <button onclick="cancelDrawingLine()" class="danger" style="padding: 6px 12px; min-height: 36px; width: auto;">Cancel</button>
+            </div>
         </div>
 
         <!-- MOBILE FLOATING BOTTOM TOOLBAR -->
@@ -1550,7 +1566,13 @@
         window.setMode = function(mode) {
             triggerHaptic(20);
             currentMode = mode;
-            drawingLineState = null;
+            if (mode !== 'draw_line') {
+                drawingLineState = null;
+                let drawCtrl = document.getElementById("draw-controls");
+                if (drawCtrl) drawCtrl.style.display = "none";
+                let banner = document.getElementById("canvas-draw-banner");
+                if (banner) banner.style.display = "none";
+            }
             document.getElementById("modeEditBtn").classList.toggle("active", mode === 'edit');
             document.getElementById("modePanBtn").classList.toggle("active", mode === 'pan');
             document.getElementById("modeCalcBtn").classList.toggle("active", mode === 'calc');
@@ -1572,7 +1594,7 @@
                 distDisplay.style.display = 'none';
                 calcPoints = [];
             }
-            container.style.cursor = (mode === 'pan' || mode === 'calc') ? 'crosshair' : 'default';
+            container.style.cursor = (mode === 'pan' || mode === 'calc' || mode === 'draw_line') ? 'crosshair' : 'default';
             selectedId = null;
             render();
         };
@@ -1593,7 +1615,7 @@
             document.getElementById("panelShift").classList.toggle("active", tab === 'shift');
             document.getElementById("panelSafety").classList.toggle("active", tab === 'safety');
             document.getElementById("panelTom").classList.toggle("active", tab === 'tom');
-            if (tab === 'line') drawingLineState = null;
+            if (tab === 'line' && currentMode === 'draw_line') cancelDrawingLine();
         };
         window.startDrawingLine = function() {
             triggerHaptic(20);
@@ -1606,7 +1628,56 @@
             drawingLineState = { name, conveyanceType, points: [] };
             currentMode = 'draw_line';
             container.style.cursor = 'crosshair';
-            alert("Tap points on the map to create line bends. DOUBLE-TAP anywhere to finish drawing.");
+            
+            let drawCtrl = document.getElementById("draw-controls");
+            if (drawCtrl) drawCtrl.style.display = "block";
+            let banner = document.getElementById("canvas-draw-banner");
+            if (banner) banner.style.display = "block";
+
+            // Auto-collapse mobile sidebar so user can immediately see map
+            if (window.innerWidth <= 768) {
+                document.getElementById("sidebar").classList.add("collapsed");
+            }
+            render();
+        };
+        window.finishDrawingLine = function() {
+            if (!drawingLineState || drawingLineState.points.length < 2) {
+                alert("Please click or tap at least 2 points on the map to create a line.");
+                return;
+            }
+            triggerHaptic(30);
+            let newLine = {
+                id: Date.now(),
+                layer: currentLayer,
+                name: drawingLineState.name,
+                type: "conveyance_line",
+                conveyanceType: drawingLineState.conveyanceType,
+                points: drawingLineState.points,
+                photos: [],
+                spreadsheetData: [{key: "Conveyance Type", value: drawingLineState.conveyanceType === 'belted' ? "Belted" : "Flex"}]
+            };
+            elements.push(newLine);
+            drawingLineState = null;
+            currentMode = 'edit';
+            container.style.cursor = 'default';
+            
+            let drawCtrl = document.getElementById("draw-controls");
+            if (drawCtrl) drawCtrl.style.display = "none";
+            let banner = document.getElementById("canvas-draw-banner");
+            if (banner) banner.style.display = "none";
+
+            render();
+            saveToFirebase();
+        };
+        window.cancelDrawingLine = function() {
+            drawingLineState = null;
+            currentMode = 'edit';
+            container.style.cursor = 'default';
+            let drawCtrl = document.getElementById("draw-controls");
+            if (drawCtrl) drawCtrl.style.display = "none";
+            let banner = document.getElementById("canvas-draw-banner");
+            if (banner) banner.style.display = "none";
+            render();
         };
         function updateTransformString() {
             viewport.setAttribute("transform", `translate(${viewTransform.x}, ${viewTransform.y}) scale(${viewTransform.scale})`);
@@ -1786,7 +1857,6 @@
                         g.appendChild(text);
                         if (el.id === selectedId) {
                             pts.forEach((pt, pIdx) => {
-                                // Large touch hit area for conveyance vertex handles (15px radius)
                                 let hitCircle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
                                 hitCircle.setAttribute("cx", pt.x * gridSize);
                                 hitCircle.setAttribute("cy", pt.y * gridSize);
@@ -1831,7 +1901,6 @@
                         pulseRing.setAttribute("class", pmAlert === 'overdue' ? 'pm-overdue-pulse' : 'pm-due-pulse');
                         g.appendChild(pulseRing);
                     }
-                    // Invisible larger touch target for asset dot (20px radius)
                     let assetHit = document.createElementNS("http://www.w3.org/2000/svg", "circle");
                     assetHit.setAttribute("cx", cx);
                     assetHit.setAttribute("cy", cy);
@@ -1921,6 +1990,7 @@
                     g.appendChild(text);
                 }
                 const handleStart = (e) => {
+                    if (currentMode === 'draw_line') return;
                     if (currentMode === 'edit' && el.type !== 'conveyance_line') {
                         e.stopPropagation();
                         triggerHaptic(20);
@@ -1936,6 +2006,33 @@
                 g.addEventListener("touchstart", handleStart, { passive: false });
                 viewport.appendChild(g);
             });
+            /* LIVE DRAWING LINE PREVIEW */
+            if (currentMode === 'draw_line' && drawingLineState && drawingLineState.points.length > 0) {
+                let pts = drawingLineState.points;
+                if (pts.length >= 2) {
+                    let pathStr = `M ${pts[0].x * gridSize} ${pts[0].y * gridSize}`;
+                    for (let i = 1; i < pts.length; i++) {
+                        pathStr += ` L ${pts[i].x * gridSize} ${pts[i].y * gridSize}`;
+                    }
+                    let tempPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                    tempPath.setAttribute("d", pathStr);
+                    tempPath.setAttribute("fill", "none");
+                    tempPath.setAttribute("stroke", drawingLineState.conveyanceType === 'flex' ? "#fbbf24" : "#22d3ee");
+                    tempPath.setAttribute("stroke-width", "6");
+                    if (drawingLineState.conveyanceType === 'flex') tempPath.setAttribute("stroke-dasharray", "6,4");
+                    viewport.appendChild(tempPath);
+                }
+                pts.forEach(pt => {
+                    let dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                    dot.setAttribute("cx", pt.x * gridSize);
+                    dot.setAttribute("cy", pt.y * gridSize);
+                    dot.setAttribute("r", 7);
+                    dot.setAttribute("fill", "#10b981");
+                    dot.setAttribute("stroke", "#fff");
+                    dot.setAttribute("stroke-width", "2");
+                    viewport.appendChild(dot);
+                });
+            }
             if (currentMode === 'calc' && calcPoints.length > 0) {
                 calcPoints.forEach((pt) => {
                     let ptCircle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
@@ -2022,9 +2119,16 @@
                     }
                     render();
                 } else if (currentMode === 'draw_line' && drawingLineState) {
+                    e.preventDefault();
                     triggerHaptic(15);
                     let coords = getCanvasLocalCoords(touch.clientX, touch.clientY);
-                    drawingLineState.points.push({ x: parseFloat(coords.x.toFixed(2)), y: parseFloat(coords.y.toFixed(2)) });
+                    let nx = coords.x;
+                    let ny = coords.y;
+                    if (document.getElementById("snapGridToggle").checked) {
+                        nx = Math.round(nx * 2) / 2;
+                        ny = Math.round(ny * 2) / 2;
+                    }
+                    drawingLineState.points.push({ x: parseFloat(nx.toFixed(2)), y: parseFloat(ny.toFixed(2)) });
                     render();
                 } else if (currentMode === 'edit') {
                     selectedId = null;
@@ -2098,7 +2202,13 @@
                 render();
             } else if (currentMode === 'draw_line' && drawingLineState) {
                 let coords = getCanvasLocalCoords(e.clientX, e.clientY);
-                drawingLineState.points.push({ x: parseFloat(coords.x.toFixed(2)), y: parseFloat(coords.y.toFixed(2)) });
+                let nx = coords.x;
+                let ny = coords.y;
+                if (document.getElementById("snapGridToggle").checked) {
+                    nx = Math.round(nx * 2) / 2;
+                    ny = Math.round(ny * 2) / 2;
+                }
+                drawingLineState.points.push({ x: parseFloat(nx.toFixed(2)), y: parseFloat(ny.toFixed(2)) });
                 render();
             } else if (currentMode === 'edit') {
                 selectedId = null;
@@ -2107,24 +2217,7 @@
         });
         container.addEventListener("dblclick", () => {
             if (currentMode === 'draw_line' && drawingLineState && drawingLineState.points.length >= 2) {
-                triggerHaptic(30);
-                let newLine = {
-                    id: Date.now(),
-                    layer: currentLayer,
-                    name: drawingLineState.name,
-                    type: "conveyance_line",
-                    conveyanceType: drawingLineState.conveyanceType,
-                    points: drawingLineState.points,
-                    photos: [],
-                    spreadsheetData: [{key: "Conveyance Type", value: drawingLineState.conveyanceType === 'belted' ? "Belted" : "Flex"}]
-                };
-                elements.push(newLine);
-                drawingLineState = null;
-                currentMode = 'edit';
-                container.style.cursor = 'default';
-                render();
-                saveToFirebase();
-                alert("Conveyance line with bends created successfully!");
+                finishDrawingLine();
             }
         });
         window.addEventListener("mouseup", () => {
