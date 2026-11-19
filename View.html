@@ -251,6 +251,13 @@
         }
         .test-point-btn:hover { background: #0284c7; color: #fff; }
         .test-point-btn.selected-probe { background: #eab308; color: #000; font-weight: bold; border-color: #fff; }
+
+        .modal-content, .modal-body, .notes-log-box, #schematicDiagramBox, #scenarioSymptomText, #diagnosisFeedback, input, textarea, select {
+            user-select: text !important;
+            -webkit-user-select: text !important;
+            touch-action: auto !important;
+        }
+
     </style>
 </head>
 <body>
@@ -587,91 +594,104 @@
     </div>
     <!-- ELECTRICAL DIAGNOSTIC TRAINING SIMULATOR MODAL -->
     <div id="electrical-training-modal-overlay">
-        <div class="modal-content" style="width: 850px; max-width: 96vw;">
-            <div class="modal-header" style="background: #0f172a;">
+        <div class="modal-content" style="width: 940px; max-width: 96vw;">
+            <div class="modal-header" style="background: #0f172a; border-bottom: 1px solid #f59e0b;">
                 <h3 style="color: #f59e0b; margin: 0; display: flex; align-items: center; gap: 8px;">
-                    ⚡ Industrial Electrical Diagnostic Training Simulator
+                    ⚡ RME Controls & Electrical Troubleshooting Simulator
                 </h3>
                 <button class="close-modal" onclick="closeElectricalTrainingModal()">×</button>
             </div>
             <div class="modal-body" style="background: #0b131d; font-size: 12px; gap: 10px;">
                 <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
-                    <label style="color: #f59e0b; font-weight: bold;">Select Training Scenario:</label>
+                    <label style="color: #f59e0b; font-weight: bold;">Active Work Order:</label>
                     <select id="simScenarioSelect" onchange="loadScenario(this.value)" style="flex: 1; border-color: #f59e0b;">
-                        <option value="scenario1">Scenario 1: Open Fuse FU-1 (24VDC Control Power Fault)</option>
-                        <option value="scenario2">Scenario 2: Failed Contactor Coil M1 (Main Motor Won't Pick Up)</option>
-                        <option value="scenario3">Scenario 3: Corroded High-Resistance Wire Connection (Line Voltage Drop)</option>
-                        <option value="scenario4">Scenario 4: Failed E-Stop Contact (Intermittent Line Open)</option>
-                        <option value="scenario5">Scenario 5: Shorted Solenoid Coil (24V Power Supply Tripping)</option>
-                        <option value="scenario6">Scenario 6: Failed PNP Photoeye Sensor (PLC Input Dark State)</option>
+                        <option value="scenario1">WO-101: Main Infeed Conveyor Won't Start</option>
+                        <option value="scenario2">WO-102: Drive Contactor M1 Fails to Energize</option>
+                        <option value="scenario3">WO-103: Intermittent Drive Chatter & Drop-Out Under Load</option>
+                        <option value="scenario4">WO-104: Safety Circuit Fault Won't Reset at Panel</option>
+                        <option value="scenario5">WO-105: Control Power Trips When Divert Actuates</option>
+                        <option value="scenario6">WO-106: Induction Line Stalls at Accumulation Zone</option>
+                        <option value="scenario7">WO-107: 480VAC 3-Phase Hydraulic Pump Motor Hums / Won't Spin</option>
+                        <option value="scenario8">WO-108: VFD Conveyor Faults Immediately on Run Command</option>
                     </select>
                 </div>
 
                 <div style="display: flex; gap: 10px; flex-wrap: wrap;">
                     <!-- LEFT COLUMN: MULTIMETER & TEST POINTS -->
-                    <div style="flex: 1; min-width: 280px; background: #111b27; padding: 10px; border-radius: 6px; border: 1px solid #1f2d3d;">
-                        <h4 style="color: #38bdf8; margin: 0 0 6px 0;">📟 Multimeter & Test Leads</h4>
+                    <div style="flex: 1; min-width: 295px; background: #111b27; padding: 10px; border-radius: 6px; border: 1px solid #1f2d3d;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                            <h4 style="color: #38bdf8; margin: 0;">📟 Fluke-Style Digital Multimeter</h4>
+                            <button onclick="clearProbes()" style="width: auto; font-size: 10px; padding: 2px 8px; background: #334155; color: #e2e8f0; margin: 0;">Clear Leads</button>
+                        </div>
                         
                         <div style="background: #000; border: 2px solid #38bdf8; border-radius: 6px; padding: 8px; text-align: center; margin-bottom: 8px;">
                             <div style="font-size: 9px; color: #94a3b8; text-transform: uppercase;">Digital Multimeter Reading</div>
                             <div id="meterDisplayValue" style="font-family: monospace; font-size: 24px; color: #10b981; font-weight: bold;">0.00 VDC</div>
-                            <div id="meterModeText" style="font-size: 10px; color: #38bdf8; margin-top: 2px;">Mode: VDC Volts</div>
+                            <div id="meterModeText" style="font-size: 10px; color: #38bdf8; margin-top: 2px;">Mode: VDC (DC Volts)</div>
                         </div>
 
                         <div style="display: flex; gap: 4px; margin-bottom: 8px;">
-                            <button onclick="setMeterMode('VDC')" style="flex:1; font-size:10px; padding:4px;">VDC (Volts)</button>
-                            <button onclick="setMeterMode('VAC')" style="flex:1; font-size:10px; padding:4px;">VAC (Volts)</button>
-                            <button onclick="setMeterMode('OHM')" style="flex:1; font-size:10px; padding:4px;">Ω (Ohms)</button>
+                            <button id="btnModeVDC" onclick="setMeterMode('VDC')" style="flex:1; font-size:10px; padding:4px; background:#0284c7;">VDC</button>
+                            <button id="btnModeVAC" onclick="setMeterMode('VAC')" style="flex:1; font-size:10px; padding:4px;">VAC</button>
+                            <button id="btnModeOHM" onclick="setMeterMode('OHM')" style="flex:1; font-size:10px; padding:4px;">Ω (Ohms)</button>
                         </div>
 
                         <div style="display: flex; gap: 6px; margin-bottom: 6px;">
-                            <div style="flex:1; background:#0b131d; padding:4px; border-radius:4px; border:1px solid #ef4444;">
-                                <span style="color:#ef4444; font-weight:bold; font-size:10px;">🔴 Red Probe (+)</span>
-                                <div id="redProbeText" style="font-size:10px; color:#fff; overflow:hidden; text-overflow:ellipsis;">Not Connected</div>
+                            <div style="flex:1; background:#0b131d; padding:4px 6px; border-radius:4px; border:1px solid #ef4444;">
+                                <span style="color:#ef4444; font-weight:bold; font-size:10px;">🔴 Red Lead (+)</span>
+                                <div id="redProbeText" style="font-size:10px; color:#fff; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">Not Connected</div>
                             </div>
-                            <div style="flex:1; background:#0b131d; padding:4px; border-radius:4px; border:1px solid #64748b;">
-                                <span style="color:#94a3b8; font-weight:bold; font-size:10px;">⚫ Black Probe (-)</span>
-                                <div id="blackProbeText" style="font-size:10px; color:#fff; overflow:hidden; text-overflow:ellipsis;">Not Connected</div>
+                            <div style="flex:1; background:#0b131d; padding:4px 6px; border-radius:4px; border:1px solid #64748b;">
+                                <span style="color:#94a3b8; font-weight:bold; font-size:10px;">⚫ Black Lead (COM)</span>
+                                <div id="blackProbeText" style="font-size:10px; color:#fff; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">Not Connected</div>
                             </div>
                         </div>
 
-                        <label style="color: #38bdf8; font-weight: bold; font-size: 11px;">Select Circuit Test Point to Probe:</label>
-                        <div id="testPointsContainer" style="display: flex; flex-direction: column; gap: 4px; max-height: 180px; overflow-y: auto; margin-top: 4px; padding-right: 4px;"></div>
+                        <label style="color: #38bdf8; font-weight: bold; font-size: 11px;">Circuit Test Points (Select Red & Black Lead):</label>
+                        <div id="testPointsContainer" style="display: flex; flex-direction: column; gap: 4px; max-height: 210px; overflow-y: auto; margin-top: 4px; padding-right: 4px;"></div>
                     </div>
 
                     <!-- RIGHT COLUMN: SCHEMATIC & SYMPTOMS -->
-                    <div style="flex: 1.3; min-width: 300px; display: flex; flex-direction: column; gap: 10px;">
+                    <div style="flex: 1.3; min-width: 310px; display: flex; flex-direction: column; gap: 10px;">
                         <div style="background: #111b27; padding: 10px; border-radius: 6px; border: 1px solid #1f2d3d;">
-                            <h4 style="color: #f59e0b; margin: 0 0 4px 0;">🚨 Problem Description & Symptoms</h4>
-                            <div id="scenarioSymptomText" style="color: #e0e1dd; font-size: 11px; line-height: 1.4;">Select a scenario above to begin troubleshooting.</div>
+                            <h4 style="color: #f59e0b; margin: 0 0 4px 0;">🚨 Operator Report & Field Observations</h4>
+                            <div id="scenarioSymptomText" style="color: #e0e1dd; font-size: 11px; line-height: 1.45;">Select a work order above to begin troubleshooting.</div>
                         </div>
 
                         <div style="background: #111b27; padding: 10px; border-radius: 6px; border: 1px solid #1f2d3d;">
-                            <h4 style="color: #38bdf8; margin: 0 0 4px 0;">📐 Electrical Ladder Schematic</h4>
-                            <div id="schematicDiagramBox" style="background: #070d14; border: 1px solid #1f2d3d; border-radius: 4px; padding: 8px; font-family: monospace; font-size: 10px; color: #38bdf8; white-space: pre; overflow-x: auto;"></div>
-                        </div>
-
-                        <div style="background: #111b27; padding: 10px; border-radius: 6px; border: 1px solid #1f2d3d;">
-                            <h4 style="color: #10b981; margin: 0 0 4px 0;">💡 Submit Root Cause Diagnosis</h4>
-                            <div style="display: flex; gap: 6px;">
-                                <select id="diagnosisAnswerSelect" style="flex:1;">
-                                    <option value="">Select Root Cause...</option>
-                                    <option value="open_fuse">Blown Fuse FU-1</option>
-                                    <option value="open_estop">Failed E-Stop PB-1 Contacts</option>
-                                    <option value="failed_relay">Failed Relay / Contactor Coil</option>
-                                    <option value="high_res_wire">High-Resistance Corroded Wire Terminal</option>
-                                    <option value="shorted_coil">Shorted Solenoid Coil</option>
-                                    <option value="failed_sensor">Failed Sensor Output (NPN/PNP)</option>
-                                </select>
-                                <button onclick="checkDiagnosis()" style="width: auto; padding: 4px 12px; background: #10b981; color: #0b131d;">Verify Answer</button>
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                                <h4 style="color: #38bdf8; margin: 0;">📐 Control / Power Schematic & Spec Notes</h4>
+                                <button onclick="copyWorkOrderSummary()" style="width:auto; padding:2px 8px; font-size:10px; min-height:auto; background:#1e293b; color:#38bdf8; margin:0;">📋 Copy WO & Schematic</button>
                             </div>
-                            <div id="diagnosisFeedback" style="margin-top: 6px; font-weight: bold; font-size: 11px;"></div>
+                            <div id="schematicDiagramBox" style="background: #070d14; border: 1px solid #1f2d3d; border-radius: 4px; padding: 8px; font-family: monospace; font-size: 10px; color: #38bdf8; white-space: pre; overflow-x: auto; line-height: 1.4;"></div>
+                        </div>
+
+                        <div style="background: #111b27; padding: 10px; border-radius: 6px; border: 1px solid #1f2d3d;">
+                            <h4 style="color: #10b981; margin: 0 0 4px 0;">💡 Close Work Order — Root Cause Diagnosis</h4>
+                            <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                                <select id="diagnosisAnswerSelect" style="flex:1; min-width: 200px;">
+                                    <option value="">Select Verified Root Cause...</option>
+                                    <option value="open_fuse">Open Control Fuse FU-1</option>
+                                    <option value="open_estop">Open / Faulty E-Stop PB-1 NC Contact</option>
+                                    <option value="failed_relay">Open Contactor Coil M1</option>
+                                    <option value="high_res_wire">High-Resistance Terminal / Loose Connection (TB2)</option>
+                                    <option value="shorted_coil">Shorted Diverter Solenoid Coil (SOL-1)</option>
+                                    <option value="failed_sensor">Faulty PNP Photoeye Sensor Output (PE-01)</option>
+                                    <option value="blown_l2_fuse">Blown Phase L2 Power Fuse (FU-L2)</option>
+                                    <option value="vfd_igbt_short">Shorted Motor Phase Winding (U-V-W Ground/Phase Fault)</option>
+                                    <option value="bad_psu">Failed 24VDC Power Supply Unit</option>
+                                    <option value="failed_start_pb">Defective Start Pushbutton PB-2</option>
+                                </select>
+                                <button onclick="checkDiagnosis()" style="width: auto; padding: 4px 14px; background: #10b981; color: #0b131d;">Verify Root Cause</button>
+                            </div>
+                            <div id="diagnosisFeedback" style="margin-top: 6px; font-weight: bold; font-size: 11px; line-height: 1.4;"></div>
                         </div>
                     </div>
                 </div>
             </div>
-            <div class="modal-footer" style="background: #0f172a;">
-                <button onclick="closeElectricalTrainingModal()" style="width: auto; padding: 6px 12px; background: #38bdf8; color: #0b131d;">Exit Training</button>
+            <div class="modal-footer" style="background: #0f172a; justify-content: space-between; align-items: center;">
+                <span style="font-size: 10px; color: #94a3b8;">Tip: Check voltage drops across series contacts/fuses or verify resistance (Ω) on isolated loads.</span>
+                <button onclick="closeElectricalTrainingModal()" style="width: auto; padding: 6px 14px; background: #38bdf8; color: #0b131d;">Exit Training</button>
             </div>
         </div>
     </div>
@@ -815,83 +835,175 @@
 
         const simulatorScenarios = {
             scenario1: {
-                title: "Scenario 1: Open Fuse FU-1 (24VDC Control Power Fault)",
-                symptoms: "The main conveyance drive motor does not start when pressing the Start PB-2 button. The power supply LED is ON (24VDC), but the control circuit has no voltage past the fuse block.",
+                title: "WO-101: Main Infeed Conveyor Won't Start",
+                defaultMode: "VDC",
+                symptoms: "Operators report the main infeed conveyor will not start when pressing Start PB-2. The cabinet main disconnect is ON and the 24VDC power supply green status LED is illuminated.",
+                explanation: "Voltage is 24.00 VDC on the line side of FU-1 (Terminal 1) and 0.00 VDC on the load side (Terminal 2), with a 24.00 VDC drop directly across FU-1—confirming an open control fuse.",
                 correctAnswer: "open_fuse",
-                schematic: `+24VDC [24V Terminal] ------ (FU-1 2A) ------ (E-Stop PB-1) ------ (Start PB-2) ------ [Coil M1] ------ 0VDC (GND)`,
+                schematic: `+24VDC [PSU +] --- (FU-1 2A) --- (E-Stop PB-1) --- (Start PB-2) --- [Coil M1] --- 0VDC (COM)\nSpec: Normal M1 Coil = 120 Ω | Fuse FU-1 = < 0.5 Ω`,
                 points: [
-                    { id: "24V", name: "24V Power Supply Output", volts: 24.0, ohm: 0.2 },
-                    { id: "FU1_IN", name: "Fuse FU-1 Line Side (In)", volts: 24.0, ohm: 0.2 },
-                    { id: "FU1_OUT", name: "Fuse FU-1 Load Side (Out)", volts: 0.0, ohm: 999999 },
-                    { id: "ESTOP_IN", name: "E-Stop PB-1 Terminal 1", volts: 0.0, ohm: 999999 },
-                    { id: "COIL_A1", name: "Contactor Coil M1 (A1)", volts: 0.0, ohm: 120.0 },
-                    { id: "GND", name: "0VDC Power Supply Ground", volts: 0.0, ohm: 0.0 }
-                ]
+                    { id: "24V", name: "PSU +24VDC Output", vdc: 24.0, vac: 0.0, ohmToCom: 999999 },
+                    { id: "FU1_IN", name: "Fuse FU-1 Line (T1)", vdc: 24.0, vac: 0.0, ohmToCom: 999999 },
+                    { id: "FU1_OUT", name: "Fuse FU-1 Load (T2)", vdc: 0.0, vac: 0.0, ohmToCom: 120.4 },
+                    { id: "ESTOP_IN", name: "E-Stop PB-1 Term 1", vdc: 0.0, vac: 0.0, ohmToCom: 120.4 },
+                    { id: "START_IN", name: "Start PB-2 Term 3", vdc: 0.0, vac: 0.0, ohmToCom: 120.2 },
+                    { id: "COIL_A1", name: "Contactor Coil M1 (A1)", vdc: 0.0, vac: 0.0, ohmToCom: 120.0 },
+                    { id: "GND", name: "0VDC Common (COM)", vdc: 0.0, vac: 0.0, ohmToCom: 0.0 }
+                ],
+                pairOhms: {
+                    "FU1_IN|FU1_OUT": 999999,
+                    "24V|FU1_IN": 0.1,
+                    "FU1_OUT|ESTOP_IN": 0.1,
+                    "FU1_OUT|START_IN": 0.2,
+                    "COIL_A1|GND": 120.0
+                }
             },
             scenario2: {
-                title: "Scenario 2: Failed Contactor Coil M1 (Main Motor Won't Pick Up)",
-                symptoms: "The start button is pressed, voltage is confirmed present at coil terminal A1 (24VDC), but the contactor mechanically fails to pick up or pull in.",
+                title: "WO-102: Drive Contactor M1 Fails to Energize",
+                defaultMode: "VDC",
+                symptoms: "The HMI shows a valid run command and the operator holds Start PB-2, yet the motor starter never pulls in. Cabinet power LEDs are lit and no breaker has tripped.",
+                explanation: "Full 24.00 VDC reaches Contactor Coil M1 terminal A1 while A2 sits at 0.00 VDC, and resistance across A1–A2 reads O.L (Open)—confirming an open contactor coil.",
                 correctAnswer: "failed_relay",
-                schematic: `+24VDC ------ (FU-1) ------ (E-Stop PB-1) ------ (Start PB-2) ------ [Coil M1 (OPEN COIL)] ------ 0VDC (GND)`,
+                schematic: `+24VDC [PSU +] --- (FU-1 2A) --- (E-Stop PB-1) --- (Start PB-2) --- [Coil M1] --- 0VDC (COM)\nSpec: Normal M1 Coil = 120 Ω`,
                 points: [
-                    { id: "24V", name: "24V Power Supply Output", volts: 24.0, ohm: 0.2 },
-                    { id: "FU1_OUT", name: "Fuse FU-1 Load Side", volts: 24.0, ohm: 0.2 },
-                    { id: "ESTOP_OUT", name: "E-Stop PB-1 Terminal 2", volts: 24.0, ohm: 0.3 },
-                    { id: "START_OUT", name: "Start PB-2 Output Terminal", volts: 24.0, ohm: 0.4 },
-                    { id: "COIL_A1", name: "Contactor Coil M1 (A1)", volts: 24.0, ohm: 999999 },
-                    { id: "GND", name: "0VDC Power Supply Ground", volts: 0.0, ohm: 0.0 }
-                ]
+                    { id: "24V", name: "PSU +24VDC Output", vdc: 24.0, vac: 0.0, ohmToCom: 999999 },
+                    { id: "FU1_OUT", name: "Fuse FU-1 Load (T2)", vdc: 24.0, vac: 0.0, ohmToCom: 999999 },
+                    { id: "ESTOP_OUT", name: "E-Stop PB-1 Term 2", vdc: 24.0, vac: 0.0, ohmToCom: 999999 },
+                    { id: "START_OUT", name: "Start PB-2 Term 4 (Held)", vdc: 24.0, vac: 0.0, ohmToCom: 999999 },
+                    { id: "COIL_A1", name: "Contactor Coil M1 (A1)", vdc: 24.0, vac: 0.0, ohmToCom: 999999 },
+                    { id: "COIL_A2", name: "Contactor Coil M1 (A2)", vdc: 0.0, vac: 0.0, ohmToCom: 0.1 },
+                    { id: "GND", name: "0VDC Common (COM)", vdc: 0.0, vac: 0.0, ohmToCom: 0.0 }
+                ],
+                pairOhms: {
+                    "COIL_A1|COIL_A2": 999999,
+                    "COIL_A1|GND": 999999,
+                    "COIL_A2|GND": 0.1,
+                    "24V|COIL_A1": 0.4
+                }
             },
             scenario3: {
-                title: "Scenario 3: Corroded High-Resistance Wire Connection",
-                symptoms: "The contactor chatters intermittently and drops out under load. Voltage drops significantly across Terminal Block TB2 when current flows.",
+                title: "WO-103: Intermittent Drive Chatter & Drop-Out Under Load",
+                defaultMode: "VDC",
+                symptoms: "During peak sortation, Contactor M1 chatters audibly and drops out mid-run, then allows a restart a few seconds later. Supply output at the PSU measures steady.",
+                explanation: "There is a 15.50 VDC voltage drop across Terminal Block TB2 (24.0V in vs. 8.5V out), starving Coil M1 of pull-in/hold voltage due to a loose/oxidized terminal.",
                 correctAnswer: "high_res_wire",
-                schematic: `+24VDC ------ (FU-1) ------ [TB2 High Resistance Term] ------ (Start PB) ------ [Coil M1] ------ 0VDC`,
+                schematic: `+24VDC [PSU +] --- (FU-1 2A) --- [Terminal Block TB2] --- (Start PB-2) --- [Coil M1] --- 0VDC (COM)\nSpec: M1 Minimum Hold Voltage = 18.0 VDC`,
                 points: [
-                    { id: "24V", name: "24V Power Supply Output", volts: 24.0, ohm: 0.2 },
-                    { id: "TB2_IN", name: "Terminal Block TB2 Inbound", volts: 24.0, ohm: 0.2 },
-                    { id: "TB2_OUT", name: "Terminal Block TB2 Outbound (Corroded)", volts: 8.5, ohm: 450.0 },
-                    { id: "COIL_A1", name: "Contactor Coil M1 (A1)", volts: 8.5, ohm: 120.0 },
-                    { id: "GND", name: "0VDC Power Supply Ground", volts: 0.0, ohm: 0.0 }
-                ]
+                    { id: "24V", name: "PSU +24VDC Output", vdc: 24.0, vac: 0.0, ohmToCom: 340.0 },
+                    { id: "FU1_OUT", name: "Fuse FU-1 Load (T2)", vdc: 24.0, vac: 0.0, ohmToCom: 339.8 },
+                    { id: "TB2_IN", name: "Terminal Block TB2 Line", vdc: 24.0, vac: 0.0, ohmToCom: 339.6 },
+                    { id: "TB2_OUT", name: "Terminal Block TB2 Load", vdc: 8.5, vac: 0.0, ohmToCom: 120.2 },
+                    { id: "COIL_A1", name: "Contactor Coil M1 (A1)", vdc: 8.5, vac: 0.0, ohmToCom: 120.0 },
+                    { id: "GND", name: "0VDC Common (COM)", vdc: 0.0, vac: 0.0, ohmToCom: 0.0 }
+                ],
+                pairOhms: {
+                    "TB2_IN|TB2_OUT": 219.4,
+                    "TB2_OUT|COIL_A1": 0.2,
+                    "COIL_A1|GND": 120.0
+                }
             },
             scenario4: {
-                title: "Scenario 4: Failed E-Stop Contact (Intermittent Line Open)",
-                symptoms: "The safety relay trips continuously with an Emergency Stop fault, even though all physical mushroom buttons are pulled out and reset.",
+                title: "WO-104: Safety Circuit Fault Won't Reset at Panel",
+                defaultMode: "VDC",
+                symptoms: "The safety relay refuses to reset after a jam clear. Techs verified all E-Stop mushroom heads on the zone are pulled out and the reset button clicks normally.",
+                explanation: "24.00 VDC is present at E-Stop PB-1 Terminal 1 but 0.00 VDC exits Terminal 2 (and Ω across T1–T2 is O.L), indicating an internal open NC contact block on PB-1.",
                 correctAnswer: "open_estop",
-                schematic: `+24VDC ------ (FU-1) ------ (E-Stop PB-1 OPEN N.C.) ------ (Safety Relay A1) ------ 0VDC`,
+                schematic: `+24VDC [PSU +] --- (FU-1 2A) --- (E-Stop PB-1 N.C.) --- (Safety Relay S11/S12) --- 0VDC (COM)\nSpec: Pulled E-Stop NC Contact = < 0.5 Ω`,
                 points: [
-                    { id: "24V", name: "24V Power Supply Output", volts: 24.0, ohm: 0.2 },
-                    { id: "FU1_OUT", name: "Fuse FU-1 Load Side", volts: 24.0, ohm: 0.2 },
-                    { id: "ESTOP_IN", name: "E-Stop PB-1 NC Contact In", volts: 24.0, ohm: 0.2 },
-                    { id: "ESTOP_OUT", name: "E-Stop PB-1 NC Contact Out (Open Fault)", volts: 0.0, ohm: 999999 },
-                    { id: "SAFETY_A1", name: "Safety Relay Input Terminal A1", volts: 0.0, ohm: 999999 },
-                    { id: "GND", name: "0VDC Power Supply Ground", volts: 0.0, ohm: 0.0 }
-                ]
+                    { id: "24V", name: "PSU +24VDC Output", vdc: 24.0, vac: 0.0, ohmToCom: 999999 },
+                    { id: "FU1_OUT", name: "Fuse FU-1 Load (T2)", vdc: 24.0, vac: 0.0, ohmToCom: 999999 },
+                    { id: "ESTOP_IN", name: "E-Stop PB-1 Contact T1", vdc: 24.0, vac: 0.0, ohmToCom: 999999 },
+                    { id: "ESTOP_OUT", name: "E-Stop PB-1 Contact T2", vdc: 0.0, vac: 0.0, ohmToCom: 480.0 },
+                    { id: "SAFETY_A1", name: "Safety Relay Input S12", vdc: 0.0, vac: 0.0, ohmToCom: 480.0 },
+                    { id: "GND", name: "0VDC Common (COM)", vdc: 0.0, vac: 0.0, ohmToCom: 0.0 }
+                ],
+                pairOhms: {
+                    "ESTOP_IN|ESTOP_OUT": 999999,
+                    "ESTOP_OUT|SAFETY_A1": 0.1,
+                    "SAFETY_A1|GND": 480.0
+                }
             },
             scenario5: {
-                title: "Scenario 5: Shorted Solenoid Coil (Power Supply Tripping)",
-                symptoms: "The moment a diverter arm solenoid is actuated, the 24VDC control circuit power supply trips into over-current foldback mode (0V).",
+                title: "WO-105: Control Power Trips When Divert Actuates",
+                defaultMode: "OHM",
+                symptoms: "The line idles normally, but every time the sorter fires Diverter Arm #1, the 24VDC power supply enters overcurrent foldback (red LED) and control voltage collapses.",
+                explanation: "Resistance across Diverter Solenoid SOL-1 measures 0.3 Ω instead of the nominal 28 Ω coil resistance—indicating a dead short in the solenoid winding.",
                 correctAnswer: "shorted_coil",
-                schematic: `+24VDC ------ (Fuse 5A) ------ [Diverter Solenoid SOL-1 (SHORTED COIL)] ------ 0VDC`,
+                schematic: `+24VDC [PSU +] --- (Fuse FU-5 5A) --- (PLC Out O:0/1) --- [Diverter Solenoid SOL-1] --- 0VDC (COM)\nSpec: Normal SOL-1 Coil Resistance = 28.0 Ω (0.85 A)`,
                 points: [
-                    { id: "24V", name: "24V Power Supply Output (Foldback)", volts: 2.1, ohm: 0.05 },
-                    { id: "FU5_OUT", name: "Fuse 5A Load Side", volts: 2.1, ohm: 0.05 },
-                    { id: "SOL1_A1", name: "Solenoid SOL-1 Coil (+)", volts: 2.1, ohm: 0.1 },
-                    { id: "GND", name: "0VDC Power Supply Ground", volts: 0.0, ohm: 0.0 }
-                ]
+                    { id: "24V", name: "PSU +24VDC Output (Faulted)", vdc: 2.1, vac: 0.0, ohmToCom: 0.4 },
+                    { id: "FU5_OUT", name: "Fuse FU-5 Load Side", vdc: 2.1, vac: 0.0, ohmToCom: 0.4 },
+                    { id: "SOL1_A1", name: "Solenoid SOL-1 Lead (+)", vdc: 2.1, vac: 0.0, ohmToCom: 0.3 },
+                    { id: "SOL1_A2", name: "Solenoid SOL-1 Lead (-)", vdc: 0.0, vac: 0.0, ohmToCom: 0.0 },
+                    { id: "GND", name: "0VDC Common (COM)", vdc: 0.0, vac: 0.0, ohmToCom: 0.0 }
+                ],
+                pairOhms: {
+                    "SOL1_A1|SOL1_A2": 0.3,
+                    "SOL1_A1|GND": 0.3,
+                    "FU5_OUT|SOL1_A1": 0.1
+                }
             },
             scenario6: {
-                title: "Scenario 6: Failed PNP Photoeye Sensor (PLC Input Dark State)",
-                symptoms: "Totes block the optical sensor reflector, but the PLC input indicator LED does not turn ON, stalling the conveyance line bed.",
+                title: "WO-106: Induction Line Stalls at Accumulation Zone",
+                defaultMode: "VDC",
+                symptoms: "Totes are stacking up in front of Photoeye PE-01. The sensor's green power LED is on and its amber target LED lights up when blocked, but the PLC input card LED stays dark.",
+                explanation: "PE-01 receives +24.00 VDC on Pin 1 (Brown), yet Pin 4 (Black) outputs only 0.20 VDC when blocked—confirming a blown PNP output transistor inside PE-01.",
                 correctAnswer: "failed_sensor",
-                schematic: `+24VDC (Brown) ------ [PNP Photoeye Sensor PE-01] ------ (Black Out) ------ [PLC Input I:0/4]`,
+                schematic: `+24VDC (Brown) --- [PNP Photoeye PE-01] --- (Black Signal) --- [PLC Input I:0/4] --- 0VDC (Blue)\nSpec: PNP Blocked Output = +24.0 VDC`,
                 points: [
-                    { id: "PE_BROWN", name: "Sensor Pin 1 (Brown +24V)", volts: 24.0, ohm: 0.2 },
-                    { id: "PE_BLUE", name: "Sensor Pin 3 (Blue 0V GND)", volts: 0.0, ohm: 0.0 },
-                    { id: "PE_BLACK", name: "Sensor Pin 4 (Black Output Triggered)", volts: 0.2, ohm: 999999 },
-                    { id: "PLC_IN4", name: "PLC Input Card Terminal I:0/4", volts: 0.2, ohm: 999999 }
-                ]
+                    { id: "PE_BROWN", name: "Sensor Pin 1 (Brown +24V)", vdc: 24.0, vac: 0.0, ohmToCom: 2400.0 },
+                    { id: "PE_BLUE", name: "Sensor Pin 3 (Blue 0V COM)", vdc: 0.0, vac: 0.0, ohmToCom: 0.0 },
+                    { id: "PE_BLACK", name: "Sensor Pin 4 (Black Blocked)", vdc: 0.2, vac: 0.0, ohmToCom: 3200.0 },
+                    { id: "PLC_IN4", name: "PLC Input Terminal I:0/4", vdc: 0.2, vac: 0.0, ohmToCom: 3200.0 }
+                ],
+                pairOhms: {
+                    "PE_BLACK|PLC_IN4": 0.1,
+                    "PLC_IN4|PE_BLUE": 3200.0
+                }
+            },
+            scenario7: {
+                title: "WO-107: 480VAC 3-Phase Hydraulic Pump Motor Hums / Won't Spin",
+                defaultMode: "VAC",
+                symptoms: "The dock leveler hydraulic pump motor hums loudly and trips its thermal overload after 4 seconds. Switch multimeter to VAC to check incoming 3-phase power.",
+                explanation: "Line-to-line voltage shows 480 VAC across L1–L3, but 0 VAC across L1–L2 and L2–L3 (with 480 VAC dropped across Fuse FU-L2)—confirming a single-phased condition from a blown L2 fuse.",
+                correctAnswer: "blown_l2_fuse",
+                schematic: `480VAC 3Ø Supply [L1, L2, L3] --- [Fuses FU-L1, FU-L2, FU-L3] --- [Contactor M2] --- [3Ø Motor]\nSpec: Nominal Phase-to-Phase = 480 VAC | Phase-to-Ground = 277 VAC`,
+                points: [
+                    { id: "L1_IN", name: "Line L1 (Disconnect Line)", vac: 277.0, vdc: 0.0, phase: 0 },
+                    { id: "L2_IN", name: "Line L2 (Disconnect Line)", vac: 277.0, vdc: 0.0, phase: 120 },
+                    { id: "L3_IN", name: "Line L3 (Disconnect Line)", vac: 277.0, vdc: 0.0, phase: 240 },
+                    { id: "L1_LOAD", name: "Motor Terminal T1 (Load)", vac: 277.0, vdc: 0.0, phase: 0 },
+                    { id: "L2_LOAD", name: "Motor Terminal T2 (Load)", vac: 0.0, vdc: 0.0, phase: null },
+                    { id: "L3_LOAD", name: "Motor Terminal T3 (Load)", vac: 277.0, vdc: 0.0, phase: 240 },
+                    { id: "PE_GND", name: "Panel Equipment Ground (GND)", vac: 0.0, vdc: 0.0, phase: null }
+                ],
+                pairOhms: {
+                    "L1_IN|L1_LOAD": 0.1,
+                    "L2_IN|L2_LOAD": 999999,
+                    "L3_IN|L3_LOAD": 0.1
+                }
+            },
+            scenario8: {
+                title: "WO-108: VFD Conveyor Faults Immediately on Run Command",
+                defaultMode: "OHM",
+                symptoms: "The PowerFlex VFD immediately trips on 'F013 Ground Fault / Overcurrent' the instant a start command is issued. Power is locked out (LOTO verified) for static winding checks.",
+                explanation: "Motor Phase W (T3) measures 0.2 Ω directly to Motor Frame Ground, while U–V measures normal winding resistance (4.2 Ω)—confirming a shorted-to-ground stator winding.",
+                correctAnswer: "vfd_igbt_short",
+                schematic: `VFD Output [U/T1, V/T2, W/T3] ===> [3-Phase Inverter Duty Gearmotor] + [Frame Ground]\nSpec: Balanced Phase-to-Phase = 4.2 Ω | Phase-to-Ground = > 10 MΩ (O.L)`,
+                points: [
+                    { id: "T1_U", name: "Motor Lead T1 (Phase U)", vdc: 0.0, vac: 0.0, ohmToCom: 4.4 },
+                    { id: "T2_V", name: "Motor Lead T2 (Phase V)", vdc: 0.0, vac: 0.0, ohmToCom: 4.4 },
+                    { id: "T3_W", name: "Motor Lead T3 (Phase W)", vdc: 0.0, vac: 0.0, ohmToCom: 0.2 },
+                    { id: "MOTOR_GND", name: "Motor Frame Ground Lug", vdc: 0.0, vac: 0.0, ohmToCom: 0.0 }
+                ],
+                pairOhms: {
+                    "T1_U|T2_V": 4.2,
+                    "T2_V|T3_W": 4.2,
+                    "T1_U|T3_W": 4.2,
+                    "T3_W|MOTOR_GND": 0.2,
+                    "T1_U|MOTOR_GND": 4.4,
+                    "T2_V|MOTOR_GND": 4.4
+                }
             }
         };
 
@@ -921,6 +1033,13 @@
             document.getElementById("electrical-training-modal-overlay").style.display = "none";
         };
 
+        window.clearProbes = function() {
+            activeRedProbe = null;
+            activeBlackProbe = null;
+            updateProbeTextDisplays();
+            updateMultimeterDisplay();
+        };
+
         window.loadScenario = function(scenKey) {
             activeScenarioKey = scenKey;
             let scen = simulatorScenarios[scenKey];
@@ -930,6 +1049,10 @@
             document.getElementById("schematicDiagramBox").innerText = scen.schematic;
             document.getElementById("diagnosisFeedback").innerText = "";
             document.getElementById("diagnosisAnswerSelect").value = "";
+
+            if (scen.defaultMode) {
+                setMeterMode(scen.defaultMode);
+            }
 
             activeRedProbe = null;
             activeBlackProbe = null;
@@ -963,7 +1086,16 @@
 
         window.setMeterMode = function(mode) {
             currentMeterMode = mode;
-            document.getElementById("meterModeText").innerText = `Mode: ${mode}`;
+            const labels = {
+                VDC: "Mode: VDC (DC Volts)",
+                VAC: "Mode: VAC (AC Volts)",
+                OHM: "Mode: Ω (Resistance / Continuity)"
+            };
+            document.getElementById("meterModeText").innerText = labels[mode] || `Mode: ${mode}`;
+            ['VDC', 'VAC', 'OHM'].forEach(m => {
+                const btn = document.getElementById(`btnMode${m}`);
+                if (btn) btn.style.background = (m === mode) ? "#0284c7" : "#1f2d3d";
+            });
             updateMultimeterDisplay();
         };
 
@@ -981,26 +1113,70 @@
 
         function updateMultimeterDisplay() {
             let display = document.getElementById("meterDisplayValue");
+            let scen = simulatorScenarios[activeScenarioKey];
             if (!activeRedProbe || !activeBlackProbe) {
-                display.innerText = "0.00 VDC";
+                display.innerText = currentMeterMode === 'OHM' ? "O.L (OPEN)" : `0.00 ${currentMeterMode}`;
                 return;
             }
 
             if (currentMeterMode === 'VDC') {
-                let voltageDiff = Math.abs(activeRedProbe.volts - activeBlackProbe.volts);
+                let voltageDiff = (activeRedProbe.vdc || 0) - (activeBlackProbe.vdc || 0);
                 display.innerText = `${voltageDiff.toFixed(2)} VDC`;
             } else if (currentMeterMode === 'VAC') {
-                display.innerText = "0.00 VAC";
+                if (activeRedProbe.id === activeBlackProbe.id) {
+                    display.innerText = "0.00 VAC";
+                } else if (activeRedProbe.phase !== undefined && activeBlackProbe.phase !== undefined) {
+                    const rV = activeRedProbe.vac || 0;
+                    const bV = activeBlackProbe.vac || 0;
+                    if (activeRedProbe.phase === null && activeBlackProbe.phase === null) {
+                        display.innerText = "0.00 VAC";
+                    } else if (activeRedProbe.phase === null || activeBlackProbe.phase === null) {
+                        display.innerText = `${Math.abs(rV - bV).toFixed(1)} VAC`;
+                    } else if (activeRedProbe.phase === activeBlackProbe.phase) {
+                        display.innerText = `${Math.abs(rV - bV).toFixed(1)} VAC`;
+                    } else {
+                        const rad = ((activeRedProbe.phase - activeBlackProbe.phase) * Math.PI) / 180;
+                        const mag = Math.sqrt(rV * rV + bV * bV - 2 * rV * bV * Math.cos(rad));
+                        display.innerText = `${mag.toFixed(1)} VAC`;
+                    }
+                } else {
+                    let acDiff = Math.abs((activeRedProbe.vac || 0) - (activeBlackProbe.vac || 0));
+                    display.innerText = `${acDiff.toFixed(2)} VAC`;
+                }
             } else if (currentMeterMode === 'OHM') {
                 if (activeRedProbe.id === activeBlackProbe.id) {
                     display.innerText = "0.1 Ω";
+                    return;
+                }
+                const k1 = `${activeRedProbe.id}|${activeBlackProbe.id}`;
+                const k2 = `${activeBlackProbe.id}|${activeRedProbe.id}`;
+                if (scen.pairOhms && (scen.pairOhms[k1] !== undefined || scen.pairOhms[k2] !== undefined)) {
+                    const val = scen.pairOhms[k1] !== undefined ? scen.pairOhms[k1] : scen.pairOhms[k2];
+                    display.innerText = val >= 99999 ? "O.L (OPEN)" : `${val.toFixed(1)} Ω`;
+                    return;
+                }
+                const rCom = activeRedProbe.ohmToCom !== undefined ? activeRedProbe.ohmToCom : 999999;
+                const bCom = activeBlackProbe.ohmToCom !== undefined ? activeBlackProbe.ohmToCom : 999999;
+                if (rCom >= 99999 || bCom >= 99999) {
+                    display.innerText = "O.L (OPEN)";
                 } else {
-                    let totalOhm = Math.abs(activeRedProbe.ohm + activeBlackProbe.ohm);
-                    if (totalOhm >= 99999) display.innerText = "O.L (OPEN)";
-                    else display.innerText = `${totalOhm.toFixed(1)} Ω`;
+                    display.innerText = `${Math.abs(rCom - bCom).toFixed(1)} Ω`;
                 }
             }
         }
+
+        
+        window.copyWorkOrderSummary = function() {
+            const sel = document.getElementById("simScenarioSelect");
+            const woTitle = sel && sel.options[sel.selectedIndex] ? sel.options[sel.selectedIndex].text : "Work Order";
+            const sym = document.getElementById("scenarioSymptomText")?.innerText || "";
+            const sch = document.getElementById("schematicDiagramBox")?.innerText || "";
+            const fb = document.getElementById("diagnosisFeedback")?.innerText || "";
+            const text = `${woTitle}\n\nSymptoms:\n${sym}\n\nSchematic & Specs:\n${sch}` + (fb ? `\n\nDiagnosis:\n${fb}` : "");
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).catch(() => {});
+            }
+        };
 
         window.checkDiagnosis = function() {
             let userVal = document.getElementById("diagnosisAnswerSelect").value;
@@ -1012,10 +1188,10 @@
                 return;
             }
             if (userVal === scen.correctAnswer) {
-                feedback.innerText = "🎉 CORRECT! Excellent diagnostic troubleshooting.";
+                feedback.innerText = `🎉 CORRECT! ${scen.explanation}`;
                 feedback.style.color = "#10b981";
             } else {
-                feedback.innerText = "❌ Incorrect diagnosis. Take voltage drop measurements between test points.";
+                feedback.innerText = "❌ Incorrect root cause. Verify voltage drops across contacts/fuses or check resistance (Ω) between test points.";
                 feedback.style.color = "#ef4444";
             }
         };
@@ -1342,7 +1518,14 @@
                     .entry { border-bottom: 1px dashed #ccc; padding: 6px 0; font-size: 13px; }
                     .timestamp { font-weight: bold; color: #0284c7; }
                     ul { padding-left: 20px; }
-                </style></head><body>
+            
+        .modal-content, .modal-body, .notes-log-box, #schematicDiagramBox, #scenarioSymptomText, #diagnosisFeedback, input, textarea, select {
+            user-select: text !important;
+            -webkit-user-select: text !important;
+            touch-action: auto !important;
+        }
+
+    </style></head><body>
                 <h2>📋 ${catName} Shift Handover Summary (${selectedShift})</h2>
                 <p><b>Generated:</b> ${new Date().toLocaleString()}</p>
                 <h3>Pending Action Items</h3>
@@ -1390,7 +1573,14 @@
                     h3 { margin: 0 0 5px 0; font-size: 16px; }
                     p { margin: 2px 0; font-size: 12px; }
                     canvas { margin-top: 10px; }
-                </style></head><body>
+            
+        .modal-content, .modal-body, .notes-log-box, #schematicDiagramBox, #scenarioSymptomText, #diagnosisFeedback, input, textarea, select {
+            user-select: text !important;
+            -webkit-user-select: text !important;
+            touch-action: auto !important;
+        }
+
+    </style></head><body>
                 <div class="label-card">
                     <h3>${el.name}</h3>
                     <p><b>Category:</b> ${el.category || 'N/A'}</p>
