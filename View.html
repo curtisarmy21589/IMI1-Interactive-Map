@@ -258,6 +258,108 @@
             touch-action: auto !important;
         }
 
+
+        #equipment-sim-modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 1050;
+            justify-content: center;
+            align-items: center;
+            padding: 10px;
+        }
+        .sim-module-btn {
+            flex: 1;
+            min-width: 120px;
+            padding: 7px 8px;
+            background: #070d14;
+            border: 1px solid #1e293b;
+            color: #94a3b8;
+            font-size: 11px;
+            font-weight: bold;
+            border-radius: 5px;
+            cursor: pointer;
+            text-align: center;
+        }
+        .sim-module-btn.active {
+            background: #0284c7;
+            color: #fff;
+            border-color: #38bdf8;
+        }
+        .gauge-card {
+            background: #070d14;
+            border: 1px solid #1f2d3d;
+            border-radius: 6px;
+            padding: 8px;
+            flex: 1;
+            min-width: 125px;
+        }
+        .gauge-label {
+            font-size: 9px;
+            color: #94a3b8;
+            text-transform: uppercase;
+            margin-bottom: 2px;
+        }
+        .gauge-val {
+            font-family: monospace;
+            font-size: 15px;
+            font-weight: bold;
+            color: #38bdf8;
+        }
+        .gauge-val.warn { color: #f59e0b; }
+        .gauge-val.crit { color: #ef4444; }
+        .gauge-val.ok { color: #10b981; }
+        .inspect-step-btn {
+            background: #1e293b;
+            border: 1px solid #38bdf8;
+            color: #e0e1dd;
+            padding: 7px 10px;
+            border-radius: 5px;
+            font-size: 11px;
+            text-align: left;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 6px;
+        }
+        .inspect-step-btn:hover {
+            background: #0284c7;
+            color: #fff;
+        }
+        .inspect-step-btn.checked {
+            border-color: #10b981;
+            background: #0f291e;
+        }
+        .scavenger-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            background: #070d14;
+            border: 1px solid #1f2d3d;
+            border-radius: 5px;
+            padding: 8px 10px;
+            font-size: 11px;
+        }
+        .scavenger-row.completed {
+            border-color: #10b981;
+            background: #0c241b;
+        }
+        #equipment-sim-modal-overlay .modal-content,
+        #equipment-sim-modal-overlay .modal-body,
+        #eqSimTelemetryGrid,
+        #eqSimDiagnosticLog,
+        #eqSimSchematicBox,
+        #eqSimSymptomText,
+        #eqSimFeedback,
+        #scavengerChecklistBox {
+            user-select: text !important;
+            -webkit-user-select: text !important;
+            touch-action: auto !important;
+        }
+
     </style>
 </head>
 <body>
@@ -315,6 +417,7 @@
         <div style="display: flex; flex-direction: column; gap: 4px;">
             <button onclick="openARModal()" style="background:#0284c7; color:#fff; border-color:#38bdf8;">🕶️ AR Live Camera View</button>
             <button onclick="openElectricalTrainingModal()" style="background:#f59e0b; color:#0b131d; border-color:#fbbf24; font-weight: bold;">⚡ Electrical Training & Simulator</button>
+            <button onclick="openEquipmentSimModal()" style="background:#10b981; color:#0b131d; border-color:#34d399; font-weight: bold;">🛠️ Equipment & Facility Simulators</button>
         </div>
         <hr style="border-color: #1e293b; margin: 4px 0;">
         <div class="tab-bar">
@@ -486,6 +589,7 @@
             <div class="modal-header">
                 <h3 id="modalTitle" style="color: #38bdf8; margin: 0;">Item Details</h3>
                 <div style="display: flex; gap: 6px; align-items: center;">
+                    <button id="assetPracticeSimBtn" onclick="launchSimForCurrentAsset()" style="display:none; width: auto; padding: 4px 8px; font-size: 10px; background: #10b981; color: #0b131d; font-weight:bold;">🎯 Practice Fault Sim</button>
                     <button onclick="printAssetQrCode()" style="width: auto; padding: 4px 8px; font-size: 10px; background: #0284c7; color: #fff;">🖨️ Print QR Label</button>
                     <button class="close-modal" onclick="closeModal()">×</button>
                 </div>
@@ -692,6 +796,97 @@
             <div class="modal-footer" style="background: #0f172a; justify-content: space-between; align-items: center;">
                 <span style="font-size: 10px; color: #94a3b8;">Tip: Check voltage drops across series contacts/fuses or verify resistance (Ω) on isolated loads.</span>
                 <button onclick="closeElectricalTrainingModal()" style="width: auto; padding: 6px 14px; background: #38bdf8; color: #0b131d;">Exit Training</button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- EQUIPMENT & FACILITY TRAINING SIMULATORS MODAL -->
+    <div id="equipment-sim-modal-overlay">
+        <div class="modal-content" style="width: 980px; max-width: 96vw;">
+            <div class="modal-header" style="background: #0f172a; border-bottom: 1px solid #10b981;">
+                <h3 style="color: #10b981; margin: 0; display: flex; align-items: center; gap: 8px;">
+                    🛠️ RME Equipment & Facility Systems Training Simulator
+                </h3>
+                <button class="close-modal" onclick="closeEquipmentSimModal()">×</button>
+            </div>
+            <div class="modal-body" style="background: #0b131d; font-size: 12px; gap: 10px;">
+                <!-- SIMULATOR TRACK TABS -->
+                <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                    <button class="sim-module-btn active" id="simTrackBtn_conveyance" onclick="switchEqSimTrack('conveyance')">📦 Conveyance & ATR</button>
+                    <button class="sim-module-btn" id="simTrackBtn_sorter" onclick="switchEqSimTrack('sorter')">🔀 OPEX UIS Sorter</button>
+                    <button class="sim-module-btn" id="simTrackBtn_dock" onclick="switchEqSimTrack('dock')">🚛 Dock Doors & Restraints</button>
+                    <button class="sim-module-btn" id="simTrackBtn_hvac" onclick="switchEqSimTrack('hvac')">❄️ HVAC & Utilities / LOTO</button>
+                    <button class="sim-module-btn" id="simTrackBtn_onboarding" onclick="switchEqSimTrack('onboarding')">🧭 New Tech Map Walkthrough</button>
+                </div>
+
+                <!-- SCENARIO SIMULATOR VIEW (Tracks 1-4) -->
+                <div id="eqSimScenarioView" style="display: flex; flex-direction: column; gap: 10px;">
+                    <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+                        <label style="color: #10b981; font-weight: bold;">Work Order Scenario:</label>
+                        <select id="eqSimScenarioSelect" onchange="loadEqScenario(this.value)" style="flex: 1; border-color: #10b981;"></select>
+                        <button onclick="copyEqWorkOrderSummary()" style="width: auto; padding: 5px 10px; font-size: 11px; background: #1e293b; color: #38bdf8; margin: 0;">📋 Copy WO & Notes</button>
+                    </div>
+
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                        <!-- LEFT COLUMN: DIAGNOSTIC GAUGES & FIELD CHECKS -->
+                        <div style="flex: 1.05; min-width: 300px; background: #111b27; padding: 10px; border-radius: 6px; border: 1px solid #1f2d3d; display: flex; flex-direction: column; gap: 8px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <h4 style="color: #38bdf8; margin: 0;">📊 Live Telemetry & Field Readings</h4>
+                                <button onclick="resetEqChecks()" style="width: auto; font-size: 10px; padding: 2px 8px; background: #334155; color: #e2e8f0; margin: 0;">Reset Checks</button>
+                            </div>
+                            <div id="eqSimTelemetryGrid" style="display: flex; gap: 6px; flex-wrap: wrap;"></div>
+
+                            <label style="color: #38bdf8; font-weight: bold; font-size: 11px;">Interactive Field Inspection & Diagnostic Actions:</label>
+                            <div id="eqSimChecksContainer" style="display: flex; flex-direction: column; gap: 5px; max-height: 220px; overflow-y: auto; padding-right: 4px;"></div>
+
+                            <div>
+                                <label style="color: #f59e0b; font-weight: bold; font-size: 11px;">📝 Diagnostic Findings Log:</label>
+                                <div id="eqSimDiagnosticLog" class="notes-log-box" style="max-height: 95px; margin-top: 3px; color: #cbd5e1;"></div>
+                            </div>
+                        </div>
+
+                        <!-- RIGHT COLUMN: SYMPTOMS, SYSTEM DIAGRAM & ROOT CAUSE -->
+                        <div style="flex: 1.25; min-width: 310px; display: flex; flex-direction: column; gap: 10px;">
+                            <div style="background: #111b27; padding: 10px; border-radius: 6px; border: 1px solid #1f2d3d;">
+                                <h4 style="color: #f59e0b; margin: 0 0 4px 0;">🚨 Operations Report & Equipment Symptoms</h4>
+                                <div id="eqSimSymptomText" style="color: #e0e1dd; font-size: 11px; line-height: 1.45;"></div>
+                            </div>
+
+                            <div style="background: #111b27; padding: 10px; border-radius: 6px; border: 1px solid #1f2d3d;">
+                                <h4 style="color: #38bdf8; margin: 0 0 4px 0;">📐 Subsystem Layout, Specs & LOTO Reference</h4>
+                                <div id="eqSimSchematicBox" style="background: #070d14; border: 1px solid #1f2d3d; border-radius: 4px; padding: 8px; font-family: monospace; font-size: 10px; color: #38bdf8; white-space: pre; overflow-x: auto; line-height: 1.4;"></div>
+                            </div>
+
+                            <div style="background: #111b27; padding: 10px; border-radius: 6px; border: 1px solid #1f2d3d;">
+                                <h4 style="color: #10b981; margin: 0 0 4px 0;">💡 Close Work Order — Verified Root Cause & Corrective Action</h4>
+                                <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                                    <select id="eqSimDiagnosisSelect" style="flex: 1; min-width: 210px;"></select>
+                                    <button onclick="checkEqDiagnosis()" style="width: auto; padding: 4px 14px; background: #10b981; color: #0b131d;">Verify Root Cause</button>
+                                </div>
+                                <div id="eqSimFeedback" style="margin-top: 6px; font-weight: bold; font-size: 11px; line-height: 1.4;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- NEW TECH ONBOARDING WALKTHROUGH VIEW (Track 5) -->
+                <div id="eqSimOnboardingView" style="display: none; flex-direction: column; gap: 10px;">
+                    <div style="background: #111b27; padding: 10px; border-radius: 6px; border: 1px solid #1f2d3d;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px;">
+                            <h4 style="color: #38bdf8; margin: 0;">🧭 New Tech Floor Orientation & Emergency Isolation Checklist</h4>
+                            <span id="onboardingProgressBadge" style="background: #0284c7; color: #fff; padding: 3px 8px; border-radius: 12px; font-size: 10px; font-weight: bold;">0 / 8 Completed</span>
+                        </div>
+                        <p style="color: #94a3b8; font-size: 11px; margin: 6px 0 0 0;">
+                            Use the <b>Jump to Map Layer</b> buttons below to locate critical shutoffs, E-stops, LOTO points, and automation zones on the live facility map, then check off each onboarding milestone.
+                        </p>
+                    </div>
+                    <div id="scavengerChecklistBox" style="display: flex; flex-direction: column; gap: 6px; max-height: 360px; overflow-y: auto;"></div>
+                </div>
+            </div>
+            <div class="modal-footer" style="background: #0f172a; justify-content: space-between; align-items: center;">
+                <span style="font-size: 10px; color: #94a3b8;">Tip: Perform field inspections before selecting a root cause to validate readings against OEM specs.</span>
+                <button onclick="closeEquipmentSimModal()" style="width: auto; padding: 6px 14px; background: #10b981; color: #0b131d;">Exit Simulator</button>
             </div>
         </div>
     </div>
@@ -1193,6 +1388,510 @@
             } else {
                 feedback.innerText = "❌ Incorrect root cause. Verify voltage drops across contacts/fuses or check resistance (Ω) between test points.";
                 feedback.style.color = "#ef4444";
+            }
+        };
+
+
+        /* EQUIPMENT & FACILITY TRAINING SIMULATOR DATA & LOGIC */
+        let activeEqTrack = 'conveyance';
+        let activeEqScenarioId = 'conv_1';
+        let completedOnboardingTasks = JSON.parse(localStorage.getItem('imi1_onboarding_tasks') || '{}');
+
+        const equipmentSimData = {
+            conveyance: [
+                {
+                    id: 'conv_1',
+                    title: 'WO-201: MDR Accumulation Zone Jammed / Upstream Not Cascading',
+                    symptoms: 'Totes are accumulating properly at Zone 4, but Zone 3 keeps running and crashing totes into Zone 4 instead of sleeping. Zone 4 MDR green status LED is solid.',
+                    telemetry: [
+                        { label: 'Zone 4 MDR Current', value: '1.4 A (Nominal)', status: 'ok' },
+                        { label: 'Zone 4 Photoeye (PE-Z4)', value: 'Blocked (24V)', status: 'ok' },
+                        { label: 'Z4 -> Z3 Upstream Comms', value: '0.0 VDC (Open)', status: 'crit' },
+                        { label: 'Belt Speed', value: '145 FPM', status: 'ok' }
+                    ],
+                    checks: [
+                        { label: 'Inspect Z4-to-Z3 inter-zone M8 jumper cable', result: 'M8 4-pin jumper cable pin 4 (upstream accumulation signal) is backed out / corroded at Z3 controller port.' },
+                        { label: 'Check Zone 4 Motor Driven Roller (MDR) O-rings', result: 'All 4 urethane drive O-rings intact and seated in roller grooves; no slippage.' },
+                        { label: 'Verify Zone 4 Photoeye reflector alignment', result: 'Reflector clean and aligned; PE-Z4 switches cleanly between 0V (clear) and 24V (blocked).' },
+                        { label: 'Check Conveyor Control Card DIP switches', result: 'DIP switches set to ZPA (Zero Pressure Accumulation) Singulation mode, matching adjacent zones.' }
+                    ],
+                    schematic: `[Zone 3 Card] <--- (M8 ZPA Signal Jumper) --- [Zone 4 Card] <--- [PE-Z4 Retro-Reflective]
+Spec: ZPA Upstream Signal = +24VDC when downstream zone occupied | MDR Nominal = 0.8–1.8 A`,
+                    options: [
+                        { value: 'zpa_jumper', text: 'Damaged / Unseated Inter-Zone ZPA Communication Jumper (Z4 to Z3)' },
+                        { value: 'mdr_burnout', text: 'Burned Out Zone 4 Motor Driven Roller (MDR)' },
+                        { value: 'broken_orings', text: 'Snapped Urethane Drive O-Rings on Zone 3' },
+                        { value: 'dirty_reflector', text: 'Misaligned Photoeye Reflector on Zone 4' }
+                    ],
+                    correctAnswer: 'zpa_jumper',
+                    explanation: 'Zone 4 detects the tote properly, but the open M8 inter-zone jumper prevents the accumulation hold signal from reaching Zone 3.'
+                },
+                {
+                    id: 'conv_2',
+                    title: 'WO-202: Main Take-Away Belt Tracking Hard Left & Rubbing Side Frame',
+                    symptoms: 'Operations reports a burning rubber smell from Take-Away Conveyor TA-02. The belt has migrated 1.5 inches toward the operator side and is fraying against the steel guide rail.',
+                    telemetry: [
+                        { label: 'Drive Motor Temp', value: '142 °F (Warm)', status: 'warn' },
+                        { label: 'Belt Tracking Offset', value: '+1.55 in Left', status: 'crit' },
+                        { label: 'Take-Up Roller Gap', value: 'L: 2.1" / R: 2.8"', status: 'crit' },
+                        { label: 'Gearbox Vibration', value: '0.11 in/s', status: 'ok' }
+                    ],
+                    checks: [
+                        { label: 'Measure tail/take-up pulley jackscrew positions', result: 'Left-side take-up locknut backed off; left bearing block is 0.70" closer to head pulley than right side (slack on left).' },
+                        { label: 'Inspect snubber & return rollers for product buildup', result: 'Return rollers clean with no adhesive or tape buildup altering crown diameter.' },
+                        { label: 'Check lacing splice squareness', result: 'Alligator mechanical lace is square within 1/16" across belt width.' },
+                        { label: 'Verify drive gearbox oil sight glass & mounting bolts', result: 'Oil level at mid-sightglass, clear amber; torque marks intact.' }
+                    ],
+                    schematic: `[Head Drive Pulley] ===> Belt Travel ===> [Snubber] ===> [Take-Up Pulley (L/R Jackscrews)]
+Rule of Thumb: Belt moves toward the LOOSE (slack) side or the roller end it contacts FIRST.`,
+                    options: [
+                        { value: 'uneven_takeup', text: 'Loose Left Take-Up Jackscrew Causing Uneven Belt Tension / Skew' },
+                        { value: 'gearbox_seized', text: 'Seized Head Drive Gearbox Bearing' },
+                        { value: 'crooked_splice', text: 'Crooked Mechanical Belt Splice' },
+                        { value: 'vfd_overspeed', text: 'VFD Frequency Parameter Set Above 60 Hz' }
+                    ],
+                    correctAnswer: 'uneven_takeup',
+                    explanation: 'The backed-off left take-up locknut created slack on the left edge, causing the belt to track toward the loose side and rub the frame.'
+                },
+                {
+                    id: 'conv_3',
+                    title: 'WO-203: ATR Tote Retrieval Crane Y-Axis Positioning Fault',
+                    symptoms: 'ATR Retrieval Shuttle #2 stops mid-aisle with "E-42 Vertical Encoder / Slip Fault" when lifting heavy totes above Tier 4.',
+                    telemetry: [
+                        { label: 'Hoist Servo Torque', value: '138% (Peak)', status: 'crit' },
+                        { label: 'Laser Distance vs Encoder', value: '48 mm Drift', status: 'crit' },
+                        { label: 'Hoist Belt / Chain Tension', value: 'Slack (1.8" Deflect)', status: 'warn' },
+                        { label: 'Brake Release Voltage', value: '24.1 VDC', status: 'ok' }
+                    ],
+                    checks: [
+                        { label: 'Compare rotary motor encoder count vs mast laser distance', result: 'Motor encoder reports 120 mm more travel than actual carriage laser height during heavy lift—indicating drive slip.' },
+                        { label: 'Inspect hoist timing belt teeth & tensioner', result: 'Hoist toothed belt shows worn tooth root profile and excessive slack, skipping teeth under high load.' },
+                        { label: 'Test electromagnetic holding brake release', result: 'Brake coil receives 24.1 VDC and releases cleanly with zero drag.' },
+                        { label: 'Inspect mast guide rollers', result: 'Guide rollers spin freely with no flat spots or rail scoring.' }
+                    ],
+                    schematic: `[Hoist Servo + Brake] ---> [Toothed Drive Pulley] ===> [Carriage] <--- [Optical Mast Laser]
+Spec: Max Encoder-to-Laser Deviation = ±5 mm | Belt Deflection = 0.25"–0.40"`,
+                    options: [
+                        { value: 'worn_hoist_belt', text: 'Worn / Slack Hoist Timing Belt Skipping Teeth Under Load' },
+                        { value: 'dragging_brake', text: '24VDC Holding Brake Failing to Release' },
+                        { value: 'dirty_laser', text: 'Obstructed Mast Optical Laser Reflector' },
+                        { value: 'bad_mast_roller', text: 'Seized Carriage Mast Guide Roller' }
+                    ],
+                    correctAnswer: 'worn_hoist_belt',
+                    explanation: 'The 48 mm discrepancy between the motor encoder and the carriage optical laser confirms mechanical tooth skipping on the slack/worn hoist belt.'
+                }
+            ],
+            sorter: [
+                {
+                    id: 'sort_1',
+                    title: 'WO-301: OPEX UIS Sorter iBOT Fails to Discharge at Chute 14',
+                    symptoms: 'iBOT #07 carries items past Chute 14 three times before circulating to the jackpot lane. Other iBOTs discharge into Chute 14 normally.',
+                    telemetry: [
+                        { label: 'iBOT #07 Supercap Voltage', value: '47.8 VDC (OK)', status: 'ok' },
+                        { label: 'Cross-Belt Discharge Motor', value: '0.0 A (No Spin)', status: 'crit' },
+                        { label: 'Chute 14 Full Photoeye', value: 'Clear (0V)', status: 'ok' },
+                        { label: 'Wi-Fi / IR Comms RSSI', value: '-54 dBm (Strong)', status: 'ok' }
+                    ],
+                    checks: [
+                        { label: 'Command manual cross-belt jog on iBOT #07 at service station', result: 'Discharge belt does not move; onboard controller logs "Discharge Drive Overcurrent / Open Brush".' },
+                        { label: 'Inspect iBOT #07 cross-belt drive belt & tension', result: 'Small toothed cross-belt is intact, but motor shaft does not turn when commanded.' },
+                        { label: 'Verify Chute 14 full-chute sensor & deflector', result: 'Other iBOTs discharge into Chute 14 with zero errors.' },
+                        { label: 'Check iBOT #07 supercapacitor charge & wheel encoders', result: 'Capacitor bank holds 47.8 VDC; drive wheels and steering encoders calibrate normally.' }
+                    ],
+                    schematic: `[iBOT Onboard Controller] ---> [24V Cross-Belt Discharge Motor] ===> [Top Conveyor Belt] ---> [Chute 14]
+Spec: Supercap Nominal = 48 VDC | Discharge Belt Speed = 1.8 m/s`,
+                    options: [
+                        { value: 'ibot_discharge_motor', text: 'Failed Onboard Cross-Belt Discharge Motor on iBOT #07' },
+                        { value: 'chute_14_full', text: 'Blocked Chute 14 Full-Chute Photoeye' },
+                        { value: 'low_supercap', text: 'Depleted Supercapacitor Bank on iBOT #07' },
+                        { value: 'track_rfid', text: 'Missing Track Positioning Barcode at Chute 14' }
+                    ],
+                    correctAnswer: 'ibot_discharge_motor',
+                    explanation: 'Since other iBOTs discharge cleanly into Chute 14 and iBOT #07 fails a stationary cross-belt jog test, the fault is isolated to iBOT #07’s discharge motor.'
+                },
+                {
+                    id: 'sort_2',
+                    title: 'WO-302: UIS Induction Station Double-Feeding / Gapping Errors',
+                    symptoms: 'Sorter HMI shows frequent "Gap Violation / Double Induction" alerts on Induction Line B, sending waves of packages to the reject chute.',
+                    telemetry: [
+                        { label: 'Induct Belt 1 Speed', value: '120 FPM', status: 'ok' },
+                        { label: 'Induct Belt 2 (Gap) Speed', value: '122 FPM (Low)', status: 'crit' },
+                        { label: 'Induct Trigger PE-IND2', value: '24V Active', status: 'ok' },
+                        { label: 'VFD-IND2 Command', value: '60.0 Hz', status: 'ok' }
+                    ],
+                    checks: [
+                        { label: 'Measure surface speed of Induct Belt 2 with tachometer', result: 'Induct Belt 2 runs at 122 FPM instead of its 210 FPM acceleration spec—matching Belt 1 speed and creating zero gap.' },
+                        { label: 'Inspect VFD-IND2 parameters & drive pulley keyway', result: 'VFD outputs 60 Hz, but drive pulley bushing is slipping on the gearbox output shaft (sheared key).' },
+                        { label: 'Test Induction Photoeye PE-IND2 response time', result: 'Sensor triggers within 2 ms with clean square-wave output.' },
+                        { label: 'Check pneumatic pinch roller pressure', result: 'Regulator reads 65 PSI; pinch rollers engage smoothly.' }
+                    ],
+                    schematic: `[Induct Belt 1: 120 FPM] ---> [Gap Belt 2: Spec 210 FPM] ---> [PE-IND2] ---> [UIS iBOT Load]
+Spec: Minimum Package Gap = 14 inches | Belt 2 Ratio = 1.75x Belt 1`,
+                    options: [
+                        { value: 'sheared_pulley_key', text: 'Sheared Drive Pulley Key on Gap Belt 2 Causing Speed Loss' },
+                        { value: 'slow_photoeye', text: 'Delayed Response on Induction Photoeye PE-IND2' },
+                        { value: 'low_air_pressure', text: 'Low Pneumatic Pressure on Pinch Rollers' },
+                        { value: 'plc_scan_lag', text: 'PLC Ethernet Communication Timeout' }
+                    ],
+                    correctAnswer: 'sheared_pulley_key',
+                    explanation: 'Without the 210 FPM speed differential on Belt 2, consecutive packages never separate, causing continuous gap violations.'
+                }
+            ],
+            dock: [
+                {
+                    id: 'dock_1',
+                    title: 'WO-401: Dock Door 12 Restraint Locked / Interior Light Flashing Red-Green',
+                    symptoms: 'Trailer is backed into Dock 12, but when the operator presses "Engage Restraint", the hook cycles out and immediately retracts with alternating Red/Green fault lights.',
+                    telemetry: [
+                        { label: 'Hydraulic Pump Pressure', value: '1,650 PSI (OK)', status: 'ok' },
+                        { label: 'Hook Extended Limit (LS-2)', value: 'Not Made (0V)', status: 'crit' },
+                        { label: 'RIG Sensor Bar', value: 'Depressed (24V)', status: 'ok' },
+                        { label: 'Door Closed Interlock', value: 'Closed (24V)', status: 'ok' }
+                    ],
+                    checks: [
+                        { label: 'Inspect pit & restraint hook travel path for debris', result: 'Compacted wood pallet splinters and ice/gravel are wedged behind the restraint carriage, stopping hook travel 1" short of Limit Switch LS-2.' },
+                        { label: 'Test Hook Extended Limit Switch LS-2 manually', result: 'Actuating LS-2 roller arm by hand sends 24VDC cleanly to the dock control panel.' },
+                        { label: 'Check trailer Rear Impact Guard (RIG) bar contact', result: 'Trailer ICC bar is tight against the restraint housing; RIG sensor switch is made.' },
+                        { label: 'Verify hydraulic fluid level in power pack', result: 'Reservoir full with clean ISO 32 hydraulic oil.' }
+                    ],
+                    schematic: `[Trailer RIG Bar] ---> [Hydraulic Hook Cylinder] ---> [Hook Extended Limit LS-2] ---> [Green Interior Light]
+Fault Logic: If LS-2 is not made within 6 sec of Engage command, hook retracts & flashes Red/Green.`,
+                    options: [
+                        { value: 'pit_debris_ls2', text: 'Debris Obstructing Restraint Carriage Travel Before Limit Switch LS-2' },
+                        { value: 'bad_rig_sensor', text: 'Failed Trailer RIG Presence Sensor' },
+                        { value: 'low_hyd_fluid', text: 'Low Hydraulic Power Unit Fluid Level' },
+                        { value: 'door_interlock', text: 'Open Overhead Door Track Interlock Switch' }
+                    ],
+                    correctAnswer: 'pit_debris_ls2',
+                    explanation: 'Debris physically stops the hook just shy of LS-2; when the controller timer expires without seeing LS-2 close, it auto-retracts and signals a fault.'
+                },
+                {
+                    id: 'dock_2',
+                    title: 'WO-402: Overhead Dock Door 08 Reverses Halfway Down',
+                    symptoms: 'When closing Dock Door 08, the door travels halfway down, stops, and reverses back to the full-open position.',
+                    telemetry: [
+                        { label: 'Photo-Eye Safety Beam', value: 'Interrupted (0V)', status: 'crit' },
+                        { label: 'Bottom Pneumatic Edge', value: 'Normal (Closed)', status: 'ok' },
+                        { label: 'Motor Current Draw', value: '3.2 A (Normal)', status: 'ok' },
+                        { label: 'Torsion Spring Balance', value: 'Balanced', status: 'ok' }
+                    ],
+                    checks: [
+                        { label: 'Check door-mounted photo-eye emitter & receiver alignment', result: 'Receiver bracket on right track was bumped by a pallet jack; beam alignment LED is blinking amber/off.' },
+                        { label: 'Inspect vertical track rollers and hinges', result: 'Rollers move smoothly in track with no binding or bent track sections.' },
+                        { label: 'Test bottom sensing edge air switch / coil cord', result: 'Continuity across bottom edge switch is normal until compressed.' },
+                        { label: 'Check operator limit cams', result: 'Open and close limit cams are tight on the threaded shaft.' }
+                    ],
+                    schematic: `[Door Controller] <--- [Thru-Beam Photo-Eye] + [Bottom Sensing Edge] ---> [3Ø Door Operator]
+Safety Spec: Any interruption of safety beam during close cycle commands immediate full reversal.`,
+                    options: [
+                        { value: 'misaligned_door_pe', text: 'Knocked / Misaligned Track Safety Photo-Eye Sensor' },
+                        { value: 'broken_torsion_spring', text: 'Broken Overhead Torsion Spring' },
+                        { value: 'bad_close_limit', text: 'Slipped Close Limit Cam Nut' },
+                        { value: 'pinched_coil_cord', text: 'Shorted Bottom Edge Coil Cord' }
+                    ],
+                    correctAnswer: 'misaligned_door_pe',
+                    explanation: 'A bumped receiver bracket broke the thru-beam safety circuit, triggering a mandatory safety reversal during downward travel.'
+                }
+            ],
+            hvac: [
+                {
+                    id: 'hvac_1',
+                    title: 'WO-501: Roof Top Unit RTU-03 Blowing Warm Air / Condenser Fan Off',
+                    symptoms: 'MDF/IDF electrical room temperature is rising (82°F). RTU-03 indoor supply blower is running, but the outdoor compressor trips on high head pressure after 2 minutes.',
+                    telemetry: [
+                        { label: 'Supply Air Temp', value: '79.5 °F (High)', status: 'crit' },
+                        { label: 'Condenser Fan Motor', value: '0 RPM (Hum)', status: 'crit' },
+                        { label: 'Dual-Run Cap (FAN-C)', value: '0.4 µF (Spec 5 µF)', status: 'crit' },
+                        { label: 'Compressor Amps', value: '18.4 A (Tripping)', status: 'warn' }
+                    ],
+                    checks: [
+                        { label: 'Isolate disconnect (LOTO), discharge & test 45+5 µF dual-run capacitor', result: 'HERM-to-C reads 44.6 µF (good), but FAN-to-C reads 0.4 µF (open/failed fan section).' },
+                        { label: 'Spin condenser fan blade by hand (power off)', result: 'Fan blade spins freely with smooth bearings and no axial play.' },
+                        { label: 'Measure condenser fan motor winding resistance', result: 'Motor windings measure normal resistance (14.2 Ω) with infinite resistance to ground.' },
+                        { label: 'Inspect condenser coil fins', result: 'Coil fins are clean and clear of cottonwood/debris.' }
+                    ],
+                    schematic: `[240/480V Contactor] ---> [45+5 µF Dual-Run Capacitor (C / HERM / FAN)] ---> [Condenser Fan + Compressor]
+Spec: Capacitor Tolerance = ±6% of nameplate µF`,
+                    options: [
+                        { value: 'bad_dual_cap', text: 'Failed Fan Section on Dual-Run Capacitor (0.4 µF vs 5 µF)' },
+                        { value: 'seized_fan_motor', text: 'Seized Condenser Fan Motor Bearings' },
+                        { value: 'low_refrigerant', text: 'Low Refrigerant Charge / Suction Line Leak' },
+                        { value: 'clogged_filters', text: 'Plugged Return Air Filters' }
+                    ],
+                    correctAnswer: 'bad_dual_cap',
+                    explanation: 'With the FAN capacitor section open (0.4 µF), the condenser fan motor cannot start, causing head pressure to spike and trip the compressor.'
+                },
+                {
+                    id: 'hvac_2',
+                    title: 'WO-502: Sprinkler Riser Room Tamper Supervisory Alarm on FACP',
+                    symptoms: 'Fire Alarm Control Panel displays "Supervisory Trouble: Riser #2 OS&Y Tamper Switch". No water flow alarm is active.',
+                    telemetry: [
+                        { label: 'Riser #2 Static Pressure', value: '92 PSI (Normal)', status: 'ok' },
+                        { label: 'OS&Y Valve Stem', value: '2 Threads Lowered', status: 'warn' },
+                        { label: 'Tamper Switch Circuit', value: 'Open (Supervisory)', status: 'crit' },
+                        { label: 'Waterflow Paddle Switch', value: 'Normal (Closed)', status: 'ok' }
+                    ],
+                    checks: [
+                        { label: 'Inspect Riser #2 OS&Y gate valve stem & handwheel', result: 'Handwheel was bumped slightly clockwise (2 turns closed), allowing the tamper switch plunger to drop out of the stem groove.' },
+                        { label: 'Verify pressure gauges above and below check valve', result: 'System pressure is steady at 92 PSI with no leaks.' },
+                        { label: 'Confirm Fire Pump controller is in AUTO', result: 'Fire pump controller selector is in AUTO with normal power.' }
+                    ],
+                    schematic: `[Main Water Supply] ---> [OS&Y Gate Valve + Tamper Switch] ---> [Alarm Check Valve] ---> [Sprinkler Grid]
+Note: Any partial closure of an OS&Y valve triggers an immediate FACP Supervisory signal.`,
+                    options: [
+                        { value: 'osy_partially_closed', text: 'Partially Closed OS&Y Gate Valve Tripping Supervisory Tamper Switch' },
+                        { value: 'broken_sprinkler_head', text: 'Active Waterflow from Burst Sprinkler Head' },
+                        { value: 'low_air_compressor', text: 'Dry-Pipe Air Compressor Failure' },
+                        { value: 'cut_facp_slc', text: 'Open Fire Alarm SLC Loop Wiring' }
+                    ],
+                    correctAnswer: 'osy_partially_closed',
+                    explanation: 'Opening the OS&Y valve fully back to the top stop re-seats the tamper switch plunger into the machined stem groove and clears the supervisory fault.'
+                }
+            ]
+        };
+
+        const onboardingChecklistItems = [
+            { id: 'ob_1', title: 'Locate Main Water Shutoffs', desc: 'Switch to the Water Shutoffs layer and inspect main riser isolation points.', layer: 'water' },
+            { id: 'ob_2', title: 'Verify Natural Gas Shutoff Valves', desc: 'Open the Gas Shutoffs layer to identify exterior & rooftop gas isolation valves.', layer: 'gas' },
+            { id: 'ob_3', title: 'Inspect Fire Sprinkler Risers', desc: 'View the Sprinklers layer to locate riser rooms, PIVs, and zone control valves.', layer: 'sprinkler' },
+            { id: 'ob_4', title: 'Review LOTO Isolation Points', desc: 'Open the LOTO Isolation layer to see electrical disconnects and pneumatic dump valves.', layer: 'loto' },
+            { id: 'ob_5', title: 'Trace OPEX UIS Sorter Footprint', desc: 'Inspect the OPEX UIS Sorter layer, induction stations, and chute layout.', layer: 'uis_sorter' },
+            { id: 'ob_6', title: 'Locate ATR Tote Retrieval Aisles', desc: 'Switch to ATR Retrieval to review crane aisles and maintenance access gates.', layer: 'atr_retrieval' },
+            { id: 'ob_7', title: 'Inspect Dock Doors & Guardrails', desc: 'Open the Dock Doors layer to check dock leveler, restraint, and corral locations.', layer: 'dock_doors' },
+            { id: 'ob_8', title: 'Check Rooftop HVAC Units', desc: 'View the HVAC / Roof layers to locate RTUs, exhaust fans, and roof hatch access.', layer: 'hvac' }
+        ];
+
+        window.openEquipmentSimModal = function(initialTrack) {
+            document.getElementById('equipment-sim-modal-overlay').style.display = 'flex';
+            switchEqSimTrack(initialTrack || activeEqTrack || 'conveyance');
+        };
+
+        window.closeEquipmentSimModal = function() {
+            document.getElementById('equipment-sim-modal-overlay').style.display = 'none';
+        };
+
+        window.switchEqSimTrack = function(track) {
+            activeEqTrack = track;
+            ['conveyance', 'sorter', 'dock', 'hvac', 'onboarding'].forEach(t => {
+                const btn = document.getElementById('simTrackBtn_' + t);
+                if (btn) btn.classList.toggle('active', t === track);
+            });
+
+            const scenView = document.getElementById('eqSimScenarioView');
+            const obView = document.getElementById('eqSimOnboardingView');
+
+            if (track === 'onboarding') {
+                scenView.style.display = 'none';
+                obView.style.display = 'flex';
+                renderOnboardingChecklist();
+                return;
+            }
+
+            scenView.style.display = 'flex';
+            obView.style.display = 'none';
+
+            const scenarios = equipmentSimData[track] || [];
+            const sel = document.getElementById('eqSimScenarioSelect');
+            sel.innerHTML = '';
+            scenarios.forEach(s => {
+                const opt = document.createElement('option');
+                opt.value = s.id;
+                opt.textContent = s.title;
+                sel.appendChild(opt);
+            });
+
+            if (scenarios.length > 0) {
+                loadEqScenario(scenarios[0].id);
+            }
+        };
+
+        function findEqScenarioById(id) {
+            for (const track of Object.keys(equipmentSimData)) {
+                const found = equipmentSimData[track].find(s => s.id === id);
+                if (found) return found;
+            }
+            return null;
+        }
+
+        window.loadEqScenario = function(scenId) {
+            activeEqScenarioId = scenId;
+            const scen = findEqScenarioById(scenId);
+            if (!scen) return;
+
+            document.getElementById('eqSimSymptomText').innerText = scen.symptoms;
+            document.getElementById('eqSimSchematicBox').innerText = scen.schematic;
+            document.getElementById('eqSimFeedback').innerText = '';
+            document.getElementById('eqSimDiagnosticLog').innerHTML = '<span style="color:#64748b; font-style:italic;">Click any field inspection step above to log live findings...</span>';
+
+            // Telemetry cards
+            const teleGrid = document.getElementById('eqSimTelemetryGrid');
+            teleGrid.innerHTML = '';
+            (scen.telemetry || []).forEach(t => {
+                const card = document.createElement('div');
+                card.className = 'gauge-card';
+                card.innerHTML = `<div class="gauge-label">${t.label}</div><div class="gauge-val ${t.status || ''}">${t.value}</div>`;
+                teleGrid.appendChild(card);
+            });
+
+            // Interactive field check buttons
+            const checksBox = document.getElementById('eqSimChecksContainer');
+            checksBox.innerHTML = '';
+            (scen.checks || []).forEach((chk, idx) => {
+                const btn = document.createElement('button');
+                btn.className = 'inspect-step-btn';
+                btn.id = `eqChkBtn_${idx}`;
+                btn.innerHTML = `<span>🔍 ${chk.label}</span><span style="font-size:10px; color:#38bdf8;">Inspect</span>`;
+                btn.onclick = () => runEqFieldCheck(idx, chk);
+                checksBox.appendChild(btn);
+            });
+
+            // Root cause options
+            const diagSel = document.getElementById('eqSimDiagnosisSelect');
+            diagSel.innerHTML = '<option value="">Select Verified Root Cause...</option>';
+            (scen.options || []).forEach(optData => {
+                const opt = document.createElement('option');
+                opt.value = optData.value;
+                opt.textContent = optData.text;
+                diagSel.appendChild(opt);
+            });
+        };
+
+        function runEqFieldCheck(idx, chk) {
+            const btn = document.getElementById(`eqChkBtn_${idx}`);
+            const logBox = document.getElementById('eqSimDiagnosticLog');
+            if (logBox.innerHTML.includes('Click any field inspection step')) {
+                logBox.innerHTML = '';
+            }
+            if (btn && !btn.classList.contains('checked')) {
+                btn.classList.add('checked');
+                btn.querySelector('span:last-child').innerText = '✅ Checked';
+                btn.querySelector('span:last-child').style.color = '#10b981';
+                const entry = document.createElement('div');
+                entry.className = 'note-entry';
+                entry.innerHTML = `<span class="note-timestamp">[STEP ${idx + 1}] ${chk.label}:</span> ${chk.result}`;
+                logBox.appendChild(entry);
+                logBox.scrollTop = logBox.scrollHeight;
+            }
+        }
+
+        window.resetEqChecks = function() {
+            loadEqScenario(activeEqScenarioId);
+        };
+
+        window.checkEqDiagnosis = function() {
+            const val = document.getElementById('eqSimDiagnosisSelect').value;
+            const scen = findEqScenarioById(activeEqScenarioId);
+            const fb = document.getElementById('eqSimFeedback');
+            if (!scen) return;
+            if (!val) {
+                fb.innerText = 'Please select a root cause diagnosis.';
+                fb.style.color = '#ef4444';
+                return;
+            }
+            if (val === scen.correctAnswer) {
+                fb.innerText = `🎉 CORRECT! ${scen.explanation}`;
+                fb.style.color = '#10b981';
+            } else {
+                fb.innerText = '❌ Not quite — review the telemetry readings and run the remaining field inspection checks.';
+                fb.style.color = '#ef4444';
+            }
+        };
+
+        window.copyEqWorkOrderSummary = function() {
+            const scen = findEqScenarioById(activeEqScenarioId);
+            if (!scen) return;
+            const logText = document.getElementById('eqSimDiagnosticLog')?.innerText || '';
+            const fbText = document.getElementById('eqSimFeedback')?.innerText || '';
+            const text = `${scen.title}
+
+Symptoms:
+${scen.symptoms}
+
+Subsystem & Specs:
+${scen.schematic}
+
+Field Findings:
+${logText}` + (fbText ? `
+
+Diagnosis:
+${fbText}` : '');
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).catch(() => {});
+            }
+        };
+
+        function renderOnboardingChecklist() {
+            const box = document.getElementById('scavengerChecklistBox');
+            if (!box) return;
+            box.innerHTML = '';
+            let doneCount = 0;
+
+            onboardingChecklistItems.forEach(item => {
+                const isDone = !!completedOnboardingTasks[item.id];
+                if (isDone) doneCount++;
+
+                const row = document.createElement('div');
+                row.className = 'scavenger-row' + (isDone ? ' completed' : '');
+                row.innerHTML = `
+                    <label style="display:flex; align-items:flex-start; gap:8px; cursor:pointer; flex:1; color:#e0e1dd; font-size:11px;">
+                        <input type="checkbox" ${isDone ? 'checked' : ''} onchange="toggleOnboardingTask('${item.id}', this.checked)" style="width:auto; margin-top:2px; min-height:auto;">
+                        <div>
+                            <div style="font-weight:bold; color:${isDone ? '#10b981' : '#fff'};">${item.title}</div>
+                            <div style="color:#94a3b8; font-size:10px;">${item.desc}</div>
+                        </div>
+                    </label>
+                    <button onclick="jumpToOnboardingLayer('${item.layer}')" style="width:auto; padding:4px 10px; font-size:10px; min-height:auto; background:#0284c7; color:#fff; margin:0;">🗺️ View Layer</button>
+                `;
+                box.appendChild(row);
+            });
+
+            const badge = document.getElementById('onboardingProgressBadge');
+            if (badge) badge.innerText = `${doneCount} / ${onboardingChecklistItems.length} Completed`;
+        }
+
+        window.toggleOnboardingTask = function(taskId, checked) {
+            completedOnboardingTasks[taskId] = checked;
+            localStorage.setItem('imi1_onboarding_tasks', JSON.stringify(completedOnboardingTasks));
+            renderOnboardingChecklist();
+        };
+
+        window.jumpToOnboardingLayer = function(layerName) {
+            closeEquipmentSimModal();
+            switchLayer(layerName);
+        };
+
+        /* CONTEXTUAL BRIDGE FROM MAP ASSET MODAL TO MATCHING SIMULATOR */
+        let currentModalAssetSimTarget = null;
+
+        function detectSimulatorForElement(el) {
+            if (!el) return null;
+            const hay = `${el.name || ''} ${el.category || ''} ${el.layer || ''}`.toLowerCase();
+            if (hay.includes('opex') || hay.includes('uis') || hay.includes('sorter') || hay.includes('ibot')) {
+                return { type: 'equipment', track: 'sorter', label: '🎯 Practice UIS Sorter Sim' };
+            }
+            if (hay.includes('atr') || hay.includes('convey') || hay.includes('mdr') || el.type === 'conveyance_line') {
+                return { type: 'equipment', track: 'conveyance', label: '🎯 Practice Conveyance/ATR Sim' };
+            }
+            if (hay.includes('dock') || hay.includes('door') || hay.includes('restraint') || hay.includes('corral')) {
+                return { type: 'equipment', track: 'dock', label: '🎯 Practice Dock Door Sim' };
+            }
+            if (hay.includes('hvac') || hay.includes('rtu') || hay.includes('sprinkler') || hay.includes('water') || hay.includes('gas') || hay.includes('plumbing')) {
+                return { type: 'equipment', track: 'hvac', label: '🎯 Practice HVAC/Utility Sim' };
+            }
+            if (hay.includes('electr') || hay.includes('panel') || hay.includes('vfd') || hay.includes('plc') || hay.includes('loto')) {
+                return { type: 'electrical', label: '⚡ Practice Electrical Sim' };
+            }
+            return null;
+        }
+
+        window.launchSimForCurrentAsset = function() {
+            const target = currentModalAssetSimTarget;
+            closeModal();
+            if (!target) return;
+            if (target.type === 'electrical') {
+                openElectricalTrainingModal();
+            } else {
+                openEquipmentSimModal(target.track);
             }
         };
 
@@ -2123,6 +2822,16 @@
             document.getElementById("modalElementId").value = el.id;
             document.getElementById("modalTitle").innerText = `Details: ${el.name}`;
             document.getElementById("modalName").value = el.name;
+            currentModalAssetSimTarget = detectSimulatorForElement(el);
+            const pracBtn = document.getElementById("assetPracticeSimBtn");
+            if (pracBtn) {
+                if (currentModalAssetSimTarget) {
+                    pracBtn.style.display = "inline-block";
+                    pracBtn.innerText = currentModalAssetSimTarget.label;
+                } else {
+                    pracBtn.style.display = "none";
+                }
+            }
             
             if (el.type === 'asset') {
                 document.getElementById("modalAssetFields").style.display = "flex";
