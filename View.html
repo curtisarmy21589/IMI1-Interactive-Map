@@ -360,6 +360,99 @@
             touch-action: auto !important;
         }
 
+
+        #additional-sims-modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 1060;
+            justify-content: center;
+            align-items: center;
+            padding: 10px;
+        }
+        .add-sim-cat-btn {
+            flex: 1;
+            min-width: 120px;
+            padding: 7px 8px;
+            background: #070d14;
+            border: 1px solid #1e293b;
+            color: #94a3b8;
+            font-size: 11px;
+            font-weight: bold;
+            border-radius: 5px;
+            cursor: pointer;
+            text-align: center;
+        }
+        .add-sim-cat-btn.active {
+            background: #0284c7;
+            color: #fff;
+            border-color: #38bdf8;
+        }
+        .add-sim-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 10px;
+        }
+        .add-sim-card {
+            background: #111b27;
+            border: 1px solid #1f2d3d;
+            border-radius: 6px;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            gap: 8px;
+        }
+        .add-sim-badge {
+            font-size: 9px;
+            font-weight: bold;
+            text-transform: uppercase;
+            color: #38bdf8;
+            letter-spacing: 0.4px;
+        }
+        .add-sim-title {
+            color: #fff;
+            font-size: 13px;
+            font-weight: bold;
+            margin: 2px 0;
+        }
+        .add-sim-desc {
+            color: #cbd5e1;
+            font-size: 11px;
+            line-height: 1.4;
+            margin: 0;
+        }
+        .add-sim-actions {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        .add-sim-link-btn {
+            display: inline-block;
+            background: #0284c7;
+            color: #fff;
+            text-decoration: none;
+            font-size: 11px;
+            font-weight: bold;
+            padding: 5px 10px;
+            border-radius: 4px;
+            border: 1px solid #38bdf8;
+        }
+        .add-sim-link-btn:hover {
+            background: #38bdf8;
+            color: #0b131d;
+        }
+        #additional-sims-modal-overlay .modal-content,
+        #additional-sims-modal-overlay .modal-body,
+        #addSimCardsContainer,
+        #addSimQuickNotes {
+            user-select: text !important;
+            -webkit-user-select: text !important;
+            touch-action: auto !important;
+        }
+
     </style>
 </head>
 <body>
@@ -418,6 +511,7 @@
             <button onclick="openARModal()" style="background:#0284c7; color:#fff; border-color:#38bdf8;">🕶️ AR Live Camera View</button>
             <button onclick="openElectricalTrainingModal()" style="background:#f59e0b; color:#0b131d; border-color:#fbbf24; font-weight: bold;">⚡ Electrical Training & Simulator</button>
             <button onclick="openEquipmentSimModal()" style="background:#10b981; color:#0b131d; border-color:#34d399; font-weight: bold;">🛠️ Equipment & Facility Simulators</button>
+            <button onclick="openAdditionalSimsModal()" style="background:#38bdf8; color:#0b131d; border-color:#7dd3fc; font-weight: bold;">🌐 Additional Simulators Hub</button>
         </div>
         <hr style="border-color: #1e293b; margin: 4px 0;">
         <div class="tab-bar">
@@ -887,6 +981,52 @@
             <div class="modal-footer" style="background: #0f172a; justify-content: space-between; align-items: center;">
                 <span style="font-size: 10px; color: #94a3b8;">Tip: Perform field inspections before selecting a root cause to validate readings against OEM specs.</span>
                 <button onclick="closeEquipmentSimModal()" style="width: auto; padding: 6px 14px; background: #10b981; color: #0b131d;">Exit Simulator</button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ADDITIONAL TRAINING SIMULATORS HUB MODAL -->
+    <div id="additional-sims-modal-overlay">
+        <div class="modal-content" style="width: 960px; max-width: 96vw;">
+            <div class="modal-header" style="background: #0f172a; border-bottom: 1px solid #38bdf8;">
+                <h3 style="color: #38bdf8; margin: 0; display: flex; align-items: center; gap: 8px;">
+                    🌐 Additional Controls, PLC & Equipment Training Simulators
+                </h3>
+                <button class="close-modal" onclick="closeAdditionalSimsModal()">×</button>
+            </div>
+            <div class="modal-body" style="background: #0b131d; font-size: 12px; gap: 10px;">
+                <!-- CATEGORY FILTER TABS -->
+                <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                    <button class="add-sim-cat-btn active" id="addSimCat_all" onclick="filterAdditionalSims('all')">All Labs</button>
+                    <button class="add-sim-cat-btn" id="addSimCat_plc" onclick="filterAdditionalSims('plc')">PLC & Logic</button>
+                    <button class="add-sim-cat-btn" id="addSimCat_controls" onclick="filterAdditionalSims('controls')">Controls & Signals</button>
+                    <button class="add-sim-cat-btn" id="addSimCat_inapp" onclick="filterAdditionalSims('inapp')">Built-In Map Sims</button>
+                </div>
+
+                <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center; justify-content: space-between;">
+                    <span style="color: #94a3b8; font-size: 11px;">
+                        External browser simulators launch in a new tab so your live map and shift logs stay open.
+                    </span>
+                    <button onclick="copyAdditionalSimsList()" style="width: auto; padding: 4px 10px; font-size: 10px; min-height: auto; background: #1e293b; color: #38bdf8; margin: 0;">📋 Copy Simulator Links</button>
+                </div>
+
+                <!-- SIMULATOR CARDS GRID -->
+                <div id="addSimCardsContainer" class="add-sim-grid"></div>
+
+                <!-- NEW TECH TRAINING ASSIGNMENTS / NOTES -->
+                <div id="addSimQuickNotes" style="background: #111b27; border: 1px solid #1f2d3d; border-radius: 6px; padding: 10px;">
+                    <h4 style="color: #f59e0b; margin: 0 0 4px 0;">📌 Suggested Onboarding Sequence for Newer Techs</h4>
+                    <div style="color: #cbd5e1; font-size: 11px; line-height: 1.5;">
+                        1. Start with <b>New Tech Map Walkthrough</b> in Equipment Simulators to learn shutoffs, LOTO points, and zones on the map.<br>
+                        2. Practice <b>Controls & Electrical Simulator (`WO-101`–`WO-108`)</b> and <b>Equipment Simulators (`WO-201`–`WO-502`)</b> for facility-specific faults.<br>
+                        3. Use external labs like <b>ControlsTrainer</b>, <b>CodePLC Labs</b>, <b>Automation Controls Toolbox</b>, or <b>rungs.dev</b> for deeper ladder logic and I/O drills.
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer" style="background: #0f172a; justify-content: space-between; align-items: center;">
+                <span style="font-size: 10px; color: #94a3b8;">Map integrity & existing scenarios remain untouched.</span>
+                <button onclick="closeAdditionalSimsModal()" style="width: auto; padding: 6px 14px; background: #38bdf8; color: #0b131d;">Close Hub</button>
             </div>
         </div>
     </div>
@@ -1892,6 +2032,150 @@ ${fbText}` : '');
                 openElectricalTrainingModal();
             } else {
                 openEquipmentSimModal(target.track);
+            }
+        };
+
+
+        /* ADDITIONAL SIMULATORS HUB DATA & FUNCTIONS */
+        let activeAddSimFilter = 'all';
+
+        const additionalSimulatorCatalog = [
+            {
+                id: 'sim_controlstrainer',
+                cat: 'controls',
+                badge: 'Safe Isolation & Controls',
+                title: 'ControlsTrainer',
+                desc: 'Browser-based troubleshooting for safe isolation, panel circuits, ladder logic, and industrial fault-finding.',
+                url: 'https://controlstrainer.com/',
+                actionType: 'external',
+                actionLabel: 'Open ControlsTrainer ↗'
+            },
+            {
+                id: 'sim_codeplc',
+                cat: 'plc',
+                badge: 'Electrical Prints & Faults',
+                title: 'CodePLC Labs',
+                desc: 'Interactive industrial machine scenarios with electrical prints, I/O states, and hidden faults to isolate.',
+                url: 'https://www.codeplc.com/',
+                actionType: 'external',
+                actionLabel: 'Open CodePLC Labs ↗'
+            },
+            {
+                id: 'sim_actoolbox',
+                cat: 'controls',
+                badge: 'Conveyors & Analog Signals',
+                title: 'Automation Controls Toolbox',
+                desc: 'Browser mini-labs for conveyor sequences, permissives, timeouts, and 4–20 mA / 0–10 V signal troubleshooting.',
+                url: 'https://automationcontrolstoolbox.com/',
+                actionType: 'external',
+                actionLabel: 'Open Toolbox ↗'
+            },
+            {
+                id: 'sim_rungsdev',
+                cat: 'plc',
+                badge: 'Ladder Logic & Structured Text',
+                title: 'rungs.dev',
+                desc: 'Browser-based PLC logic editor and simulator with scan-by-scan execution and tag trend views.',
+                url: 'https://rungs.dev/',
+                actionType: 'external',
+                actionLabel: 'Open rungs.dev ↗'
+            },
+            {
+                id: 'sim_local_elec',
+                cat: 'inapp',
+                badge: 'Built-In Map Simulator',
+                title: 'Electrical & Controls Simulator (WO-101–108)',
+                desc: 'Practice 24VDC control circuits, 480VAC 3-phase power, and VFD faults using the built-in multimeter.',
+                actionType: 'modal_elec',
+                actionLabel: 'Launch Built-In Sim'
+            },
+            {
+                id: 'sim_local_eq',
+                cat: 'inapp',
+                badge: 'Built-In Map Simulator',
+                title: 'Equipment, Dock, HVAC & Onboarding Sim',
+                desc: 'Practice conveyance/ATR, OPEX UIS sorter, dock doors, HVAC/utilities, and the 8-step floor walkthrough.',
+                actionType: 'modal_eq',
+                actionLabel: 'Launch Built-In Sim'
+            }
+        ];
+
+        window.openAdditionalSimsModal = function(filterCat) {
+            document.getElementById('additional-sims-modal-overlay').style.display = 'flex';
+            filterAdditionalSims(filterCat || activeAddSimFilter || 'all');
+        };
+
+        window.closeAdditionalSimsModal = function() {
+            document.getElementById('additional-sims-modal-overlay').style.display = 'none';
+        };
+
+        window.filterAdditionalSims = function(cat) {
+            activeAddSimFilter = cat;
+            ['all', 'plc', 'controls', 'inapp'].forEach(c => {
+                const btn = document.getElementById('addSimCat_' + c);
+                if (btn) btn.classList.toggle('active', c === cat);
+            });
+            renderAdditionalSimCards();
+        };
+
+        function renderAdditionalSimCards() {
+            const box = document.getElementById('addSimCardsContainer');
+            if (!box) return;
+            box.innerHTML = '';
+
+            const items = activeAddSimFilter === 'all'
+                ? additionalSimulatorCatalog
+                : additionalSimulatorCatalog.filter(item => item.cat === activeAddSimFilter);
+
+            items.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'add-sim-card';
+
+                const top = document.createElement('div');
+                top.innerHTML = `<div class="add-sim-badge">${item.badge}</div><div class="add-sim-title">${item.title}</div><p class="add-sim-desc">${item.desc}</p>`;
+
+                const actions = document.createElement('div');
+                actions.className = 'add-sim-actions';
+
+                if (item.actionType === 'external' && item.url) {
+                    const link = document.createElement('a');
+                    link.className = 'add-sim-link-btn';
+                    link.href = item.url;
+                    link.target = '_blank';
+                    link.rel = 'noopener noreferrer';
+                    link.textContent = item.actionLabel;
+                    actions.appendChild(link);
+                } else {
+                    const btn = document.createElement('button');
+                    btn.style.width = 'auto';
+                    btn.style.padding = '5px 10px';
+                    btn.style.fontSize = '11px';
+                    btn.style.minHeight = 'auto';
+                    btn.style.margin = '0';
+                    btn.style.background = '#10b981';
+                    btn.style.color = '#0b131d';
+                    btn.textContent = item.actionLabel;
+                    btn.onclick = () => {
+                        closeAdditionalSimsModal();
+                        if (item.actionType === 'modal_elec') openElectricalTrainingModal();
+                        else openEquipmentSimModal('conveyance');
+                    };
+                    actions.appendChild(btn);
+                }
+
+                card.appendChild(top);
+                card.appendChild(actions);
+                box.appendChild(card);
+            });
+        }
+
+        window.copyAdditionalSimsList = function() {
+            const lines = additionalSimulatorCatalog
+                .filter(i => i.url)
+                .map(i => `${i.title}: ${i.url}`);
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(lines.join('
+')).catch(() => {});
             }
         };
 
