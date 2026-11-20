@@ -2174,8 +2174,7 @@ ${fbText}` : '');
                 .filter(i => i.url)
                 .map(i => `${i.title}: ${i.url}`);
             if (navigator.clipboard && navigator.clipboard.writeText) {
-                navigator.clipboard.writeText(lines.join('
-')).catch(() => {});
+                navigator.clipboard.writeText(lines.join('\n')).catch(() => {});
             }
         };
 
