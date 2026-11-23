@@ -453,6 +453,96 @@
             touch-action: auto !important;
         }
 
+
+        /* NEW TECH VIEWER & FIELD HELPERS */
+        #map-legend-panel {
+            display: none;
+            position: absolute;
+            top: 52px;
+            right: 12px;
+            width: 255px;
+            max-height: 75vh;
+            overflow-y: auto;
+            background: rgba(17, 27, 39, 0.96);
+            border: 1px solid #38bdf8;
+            border-radius: 8px;
+            padding: 10px 12px;
+            z-index: 15;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.75);
+            font-size: 11px;
+            pointer-events: auto;
+        }
+        #map-legend-panel h4 {
+            margin: 0 0 6px 0;
+            color: #38bdf8;
+            font-size: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .legend-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 3px 0;
+            color: #e2e8f0;
+            font-size: 10.5px;
+        }
+        .legend-swatch {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            flex-shrink: 0;
+            border: 2px solid #fff;
+        }
+        #guided-tour-banner {
+            display: none;
+            position: absolute;
+            bottom: 14px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 540px;
+            max-width: 94vw;
+            background: rgba(15, 23, 42, 0.96);
+            border: 1px solid #10b981;
+            border-radius: 8px;
+            padding: 10px 14px;
+            z-index: 18;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.85);
+            pointer-events: auto;
+        }
+        .asset-safety-banner {
+            background: #1e1b18;
+            border: 1px solid #f59e0b;
+            border-left: 4px solid #ef4444;
+            border-radius: 6px;
+            padding: 8px 10px;
+            font-size: 11px;
+            color: #fef3c7;
+            line-height: 1.45;
+        }
+        .new-tech-quickcheck-box {
+            background: #0d1b2a;
+            border: 1px solid #0284c7;
+            border-left: 4px solid #38bdf8;
+            border-radius: 6px;
+            padding: 8px 10px;
+            font-size: 11px;
+            color: #e0f2fe;
+            line-height: 1.45;
+        }
+        @keyframes searchTargetPulse {
+            0% { r: 10px; opacity: 1; }
+            50% { r: 18px; opacity: 0.25; }
+            100% { r: 10px; opacity: 1; }
+        }
+        .search-highlight-ring {
+            animation: searchTargetPulse 1.3s infinite ease-in-out;
+            stroke: #38bdf8;
+            stroke-width: 2.5;
+            fill: none;
+            pointer-events: none;
+        }
     </style>
 </head>
 <body>
@@ -464,11 +554,20 @@
         <h2>Facility Viewer (View Only)</h2>
         
         <div>
-            <label>🔍 Asset Search / QR Scanner</label>
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <label>🔍 Asset Search / QR Scanner</label>
+                <span id="searchMatchCount" style="font-size:10px; color:#38bdf8; font-weight:bold;"></span>
+            </div>
             <div style="display: flex; gap: 4px;">
                 <input type="text" id="assetSearchInput" placeholder="Search Asset Name, Tag ID, PLC..." oninput="handleSearch(this.value)">
+                <button id="clearSearchBtn" onclick="clearAssetSearch()" title="Clear search" style="display:none; width: auto; padding: 4px 8px; font-size: 11px; background:#334155;">✕</button>
                 <button onclick="openScannerModal()" style="width: auto; padding: 4px 10px; font-size: 11px;">📷 Scan</button>
             </div>
+        </div>
+        <div style="display: flex; gap: 4px; align-items: center;">
+            <input type="text" id="gridJumpInput" placeholder="Jump to Grid (e.g. C14 or B-8)" onkeydown="if(event.key==='Enter') jumpToGridCoord()" style="flex:1; min-height:30px; padding:4px 8px; font-size:11px;">
+            <button onclick="jumpToGridCoord()" style="width:auto; min-height:30px; padding:4px 8px; font-size:10px; background:#1e293b; color:#38bdf8;">🎯 Go</button>
+            <button onclick="resetMapView()" style="width:auto; min-height:30px; padding:4px 8px; font-size:10px; background:#0284c7; color:#fff;">Fit Map</button>
         </div>
         <div id="coord-display">Col: -- | Row: --</div>
         <div id="sync-status">Connected (View Only)</div>
@@ -672,6 +771,42 @@
             <button class="filter-pill" onclick="toggleQuickFilter('water')">💧 Water Shutoffs</button>
             <button class="filter-pill" onclick="toggleQuickFilter('estop')">⚡ E-Stop Zones</button>
             <button class="filter-pill active" id="filterAllBtn" onclick="toggleQuickFilter('all')">Show All</button>
+            <button class="filter-pill" onclick="resetMapView()" style="border-color:#38bdf8; color:#38bdf8;">🎯 Reset View</button>
+            <button class="filter-pill" id="legendToggleBtn" onclick="toggleMapLegend()" style="border-color:#f59e0b; color:#fbbf24;">📖 Map Legend</button>
+            <button class="filter-pill" id="tourToggleBtn" onclick="startGuidedFloorTour()" style="border-color:#10b981; color:#34d399;">🧭 New Tech Tour</button>
+        </div>
+
+        <!-- FLOATING MAP LEGEND DRAWER -->
+        <div id="map-legend-panel">
+            <h4>
+                <span>📖 Facility Map Key</span>
+                <button onclick="toggleMapLegend()" style="width:auto; min-height:auto; padding:0 6px; background:none; border:none; color:#94a3b8; font-size:15px;">×</button>
+            </h4>
+            <div style="color:#94a3b8; font-size:10px; font-weight:bold; margin-bottom:3px;">STATUS DOTS & BADGES</div>
+            <div class="legend-row"><span class="legend-swatch" style="background:#10b981; border-color:#0b131d;"></span> Operational Asset</div>
+            <div class="legend-row"><span class="legend-swatch" style="background:#f59e0b; border-color:#0b131d;"></span> Maintenance / Attention</div>
+            <div class="legend-row"><span class="legend-swatch" style="background:#ef4444; border-color:#0b131d;"></span> Down / Out of Service</div>
+            <div class="legend-row"><span style="width:14px; text-align:center;">📦</span> Spare Parts Waiting / Needed</div>
+            <div class="legend-row"><span style="width:14px; text-align:center; color:#ef4444; font-weight:bold;">◎</span> Pulsing Ring: PM Due / Overdue</div>
+            <div style="color:#94a3b8; font-size:10px; font-weight:bold; margin:6px 0 3px 0; border-top:1px solid #1f2d3d; padding-top:5px;">ASSET CATEGORIES</div>
+            <div id="legendCategoriesList"></div>
+        </div>
+
+        <!-- GUIDED NEW TECH FLOOR TOUR BANNER -->
+        <div id="guided-tour-banner">
+            <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:4px;">
+                <span id="tourStepBadge" style="background:#10b981; color:#0b131d; font-weight:bold; font-size:10px; padding:2px 8px; border-radius:10px;">Step 1 of 8</span>
+                <strong id="tourStepTitle" style="color:#38bdf8; font-size:12px; flex:1;">Locate Main Water Shutoffs</strong>
+                <button onclick="stopGuidedFloorTour()" style="width:auto; min-height:auto; padding:2px 8px; font-size:10px; background:#334155; color:#e2e8f0; margin:0;">✕ End Tour</button>
+            </div>
+            <div id="tourStepDesc" style="color:#e2e8f0; font-size:11px; line-height:1.4; margin-bottom:6px;"></div>
+            <div style="display:flex; justify-content:space-between; align-items:center; gap:6px;">
+                <span id="tourStepCountInfo" style="color:#94a3b8; font-size:10px;"></span>
+                <div style="display:flex; gap:6px;">
+                    <button onclick="prevTourStep()" style="width:auto; min-height:auto; padding:4px 10px; font-size:10px; background:#1e293b; color:#fff; margin:0;">◀ Prev</button>
+                    <button onclick="nextTourStep()" style="width:auto; min-height:auto; padding:4px 10px; font-size:10px; background:#0284c7; color:#fff; margin:0;">Next Step ▶</button>
+                </div>
+            </div>
         </div>
         <svg id="layoutSvg" width="2200" height="1400">
             <g id="viewport"></g>
@@ -682,14 +817,17 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h3 id="modalTitle" style="color: #38bdf8; margin: 0;">Item Details</h3>
-                <div style="display: flex; gap: 6px; align-items: center;">
+                <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
                     <button id="assetPracticeSimBtn" onclick="launchSimForCurrentAsset()" style="display:none; width: auto; padding: 4px 8px; font-size: 10px; background: #10b981; color: #0b131d; font-weight:bold;">🎯 Practice Fault Sim</button>
+                    <button onclick="printAssetSpecSheet()" style="width: auto; padding: 4px 8px; font-size: 10px; background: #1e293b; color: #38bdf8;">📄 Print Spec Sheet</button>
                     <button onclick="printAssetQrCode()" style="width: auto; padding: 4px 8px; font-size: 10px; background: #0284c7; color: #fff;">🖨️ Print QR Label</button>
                     <button class="close-modal" onclick="closeModal()">×</button>
                 </div>
             </div>
             <div class="modal-body">
                 <input type="hidden" id="modalElementId">
+                <div id="modalSafetyCallout" class="asset-safety-banner" style="display:none;"></div>
+                <div id="modalNewTechQuickCheck" class="new-tech-quickcheck-box" style="display:none;"></div>
                 <div>
                     <label>Item Name / Designation</label>
                     <input type="text" id="modalName" disabled>
@@ -911,6 +1049,7 @@
                     <button class="sim-module-btn" id="simTrackBtn_sorter" onclick="switchEqSimTrack('sorter')">🔀 OPEX UIS Sorter</button>
                     <button class="sim-module-btn" id="simTrackBtn_dock" onclick="switchEqSimTrack('dock')">🚛 Dock Doors & Restraints</button>
                     <button class="sim-module-btn" id="simTrackBtn_hvac" onclick="switchEqSimTrack('hvac')">❄️ HVAC & Utilities / LOTO</button>
+                    <button class="sim-module-btn" id="simTrackBtn_pneumatics" onclick="switchEqSimTrack('pneumatics')">💨 Pneumatics & PLC I/O</button>
                     <button class="sim-module-btn" id="simTrackBtn_onboarding" onclick="switchEqSimTrack('onboarding')">🧭 New Tech Map Walkthrough</button>
                 </div>
 
@@ -1790,6 +1929,63 @@ Note: Any partial closure of an OS&Y valve triggers an immediate FACP Supervisor
             ]
         };
 
+            pneumatics: [
+                {
+                    id: 'pneu_1',
+                    title: 'WO-601: Pneumatic Diverter / Stop Actuator Sluggish or Failing to Extend',
+                    symptoms: 'Package diverter stop on Sort Spur #3 extends slowly or stalls halfway under load. Adjacent pneumatic zones operate briskly.',
+                    telemetry: [
+                        { label: 'Main Air Header', value: '88 PSI (Nominal)', status: 'ok' },
+                        { label: 'Spur #3 FRL Regulator', value: '42 PSI (Low)', status: 'crit' },
+                        { label: '5/2 Solenoid Coil', value: '24.0 VDC (Energized)', status: 'ok' },
+                        { label: 'FRL Bowl Sight Glass', value: 'Clear / Dry', status: 'ok' }
+                    ],
+                    checks: [
+                        { label: 'Read downstream gauge on Spur #3 Filter-Regulator-Lubricator (FRL)', result: 'Regulator gauge reads 42 PSI vs. 75 PSI spec; adjustment knob lock ring was unlatched and drifted down.' },
+                        { label: 'Check 5/2 directional spool valve exhaust ports & mufflers', result: 'Bronze exhaust mufflers are clean and unrestricted when valve shifts.' },
+                        { label: 'Inspect push-to-connect air lines for kinks or hiss leaks', result: '6mm/8mm polyurethane tubing shows no pinholes, kinks, or fitting blow-by.' },
+                        { label: 'Verify LOTO stored-energy dump valve operation', result: 'Main supply isolation ball valve is open; dump exhaust is closed.' }
+                    ],
+                    schematic: `[88 PSI Header] ---> [Shutoff + FRL (Spec 75 PSI)] ---> [24VDC 5/2 Solenoid] ---> [Double-Acting Cylinder]
+New Tech Note: Always bleed trapped pneumatic pressure after LOTO before disconnecting lines/fittings.`,
+                    options: [
+                        { value: 'low_frl_pressure', text: 'Low Downstream FRL Regulator Pressure (42 PSI vs. 75 PSI Spec)' },
+                        { value: 'dead_solenoid_coil', text: 'De-energized / Open 24VDC Solenoid Coil' },
+                        { value: 'clogged_header', text: 'Facility Main Air Compressor Header Failure' },
+                        { value: 'leaking_cylinder_seal', text: 'Blown Piston Rod Seal on Actuator' }
+                    ],
+                    correctAnswer: 'low_frl_pressure',
+                    explanation: 'The main header is healthy at 88 PSI, but the local FRL regulator drifted down to 42 PSI, starving the cylinder of force.'
+                },
+                {
+                    id: 'pneu_2',
+                    title: 'WO-602: PLC Remote I/O Block Input Flickering / Sensor False Triggers',
+                    symptoms: 'Conveyor jam fault triggers intermittently when no tote is present. HMI shows PLC Input I:2/03 toggling rapidly.',
+                    telemetry: [
+                        { label: 'I/O Block Bus Power', value: '24.2 VDC (OK)', status: 'ok' },
+                        { label: 'M12 Sensor Cable Nut', value: 'Finger-Loose', status: 'warn' },
+                        { label: 'Sensor Target Alignment', value: 'Centered on Reflector', status: 'ok' },
+                        { label: 'PLC Rack Comms Status', value: 'OK (No Timeout)', status: 'ok' }
+                    ],
+                    checks: [
+                        { label: 'Wiggle M12 connector & inspect cable near conveyor frame pinch point', result: 'Wiggling M12 plug at I/O port 3 causes I:2/03 LED to flicker; outer jacket shows slight abrasion against frame.' },
+                        { label: 'Verify PNP vs. NPN wiring & 24VDC common reference', result: 'PNP sensor wired properly (Pin 1 +24V, Pin 3 0V, Pin 4 Signal In).' },
+                        { label: 'Check photoeye lens for dust/debris', result: 'Optical lens and reflector are clean.' }
+                    ],
+                    schematic: `[PNP Sensor (Brown +24V / Blue 0V / Black Out)] --- (M12 Cordset) ---> [Remote I/O Input Port 3]
+New Tech Tip: Check cable continuity while flexing near moving guards/frames before replacing sensors.`,
+                    options: [
+                        { value: 'loose_m12_intermittent', text: 'Loose / Abraded M12 Sensor Cordset Causing Intermittent I/O Flicker' },
+                        { value: 'plc_cpu_fault', text: 'Main PLC Processor Overheating / Faulting' },
+                        { value: 'npn_pnp_mismatch', text: 'Wrong NPN vs. PNP Sensor Type Installed' },
+                        { value: 'low_24v_bus', text: 'Failed 24VDC Power Supply' }
+                    ],
+                    correctAnswer: 'loose_m12_intermittent',
+                    explanation: 'Vibration and cable strain at the M12 connection caused intermittent signal drop-outs on Input I:2/03.'
+                }
+            ]
+        };
+
         const onboardingChecklistItems = [
             { id: 'ob_1', title: 'Locate Main Water Shutoffs', desc: 'Switch to the Water Shutoffs layer and inspect main riser isolation points.', layer: 'water' },
             { id: 'ob_2', title: 'Verify Natural Gas Shutoff Valves', desc: 'Open the Gas Shutoffs layer to identify exterior & rooftop gas isolation valves.', layer: 'gas' },
@@ -1812,7 +2008,7 @@ Note: Any partial closure of an OS&Y valve triggers an immediate FACP Supervisor
 
         window.switchEqSimTrack = function(track) {
             activeEqTrack = track;
-            ['conveyance', 'sorter', 'dock', 'hvac', 'onboarding'].forEach(t => {
+            ['conveyance', 'sorter', 'dock', 'hvac', 'pneumatics', 'onboarding'].forEach(t => {
                 const btn = document.getElementById('simTrackBtn_' + t);
                 if (btn) btn.classList.toggle('active', t === track);
             });
@@ -2218,8 +2414,50 @@ ${fbText}` : '');
                 render();
             } catch (error) {
                 console.error("Error loading layout:", error);
-                syncStatus.innerText = "Error Loading Database";
-                syncStatus.style.color = "#ef4444";
+                let loadedFromCache = false;
+                try {
+                    const cachedRaw = localStorage.getItem("cached_layout");
+                    if (cachedRaw) {
+                        const data = JSON.parse(cachedRaw);
+                        if (data.elements) {
+                            elements = data.elements.map(el => {
+                                if (el.type === 'conveyance_line' && !el.points && el.x1 !== undefined) {
+                                    el.points = [{x: el.x1, y: el.y1}, {x: el.x2, y: el.y2}];
+                                }
+                                return el;
+                            });
+                        }
+                        if (data.categories) categories = data.categories;
+                        if (data.shiftLogs) shiftLogs = data.shiftLogs;
+                        if (data.safetyLogs) safetyLogs = data.safetyLogs;
+                        if (data.tomLogs) tomLogs = data.tomLogs;
+                        if (data.techLogs) techLogs = data.techLogs;
+                        if (data.opsShifts) opsShifts = data.opsShifts;
+                        if (data.safetyShifts) safetyShifts = data.safetyShifts;
+                        if (data.tomShifts) tomShifts = data.tomShifts;
+                        if (data.techShifts) techShifts = data.techShifts;
+                        if (data.techActions) techActions = data.techActions;
+                        if (data.opsActions) opsActions = data.opsActions;
+                        if (data.safetyActions) safetyActions = data.safetyActions;
+                        if (data.tomActions) tomActions = data.tomActions;
+                        loadedFromCache = true;
+                        const syncTime = data.updatedAt ? new Date(data.updatedAt).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'}) : 'Local';
+                        syncStatus.innerText = `Offline Cache (${syncTime})`;
+                        syncStatus.style.color = "#f59e0b";
+                    }
+                } catch (cacheErr) {
+                    console.warn("Cache fallback unavailable:", cacheErr);
+                }
+                if (!loadedFromCache) {
+                    syncStatus.innerText = "Offline / No Cached Data";
+                    syncStatus.style.color = "#ef4444";
+                }
+                populateAllShiftDropdowns();
+                renderAllActionLists();
+                renderShiftLogs('tech', document.getElementById('techFilterSelect').value);
+                renderShiftLogs('ops', document.getElementById('shiftFilterSelect').value);
+                renderShiftLogs('safety', document.getElementById('safetyFilterSelect').value);
+                renderShiftLogs('tom', document.getElementById('tomFilterSelect').value);
                 render();
             }
         }
@@ -2649,7 +2887,200 @@ ${fbText}` : '');
 
         window.handleSearch = function(val) {
             searchQuery = val.trim().toLowerCase();
+            const clearBtn = document.getElementById("clearSearchBtn");
+            if (clearBtn) clearBtn.style.display = searchQuery ? "inline-block" : "none";
             render();
+        };
+
+        window.clearAssetSearch = function() {
+            const input = document.getElementById("assetSearchInput");
+            if (input) input.value = "";
+            searchQuery = "";
+            const clearBtn = document.getElementById("clearSearchBtn");
+            if (clearBtn) clearBtn.style.display = "none";
+            const countEl = document.getElementById("searchMatchCount");
+            if (countEl) countEl.innerText = "";
+            render();
+        };
+
+        window.resetMapView = function() {
+            const rect = container.getBoundingClientRect();
+            const targetW = buildingCols * gridSize;
+            const targetH = buildingRows * gridSize;
+            const scaleX = (rect.width * 0.78) / targetW;
+            const scaleY = (rect.height * 0.75) / targetH;
+            const fitScale = Math.min(Math.max(Math.min(scaleX, scaleY), 0.35), 1.6);
+            viewTransform.scale = Number(fitScale.toFixed(2));
+            viewTransform.x = Math.round((rect.width - targetW * viewTransform.scale) / 2);
+            viewTransform.y = Math.round((rect.height - targetH * viewTransform.scale) / 2);
+            render();
+        };
+
+        window.jumpToGridCoord = function() {
+            const raw = (document.getElementById("gridJumpInput")?.value || "").trim().toUpperCase();
+            if (!raw) return;
+            // Supports formats like C14, B-8, N1 5, etc.
+            const match = raw.match(/^(N?\d+|[A-Z])\s*-?\s*(\d+(?:\.\d+)?)$/);
+            if (!match) {
+                alert("Enter a grid coordinate like C14, B-8, or N1 5.");
+                return;
+            }
+            const rowToken = match[1];
+            const colNum = parseFloat(match[2]);
+            let targetRow = null;
+            for (let r = minRow; r <= maxRow; r++) {
+                if (getRowLabel(r).toUpperCase() === rowToken) {
+                    targetRow = r;
+                    break;
+                }
+            }
+            if (targetRow === null) {
+                alert(`Row "${rowToken}" was not found on the grid.`);
+                return;
+            }
+            const targetCol = colNum - 1;
+            const rect = container.getBoundingClientRect();
+            const worldX = (targetCol + 0.5) * gridSize;
+            const worldY = (targetRow + 0.5) * gridSize;
+            viewTransform.scale = Math.max(viewTransform.scale, 1.15);
+            viewTransform.x = Math.round(rect.width / 2 - worldX * viewTransform.scale);
+            viewTransform.y = Math.round(rect.height / 2 - worldY * viewTransform.scale);
+            render();
+        };
+
+        /* MAP LEGEND & GUIDED NEW TECH FLOOR TOUR */
+        let guidedTourActive = false;
+        let guidedTourIndex = 0;
+
+        window.toggleMapLegend = function() {
+            const panel = document.getElementById("map-legend-panel");
+            if (!panel) return;
+            const show = panel.style.display !== "block";
+            panel.style.display = show ? "block" : "none";
+            if (show) renderMapLegendCategories();
+        };
+
+        function renderMapLegendCategories() {
+            const list = document.getElementById("legendCategoriesList");
+            if (!list) return;
+            list.innerHTML = "";
+            categories.forEach(cat => {
+                const row = document.createElement("div");
+                row.className = "legend-row";
+                row.innerHTML = `<span class="legend-swatch" style="background:#111b27; border-color:${cat.color};"></span><span>${cat.name}</span>`;
+                list.appendChild(row);
+            });
+        }
+
+        window.startGuidedFloorTour = function() {
+            guidedTourActive = true;
+            guidedTourIndex = 0;
+            const banner = document.getElementById("guided-tour-banner");
+            if (banner) banner.style.display = "block";
+            applyGuidedTourStep();
+        };
+
+        window.stopGuidedFloorTour = function() {
+            guidedTourActive = false;
+            const banner = document.getElementById("guided-tour-banner");
+            if (banner) banner.style.display = "none";
+            render();
+        };
+
+        window.nextTourStep = function() {
+            guidedTourIndex = (guidedTourIndex + 1) % onboardingChecklistItems.length;
+            applyGuidedTourStep();
+        };
+
+        window.prevTourStep = function() {
+            guidedTourIndex = (guidedTourIndex - 1 + onboardingChecklistItems.length) % onboardingChecklistItems.length;
+            applyGuidedTourStep();
+        };
+
+        function applyGuidedTourStep() {
+            const step = onboardingChecklistItems[guidedTourIndex];
+            if (!step) return;
+            switchLayer(step.layer);
+            document.getElementById("tourStepBadge").innerText = `Step ${guidedTourIndex + 1} of ${onboardingChecklistItems.length}`;
+            document.getElementById("tourStepTitle").innerText = step.title;
+            document.getElementById("tourStepDesc").innerText = step.desc;
+            const countMatches = elements.filter(el => (el.layer || 'ground') === step.layer).length;
+            document.getElementById("tourStepCountInfo").innerText = `${countMatches} mapped item(s) on ${step.layer.replace('_', ' ').toUpperCase()} layer`;
+        }
+
+        function buildNewTechQuickCheck(el) {
+            const parts = [];
+            if (el.parentId) parts.push(`<b>Upstream/Feed:</b> Parent ID ${el.parentId}`);
+            if (el.plcNode) parts.push(`<b>Controls/PLC:</b> ${el.plcNode}`);
+            if (el.utilityDraw) parts.push(`<b>Power/Utility Spec:</b> ${el.utilityDraw}`);
+            if (el.estopZone) parts.push(`<b>Safety/E-Stop Zone:</b> ${el.estopZone}`);
+            if (el.lotoSteps && el.lotoSteps.length > 0) {
+                parts.push(`<b>LOTO Steps (${el.lotoSteps.length}):</b> Always verify zero-energy state & try-start before hands-on work.`);
+            }
+            if (el.spareParts && el.spareParts.length > 0) {
+                const bins = el.spareParts.map(p => `${p.partName}${p.binLoc ? ` [${p.binLoc}]` : ''}`).join(', ');
+                parts.push(`<b>Mapped Spares:</b> ${bins}`);
+            }
+            if (parts.length === 0) {
+                return `<b>New Tech Quick-Check:</b> Confirm grid location (Row ${getRowLabel(Math.floor(el.y))}, Col ${(el.x + 1).toFixed(1)}), inspect guards/sensors for debris or loose M12/terminal connections, and check recent shift handover logs before escalating.`;
+            }
+            return `<b>New Tech Quick-Check:</b><br>• ` + parts.join('<br>• ');
+        }
+
+        function buildSafetyCallout(el) {
+            const warnings = [];
+            if (el.status === 'down') warnings.push("🚨 <b>ASSET MARKED DOWN:</b> Verify LOTO/tag status and open breakdown tickets before operating.");
+            if (el.partsNeeded) warnings.push("📦 <b>PARTS WAITING / NEEDED:</b> Check cage/BOM mapping before ordering duplicate parts.");
+            if (getPmAlertStatus(el.pmDue) === 'overdue') warnings.push("🔥 <b>OVERDUE PM:</b> Preventive maintenance past due date—inspect wear points closely.");
+            if ((el.category === 'LOTO Isolation') || (el.lotoSteps && el.lotoSteps.length > 0)) {
+                warnings.push("🔒 <b>ISOLATION REQUIRED:</b> Follow documented LOTO sequence and verify zero energy.");
+            }
+            return warnings.join("<br>");
+        }
+
+        window.printAssetSpecSheet = function() {
+            const id = parseInt(document.getElementById("modalElementId").value);
+            const el = elements.find(item => item.id === id);
+            if (!el) return;
+            const rowLabel = getRowLabel(Math.floor(el.y));
+            const colNum = (el.x + 1).toFixed(1);
+            const lotoHtml = (el.lotoSteps && el.lotoSteps.length)
+                ? `<ol>${el.lotoSteps.map(s => `<li>${s.step}</li>`).join('')}</ol>`
+                : '<p>No specific LOTO steps recorded; follow site LOTO procedure.</p>';
+            const bomHtml = (el.spareParts && el.spareParts.length)
+                ? `<ul>${el.spareParts.map(p => `<li><b>${p.partName}</b> — SKU: ${p.partNum || 'N/A'} — Bin: ${p.binLoc || 'N/A'}</li>`).join('')}</ul>`
+                : '<p>No spare parts mapped.</p>';
+
+            const win = window.open('', '_blank');
+            win.document.write(`
+                <html><head><title>Asset Spec Sheet - ${el.name}</title>
+                <style>
+                    body { font-family: Arial, sans-serif; padding: 24px; color: #111; line-height: 1.45; }
+                    h1 { margin: 0 0 6px 0; color: #0f172a; border-bottom: 2px solid #0284c7; padding-bottom: 6px; }
+                    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 18px; margin: 12px 0; font-size: 13px; }
+                    h3 { margin: 16px 0 6px 0; color: #0284c7; border-bottom: 1px solid #cbd5e1; padding-bottom: 3px; }
+                </style></head><body>
+                <h1>${el.name}</h1>
+                <div class="grid">
+                    <div><b>Category:</b> ${el.category || 'General'}</div>
+                    <div><b>Status:</b> ${el.status || 'operational'}</div>
+                    <div><b>Grid Location:</b> Row ${rowLabel}, Col ${colNum} (Layer: ${el.layer || 'ground'})</div>
+                    <div><b>PLC / Node:</b> ${el.plcNode || 'N/A'}</div>
+                    <div><b>Utility / Draw:</b> ${el.utilityDraw || 'N/A'}</div>
+                    <div><b>Safety / E-Stop Zone:</b> ${el.estopZone || 'N/A'}</div>
+                    <div><b>PM Due:</b> ${el.pmDue || 'N/A'}</div>
+                    <div><b>Vendor:</b> ${el.vendorName || 'N/A'} ${el.vendorContact ? '(' + el.vendorContact + ')' : ''}</div>
+                </div>
+                <h3>New Tech Quick-Check</h3>
+                <p>${buildNewTechQuickCheck(el).replace(/<br>/g, ' | ')}</p>
+                <h3>LOTO Sequence</h3>
+                ${lotoHtml}
+                <h3>Spare Parts & Bin Locations</h3>
+                ${bomHtml}
+                <script>window.onload = () => { window.print(); };<\/script>
+                </body></html>
+            `);
+            win.document.close();
         };
 
         window.toggleHeatmap = function(checked) {
@@ -2861,6 +3292,11 @@ ${fbText}` : '');
                 if (currentLayer === 'loto') return el.type === 'asset' && el.category === 'LOTO Isolation';
                 return (el.layer || 'ground') === currentLayer;
             });
+
+            const countEl = document.getElementById("searchMatchCount");
+            if (countEl) {
+                countEl.innerText = searchQuery ? `${visibleElements.length} match${visibleElements.length === 1 ? '' : 'es'}` : "";
+            }
 
             visibleElements.forEach(el => {
                 let g = document.createElementNS("http://www.w3.org/2000/svg", "g");
@@ -3162,6 +3598,17 @@ ${fbText}` : '');
                 document.getElementById("modalCoordContainer").style.display = "flex";
                 document.getElementById("modalX").value = el.x;
                 document.getElementById("modalY").value = el.y;
+            }
+            const safetyBox = document.getElementById("modalSafetyCallout");
+            const quickCheckBox = document.getElementById("modalNewTechQuickCheck");
+            if (safetyBox) {
+                const warnHtml = buildSafetyCallout(el);
+                safetyBox.innerHTML = warnHtml;
+                safetyBox.style.display = warnHtml ? "block" : "none";
+            }
+            if (quickCheckBox) {
+                quickCheckBox.innerHTML = buildNewTechQuickCheck(el);
+                quickCheckBox.style.display = "block";
             }
             renderPhotos(el);
             renderSpreadsheet(el);
