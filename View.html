@@ -129,15 +129,38 @@
         .panel { display: none; }
         .panel.active { display: flex; flex-direction: column; gap: 8px; }
         /* EMERGENCY QUICK-FILTER FLOATING BAR */
-        #quick-filter-bar {
+        #quick-filter-wrapper {
             position: absolute;
             top: 10px;
             left: 10px;
             z-index: 10;
             display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 6px;
+            max-width: calc(100% - 20px);
+            pointer-events: none;
+        }
+        #quick-filter-bar {
+            display: flex;
             gap: 6px;
             flex-wrap: wrap;
             pointer-events: auto;
+            transition: opacity 0.18s ease, transform 0.18s ease;
+        }
+        #quick-filter-wrapper.collapsed #quick-filter-bar {
+            display: none;
+        }
+        .filter-pill.minimize-pill {
+            background: #0f172a;
+            border-color: #38bdf8;
+            color: #38bdf8;
+            pointer-events: auto;
+        }
+        .filter-pill.minimize-pill.is-minimized {
+            background: #0284c7;
+            color: #fff;
+            border-color: #7dd3fc;
         }
         .filter-pill {
             background: #111b27;
@@ -763,17 +786,23 @@
         </div>
     </div>
     <div id="canvas-container">
-        <!-- EMERGENCY QUICK-FILTER FLOATING PILLS -->
-        <div id="quick-filter-bar">
-            <button class="filter-pill down-pill" onclick="toggleQuickFilter('down')">🚨 Down Assets</button>
-            <button class="filter-pill pm-pill" onclick="toggleQuickFilter('pm_due')">🔥 Overdue PMs</button>
-            <button class="filter-pill" onclick="toggleQuickFilter('parts_needed')">📦 Parts Needed</button>
-            <button class="filter-pill" onclick="toggleQuickFilter('water')">💧 Water Shutoffs</button>
-            <button class="filter-pill" onclick="toggleQuickFilter('estop')">⚡ E-Stop Zones</button>
-            <button class="filter-pill active" id="filterAllBtn" onclick="toggleQuickFilter('all')">Show All</button>
-            <button class="filter-pill" onclick="resetMapView()" style="border-color:#38bdf8; color:#38bdf8;">🎯 Reset View</button>
-            <button class="filter-pill" id="legendToggleBtn" onclick="toggleMapLegend()" style="border-color:#f59e0b; color:#fbbf24;">📖 Map Legend</button>
-            <button class="filter-pill" id="tourToggleBtn" onclick="startGuidedFloorTour()" style="border-color:#10b981; color:#34d399;">🧭 New Tech Tour</button>
+        <!-- EMERGENCY QUICK-FILTER FLOATING PILLS (COLLAPSIBLE) -->
+        <div id="quick-filter-wrapper">
+            <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap; pointer-events:auto;">
+                <button class="filter-pill minimize-pill" id="minimizeFiltersBtn" onclick="toggleQuickFilterBar()" title="Minimize or expand filter bar">➖ Hide Filters</button>
+                <span id="activeFilterBadge" style="display:none; background:#0f172a; border:1px solid #38bdf8; color:#38bdf8; padding:4px 9px; border-radius:20px; font-size:10px; font-weight:bold;"></span>
+            </div>
+            <div id="quick-filter-bar">
+                <button class="filter-pill down-pill" onclick="toggleQuickFilter('down')">🚨 Down Assets</button>
+                <button class="filter-pill pm-pill" onclick="toggleQuickFilter('pm_due')">🔥 Overdue PMs</button>
+                <button class="filter-pill" onclick="toggleQuickFilter('parts_needed')">📦 Parts Needed</button>
+                <button class="filter-pill" onclick="toggleQuickFilter('water')">💧 Water Shutoffs</button>
+                <button class="filter-pill" onclick="toggleQuickFilter('estop')">⚡ E-Stop Zones</button>
+                <button class="filter-pill active" id="filterAllBtn" onclick="toggleQuickFilter('all')">Show All</button>
+                <button class="filter-pill" onclick="resetMapView()" style="border-color:#38bdf8; color:#38bdf8;">🎯 Reset View</button>
+                <button class="filter-pill" id="legendToggleBtn" onclick="toggleMapLegend()" style="border-color:#f59e0b; color:#fbbf24;">📖 Map Legend</button>
+                <button class="filter-pill" id="tourToggleBtn" onclick="startGuidedFloorTour()" style="border-color:#10b981; color:#34d399;">🧭 New Tech Tour</button>
+            </div>
         </div>
 
         <!-- FLOATING MAP LEGEND DRAWER -->
@@ -2815,15 +2844,52 @@ ${fbText}` : '');
             qrWin.document.close();
         };
 
+        let quickFilterMinimized = false;
+        const quickFilterLabels = {
+            all: 'Show All',
+            down: '🚨 Down Assets',
+            pm_due: '🔥 Overdue PMs',
+            parts_needed: '📦 Parts Needed',
+            water: '💧 Water Shutoffs',
+            estop: '⚡ E-Stop Zones'
+        };
+
+        function updateActiveFilterBadge() {
+            const badge = document.getElementById('activeFilterBadge');
+            if (!badge) return;
+            if (quickFilterMinimized && activeQuickFilter !== 'all') {
+                badge.style.display = 'inline-block';
+                badge.innerText = 'Filter: ' + (quickFilterLabels[activeQuickFilter] || activeQuickFilter);
+            } else {
+                badge.style.display = 'none';
+                badge.innerText = '';
+            }
+        }
+
+        window.toggleQuickFilterBar = function(forceState) {
+            quickFilterMinimized = (typeof forceState === 'boolean') ? forceState : !quickFilterMinimized;
+            const wrapper = document.getElementById('quick-filter-wrapper');
+            const btn = document.getElementById('minimizeFiltersBtn');
+            if (wrapper) wrapper.classList.toggle('collapsed', quickFilterMinimized);
+            if (btn) {
+                btn.classList.toggle('is-minimized', quickFilterMinimized);
+                btn.innerText = quickFilterMinimized ? '➕ Show Filters' : '➖ Hide Filters';
+                btn.title = quickFilterMinimized ? 'Expand filter & map buttons' : 'Minimize filter bar for full map view';
+            }
+            updateActiveFilterBadge();
+        };
+
         window.toggleQuickFilter = function(filterType) {
             activeQuickFilter = filterType;
-            document.querySelectorAll('.filter-pill').forEach(btn => btn.classList.remove('active'));
-            if (filterType === 'down') document.querySelector('.down-pill').classList.add('active');
-            else if (filterType === 'pm_due') document.querySelector('.pm-pill').classList.add('active');
-            else if (filterType === 'parts_needed') document.querySelectorAll('.filter-pill')[2].classList.add('active');
-            else if (filterType === 'water') document.querySelectorAll('.filter-pill')[3].classList.add('active');
-            else if (filterType === 'estop') document.querySelectorAll('.filter-pill')[4].classList.add('active');
+            document.querySelectorAll('#quick-filter-bar .filter-pill').forEach(btn => btn.classList.remove('active'));
+            const barButtons = document.querySelectorAll('#quick-filter-bar .filter-pill');
+            if (filterType === 'down') document.querySelector('#quick-filter-bar .down-pill').classList.add('active');
+            else if (filterType === 'pm_due') document.querySelector('#quick-filter-bar .pm-pill').classList.add('active');
+            else if (filterType === 'parts_needed' && barButtons[2]) barButtons[2].classList.add('active');
+            else if (filterType === 'water' && barButtons[3]) barButtons[3].classList.add('active');
+            else if (filterType === 'estop' && barButtons[4]) barButtons[4].classList.add('active');
             else document.getElementById('filterAllBtn').classList.add('active');
+            updateActiveFilterBadge();
             render();
         };
 
