@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Facility Layout & Maintenance Hub</title>
+    <title>Facility Layout & Maintenance Hub (Builder Pro)</title>
     <!-- html5-qrcode for live camera barcode scanning & AR overlay -->
     <script src="https://unpkg.com/html5-qrcode"></script>
     <style>
@@ -23,12 +23,12 @@
             touch-action: none;
         }
         #sidebar {
-            width: 360px;
+            width: 375px;
             background-color: #111b27;
             padding: 15px;
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            gap: 10px;
             box-shadow: 2px 0 10px rgba(0,0,0,0.7);
             z-index: 20;
             overflow-y: auto;
@@ -67,7 +67,7 @@
             #mobile-nav-toggle { display: flex; }
             #sidebar { 
                 width: 100%; 
-                max-height: 52vh; 
+                max-height: 55vh; 
                 border-right: none; 
                 border-bottom: 1px solid #1f2d3d;
                 box-shadow: 0 4px 10px rgba(0,0,0,0.5);
@@ -81,7 +81,7 @@
         label { font-size: 11px; color: #94a3b8; }
         input, select, button, textarea {
             width: 100%;
-            padding: 10px;
+            padding: 9px;
             background: #0b131d;
             border: 1px solid #38bdf8;
             color: #fff;
@@ -89,23 +89,24 @@
             box-sizing: border-box;
             margin-top: 2px;
             font-size: 13px;
-            min-height: 40px;
+            min-height: 38px;
         }
         textarea { resize: vertical; height: 55px; font-family: sans-serif; }
         button {
             background: #1e293b;
             font-weight: bold;
             cursor: pointer;
-            transition: background 0.2s;
+            transition: background 0.2s, opacity 0.2s;
             touch-action: manipulation;
         }
         button:hover, button:active { background: #38bdf8; color: #0b131d; }
+        button:disabled { opacity: 0.45; cursor: not-allowed; pointer-events: none; }
         .mode-btn {
             background: #070d14;
             border: 2px solid #1e293b;
-            padding: 10px;
+            padding: 8px;
             font-size: 12px;
-            min-height: 42px;
+            min-height: 40px;
         }
         .mode-btn.active {
             background: #38bdf8;
@@ -114,7 +115,7 @@
         }
         .layer-btn {
             flex: 1;
-            padding: 10px 4px;
+            padding: 8px 4px;
             background: #070d14;
             border: 1px solid #1e293b;
             color: #94a3b8;
@@ -125,7 +126,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            min-height: 38px;
+            min-height: 36px;
         }
         .layer-btn.active {
             background: #0284c7;
@@ -137,7 +138,7 @@
         .danger:hover, .danger:active { background: #ef4444; color: #fff; }
         .tab-bar { display: flex; gap: 3px; margin-bottom: 5px; }
         .tab-btn {
-            flex: 1; padding: 8px 2px; background: #070d14; border: 1px solid #1e293b; color: #94a3b8; font-size: 9.5px; cursor: pointer; border-radius: 6px; text-align: center; min-height: 38px;
+            flex: 1; padding: 8px 2px; background: #070d14; border: 1px solid #1e293b; color: #94a3b8; font-size: 9.5px; cursor: pointer; border-radius: 6px; text-align: center; min-height: 36px;
         }
         .tab-btn.active { background: #1e293b; color: #38bdf8; border-color: #38bdf8; }
         .panel { display: none; }
@@ -155,7 +156,90 @@
         .item-group:hover .asset-popup { opacity: 1; }
         .grid-line { stroke: #132235; stroke-width: 1; pointer-events: none; }
         .coord-label { fill: #64748b; font-size: 10px; font-family: monospace; pointer-events: none; }
-        
+
+        /* QUICK STAMP PALETTE & BUILDER CARDS */
+        .builder-box {
+            background: #070d14;
+            border: 1px solid #1e293b;
+            border-radius: 8px;
+            padding: 9px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .stamp-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+        }
+        .stamp-chip {
+            width: auto;
+            min-height: 30px;
+            padding: 4px 8px;
+            font-size: 11px;
+            background: #111b27;
+            border: 1px solid #334155;
+            color: #e2e8f0;
+            border-radius: 14px;
+            margin: 0;
+        }
+        .stamp-chip:hover {
+            border-color: #38bdf8;
+            background: #0284c7;
+            color: #fff;
+        }
+
+        /* FLOATING VIEWPORT ZOOM / CENTER CONTROLS */
+        #viewport-controls {
+            position: absolute;
+            bottom: 16px;
+            right: 16px;
+            z-index: 25;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            background: #111b27;
+            border: 1px solid #1f2d3d;
+            border-radius: 10px;
+            padding: 6px;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.65);
+        }
+        .vp-btn {
+            width: 38px;
+            height: 38px;
+            min-height: 38px;
+            padding: 0;
+            margin: 0;
+            font-size: 16px;
+            background: #1e293b;
+            color: #38bdf8;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        @media (max-width: 768px) {
+            #viewport-controls { bottom: 68px; right: 10px; }
+        }
+
+        /* MULTI-BUILDER REMOTE SYNC BANNER */
+        #remote-sync-banner {
+            display: none;
+            position: absolute;
+            top: 56px;
+            right: 16px;
+            z-index: 30;
+            background: #0f172a;
+            border: 1px solid #10b981;
+            color: #10b981;
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: bold;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.75);
+        }
+
         /* MOBILE FLOATING BOTTOM TOOLBAR */
         #mobile-bottom-toolbar {
             display: none;
@@ -191,7 +275,6 @@
             color: #fff;
             border-color: #38bdf8;
         }
-
         /* EMERGENCY QUICK-FILTER FLOATING BAR */
         #quick-filter-bar {
             position: absolute;
@@ -207,7 +290,7 @@
             background: #111b27;
             border: 1px solid #1f2d3d;
             color: #94a3b8;
-            padding: 8px 12px;
+            padding: 7px 11px;
             border-radius: 20px;
             font-size: 11px;
             font-weight: bold;
@@ -216,7 +299,8 @@
             display: flex;
             align-items: center;
             gap: 4px;
-            min-height: 36px;
+            min-height: 34px;
+            width: auto;
         }
         .filter-pill.active {
             background: #0284c7;
@@ -226,12 +310,12 @@
         .filter-pill.down-pill.active { background: #7f1d1d; border-color: #ef4444; }
         .filter-pill.pm-pill.active { background: #b45309; border-color: #f59e0b; }
         #coord-display {
-            background: #070d14; border: 1px solid #1e293b; padding: 8px; border-radius: 6px; font-family: monospace; color: #38bdf8; font-size: 12px; text-align: center;
+            background: #070d14; border: 1px solid #1e293b; padding: 7px; border-radius: 6px; font-family: monospace; color: #38bdf8; font-size: 12px; text-align: center;
         }
         #dist-result-display {
             background: #0f172a; border: 1px solid #f59e0b; color: #fbbf24; padding: 8px; border-radius: 6px; font-family: monospace; font-size: 12px; text-align: center; display: none;
         }
-        #sync-status { font-size: 10px; text-align: center; color: #10b981; font-weight: bold; margin-top: -4px; }
+        #sync-status { font-size: 10.5px; text-align: center; color: #10b981; font-weight: bold; margin-top: -2px; }
         #modal-overlay, #category-modal-overlay, #lightbox-overlay, #scanner-modal-overlay, #ar-modal-overlay, #shift-manager-modal-overlay {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.85); z-index: 1000; justify-content: center; align-items: center; padding: 10px;
         }
@@ -241,7 +325,7 @@
         }
         .modal-header { background: #0b131d; padding: 14px 18px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1f2d3d; }
         .modal-body { padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; -webkit-overflow-scrolling: touch; }
-        .modal-footer { background: #0b131d; padding: 12px 18px; display: flex; justify-content: flex-end; gap: 8px; border-top: 1px solid #1f2d3d; }
+        .modal-footer { background: #0b131d; padding: 12px 18px; display: flex; justify-content: flex-end; gap: 8px; border-top: 1px solid #1f2d3d; flex-wrap: wrap; }
         .close-modal { background: none; border: none; color: #94a3b8; font-size: 26px; cursor: pointer; width: auto; min-height: auto; padding: 0 8px; margin: 0; }
         .close-modal:hover, .close-modal:active { color: #fff; background: none; }
         .spreadsheet-table { width: 100%; border-collapse: collapse; margin-top: 4px; }
@@ -268,7 +352,10 @@
         <button class="toggle-btn" onclick="toggleSidebar()">☰ Controls</button>
     </div>
     <div id="sidebar" class="collapsed">
-        <h2>Site & Layout Builder</h2>
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <h2>Site & Layout Builder</h2>
+            <span style="font-size:10px; background:#0284c7; color:#fff; padding:2px 7px; border-radius:10px; font-weight:bold;">BUILDER PRO</span>
+        </div>
         
         <div>
             <label>🔍 Asset Search / QR Scanner</label>
@@ -279,22 +366,44 @@
         </div>
         <div id="coord-display">Col: -- | Row: --</div>
         <div id="dist-result-display">Click 2 points to measure distance</div>
-        <div id="sync-status">Connected to Firebase</div>
-        
-        <!-- GRID SNAPPING TOGGLE -->
-        <div>
-            <label style="display:flex; align-items:center; gap:8px; cursor:pointer; padding: 4px 0;">
-                <input type="checkbox" id="snapGridToggle" checked style="width:auto; margin:0; min-height:auto; transform: scale(1.2);">
-                <span style="color:#38bdf8; font-weight:bold;">🧲 Snap to Grid (0.5 Increment)</span>
-            </label>
+        <div id="sync-status">Connecting to Firebase...</div>
+
+        <!-- BUILDER HISTORY, BACKUP & PRECISION TOGGLES -->
+        <div class="builder-box">
+            <div style="display: flex; gap: 6px;">
+                <button id="undoBtn" onclick="undoLayout()" disabled style="flex:1; font-size:11px; padding:6px; min-height:34px;" title="Undo (Ctrl+Z)">↩️ Undo (0)</button>
+                <button id="redoBtn" onclick="redoLayout()" disabled style="flex:1; font-size:11px; padding:6px; min-height:34px;" title="Redo (Ctrl+Y)">↪️ Redo (0)</button>
+                <button id="duplicateSelBtn" onclick="duplicateSelected()" disabled style="flex:1; font-size:11px; padding:6px; min-height:34px; border-color:#f59e0b; color:#fbbf24;" title="Duplicate Selected (Ctrl+D)">📋 Clone</button>
+            </div>
+            <div style="display: flex; gap: 6px;">
+                <button onclick="exportJsonBackup()" style="flex:1; font-size:11px; padding:6px; min-height:34px; background:#0f172a;">💾 Backup JSON</button>
+                <button onclick="document.getElementById('importJsonInput').click()" style="flex:1; font-size:11px; padding:6px; min-height:34px; background:#0f172a;">📂 Restore JSON</button>
+                <input type="file" id="importJsonInput" accept=".json" style="display:none;" onchange="importJsonBackup(event)">
+            </div>
+            <div style="display:flex; flex-direction:column; gap:4px; margin-top:2px;">
+                <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+                    <input type="checkbox" id="snapGridToggle" checked style="width:auto; margin:0; min-height:auto; transform: scale(1.15);">
+                    <span style="color:#38bdf8; font-weight:bold;">🧲 Snap to Grid (0.5 Increment)</span>
+                </label>
+                <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+                    <input type="checkbox" id="orthoLockToggle" style="width:auto; margin:0; min-height:auto; transform: scale(1.15);">
+                    <span style="color:#22d3ee; font-weight:bold;">📐 90° Ortho Line Lock (or Hold Shift)</span>
+                </label>
+                <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+                    <input type="checkbox" id="ghostGroundToggle" onchange="render()" style="width:auto; margin:0; min-height:auto; transform: scale(1.15);">
+                    <span style="color:#a855f7; font-weight:bold;">👻 Ghost Ground Layer Reference</span>
+                </label>
+                <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+                    <input type="checkbox" id="lockZonesToggle" onchange="render()" style="width:auto; margin:0; min-height:auto; transform: scale(1.15);">
+                    <span style="color:#94a3b8; font-weight:bold;">🔒 Lock Background Zones (Prevent Drag)</span>
+                </label>
+                <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+                    <input type="checkbox" id="heatmapToggle" onchange="toggleHeatmap(this.checked)" style="width:auto; margin:0; min-height:auto; transform: scale(1.15);">
+                    <span style="color:#f59e0b; font-weight:bold;">🔥 Show Downtime & Breakdown Heatmap</span>
+                </label>
+            </div>
         </div>
-        <!-- HEATMAP OVERLAY TOGGLE -->
-        <div>
-            <label style="display:flex; align-items:center; gap:8px; cursor:pointer; padding: 4px 0;">
-                <input type="checkbox" id="heatmapToggle" onchange="toggleHeatmap(this.checked)" style="width:auto; margin:0; min-height:auto; transform: scale(1.2);">
-                <span style="color:#f59e0b; font-weight:bold;">🔥 Show Downtime & Breakdown Heatmap</span>
-            </label>
-        </div>
+
         <!-- LAYER SELECTION MENU -->
         <div>
             <label>Active View Layer</label>
@@ -323,18 +432,20 @@
             </div>
         </div>
         <div>
-            <label>Interaction Mode</label>
+            <label>Interaction Mode <span style="color:#64748b;">(Shift+Click multi-select, Arrows nudge)</span></label>
             <div style="display: flex; flex-direction: column; gap: 6px; margin-top: 4px;">
                 <div style="display: flex; gap: 6px;">
-                    <button id="modeEditBtn" class="mode-btn active" style="flex:1;" onclick="setMode('edit')">Edit (Drag)</button>
-                    <button id="modePanBtn" class="mode-btn" style="flex:1;" onclick="setMode('pan')">Pan / Inspect</button>
+                    <button id="modeEditBtn" class="mode-btn active" style="flex:1;" onclick="setMode('edit')">✋ Edit (Drag)</button>
+                    <button id="modePanBtn" class="mode-btn" style="flex:1;" onclick="setMode('pan')">🗺️ Pan / Inspect</button>
                 </div>
-                <button id="modeCalcBtn" class="mode-btn" onclick="setMode('calc')">📏 Distance Calculator</button>
-                <button onclick="openARModal()" class="mode-btn" style="background:#0284c7; color:#fff; border-color:#38bdf8;">🕶️ AR Live Camera View</button>
+                <div style="display: flex; gap: 6px;">
+                    <button id="modeCalcBtn" class="mode-btn" style="flex:1;" onclick="setMode('calc')">📏 Measure</button>
+                    <button onclick="openARModal()" class="mode-btn" style="flex:1; background:#0284c7; color:#fff; border-color:#38bdf8;">🕶️ AR View</button>
+                </div>
             </div>
         </div>
-        <button onclick="exportDataToCSV()" style="background: #0284c7; color: #fff; margin-top: 4px; min-height: 42px;">📊 Export Asset Inventory (CSV)</button>
-        <hr style="border-color: #1e293b; margin: 6px 0;">
+        <button onclick="exportDataToCSV()" style="background: #0284c7; color: #fff; margin-top: 2px; min-height: 38px;">📊 Export Asset Inventory (CSV)</button>
+        <hr style="border-color: #1e293b; margin: 4px 0;">
         <div class="tab-bar">
             <button class="tab-btn active" id="tabDeptBtn" onclick="switchTab('dept')">Zones</button>
             <button class="tab-btn" id="tabLineBtn" onclick="switchTab('line')">Lines</button>
@@ -344,11 +455,17 @@
             <button class="tab-btn" id="tabSafetyBtn" onclick="switchTab('safety')">Safety</button>
             <button class="tab-btn" id="tabTomBtn" onclick="switchTab('tom')">Tom Team</button>
         </div>
+
+        <!-- ZONES PANEL -->
         <div id="panelDept" class="panel active">
-            <h3>Zone / Yard Management</h3>
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <h3>Zone / Yard Management</h3>
+                <button id="pickZoneCoordBtn" onclick="startPickCoords('zone')" style="width:auto; padding:4px 10px; font-size:11px; background:#0284c7; color:#fff; min-height:30px;">📍 Pick Coords</button>
+            </div>
             <div>
-                <label>Add New Zone / Yard Area</label>
-                <input type="text" id="newDeptName" value="OPEX UIS Induction Bay">
+                <label>Zone Name (End with # to auto-increment on repeat)</label>
+                <input type="text" id="newDeptName" value="OPEX UIS Induction Bay 1">
+                <label>Zone Type</label>
                 <select id="newDeptType">
                     <option value="uis_cell">OPEX UIS Sorter Rack (Rect)</option>
                     <option value="atr_cell">ATR Tote Retrieval Cell (Rect)</option>
@@ -366,9 +483,20 @@
                     <div style="flex:1;"><label>Width</label><input type="number" id="newDeptW" step="0.5" value="12"></div>
                     <div style="flex:1;"><label>Height</label><input type="number" id="newDeptH" step="0.5" value="5"></div>
                 </div>
-                <button onclick="addDepartment()" style="margin-top: 8px; min-height: 42px;">Add Zone to Map</button>
+                <!-- STEP & REPEAT ARRAY -->
+                <div class="builder-box" style="margin-top:6px;">
+                    <label style="color:#fbbf24; font-weight:bold;">🔁 Step & Repeat Array (Bulk Build)</label>
+                    <div style="display:flex; gap:6px;">
+                        <div style="flex:1;"><label>Count</label><input type="number" id="zoneRepeatCount" min="1" max="50" value="1"></div>
+                        <div style="flex:1;"><label>Step X</label><input type="number" id="zoneStepX" step="0.5" value="0"></div>
+                        <div style="flex:1;"><label>Step Y</label><input type="number" id="zoneStepY" step="0.5" value="5.5"></div>
+                    </div>
+                </div>
+                <button onclick="addDepartment()" style="margin-top: 8px; min-height: 40px; background:#0284c7; color:#fff;">+ Add Zone(s) to Map</button>
             </div>
         </div>
+
+        <!-- CONVEYANCE LINES PANEL -->
         <div id="panelLine" class="panel">
             <h3>Conveyance Line Tool (Bends)</h3>
             <div>
@@ -379,7 +507,10 @@
                     <option value="belted">Belted Conveyance (Solid Line)</option>
                     <option value="flex">Flex Conveyance / Expandable (Dashed Line)</option>
                 </select>
-                <button onclick="startDrawingLine()" style="margin-top: 8px; background: #0284c7; color: #fff; min-height: 42px;">✏️ Draw Multi-Point Line</button>
+                <div style="font-size:11px; color:#94a3b8; margin-top:6px; background:#070d14; padding:7px; border-radius:6px; border:1px solid #1e293b;">
+                    💡 <b>Builder Tip:</b> Select any existing line on the map to drag bends, click <b>+</b> midpoints to insert new bends, or right-click a bend to delete it.
+                </div>
+                <button onclick="startDrawingLine()" style="margin-top: 8px; background: #0284c7; color: #fff; min-height: 40px;">✏️ Draw Multi-Point Line</button>
                 <div id="draw-controls" style="display: none; background: #070d14; border: 1px solid #38bdf8; padding: 8px; border-radius: 6px; margin-top: 8px;">
                     <div style="font-size: 11px; color: #38bdf8; font-weight: bold; margin-bottom: 4px;">✏️ Drawing Active (Tap map to add bends)</div>
                     <div style="display: flex; gap: 6px;">
@@ -389,31 +520,69 @@
                 </div>
             </div>
         </div>
+
+        <!-- ASSETS PANEL -->
         <div id="panelAsset" class="panel">
             <div style="display: flex; justify-content: space-between; align-items: center;">
                 <h3>Utility & Automation Assets</h3>
-                <button onclick="openCategoryModal()" style="width: auto; padding: 4px 8px; font-size: 11px; background: #1e293b; color: #38bdf8; min-height: auto;">⚙️ Categories</button>
+                <div style="display:flex; gap:4px;">
+                    <button id="pickAssetCoordBtn" onclick="startPickCoords('asset')" style="width: auto; padding: 4px 8px; font-size: 11px; background: #0284c7; color: #fff; min-height: 30px;">📍 Pick Coords</button>
+                    <button onclick="openCategoryModal()" style="width: auto; padding: 4px 8px; font-size: 11px; background: #1e293b; color: #38bdf8; min-height: 30px;">⚙️ Cats</button>
+                </div>
             </div>
+
+            <!-- QUICK-STAMP PRESETS -->
+            <div class="builder-box">
+                <label style="color:#38bdf8; font-weight:bold;">⚡ Quick-Stamp Presets (Tap to Fill & Pick)</label>
+                <div class="stamp-grid">
+                    <button class="stamp-chip" onclick="applyAssetPreset('OPEX UIS Node 1', 'OPEX UIS Sorter', '🤖')">🤖 UIS Node</button>
+                    <button class="stamp-chip" onclick="applyAssetPreset('ATR Cell 1', 'ATR Tote Retrieval', '📦')">📦 ATR Cell</button>
+                    <button class="stamp-chip" onclick="applyAssetPreset('MDR Drive 1', 'Conveyance', '⚙️')">⚙️ MDR Drive</button>
+                    <button class="stamp-chip" onclick="applyAssetPreset('E-Stop 1', 'Safety', '🛑')">🛑 E-Stop</button>
+                    <button class="stamp-chip" onclick="applyAssetPreset('Panel / Disconnect 1', 'Electrical', '⚡')">⚡ Panel</button>
+                    <button class="stamp-chip" onclick="applyAssetPreset('Water Valve 1', 'Plumbing', '💧')">💧 Water</button>
+                    <button class="stamp-chip" onclick="applyAssetPreset('Sprinkler Riser 1', 'Fire Safety', '🔥')">🔥 Sprinkler</button>
+                    <button class="stamp-chip" onclick="applyAssetPreset('LOTO Point 1', 'LOTO Isolation', '🔒')">🔒 LOTO</button>
+                    <button class="stamp-chip" onclick="applyAssetPreset('Dock Door 1', 'General', '🚪')">🚪 Dock Door</button>
+                </div>
+            </div>
+
             <div>
-                <label>Asset Name</label>
-                <input type="text" id="newAssetName" value="OPEX UIS Scan Tunnel #1">
+                <label>Asset Name (End with # to auto-increment on repeat)</label>
+                <input type="text" id="newAssetName" value="OPEX UIS Scan Tunnel 1">
                 <label>Category</label>
                 <select id="newAssetCategory"></select>
-                <label>Maintenance Status</label>
-                <select id="newAssetStatus">
-                    <option value="operational">Operational</option>
-                    <option value="maintenance">Under Maintenance</option>
-                    <option value="down">Down / Inoperable</option>
-                </select>
-                <label>Dot Icon (Emoji)</label>
-                <input type="text" id="newAssetEmoji" value="🤖" style="text-align: center; font-size: 18px;">
-                <div style="display: flex; gap: 8px; margin-top: 6px;">
+                <div style="display:flex; gap:8px;">
+                    <div style="flex:2;">
+                        <label>Maintenance Status</label>
+                        <select id="newAssetStatus">
+                            <option value="operational">Operational</option>
+                            <option value="maintenance">Under Maintenance</option>
+                            <option value="down">Down / Inoperable</option>
+                        </select>
+                    </div>
+                    <div style="flex:1;">
+                        <label>Dot Emoji</label>
+                        <input type="text" id="newAssetEmoji" value="🤖" style="text-align: center; font-size: 16px;">
+                    </div>
+                </div>
+                <div style="display: flex; gap: 8px; margin-top: 4px;">
                     <div style="flex:1;"><label>X Col (-6 to 34)</label><input type="number" id="newAssetX" step="0.25" value="5"></div>
                     <div style="flex:1;"><label>Y Row (-4 to 18)</label><input type="number" id="newAssetY" step="0.25" value="-2"></div>
                 </div>
-                <button onclick="addAsset()" style="margin-top: 8px; min-height: 42px;">Add Automation Asset</button>
+                <!-- STEP & REPEAT ARRAY -->
+                <div class="builder-box" style="margin-top:6px;">
+                    <label style="color:#fbbf24; font-weight:bold;">🔁 Step & Repeat Array (Bulk Build)</label>
+                    <div style="display:flex; gap:6px;">
+                        <div style="flex:1;"><label>Count</label><input type="number" id="assetRepeatCount" min="1" max="50" value="1"></div>
+                        <div style="flex:1;"><label>Step X</label><input type="number" id="assetStepX" step="0.25" value="2"></div>
+                        <div style="flex:1;"><label>Step Y</label><input type="number" id="assetStepY" step="0.25" value="0"></div>
+                    </div>
+                </div>
+                <button onclick="addAsset()" style="margin-top: 8px; min-height: 40px; background:#0284c7; color:#fff;">+ Add Automation Asset(s)</button>
             </div>
         </div>
+
         <!-- MAINTENANCE TECH SHIFT HANDOVER PANEL -->
         <div id="panelTech" class="panel">
             <h3>📝 Maintenance Tech Shift Log</h3>
@@ -425,9 +594,8 @@
                 <select id="techShiftName"></select>
                 <label>Handover Note / Parts Waiting in Cage</label>
                 <textarea id="techLogText" placeholder="Detailed handoff notes, jams, or parts set aside in cage..." style="height:60px;"></textarea>
-                <button onclick="addShiftLog('tech')" style="margin-top: 6px; background:#0284c7; color:#fff; min-height: 42px;">+ Post Tech Entry</button>
+                <button onclick="addShiftLog('tech')" style="margin-top: 6px; background:#0284c7; color:#fff; min-height: 40px;">+ Post Tech Entry</button>
             </div>
-            <!-- ACTION ITEM TRACKER -->
             <div style="margin-top: 6px;">
                 <label>📋 Shift Action Items / Tasks</label>
                 <div id="techActionList" style="max-height: 90px; overflow-y: auto; background: #070d14; border: 1px solid #1f2d3d; border-radius: 6px; padding: 6px; margin-top: 2px;"></div>
@@ -437,8 +605,8 @@
                 </div>
             </div>
             <div style="display: flex; gap: 6px; margin-top: 6px;">
-                <button onclick="printHandoverReport('tech')" style="font-size: 11px; padding: 6px; min-height: 38px;">🖨️ Print Summary</button>
-                <button onclick="exportShiftLogsCSV('tech')" style="font-size: 11px; padding: 6px; min-height: 38px;">📥 CSV Export</button>
+                <button onclick="printHandoverReport('tech')" style="font-size: 11px; padding: 6px; min-height: 36px;">🖨️ Print Summary</button>
+                <button onclick="exportShiftLogsCSV('tech')" style="font-size: 11px; padding: 6px; min-height: 36px;">📥 CSV Export</button>
             </div>
             <div style="margin-top: 6px; margin-bottom: 2px;">
                 <label>Filter Log View</label>
@@ -448,6 +616,7 @@
             </div>
             <div class="notes-log-box" id="techLogContainer" style="max-height: 130px;"></div>
         </div>
+
         <!-- OPERATIONS SHIFT HANDOVER PANEL -->
         <div id="panelShift" class="panel">
             <h3>📝 Operations Shift Handover Log</h3>
@@ -459,9 +628,8 @@
                 <select id="shiftName"></select>
                 <label>Handover Note / Updates</label>
                 <textarea id="shiftLogText" placeholder="Detailed handoff notes, equipment status..." style="height:60px;"></textarea>
-                <button onclick="addShiftLog('ops')" style="margin-top: 6px; background:#0284c7; color:#fff; min-height: 42px;">+ Post Ops Entry</button>
+                <button onclick="addShiftLog('ops')" style="margin-top: 6px; background:#0284c7; color:#fff; min-height: 40px;">+ Post Ops Entry</button>
             </div>
-            <!-- ACTION ITEM TRACKER -->
             <div style="margin-top: 6px;">
                 <label>📋 Ops Shift Action Items</label>
                 <div id="opsActionList" style="max-height: 90px; overflow-y: auto; background: #070d14; border: 1px solid #1f2d3d; border-radius: 6px; padding: 6px; margin-top: 2px;"></div>
@@ -471,8 +639,8 @@
                 </div>
             </div>
             <div style="display: flex; gap: 6px; margin-top: 6px;">
-                <button onclick="printHandoverReport('ops')" style="font-size: 11px; padding: 6px; min-height: 38px;">🖨️ Print Summary</button>
-                <button onclick="exportShiftLogsCSV('ops')" style="font-size: 11px; padding: 6px; min-height: 38px;">📥 CSV Export</button>
+                <button onclick="printHandoverReport('ops')" style="font-size: 11px; padding: 6px; min-height: 36px;">🖨️ Print Summary</button>
+                <button onclick="exportShiftLogsCSV('ops')" style="font-size: 11px; padding: 6px; min-height: 36px;">📥 CSV Export</button>
             </div>
             <div style="margin-top: 6px; margin-bottom: 2px;">
                 <label>Filter Log View</label>
@@ -482,6 +650,7 @@
             </div>
             <div class="notes-log-box" id="shiftLogContainer" style="max-height: 130px;"></div>
         </div>
+
         <!-- SAFETY SHIFT HANDOVER PANEL -->
         <div id="panelSafety" class="panel">
             <h3>🦺 Safety Shift Handover Log</h3>
@@ -493,9 +662,8 @@
                 <select id="safetyShiftName"></select>
                 <label>Safety Incidents / Audits / PPE Notes</label>
                 <textarea id="safetyLogText" placeholder="Near misses, safety audits, eyewash checks..." style="height:60px;"></textarea>
-                <button onclick="addShiftLog('safety')" style="margin-top: 6px; background:#0284c7; color:#fff; min-height: 42px;">+ Post Safety Entry</button>
+                <button onclick="addShiftLog('safety')" style="margin-top: 6px; background:#0284c7; color:#fff; min-height: 40px;">+ Post Safety Entry</button>
             </div>
-            <!-- ACTION ITEM TRACKER -->
             <div style="margin-top: 6px;">
                 <label>📋 Safety Follow-up Action Items</label>
                 <div id="safetyActionList" style="max-height: 90px; overflow-y: auto; background: #070d14; border: 1px solid #1f2d3d; border-radius: 6px; padding: 6px; margin-top: 2px;"></div>
@@ -505,8 +673,8 @@
                 </div>
             </div>
             <div style="display: flex; gap: 6px; margin-top: 6px;">
-                <button onclick="printHandoverReport('safety')" style="font-size: 11px; padding: 6px; min-height: 38px;">🖨️ Print Summary</button>
-                <button onclick="exportShiftLogsCSV('safety')" style="font-size: 11px; padding: 6px; min-height: 38px;">📥 CSV Export</button>
+                <button onclick="printHandoverReport('safety')" style="font-size: 11px; padding: 6px; min-height: 36px;">🖨️ Print Summary</button>
+                <button onclick="exportShiftLogsCSV('safety')" style="font-size: 11px; padding: 6px; min-height: 36px;">📥 CSV Export</button>
             </div>
             <div style="margin-top: 6px; margin-bottom: 2px;">
                 <label>Filter Log View</label>
@@ -516,6 +684,7 @@
             </div>
             <div class="notes-log-box" id="safetyLogContainer" style="max-height: 130px;"></div>
         </div>
+
         <!-- TOM TEAM SHIFT HANDOVER PANEL -->
         <div id="panelTom" class="panel">
             <h3>🚛 Tom Team Shift Handover Log</h3>
@@ -527,9 +696,8 @@
                 <select id="tomShiftName"></select>
                 <label>Yard / Yard Truck / Trailer Notes</label>
                 <textarea id="tomLogText" placeholder="Yard flow, spotter truck status, trailer moves..." style="height:60px;"></textarea>
-                <button onclick="addShiftLog('tom')" style="margin-top: 6px; background:#0284c7; color:#fff; min-height: 42px;">+ Post Tom Team Entry</button>
+                <button onclick="addShiftLog('tom')" style="margin-top: 6px; background:#0284c7; color:#fff; min-height: 40px;">+ Post Tom Team Entry</button>
             </div>
-            <!-- ACTION ITEM TRACKER -->
             <div style="margin-top: 6px;">
                 <label>📋 Tom Team Action Items</label>
                 <div id="tomActionList" style="max-height: 90px; overflow-y: auto; background: #070d14; border: 1px solid #1f2d3d; border-radius: 6px; padding: 6px; margin-top: 2px;"></div>
@@ -539,8 +707,8 @@
                 </div>
             </div>
             <div style="display: flex; gap: 6px; margin-top: 6px;">
-                <button onclick="printHandoverReport('tom')" style="font-size: 11px; padding: 6px; min-height: 38px;">🖨️ Print Summary</button>
-                <button onclick="exportShiftLogsCSV('tom')" style="font-size: 11px; padding: 6px; min-height: 38px;">📥 CSV Export</button>
+                <button onclick="printHandoverReport('tom')" style="font-size: 11px; padding: 6px; min-height: 36px;">🖨️ Print Summary</button>
+                <button onclick="exportShiftLogsCSV('tom')" style="font-size: 11px; padding: 6px; min-height: 36px;">📥 CSV Export</button>
             </div>
             <div style="margin-top: 6px; margin-bottom: 2px;">
                 <label>Filter Log View</label>
@@ -551,6 +719,7 @@
             <div class="notes-log-box" id="tomLogContainer" style="max-height: 130px;"></div>
         </div>
     </div>
+
     <div id="canvas-container">
         <!-- EMERGENCY QUICK-FILTER FLOATING PILLS -->
         <div id="quick-filter-bar">
@@ -562,13 +731,30 @@
             <button class="filter-pill active" id="filterAllBtn" onclick="toggleQuickFilter('all')">Show All</button>
         </div>
 
-        <!-- FLOATING FLOATING DRAWING BAR FOR CANVAS (WORKS EVEN WHEN SIDEBAR COLLAPSED) -->
-        <div id="canvas-draw-banner" style="display: none; position: absolute; top: 60px; left: 50%; transform: translateX(-50%); z-index: 30; background: #111b27; border: 2px solid #38bdf8; border-radius: 12px; padding: 10px 16px; box-shadow: 0 8px 25px rgba(0,0,0,0.85); text-align: center; min-width: 260px;">
-            <div style="color: #38bdf8; font-size: 12px; font-weight: bold; margin-bottom: 6px;">✏️ Tap Map to Place Line Bends</div>
+        <!-- REMOTE MULTI-BUILDER SYNC NOTICE -->
+        <div id="remote-sync-banner">🔄 Layout synced from co-builder</div>
+
+        <!-- FLOATING DRAWING BAR FOR CANVAS (WORKS EVEN WHEN SIDEBAR COLLAPSED) -->
+        <div id="canvas-draw-banner" style="display: none; position: absolute; top: 60px; left: 50%; transform: translateX(-50%); z-index: 30; background: #111b27; border: 2px solid #38bdf8; border-radius: 12px; padding: 10px 16px; box-shadow: 0 8px 25px rgba(0,0,0,0.85); text-align: center; min-width: 280px;">
+            <div id="drawBannerText" style="color: #38bdf8; font-size: 12px; font-weight: bold; margin-bottom: 6px;">✏️ Tap Map to Place Line Bends</div>
             <div style="display: flex; gap: 8px; justify-content: center;">
+                <button onclick="undoLastLinePoint()" style="background: #1e293b; color: #fbbf24; border-color:#f59e0b; padding: 6px 10px; min-height: 36px; width: auto;">↩️ Undo Pt</button>
                 <button onclick="finishDrawingLine()" style="background: #10b981; color: #0b131d; font-weight: bold; padding: 6px 14px; min-height: 36px; width: auto;">✅ Finish & Save</button>
                 <button onclick="cancelDrawingLine()" class="danger" style="padding: 6px 12px; min-height: 36px; width: auto;">Cancel</button>
             </div>
+        </div>
+
+        <!-- FLOATING PICK COORD BANNER -->
+        <div id="canvas-pick-banner" style="display: none; position: absolute; top: 60px; left: 50%; transform: translateX(-50%); z-index: 30; background: #111b27; border: 2px solid #f59e0b; border-radius: 12px; padding: 10px 16px; box-shadow: 0 8px 25px rgba(0,0,0,0.85); text-align: center; min-width: 260px;">
+            <div id="pickBannerText" style="color: #fbbf24; font-size: 12px; font-weight: bold; margin-bottom: 6px;">📍 Tap Anywhere on Map to Set Coordinates</div>
+            <button onclick="cancelPickCoords()" class="danger" style="padding: 5px 12px; min-height: 32px; width: auto;">Cancel</button>
+        </div>
+
+        <!-- VIEWPORT ZOOM & RESET CONTROLS -->
+        <div id="viewport-controls">
+            <button class="vp-btn" onclick="zoomViewport(1.2)" title="Zoom In">+</button>
+            <button class="vp-btn" onclick="zoomViewport(0.83)" title="Zoom Out">−</button>
+            <button class="vp-btn" onclick="resetViewport()" title="Center & Reset View">🎯</button>
         </div>
 
         <!-- MOBILE FLOATING BOTTOM TOOLBAR -->
@@ -580,16 +766,23 @@
         </div>
 
         <svg id="layoutSvg" width="2200" height="1400">
-            <g id="viewport"></g>
+            <g id="viewport">
+                <g id="static-grid-layer"></g>
+                <g id="ghost-ground-layer" style="pointer-events:none;"></g>
+                <g id="dynamic-elements-layer"></g>
+                <g id="overlay-tools-layer" style="pointer-events:none;"></g>
+            </g>
         </svg>
     </div>
+
     <!-- MAIN INSPECT & EDIT MODAL -->
     <div id="modal-overlay">
         <div class="modal-content">
             <div class="modal-header">
                 <h3 id="modalTitle" style="color: #38bdf8; margin: 0;">Item Details</h3>
-                <div style="display: flex; gap: 8px; align-items: center;">
-                    <button onclick="printAssetQrCode()" style="width: auto; padding: 6px 12px; font-size: 11px; background: #0284c7; color: #fff; min-height: 38px;">🖨️ Print QR</button>
+                <div style="display: flex; gap: 6px; align-items: center;">
+                    <button onclick="duplicateFromModal()" style="width: auto; padding: 6px 10px; font-size: 11px; background: #1e293b; border-color:#f59e0b; color:#fbbf24; min-height: 36px;">📋 Duplicate</button>
+                    <button onclick="printAssetQrCode()" style="width: auto; padding: 6px 10px; font-size: 11px; background: #0284c7; color: #fff; min-height: 36px;">🖨️ Print QR</button>
                     <button class="close-modal" onclick="closeModal()">×</button>
                 </div>
             </div>
@@ -726,11 +919,12 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button class="danger" onclick="deleteItemFromModal()" style="width: auto; padding: 8px 16px; min-height: 42px;">Delete Item</button>
-                <button onclick="closeModal()" style="width: auto; padding: 8px 16px; background: #38bdf8; color: #0b131d; min-height: 42px;">Done / Save</button>
+                <button class="danger" onclick="deleteItemFromModal()" style="width: auto; padding: 8px 16px; min-height: 40px;">Delete Item</button>
+                <button onclick="closeModal()" style="width: auto; padding: 8px 16px; background: #38bdf8; color: #0b131d; min-height: 40px;">Done / Save</button>
             </div>
         </div>
     </div>
+
     <!-- AR LIVE CAMERA OVERLAY MODAL -->
     <div id="ar-modal-overlay">
         <div class="modal-content" style="width: 500px; height: 500px;">
@@ -751,6 +945,7 @@
             </div>
         </div>
     </div>
+
     <!-- LIGHTBOX MODAL -->
     <div id="lightbox-overlay" onclick="closeLightbox()">
         <div style="position: relative; max-width: 90vw; max-height: 90vh; display: flex; flex-direction: column; align-items: center;" onclick="event.stopPropagation()">
@@ -759,6 +954,7 @@
             <div id="lightboxCaption" style="margin-top: 8px; color: #38bdf8; font-size: 13px; font-weight: bold;"></div>
         </div>
     </div>
+
     <!-- CATEGORY MANAGING MODAL -->
     <div id="category-modal-overlay">
         <div class="modal-content" style="width: 500px;">
@@ -794,6 +990,7 @@
             </div>
         </div>
     </div>
+
     <!-- SHIFT MANAGER MODAL -->
     <div id="shift-manager-modal-overlay">
         <div class="modal-content" style="width: 450px;">
@@ -827,6 +1024,7 @@
             </div>
         </div>
     </div>
+
     <!-- QR CAMERA SCANNER MODAL -->
     <div id="scanner-modal-overlay">
         <div class="modal-content" style="width: 450px;">
@@ -839,9 +1037,11 @@
             </div>
         </div>
     </div>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
         const firebaseConfig = {
             apiKey: "AIzaSyCrKAut8_5nHWTWtYqZZr5HOENGd8mqZxE",
             authDomain: "imi1-interactive-map-8d929.firebaseapp.com",
@@ -851,6 +1051,7 @@
             appId: "1:613133090515:web:f8f9be365f484a3a5c5e26",
             measurementId: "G-4QR2RSSTN1"
         };
+
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const gridSize = 25;
@@ -860,6 +1061,7 @@
         const maxRow = 20;
         const buildingCols = 30; 
         const buildingRows = 13; 
+
         let currentMode = 'edit'; 
         let currentTab = 'dept'; 
         let currentLayer = 'ground'; 
@@ -870,7 +1072,20 @@
         let arQrCode = null;
         let calcPoints = []; 
         let drawingLineState = null; 
-        let draggingVertex = null; 
+        let draggingVertex = null;
+        let resizingZone = null;
+        let pickCoordTarget = null; // 'asset' or 'zone'
+        let shiftKeyPressed = false;
+        let lastMouseLocal = null;
+
+        // Multi-builder & Undo/Redo state
+        const clientSessionId = "builder_" + Math.random().toString(36).substring(2, 10);
+        let undoStack = [];
+        let redoStack = [];
+        const MAX_HISTORY = 30;
+        let saveDebounceTimer = null;
+        let isLocalWriting = false;
+
         let categories = [
             { name: "OPEX UIS Sorter", color: "#ec4899" },
             { name: "ATR Tote Retrieval", color: "#8b5cf6" },
@@ -883,6 +1098,7 @@
             { name: "LOTO Isolation", color: "#a855f7" },
             { name: "General", color: "#94a3b8" }
         ];
+
         let elements = [
             { 
                 id: 501, layer: "uis_sorter", name: "OPEX UIS Sure Sort Frame #1", type: "asset", category: "OPEX UIS Sorter", status: "operational", emoji: "🤖", x: 10, y: 4, partsNeeded: false,
@@ -896,6 +1112,7 @@
                 spreadsheetData: [{key: "Sorter Throughput", value: "2,400 UPH"}, {key: "iBOT Fleet Count", value: "22 iBOTs"}]
             }
         ];
+
         let shiftLogs = [];
         let safetyLogs = [];
         let tomLogs = [];
@@ -909,123 +1126,445 @@
         let safetyActions = [];
         let tomActions = [];
         let activeShiftCategory = 'tech';
+
+        // Selection (supports single primary + multi-select)
         let selectedId = null;
+        let multiSelectedIds = new Set();
         let isDraggingElement = false;
         let isPanning = false;
         let panStart = { x: 0, y: 0 };
         let viewTransform = { x: 250, y: 180, scale: 0.9 };
         let initialPinchDistance = null;
         let initialScale = 0.9;
+
         const container = document.getElementById("canvas-container");
-        const svg = document.getElementById("layoutSvg");
         const viewport = document.getElementById("viewport");
+        const staticGridLayer = document.getElementById("static-grid-layer");
+        const ghostGroundLayer = document.getElementById("ghost-ground-layer");
+        const dynamicLayer = document.getElementById("dynamic-elements-layer");
+        const overlayToolsLayer = document.getElementById("overlay-tools-layer");
         const syncStatus = document.getElementById("sync-status");
-        
+
         function triggerHaptic(duration = 20) {
-            if (navigator.vibrate) {
-                navigator.vibrate(duration);
-            }
+            if (navigator.vibrate) navigator.vibrate(duration);
         }
 
         window.toggleSidebar = function() {
             triggerHaptic(15);
             document.getElementById("sidebar").classList.toggle("collapsed");
         };
-        async function loadFromFirebase() {
-            try {
-                const docRef = doc(db, "layouts", "facility_main");
-                const docSnap = await getDoc(docRef);
-                if (docSnap.exists()) {
-                    let data = docSnap.data();
-                    if (data.elements) {
-                        elements = data.elements.map(el => {
-                            if (el.type === 'conveyance_line' && !el.points && el.x1 !== undefined) {
-                                el.points = [{x: el.x1, y: el.y1}, {x: el.x2, y: el.y2}];
-                            }
-                            return el;
-                        });
+
+        /* ==========================================
+           UNDO / REDO HISTORY & SELECTION HELPERS
+           ========================================== */
+        function cloneData(obj) {
+            return JSON.parse(JSON.stringify(obj));
+        }
+
+        function pushHistorySnapshot() {
+            undoStack.push(cloneData(elements));
+            if (undoStack.length > MAX_HISTORY) undoStack.shift();
+            redoStack = [];
+            updateHistoryButtons();
+        }
+
+        function updateHistoryButtons() {
+            const uBtn = document.getElementById("undoBtn");
+            const rBtn = document.getElementById("redoBtn");
+            const cBtn = document.getElementById("duplicateSelBtn");
+            if (uBtn) {
+                uBtn.disabled = undoStack.length === 0;
+                uBtn.innerText = `↩️ Undo (${undoStack.length})`;
+            }
+            if (rBtn) {
+                rBtn.disabled = redoStack.length === 0;
+                rBtn.innerText = `↪️ Redo (${redoStack.length})`;
+            }
+            if (cBtn) {
+                cBtn.disabled = !selectedId && multiSelectedIds.size === 0;
+            }
+        }
+
+        window.undoLayout = function() {
+            if (undoStack.length === 0) return;
+            triggerHaptic(20);
+            redoStack.push(cloneData(elements));
+            elements = undoStack.pop();
+            selectedId = null;
+            multiSelectedIds.clear();
+            updateHistoryButtons();
+            render();
+            saveToFirebase(true);
+        };
+
+        window.redoLayout = function() {
+            if (redoStack.length === 0) return;
+            triggerHaptic(20);
+            undoStack.push(cloneData(elements));
+            elements = redoStack.pop();
+            selectedId = null;
+            multiSelectedIds.clear();
+            updateHistoryButtons();
+            render();
+            saveToFirebase(true);
+        };
+
+        function setSelection(id, additive = false) {
+            if (!id) {
+                selectedId = null;
+                multiSelectedIds.clear();
+            } else if (additive) {
+                if (multiSelectedIds.has(id)) {
+                    multiSelectedIds.delete(id);
+                    if (selectedId === id) {
+                        selectedId = multiSelectedIds.size > 0 ? Array.from(multiSelectedIds)[0] : null;
                     }
-                    if (data.categories) categories = data.categories;
-                    if (data.shiftLogs) shiftLogs = data.shiftLogs;
-                    if (data.safetyLogs) safetyLogs = data.safetyLogs;
-                    if (data.tomLogs) tomLogs = data.tomLogs;
-                    if (data.techLogs) techLogs = data.techLogs;
-                    if (data.opsShifts) opsShifts = data.opsShifts;
-                    if (data.safetyShifts) safetyShifts = data.safetyShifts;
-                    if (data.tomShifts) tomShifts = data.tomShifts;
-                    if (data.techShifts) techShifts = data.techShifts;
-                    if (data.techActions) techActions = data.techActions;
-                    if (data.opsActions) opsActions = data.opsActions;
-                    if (data.safetyActions) safetyActions = data.safetyActions;
-                    if (data.tomActions) tomActions = data.tomActions;
-                    syncStatus.innerText = "Loaded from Firebase";
-                    localStorage.setItem("cached_layout", JSON.stringify(data));
                 } else {
-                    await saveToFirebase();
+                    multiSelectedIds.add(id);
+                    selectedId = id;
                 }
-                populateCategoryDropdowns();
-                populateParentAssetDropdown();
-                populateAllShiftDropdowns();
-                renderAllActionLists();
-                renderShiftLogs('tech', document.getElementById('techFilterSelect').value);
-                renderShiftLogs('ops', document.getElementById('shiftFilterSelect').value);
-                renderShiftLogs('safety', document.getElementById('safetyFilterSelect').value);
-                renderShiftLogs('tom', document.getElementById('tomFilterSelect').value);
-                render();
-            } catch (error) {
-                console.error("Error loading layout:", error);
-                let offlineData = localStorage.getItem("cached_layout");
-                if (offlineData) {
-                    let parsed = JSON.parse(offlineData);
-                    if (parsed.elements) elements = parsed.elements;
+            } else {
+                selectedId = id;
+                multiSelectedIds.clear();
+                multiSelectedIds.add(id);
+            }
+            updateHistoryButtons();
+        }
+
+        /* ==========================================
+           CLONE / DUPLICATE & AUTO-INCREMENT HELPERS
+           ========================================== */
+        function incrementTrailingNumber(nameStr, offset) {
+            if (offset === 0) return nameStr;
+            const match = nameStr.match(/^(.*?)(\d+)(\s*)$/);
+            if (match) {
+                const prefix = match[1];
+                const num = parseInt(match[2], 10);
+                const padLen = match[2].length;
+                const nextNum = String(num + offset).padStart(padLen, '0');
+                return `${prefix}${nextNum}${match[3]}`;
+            }
+            return `${nameStr} (${offset + 1})`;
+        }
+
+        function createClonedElement(src, offsetIndex = 1) {
+            const copy = cloneData(src);
+            copy.id = Date.now() + Math.floor(Math.random() * 10000) + offsetIndex;
+            copy.name = incrementTrailingNumber(src.name || "Item", offsetIndex);
+            if (copy.type === 'conveyance_line' && Array.isArray(copy.points)) {
+                copy.points = copy.points.map(pt => ({
+                    x: parseFloat((pt.x + 1).toFixed(2)),
+                    y: parseFloat((pt.y + 1).toFixed(2))
+                }));
+            } else {
+                copy.x = parseFloat(((copy.x || 0) + 1).toFixed(2));
+                copy.y = parseFloat(((copy.y || 0) + 1).toFixed(2));
+            }
+            return copy;
+        }
+
+        window.duplicateSelected = function() {
+            const idsToClone = multiSelectedIds.size > 0 ? Array.from(multiSelectedIds) : (selectedId ? [selectedId] : []);
+            if (idsToClone.length === 0) return;
+            triggerHaptic(25);
+            pushHistorySnapshot();
+            const newIds = [];
+            idsToClone.forEach((id, idx) => {
+                const src = elements.find(e => e.id === id);
+                if (src) {
+                    const cloned = createClonedElement(src, 1);
+                    elements.push(cloned);
+                    newIds.push(cloned.id);
+                }
+            });
+            multiSelectedIds.clear();
+            newIds.forEach(nid => multiSelectedIds.add(nid));
+            selectedId = newIds[0] || null;
+            updateHistoryButtons();
+            render();
+            saveToFirebase(true);
+        };
+
+        window.duplicateFromModal = function() {
+            const id = parseInt(document.getElementById("modalElementId").value);
+            const src = elements.find(e => e.id === id);
+            if (!src) return;
+            triggerHaptic(25);
+            pushHistorySnapshot();
+            const cloned = createClonedElement(src, 1);
+            elements.push(cloned);
+            setSelection(cloned.id, false);
+            render();
+            saveToFirebase(true);
+            openModal(cloned);
+        };
+
+        /* ==========================================
+           QUICK-STAMP PRESETS & PICK COORDS ON MAP
+           ========================================== */
+        window.applyAssetPreset = function(name, category, emoji) {
+            triggerHaptic(15);
+            document.getElementById("newAssetName").value = name;
+            document.getElementById("newAssetEmoji").value = emoji;
+            const catSelect = document.getElementById("newAssetCategory");
+            if (categories.some(c => c.name === category)) {
+                catSelect.value = category;
+            }
+            startPickCoords('asset');
+        };
+
+        window.startPickCoords = function(target) {
+            triggerHaptic(20);
+            pickCoordTarget = target;
+            container.style.cursor = 'crosshair';
+            const banner = document.getElementById("canvas-pick-banner");
+            const text = document.getElementById("pickBannerText");
+            text.innerText = target === 'zone'
+                ? "📍 Tap Map to Set Zone Top-Left X/Y"
+                : "📍 Tap Map to Set Asset X/Y Coordinates";
+            banner.style.display = "block";
+            if (window.innerWidth <= 768) {
+                document.getElementById("sidebar").classList.add("collapsed");
+            }
+        };
+
+        window.cancelPickCoords = function() {
+            pickCoordTarget = null;
+            container.style.cursor = currentMode === 'pan' ? 'grab' : (currentMode === 'calc' || currentMode === 'draw_line' ? 'crosshair' : 'default');
+            document.getElementById("canvas-pick-banner").style.display = "none";
+        };
+
+        /* ==========================================
+           JSON BACKUP & RESTORE
+           ========================================== */
+        window.exportJsonBackup = function() {
+            triggerHaptic(20);
+            const payload = {
+                exportedAt: new Date().toISOString(),
+                elements,
+                categories,
+                shiftLogs,
+                safetyLogs,
+                tomLogs,
+                techLogs,
+                opsShifts,
+                safetyShifts,
+                tomShifts,
+                techShifts,
+                techActions,
+                opsActions,
+                safetyActions,
+                tomActions
+            };
+            const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = `Facility_Map_Backup_${new Date().toISOString().slice(0, 10)}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        };
+
+        window.importJsonBackup = function(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const parsed = JSON.parse(e.target.result);
+                    if (!Array.isArray(parsed.elements)) {
+                        alert("Invalid backup file: missing elements array.");
+                        return;
+                    }
+                    if (!confirm(`Restore ${parsed.elements.length} map elements from backup? Current state will be saved to Undo history.`)) {
+                        return;
+                    }
+                    pushHistorySnapshot();
+                    elements = parsed.elements;
                     if (parsed.categories) categories = parsed.categories;
                     if (parsed.shiftLogs) shiftLogs = parsed.shiftLogs;
                     if (parsed.safetyLogs) safetyLogs = parsed.safetyLogs;
                     if (parsed.tomLogs) tomLogs = parsed.tomLogs;
                     if (parsed.techLogs) techLogs = parsed.techLogs;
+                    if (parsed.opsShifts) opsShifts = parsed.opsShifts;
+                    if (parsed.safetyShifts) safetyShifts = parsed.safetyShifts;
+                    if (parsed.tomShifts) tomShifts = parsed.tomShifts;
+                    if (parsed.techShifts) techShifts = parsed.techShifts;
+                    if (parsed.techActions) techActions = parsed.techActions;
+                    if (parsed.opsActions) opsActions = parsed.opsActions;
+                    if (parsed.safetyActions) safetyActions = parsed.safetyActions;
+                    if (parsed.tomActions) tomActions = parsed.tomActions;
+                    populateCategoryDropdowns();
+                    populateParentAssetDropdown();
+                    populateAllShiftDropdowns();
+                    renderAllActionLists();
+                    render();
+                    saveToFirebase(true);
+                    triggerHaptic(30);
+                } catch (err) {
+                    console.error("Backup import error:", err);
+                    alert("Could not parse JSON backup file.");
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = "";
+        };
+
+        /* ==========================================
+           VIEWPORT ZOOM & RESET
+           ========================================== */
+        window.zoomViewport = function(factor) {
+            triggerHaptic(10);
+            const rect = container.getBoundingClientRect();
+            const centerX = rect.width / 2;
+            const centerY = rect.height / 2;
+            const oldScale = viewTransform.scale;
+            const newScale = Math.min(Math.max(oldScale * factor, 0.3), 3.0);
+            viewTransform.scale = newScale;
+            viewTransform.x = centerX - (centerX - viewTransform.x) * (newScale / oldScale);
+            viewTransform.y = centerY - (centerY - viewTransform.y) * (newScale / oldScale);
+            updateTransformString();
+        };
+
+        window.resetViewport = function() {
+            triggerHaptic(15);
+            viewTransform = { x: 250, y: 180, scale: 0.9 };
+            updateTransformString();
+        };
+
+        /* ==========================================
+           REAL-TIME MULTI-BUILDER FIRESTORE SYNC
+           ========================================== */
+        function applyRemoteLayoutData(data) {
+            if (data.elements) {
+                elements = data.elements.map(el => {
+                    if (el.type === 'conveyance_line' && !el.points && el.x1 !== undefined) {
+                        el.points = [{x: el.x1, y: el.y1}, {x: el.x2, y: el.y2}];
+                    }
+                    return el;
+                });
+            }
+            if (data.categories) categories = data.categories;
+            if (data.shiftLogs) shiftLogs = data.shiftLogs;
+            if (data.safetyLogs) safetyLogs = data.safetyLogs;
+            if (data.tomLogs) tomLogs = data.tomLogs;
+            if (data.techLogs) techLogs = data.techLogs;
+            if (data.opsShifts) opsShifts = data.opsShifts;
+            if (data.safetyShifts) safetyShifts = data.safetyShifts;
+            if (data.tomShifts) tomShifts = data.tomShifts;
+            if (data.techShifts) techShifts = data.techShifts;
+            if (data.techActions) techActions = data.techActions;
+            if (data.opsActions) opsActions = data.opsActions;
+            if (data.safetyActions) safetyActions = data.safetyActions;
+            if (data.tomActions) tomActions = data.tomActions;
+
+            populateCategoryDropdowns();
+            populateParentAssetDropdown();
+            populateAllShiftDropdowns();
+            renderAllActionLists();
+            renderShiftLogs('tech', document.getElementById('techFilterSelect').value);
+            renderShiftLogs('ops', document.getElementById('shiftFilterSelect').value);
+            renderShiftLogs('safety', document.getElementById('safetyFilterSelect').value);
+            renderShiftLogs('tom', document.getElementById('tomFilterSelect').value);
+            render();
+        }
+
+        function showRemoteSyncNotice() {
+            const banner = document.getElementById("remote-sync-banner");
+            if (!banner) return;
+            banner.style.display = "block";
+            clearTimeout(banner._hideTimer);
+            banner._hideTimer = setTimeout(() => {
+                banner.style.display = "none";
+            }, 2600);
+        }
+
+        function initFirebaseLiveSync() {
+            const docRef = doc(db, "layouts", "facility_main");
+            onSnapshot(docRef, (docSnap) => {
+                if (!docSnap.exists()) {
+                    saveToFirebase(true);
+                    return;
+                }
+                const data = docSnap.data();
+                localStorage.setItem("cached_layout", JSON.stringify(data));
+
+                // Skip re-rendering if this snapshot came from our own local write or while actively dragging
+                if (data.lastEditorId === clientSessionId && isLocalWriting) {
+                    isLocalWriting = false;
+                    syncStatus.innerText = "Live Synced (Firebase)";
+                    syncStatus.style.color = "#10b981";
+                    return;
+                }
+                if (isDraggingElement || draggingVertex || resizingZone) return;
+
+                applyRemoteLayoutData(data);
+                syncStatus.innerText = "Live Synced (Firebase)";
+                syncStatus.style.color = "#10b981";
+                if (data.lastEditorId && data.lastEditorId !== clientSessionId) {
+                    showRemoteSyncNotice();
+                }
+            }, (error) => {
+                console.error("Realtime sync error:", error);
+                let offlineData = localStorage.getItem("cached_layout");
+                if (offlineData) {
+                    applyRemoteLayoutData(JSON.parse(offlineData));
                     syncStatus.innerText = "Offline Mode (Cached)";
                 } else {
                     syncStatus.innerText = "Error Loading Database";
                 }
                 syncStatus.style.color = "#f59e0b";
-                populateCategoryDropdowns();
-                populateParentAssetDropdown();
-                populateAllShiftDropdowns();
-                renderAllActionLists();
-                render();
+            });
+        }
+
+        function saveToFirebase(immediate = false) {
+            clearTimeout(saveDebounceTimer);
+            syncStatus.innerText = immediate ? "Saving..." : "Pending save...";
+            syncStatus.style.color = "#fbbf24";
+
+            const execSave = async () => {
+                try {
+                    isLocalWriting = true;
+                    let layoutObject = {
+                        elements: elements,
+                        categories: categories,
+                        shiftLogs: shiftLogs,
+                        safetyLogs: safetyLogs,
+                        tomLogs: tomLogs,
+                        techLogs: techLogs,
+                        opsShifts: opsShifts,
+                        safetyShifts: safetyShifts,
+                        tomShifts: tomShifts,
+                        techShifts: techShifts,
+                        techActions: techActions,
+                        opsActions: opsActions,
+                        safetyActions: safetyActions,
+                        tomActions: tomActions,
+                        lastEditorId: clientSessionId,
+                        updatedAt: new Date().toISOString()
+                    };
+                    localStorage.setItem("cached_layout", JSON.stringify(layoutObject));
+                    await setDoc(doc(db, "layouts", "facility_main"), layoutObject);
+                    syncStatus.innerText = "Live Synced (Firebase)";
+                    syncStatus.style.color = "#10b981";
+                } catch (error) {
+                    isLocalWriting = false;
+                    console.error("Error saving layout:", error);
+                    syncStatus.innerText = "Saved Locally (Offline)";
+                    syncStatus.style.color = "#f59e0b";
+                }
+            };
+
+            if (immediate) {
+                execSave();
+            } else {
+                saveDebounceTimer = setTimeout(execSave, 550);
             }
         }
-        async function saveToFirebase() {
-            try {
-                syncStatus.innerText = "Saving...";
-                syncStatus.style.color = "#fbbf24";
-                let layoutObject = {
-                    elements: elements,
-                    categories: categories,
-                    shiftLogs: shiftLogs,
-                    safetyLogs: safetyLogs,
-                    tomLogs: tomLogs,
-                    techLogs: techLogs,
-                    opsShifts: opsShifts,
-                    safetyShifts: safetyShifts,
-                    tomShifts: tomShifts,
-                    techShifts: techShifts,
-                    techActions: techActions,
-                    opsActions: opsActions,
-                    safetyActions: safetyActions,
-                    tomActions: tomActions,
-                    updatedAt: new Date().toISOString()
-                };
-                localStorage.setItem("cached_layout", JSON.stringify(layoutObject));
-                await setDoc(doc(db, "layouts", "facility_main"), layoutObject);
-                syncStatus.innerText = "Synced to Firebase";
-                syncStatus.style.color = "#10b981";
-            } catch (error) {
-                console.error("Error saving layout:", error);
-                syncStatus.innerText = "Saved Locally (Offline)";
-                syncStatus.style.color = "#f59e0b";
-            }
-        }
+
+        /* ==========================================
+           SHIFT LOGS & ACTION ITEMS
+           ========================================== */
         window.addShiftLog = function(category) {
             triggerHaptic(20);
             let shiftSelectId = category === 'safety' ? 'safetyShiftName' : (category === 'tom' ? 'tomShiftName' : (category === 'tech' ? 'techShiftName' : 'shiftName'));
@@ -1046,14 +1585,16 @@
             document.getElementById(textInputId).value = "";
             let currentFilter = document.getElementById(filterSelectId).value;
             renderShiftLogs(category, currentFilter);
-            saveToFirebase();
+            saveToFirebase(true);
         };
+
         function populateAllShiftDropdowns() {
             populateDropdownForCategory('tech', 'techShiftName', 'techFilterSelect');
             populateDropdownForCategory('ops', 'shiftName', 'shiftFilterSelect');
             populateDropdownForCategory('safety', 'safetyShiftName', 'safetyFilterSelect');
             populateDropdownForCategory('tom', 'tomShiftName', 'tomFilterSelect');
         }
+
         function populateDropdownForCategory(cat, nameSelectId, filterSelectId) {
             let selectName = document.getElementById(nameSelectId);
             let selectFilter = document.getElementById(filterSelectId);
@@ -1076,6 +1617,7 @@
             if (list.includes(currentNameVal)) selectName.value = currentNameVal;
             if (currentFilterVal === "ALL" || list.includes(currentFilterVal)) selectFilter.value = currentFilterVal;
         }
+
         window.openShiftManagerModal = function(cat) {
             triggerHaptic(15);
             activeShiftCategory = cat;
@@ -1084,11 +1626,13 @@
             renderShiftTable();
             document.getElementById("shift-manager-modal-overlay").style.display = "flex";
         };
+
         window.closeShiftManagerModal = function() {
             document.getElementById("shift-manager-modal-overlay").style.display = "none";
             populateAllShiftDropdowns();
-            saveToFirebase();
+            saveToFirebase(true);
         };
+
         function renderShiftTable() {
             let tbody = document.getElementById("shiftTableBody");
             if (!tbody) return;
@@ -1128,6 +1672,7 @@
                 tbody.appendChild(tr);
             });
         }
+
         window.addNewShift = function() {
             let input = document.getElementById("newShiftInput");
             let val = input.value.trim();
@@ -1146,9 +1691,11 @@
             populateAllShiftDropdowns();
             triggerHaptic(20);
         };
+
         window.filterShiftLogs = function(cat, selectedShift) {
             renderShiftLogs(cat, selectedShift);
         };
+
         function renderShiftLogs(cat, filterShift = "ALL") {
             let containerId = cat === 'safety' ? 'safetyLogContainer' : (cat === 'tom' ? 'tomLogContainer' : (cat === 'tech' ? 'techLogContainer' : 'shiftLogContainer'));
             let box = document.getElementById(containerId);
@@ -1169,13 +1716,14 @@
                 box.appendChild(div);
             });
         }
-        /* ACTION ITEM TRACKER FUNCTIONS */
+
         function getActionList(cat) {
             if (cat === 'safety') return safetyActions;
             if (cat === 'tom') return tomActions;
             if (cat === 'tech') return techActions;
             return opsActions;
         }
+
         window.addActionItem = function(cat) {
             triggerHaptic(20);
             let inputId = cat === 'safety' ? 'newSafetyActionText' : (cat === 'tom' ? 'newTomActionText' : (cat === 'tech' ? 'newTechActionText' : 'newOpsActionText'));
@@ -1186,29 +1734,33 @@
             list.push({ text, done: false });
             input.value = "";
             renderActionList(cat);
-            saveToFirebase();
+            saveToFirebase(true);
         };
+
         window.toggleActionItem = function(cat, index, checked) {
             triggerHaptic(15);
             let list = getActionList(cat);
             if (list[index]) {
                 list[index].done = checked;
                 renderActionList(cat);
-                saveToFirebase();
+                saveToFirebase(true);
             }
         };
+
         window.deleteActionItem = function(cat, index) {
             let list = getActionList(cat);
             list.splice(index, 1);
             renderActionList(cat);
-            saveToFirebase();
+            saveToFirebase(true);
         };
+
         function renderAllActionLists() {
             renderActionList('tech');
             renderActionList('ops');
             renderActionList('safety');
             renderActionList('tom');
         }
+
         function renderActionList(cat) {
             let containerId = cat === 'safety' ? 'safetyActionList' : (cat === 'tom' ? 'tomActionList' : (cat === 'tech' ? 'techActionList' : 'opsActionList'));
             let box = document.getElementById(containerId);
@@ -1228,7 +1780,7 @@
                 box.appendChild(div);
             });
         }
-        /* PRINT HANDOVER REPORT FUNCTION */
+
         window.printHandoverReport = function(cat) {
             let catName = cat === 'safety' ? 'Safety' : (cat === 'tom' ? 'Tom Team' : (cat === 'tech' ? 'Maintenance Tech' : 'Operations'));
             let filterSelectId = cat === 'safety' ? 'safetyFilterSelect' : (cat === 'tom' ? 'tomFilterSelect' : (cat === 'tech' ? 'techFilterSelect' : 'shiftFilterSelect'));
@@ -1259,7 +1811,7 @@
             printWin.focus();
             setTimeout(() => { printWin.print(); }, 250);
         };
-        /* EXPORT LOGS CSV FUNCTION */
+
         window.exportShiftLogsCSV = function(cat) {
             let catName = cat === 'safety' ? 'Safety' : (cat === 'tom' ? 'Tom_Team' : (cat === 'tech' ? 'Tech' : 'Ops'));
             let logs = cat === 'safety' ? safetyLogs : (cat === 'tom' ? tomLogs : (cat === 'tech' ? techLogs : shiftLogs));
@@ -1274,7 +1826,7 @@
             a.click();
             URL.revokeObjectURL(url);
         };
-        /* PRINT ASSET QR CODE LABEL */
+
         window.printAssetQrCode = function() {
             let id = parseInt(document.getElementById("modalElementId").value);
             let el = elements.find(item => item.id === id);
@@ -1307,6 +1859,7 @@
             `);
             qrWin.document.close();
         };
+
         window.toggleQuickFilter = function(filterType) {
             triggerHaptic(15);
             activeQuickFilter = filterType;
@@ -1319,6 +1872,7 @@
             else document.getElementById('filterAllBtn').classList.add('active');
             render();
         };
+
         window.openARModal = function() {
             triggerHaptic(20);
             document.getElementById("ar-modal-overlay").style.display = "flex";
@@ -1334,6 +1888,7 @@
                 (err) => {}
             ).catch(err => console.error("AR Camera error:", err));
         };
+
         window.closeARModal = function() {
             if (arQrCode) {
                 arQrCode.stop().then(() => {
@@ -1346,6 +1901,7 @@
                 document.getElementById("ar-modal-overlay").style.display = "none";
             }
         };
+
         function populateCategoryDropdowns(selectedVal1 = null, selectedVal2 = null) {
             let select1 = document.getElementById("newAssetCategory");
             let select2 = document.getElementById("modalCategory");
@@ -1366,6 +1922,7 @@
             if (val1 && categories.some(c => c.name === val1)) select1.value = val1;
             if (val2 && categories.some(c => c.name === val2)) select2.value = val2;
         }
+
         function populateParentAssetDropdown(selectedParentId = null) {
             let select = document.getElementById("modalParentAsset");
             select.innerHTML = '<option value="">None / Standalone Asset</option>';
@@ -1377,15 +1934,18 @@
             });
             if (selectedParentId) select.value = selectedParentId;
         }
+
         function getCategoryColor(catName) {
             let found = categories.find(c => c.name === catName);
             return found ? found.color : "#38bdf8";
         }
+
         function getStatusColor(status) {
             if (status === 'maintenance') return "#f59e0b";
             if (status === 'down') return "#ef4444";
             return "#10b981";
         }
+
         function getPmAlertStatus(pmDueStr) {
             if (!pmDueStr) return 'none';
             let due = new Date(pmDueStr);
@@ -1395,15 +1955,18 @@
             if (diffDays <= 7) return 'due_soon';
             return 'none';
         }
+
         window.handleSearch = function(val) {
             searchQuery = val.trim().toLowerCase();
             render();
         };
+
         window.toggleHeatmap = function(checked) {
             triggerHaptic(15);
             showHeatmap = checked;
             render();
         };
+
         window.openScannerModal = function() {
             triggerHaptic(20);
             document.getElementById("scanner-modal-overlay").style.display = "flex";
@@ -1419,6 +1982,7 @@
                 () => {}
             ).catch(err => console.error("Camera access error:", err));
         };
+
         window.closeScannerModal = function() {
             if (html5QrCode) {
                 html5QrCode.stop().then(() => {
@@ -1431,6 +1995,7 @@
                 document.getElementById("scanner-modal-overlay").style.display = "none";
             }
         };
+
         window.exportDataToCSV = function() {
             triggerHaptic(20);
             let csvRows = [["ID", "Name", "Type / Conveyance", "Category / Details", "Status", "PLC Node", "X / Vertex Info", "Y Info", "W / Details", "H"]];
@@ -1453,17 +2018,20 @@
             a.click();
             URL.revokeObjectURL(url);
         };
+
         window.openCategoryModal = function() {
             triggerHaptic(15);
             renderCategoryTable();
             document.getElementById("category-modal-overlay").style.display = "flex";
         };
+
         window.closeCategoryModal = function() {
             document.getElementById("category-modal-overlay").style.display = "none";
             populateCategoryDropdowns();
             render();
-            saveToFirebase();
+            saveToFirebase(true);
         };
+
         function renderCategoryTable() {
             let tbody = document.getElementById("categoryTableBody");
             tbody.innerHTML = "";
@@ -1514,6 +2082,7 @@
                 tbody.appendChild(tr);
             });
         }
+
         window.addCategory = function() {
             let nameInput = document.getElementById("newCatName");
             let colorInput = document.getElementById("newCatColor");
@@ -1532,12 +2101,14 @@
             populateCategoryDropdowns();
             triggerHaptic(20);
         };
+
         function getRowLabel(r) {
             if (r < 0) return "N" + Math.abs(r);
             let adjustedIndex = r;
             if (adjustedIndex >= 8) adjustedIndex += 1; 
             return String.fromCharCode(65 + adjustedIndex); 
         }
+
         window.switchLayer = function(layerName) {
             triggerHaptic(15);
             currentLayer = layerName;
@@ -1560,9 +2131,11 @@
             if (mapLayerToBtn[layerName] && document.getElementById(mapLayerToBtn[layerName])) {
                 document.getElementById(mapLayerToBtn[layerName]).classList.add("active");
             }
-            selectedId = null;
+            setSelection(null);
+            buildStaticGrid();
             render();
         };
+
         window.setMode = function(mode) {
             triggerHaptic(20);
             currentMode = mode;
@@ -1576,8 +2149,7 @@
             document.getElementById("modeEditBtn").classList.toggle("active", mode === 'edit');
             document.getElementById("modePanBtn").classList.toggle("active", mode === 'pan');
             document.getElementById("modeCalcBtn").classList.toggle("active", mode === 'calc');
-            
-            // Sync mobile bottom toolbar
+
             let mobEdit = document.getElementById("mobEditBtn");
             let mobPan = document.getElementById("mobPanBtn");
             let mobCalc = document.getElementById("mobCalcBtn");
@@ -1595,9 +2167,10 @@
                 calcPoints = [];
             }
             container.style.cursor = (mode === 'pan' || mode === 'calc' || mode === 'draw_line') ? 'crosshair' : 'default';
-            selectedId = null;
+            setSelection(null);
             render();
         };
+
         window.switchTab = function(tab) {
             triggerHaptic(15);
             currentTab = tab;
@@ -1617,6 +2190,22 @@
             document.getElementById("panelTom").classList.toggle("active", tab === 'tom');
             if (tab === 'line' && currentMode === 'draw_line') cancelDrawingLine();
         };
+
+        /* ==========================================
+           CONVEYANCE LINE DRAWING & ORTHO LOCK
+           ========================================== */
+        function applyOrthoConstraint(anchorPt, targetPt) {
+            const orthoEnabled = document.getElementById("orthoLockToggle").checked || shiftKeyPressed;
+            if (!orthoEnabled || !anchorPt) return targetPt;
+            const dx = Math.abs(targetPt.x - anchorPt.x);
+            const dy = Math.abs(targetPt.y - anchorPt.y);
+            if (dx >= dy) {
+                return { x: targetPt.x, y: anchorPt.y };
+            } else {
+                return { x: anchorPt.x, y: targetPt.y };
+            }
+        }
+
         window.startDrawingLine = function() {
             triggerHaptic(20);
             let name = document.getElementById("newLineName").value.trim();
@@ -1633,19 +2222,28 @@
             if (drawCtrl) drawCtrl.style.display = "block";
             let banner = document.getElementById("canvas-draw-banner");
             if (banner) banner.style.display = "block";
+            document.getElementById("drawBannerText").innerText = "✏️ Tap Map to Place Line Bends";
 
-            // Auto-collapse mobile sidebar so user can immediately see map
             if (window.innerWidth <= 768) {
                 document.getElementById("sidebar").classList.add("collapsed");
             }
             render();
         };
+
+        window.undoLastLinePoint = function() {
+            if (!drawingLineState || drawingLineState.points.length === 0) return;
+            triggerHaptic(15);
+            drawingLineState.points.pop();
+            renderOverlays();
+        };
+
         window.finishDrawingLine = function() {
             if (!drawingLineState || drawingLineState.points.length < 2) {
                 alert("Please click or tap at least 2 points on the map to create a line.");
                 return;
             }
             triggerHaptic(30);
+            pushHistorySnapshot();
             let newLine = {
                 id: Date.now(),
                 layer: currentLayer,
@@ -1657,6 +2255,7 @@
                 spreadsheetData: [{key: "Conveyance Type", value: drawingLineState.conveyanceType === 'belted' ? "Belted" : "Flex"}]
             };
             elements.push(newLine);
+            setSelection(newLine.id, false);
             drawingLineState = null;
             currentMode = 'edit';
             container.style.cursor = 'default';
@@ -1665,10 +2264,10 @@
             if (drawCtrl) drawCtrl.style.display = "none";
             let banner = document.getElementById("canvas-draw-banner");
             if (banner) banner.style.display = "none";
-
             render();
-            saveToFirebase();
+            saveToFirebase(true);
         };
+
         window.cancelDrawingLine = function() {
             drawingLineState = null;
             currentMode = 'edit';
@@ -1679,13 +2278,16 @@
             if (banner) banner.style.display = "none";
             render();
         };
+
+        /* ==========================================
+           FAST SVG LAYERED RENDERING
+           ========================================== */
         function updateTransformString() {
             viewport.setAttribute("transform", `translate(${viewTransform.x}, ${viewTransform.y}) scale(${viewTransform.scale})`);
         }
-        function render() {
-            viewport.innerHTML = "";
-            updateTransformString();
-            let siteBackground = document.createElementNS("http://www.w3.org/2000/svg", "g");
+
+        function buildStaticGrid() {
+            staticGridLayer.innerHTML = "";
             let earthGrading = document.createElementNS("http://www.w3.org/2000/svg", "rect");
             earthGrading.setAttribute("x", minCol * gridSize);
             earthGrading.setAttribute("y", minRow * gridSize);
@@ -1694,7 +2296,8 @@
             earthGrading.setAttribute("fill", "#18110e");
             earthGrading.setAttribute("stroke", "#281e17");
             earthGrading.setAttribute("stroke-width", "2");
-            siteBackground.appendChild(earthGrading);
+            staticGridLayer.appendChild(earthGrading);
+
             let siteLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
             siteLabel.setAttribute("x", (minCol + 1) * gridSize);
             siteLabel.setAttribute("y", (minRow + 1) * gridSize);
@@ -1702,8 +2305,8 @@
             siteLabel.setAttribute("font-size", "12px");
             siteLabel.setAttribute("font-weight", "bold");
             siteLabel.textContent = "▼ 6500 W MT HOPE HWY — SURROUNDING SITE EARTHWORK & AUTOMATION FOOTPRINT";
-            siteBackground.appendChild(siteLabel);
-            viewport.appendChild(siteBackground);
+            staticGridLayer.appendChild(siteLabel);
+
             for (let c = minCol; c <= maxCol; c++) {
                 let line = document.createElementNS("http://www.w3.org/2000/svg", "line");
                 line.setAttribute("x1", c * gridSize);
@@ -1711,15 +2314,17 @@
                 line.setAttribute("x2", c * gridSize);
                 line.setAttribute("y2", maxRow * gridSize);
                 line.setAttribute("class", "grid-line");
-                viewport.appendChild(line);
+                staticGridLayer.appendChild(line);
+
                 let text = document.createElementNS("http://www.w3.org/2000/svg", "text");
                 text.setAttribute("x", (c * gridSize) + (gridSize / 2));
                 text.setAttribute("y", (minRow * gridSize) - 8);
                 text.setAttribute("text-anchor", "middle");
                 text.setAttribute("class", "coord-label");
                 text.textContent = c + 1; 
-                viewport.appendChild(text);
+                staticGridLayer.appendChild(text);
             }
+
             for (let r = 0; r < buildingRows; r++) {
                 let line = document.createElementNS("http://www.w3.org/2000/svg", "line");
                 line.setAttribute("x1", 0);
@@ -1727,15 +2332,17 @@
                 line.setAttribute("x2", buildingCols * gridSize);
                 line.setAttribute("y2", r * gridSize);
                 line.setAttribute("class", "grid-line");
-                viewport.appendChild(line);
+                staticGridLayer.appendChild(line);
+
                 let text = document.createElementNS("http://www.w3.org/2000/svg", "text");
                 text.setAttribute("x", -10);
                 text.setAttribute("y", (r * gridSize) + (gridSize / 2) + 3);
                 text.setAttribute("text-anchor", "end");
                 text.setAttribute("class", "coord-label");
                 text.textContent = getRowLabel(r);
-                viewport.appendChild(text);
+                staticGridLayer.appendChild(text);
             }
+
             let buildingWall = document.createElementNS("http://www.w3.org/2000/svg", "rect");
             buildingWall.setAttribute("x", 0);
             buildingWall.setAttribute("y", 0);
@@ -1745,7 +2352,8 @@
             buildingWall.setAttribute("fill-opacity", "0.6");
             buildingWall.setAttribute("stroke", "#38bdf8");
             buildingWall.setAttribute("stroke-width", "2");
-            viewport.appendChild(buildingWall);
+            staticGridLayer.appendChild(buildingWall);
+
             let layerTitleName = currentLayer.toUpperCase();
             let topLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
             topLabel.setAttribute("x", 0.5 * gridSize);
@@ -1754,7 +2362,8 @@
             topLabel.setAttribute("font-size", "10px");
             topLabel.setAttribute("font-weight", "bold");
             topLabel.textContent = `SOUTH WALL - ROW A (${layerTitleName} LAYER) ▲`;
-            viewport.appendChild(topLabel);
+            staticGridLayer.appendChild(topLabel);
+
             let bottomLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
             bottomLabel.setAttribute("x", 0.5 * gridSize);
             bottomLabel.setAttribute("y", (buildingRows * gridSize) + 18);
@@ -1762,7 +2371,147 @@
             bottomLabel.setAttribute("font-size", "10px");
             bottomLabel.setAttribute("font-weight", "bold");
             bottomLabel.textContent = `NORTH WALL - ROW N ▼`;
-            viewport.appendChild(bottomLabel);
+            staticGridLayer.appendChild(bottomLabel);
+        }
+
+        function renderGhostGroundLayer() {
+            ghostGroundLayer.innerHTML = "";
+            const ghostChecked = document.getElementById("ghostGroundToggle")?.checked;
+            if (!ghostChecked || currentLayer === 'ground') return;
+
+            elements.filter(el => (el.layer || 'ground') === 'ground').forEach(el => {
+                if (el.type === 'conveyance_line') {
+                    const pts = el.points || [];
+                    if (pts.length >= 2) {
+                        let pathStr = `M ${pts[0].x * gridSize} ${pts[0].y * gridSize}`;
+                        for (let i = 1; i < pts.length; i++) pathStr += ` L ${pts[i].x * gridSize} ${pts[i].y * gridSize}`;
+                        let path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                        path.setAttribute("d", pathStr);
+                        path.setAttribute("fill", "none");
+                        path.setAttribute("stroke", "#94a3b8");
+                        path.setAttribute("stroke-opacity", "0.22");
+                        path.setAttribute("stroke-width", "5");
+                        ghostGroundLayer.appendChild(path);
+                    }
+                } else if (el.type === 'asset') {
+                    let cx = (el.x * gridSize) + (gridSize / 2);
+                    let cy = (el.y * gridSize) + (gridSize / 2);
+                    let dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                    dot.setAttribute("cx", cx);
+                    dot.setAttribute("cy", cy);
+                    dot.setAttribute("r", 6);
+                    dot.setAttribute("fill", "#94a3b8");
+                    dot.setAttribute("fill-opacity", "0.25");
+                    ghostGroundLayer.appendChild(dot);
+                } else {
+                    let rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+                    rect.setAttribute("x", el.x * gridSize);
+                    rect.setAttribute("y", el.y * gridSize);
+                    rect.setAttribute("width", el.w * gridSize);
+                    rect.setAttribute("height", el.h * gridSize);
+                    rect.setAttribute("fill", "#38bdf8");
+                    rect.setAttribute("fill-opacity", "0.08");
+                    rect.setAttribute("stroke", "#38bdf8");
+                    rect.setAttribute("stroke-opacity", "0.25");
+                    rect.setAttribute("stroke-dasharray", "4,3");
+                    ghostGroundLayer.appendChild(rect);
+                }
+            });
+        }
+
+        function renderOverlays() {
+            overlayToolsLayer.innerHTML = "";
+            /* LIVE DRAWING LINE PREVIEW + RUBBER-BAND SEGMENT & LENGTH */
+            if (currentMode === 'draw_line' && drawingLineState && drawingLineState.points.length > 0) {
+                let pts = drawingLineState.points;
+                let previewPts = [...pts];
+                if (lastMouseLocal) {
+                    let nx = lastMouseLocal.x;
+                    let ny = lastMouseLocal.y;
+                    if (document.getElementById("snapGridToggle").checked) {
+                        nx = Math.round(nx * 2) / 2;
+                        ny = Math.round(ny * 2) / 2;
+                    }
+                    const constrained = applyOrthoConstraint(pts[pts.length - 1], { x: nx, y: ny });
+                    previewPts.push(constrained);
+                }
+
+                if (previewPts.length >= 2) {
+                    let pathStr = `M ${previewPts[0].x * gridSize} ${previewPts[0].y * gridSize}`;
+                    for (let i = 1; i < previewPts.length; i++) {
+                        pathStr += ` L ${previewPts[i].x * gridSize} ${previewPts[i].y * gridSize}`;
+                    }
+                    let tempPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                    tempPath.setAttribute("d", pathStr);
+                    tempPath.setAttribute("fill", "none");
+                    tempPath.setAttribute("stroke", drawingLineState.conveyanceType === 'flex' ? "#fbbf24" : "#22d3ee");
+                    tempPath.setAttribute("stroke-width", "6");
+                    if (drawingLineState.conveyanceType === 'flex') tempPath.setAttribute("stroke-dasharray", "6,4");
+                    overlayToolsLayer.appendChild(tempPath);
+
+                    // Live segment length tag
+                    const pA = previewPts[previewPts.length - 2];
+                    const pB = previewPts[previewPts.length - 1];
+                    const segUnits = Math.hypot(pB.x - pA.x, pB.y - pA.y);
+                    const segFeet = Math.round(segUnits * 25);
+                    if (segUnits > 0.1) {
+                        const midX = ((pA.x + pB.x) / 2) * gridSize;
+                        const midY = ((pA.y + pB.y) / 2) * gridSize - 10;
+                        let lenTag = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                        lenTag.setAttribute("x", midX);
+                        lenTag.setAttribute("y", midY);
+                        lenTag.setAttribute("text-anchor", "middle");
+                        lenTag.setAttribute("fill", "#10b981");
+                        lenTag.setAttribute("font-size", "11px");
+                        lenTag.setAttribute("font-weight", "bold");
+                        lenTag.textContent = `${segUnits.toFixed(1)}u (~${segFeet} ft)`;
+                        overlayToolsLayer.appendChild(lenTag);
+                    }
+                }
+                pts.forEach(pt => {
+                    let dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                    dot.setAttribute("cx", pt.x * gridSize);
+                    dot.setAttribute("cy", pt.y * gridSize);
+                    dot.setAttribute("r", 7);
+                    dot.setAttribute("fill", "#10b981");
+                    dot.setAttribute("stroke", "#fff");
+                    dot.setAttribute("stroke-width", "2");
+                    overlayToolsLayer.appendChild(dot);
+                });
+            }
+
+            if (currentMode === 'calc' && calcPoints.length > 0) {
+                calcPoints.forEach((pt) => {
+                    let ptCircle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                    ptCircle.setAttribute("cx", pt.x * gridSize);
+                    ptCircle.setAttribute("cy", pt.y * gridSize);
+                    ptCircle.setAttribute("r", 7);
+                    ptCircle.setAttribute("fill", "#f59e0b");
+                    ptCircle.setAttribute("stroke", "#fff");
+                    ptCircle.setAttribute("stroke-width", "2");
+                    overlayToolsLayer.appendChild(ptCircle);
+                });
+                if (calcPoints.length === 2) {
+                    let line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                    line.setAttribute("x1", calcPoints[0].x * gridSize);
+                    line.setAttribute("y1", calcPoints[0].y * gridSize);
+                    line.setAttribute("x2", calcPoints[1].x * gridSize);
+                    line.setAttribute("y2", calcPoints[1].y * gridSize);
+                    line.setAttribute("stroke", "#f59e0b");
+                    line.setAttribute("stroke-width", "3");
+                    line.setAttribute("stroke-dasharray", "4");
+                    overlayToolsLayer.appendChild(line);
+                }
+            }
+        }
+
+        function render() {
+            updateTransformString();
+            renderGhostGroundLayer();
+            dynamicLayer.innerHTML = "";
+            const zonesLocked = document.getElementById("lockZonesToggle")?.checked;
+
+            // Dependency lines
             elements.forEach(el => {
                 if (el.parentId) {
                     let parent = elements.find(p => p.id == el.parentId);
@@ -1779,10 +2528,11 @@
                         depLine.setAttribute("stroke", "#a855f7");
                         depLine.setAttribute("stroke-width", "1.5");
                         depLine.setAttribute("stroke-dasharray", "3");
-                        viewport.appendChild(depLine);
+                        dynamicLayer.appendChild(depLine);
                     }
                 }
             });
+
             if (showHeatmap) {
                 elements.forEach(el => {
                     let ticketCount = (el.workTickets || []).length;
@@ -1796,10 +2546,11 @@
                         heatCircle.setAttribute("r", radius);
                         heatCircle.setAttribute("fill", el.status === 'down' ? "#ef4444" : "#f59e0b");
                         heatCircle.setAttribute("fill-opacity", "0.35");
-                        viewport.appendChild(heatCircle);
+                        dynamicLayer.appendChild(heatCircle);
                     }
                 });
             }
+
             let visibleElements = elements.filter(el => {
                 if (searchQuery) {
                     let matchesName = el.name.toLowerCase().includes(searchQuery);
@@ -1818,15 +2569,23 @@
                 if (currentLayer === 'loto') return el.type === 'asset' && el.category === 'LOTO Isolation';
                 return (el.layer || 'ground') === currentLayer;
             });
+
             visibleElements.forEach(el => {
+                const isSelected = el.id === selectedId || multiSelectedIds.has(el.id);
                 let g = document.createElementNS("http://www.w3.org/2000/svg", "g");
                 g.setAttribute("class", "item-group");
                 g.addEventListener("click", (e) => {
                     e.stopPropagation();
-                    if (currentMode === 'calc' || currentMode === 'draw_line') return; 
+                    if (currentMode === 'calc' || currentMode === 'draw_line' || pickCoordTarget) return;
+                    if (e.shiftKey) {
+                        setSelection(el.id, true);
+                        render();
+                        return;
+                    }
                     triggerHaptic(15);
                     openModal(el);
                 });
+
                 if (el.type === 'conveyance_line') {
                     let pts = el.points || [];
                     if (pts.length >= 2) {
@@ -1840,7 +2599,7 @@
                         path.setAttribute("stroke", el.conveyanceType === 'flex' ? "#fbbf24" : "#22d3ee");
                         path.setAttribute("stroke-width", el.conveyanceType === 'flex' ? "5" : "7");
                         if (el.conveyanceType === 'flex') path.setAttribute("stroke-dasharray", "6,4");
-                        if (el.id === selectedId) {
+                        if (isSelected) {
                             path.setAttribute("stroke", "#fbbf24");
                             path.setAttribute("stroke-width", "9");
                         }
@@ -1855,7 +2614,36 @@
                         text.textContent = el.name;
                         g.appendChild(path);
                         g.appendChild(text);
-                        if (el.id === selectedId) {
+
+                        if (isSelected) {
+                            // Midpoint "+" handles to insert new bend vertices
+                            for (let i = 0; i < pts.length - 1; i++) {
+                                const mx = ((pts[i].x + pts[i + 1].x) / 2) * gridSize;
+                                const my = ((pts[i].y + pts[i + 1].y) / 2) * gridSize;
+                                let midCircle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                                midCircle.setAttribute("cx", mx);
+                                midCircle.setAttribute("cy", my);
+                                midCircle.setAttribute("r", 7);
+                                midCircle.setAttribute("fill", "#10b981");
+                                midCircle.setAttribute("stroke", "#0b131d");
+                                midCircle.setAttribute("stroke-width", "1.5");
+                                midCircle.style.cursor = "copy";
+                                midCircle.addEventListener("click", (e) => {
+                                    e.stopPropagation();
+                                    triggerHaptic(20);
+                                    pushHistorySnapshot();
+                                    const newPt = {
+                                        x: parseFloat(((pts[i].x + pts[i + 1].x) / 2).toFixed(2)),
+                                        y: parseFloat(((pts[i].y + pts[i + 1].y) / 2).toFixed(2))
+                                    };
+                                    el.points.splice(i + 1, 0, newPt);
+                                    render();
+                                    saveToFirebase(true);
+                                });
+                                g.appendChild(midCircle);
+                            }
+
+                            // Draggable vertex handles (Right-click to remove bend if > 2 points)
                             pts.forEach((pt, pIdx) => {
                                 let hitCircle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
                                 hitCircle.setAttribute("cx", pt.x * gridSize);
@@ -1878,11 +2666,25 @@
                                     triggerHaptic(20);
                                     startDragVertex(e, el.id, pIdx);
                                 };
+                                let handleRemoveVertex = (e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    if (el.points.length <= 2) {
+                                        alert("A conveyance line must keep at least 2 points.");
+                                        return;
+                                    }
+                                    pushHistorySnapshot();
+                                    el.points.splice(pIdx, 1);
+                                    render();
+                                    saveToFirebase(true);
+                                };
+
                                 hitCircle.addEventListener("mousedown", handleStart);
                                 hitCircle.addEventListener("touchstart", (e) => handleStart(e.touches[0]));
+                                hitCircle.addEventListener("contextmenu", handleRemoveVertex);
                                 vCircle.addEventListener("mousedown", handleStart);
                                 vCircle.addEventListener("touchstart", (e) => handleStart(e.touches[0]));
-
+                                vCircle.addEventListener("contextmenu", handleRemoveVertex);
                                 g.appendChild(hitCircle);
                                 g.appendChild(vCircle);
                             });
@@ -1911,10 +2713,11 @@
                     circle.setAttribute("cx", cx);
                     circle.setAttribute("cy", cy);
                     circle.setAttribute("r", 10); 
-                    circle.setAttribute("class", `item-shape ${el.id === selectedId ? 'selected' : ''}`);
+                    circle.setAttribute("class", `item-shape ${isSelected ? 'selected' : ''}`);
                     circle.setAttribute("fill", "#111b27");
                     circle.setAttribute("stroke", catColor);
                     circle.setAttribute("stroke-width", "2.5");
+
                     let statusDot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
                     statusDot.setAttribute("cx", cx + 8);
                     statusDot.setAttribute("cy", cy - 8);
@@ -1922,6 +2725,7 @@
                     statusDot.setAttribute("fill", statusColor);
                     statusDot.setAttribute("stroke", "#0b131d");
                     statusDot.setAttribute("stroke-width", "1");
+
                     let emojiText = document.createElementNS("http://www.w3.org/2000/svg", "text");
                     emojiText.setAttribute("x", cx);
                     emojiText.setAttribute("y", cy + 1);
@@ -1930,7 +2734,7 @@
                     emojiText.setAttribute("font-size", "11px");
                     emojiText.style.pointerEvents = "none";
                     emojiText.textContent = el.emoji || "📍";
-                    /* PARTS NEEDED MAP BADGE */
+
                     if (el.partsNeeded) {
                         let partsBadge = document.createElementNS("http://www.w3.org/2000/svg", "text");
                         partsBadge.setAttribute("x", cx - 14);
@@ -1940,6 +2744,7 @@
                         partsBadge.textContent = "📦";
                         g.appendChild(partsBadge);
                     }
+
                     let popupGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
                     popupGroup.setAttribute("class", "asset-popup");
                     let boxWidth = (el.name.length * 6.5) + 12;
@@ -1962,22 +2767,25 @@
                     popupText.textContent = el.name;
                     popupGroup.appendChild(popupBg);
                     popupGroup.appendChild(popupText);
+
                     g.appendChild(assetHit);
                     g.appendChild(circle);
                     g.appendChild(statusDot);
                     g.appendChild(emojiText);
                     g.appendChild(popupGroup);
                 } else {
+                    // Rectangular Zone
                     let rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
                     rect.setAttribute("x", el.x * gridSize);
                     rect.setAttribute("y", el.y * gridSize);
                     rect.setAttribute("width", el.w * gridSize);
                     rect.setAttribute("height", el.h * gridSize);
-                    rect.setAttribute("class", `item-shape ${el.id === selectedId ? 'selected' : ''}`);
+                    rect.setAttribute("class", `item-shape ${isSelected ? 'selected' : ''}`);
                     rect.setAttribute("fill", "#0284c7");
                     rect.setAttribute("fill-opacity", "0.35");
                     rect.setAttribute("stroke", "#38bdf8");
                     rect.setAttribute("stroke-width", "1.5");
+
                     let text = document.createElementNS("http://www.w3.org/2000/svg", "text");
                     text.setAttribute("x", (el.x * gridSize) + 6);
                     text.setAttribute("y", (el.y * gridSize) + 16);
@@ -1988,75 +2796,64 @@
                     text.textContent = el.name;
                     g.appendChild(rect);
                     g.appendChild(text);
+
+                    // On-canvas bottom-right resize handle when zone is selected & unlocked
+                    if (isSelected && !zonesLocked && currentMode === 'edit') {
+                        const rx = (el.x + el.w) * gridSize;
+                        const ry = (el.y + el.h) * gridSize;
+                        let resizeHandle = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+                        resizeHandle.setAttribute("x", rx - 7);
+                        resizeHandle.setAttribute("y", ry - 7);
+                        resizeHandle.setAttribute("width", 14);
+                        resizeHandle.setAttribute("height", 14);
+                        resizeHandle.setAttribute("rx", 3);
+                        resizeHandle.setAttribute("fill", "#fbbf24");
+                        resizeHandle.setAttribute("stroke", "#0b131d");
+                        resizeHandle.setAttribute("stroke-width", "2");
+                        resizeHandle.style.cursor = "nwse-resize";
+
+                        const onResizeStart = (ev) => {
+                            ev.stopPropagation();
+                            triggerHaptic(20);
+                            startResizeZone(ev, el);
+                        };
+                        resizeHandle.addEventListener("mousedown", onResizeStart);
+                        resizeHandle.addEventListener("touchstart", (ev) => onResizeStart(ev.touches[0]), { passive: false });
+                        g.appendChild(resizeHandle);
+                    }
                 }
+
                 const handleStart = (e) => {
-                    if (currentMode === 'draw_line') return;
+                    if (currentMode === 'draw_line' || pickCoordTarget) return;
+                    if (e.shiftKey) return;
                     if (currentMode === 'edit' && el.type !== 'conveyance_line') {
+                        if (el.type !== 'asset' && zonesLocked) {
+                            e.stopPropagation();
+                            setSelection(el.id, false);
+                            render();
+                            return;
+                        }
                         e.stopPropagation();
                         triggerHaptic(20);
                         startDragElement(e, el);
                     } else if (currentMode === 'edit' && el.type === 'conveyance_line') {
                         e.stopPropagation();
                         triggerHaptic(15);
-                        selectedId = el.id;
+                        setSelection(el.id, false);
                         render();
                     }
                 };
                 g.addEventListener("mousedown", handleStart);
                 g.addEventListener("touchstart", handleStart, { passive: false });
-                viewport.appendChild(g);
+                dynamicLayer.appendChild(g);
             });
-            /* LIVE DRAWING LINE PREVIEW */
-            if (currentMode === 'draw_line' && drawingLineState && drawingLineState.points.length > 0) {
-                let pts = drawingLineState.points;
-                if (pts.length >= 2) {
-                    let pathStr = `M ${pts[0].x * gridSize} ${pts[0].y * gridSize}`;
-                    for (let i = 1; i < pts.length; i++) {
-                        pathStr += ` L ${pts[i].x * gridSize} ${pts[i].y * gridSize}`;
-                    }
-                    let tempPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
-                    tempPath.setAttribute("d", pathStr);
-                    tempPath.setAttribute("fill", "none");
-                    tempPath.setAttribute("stroke", drawingLineState.conveyanceType === 'flex' ? "#fbbf24" : "#22d3ee");
-                    tempPath.setAttribute("stroke-width", "6");
-                    if (drawingLineState.conveyanceType === 'flex') tempPath.setAttribute("stroke-dasharray", "6,4");
-                    viewport.appendChild(tempPath);
-                }
-                pts.forEach(pt => {
-                    let dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-                    dot.setAttribute("cx", pt.x * gridSize);
-                    dot.setAttribute("cy", pt.y * gridSize);
-                    dot.setAttribute("r", 7);
-                    dot.setAttribute("fill", "#10b981");
-                    dot.setAttribute("stroke", "#fff");
-                    dot.setAttribute("stroke-width", "2");
-                    viewport.appendChild(dot);
-                });
-            }
-            if (currentMode === 'calc' && calcPoints.length > 0) {
-                calcPoints.forEach((pt) => {
-                    let ptCircle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-                    ptCircle.setAttribute("cx", pt.x * gridSize);
-                    ptCircle.setAttribute("cy", pt.y * gridSize);
-                    ptCircle.setAttribute("r", 7);
-                    ptCircle.setAttribute("fill", "#f59e0b");
-                    ptCircle.setAttribute("stroke", "#fff");
-                    ptCircle.setAttribute("stroke-width", "2");
-                    viewport.appendChild(ptCircle);
-                });
-                if (calcPoints.length === 2) {
-                    let line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-                    line.setAttribute("x1", calcPoints[0].x * gridSize);
-                    line.setAttribute("y1", calcPoints[0].y * gridSize);
-                    line.setAttribute("x2", calcPoints[1].x * gridSize);
-                    line.setAttribute("y2", calcPoints[1].y * gridSize);
-                    line.setAttribute("stroke", "#f59e0b");
-                    line.setAttribute("stroke-width", "3");
-                    line.setAttribute("stroke-dasharray", "4");
-                    viewport.appendChild(line);
-                }
-            }
+
+            renderOverlays();
         }
+
+        /* ==========================================
+           COORDINATE HELPERS & POINTER INTERACTIONS
+           ========================================== */
         function getCanvasLocalCoords(clientX, clientY) {
             let rect = container.getBoundingClientRect();
             let mouseX = clientX - rect.left;
@@ -2070,27 +2867,59 @@
                 rawY: localY
             };
         }
+
         function handlePointerMove(clientX, clientY) {
             let coords = getCanvasLocalCoords(clientX, clientY);
+            lastMouseLocal = coords;
             let coordDisplay = document.getElementById("coord-display");
             let rowIdx = Math.floor(coords.y);
             let preciseColNum = (coords.x + 1).toFixed(2);
             let rowLabel = getRowLabel(rowIdx);
             coordDisplay.innerHTML = `Grid: <b>Row ${rowLabel}, Col ${preciseColNum}</b>`;
+            if (currentMode === 'draw_line' && drawingLineState && drawingLineState.points.length > 0) {
+                renderOverlays();
+            }
         }
+
+        function handlePickCoordTap(clientX, clientY) {
+            let coords = getCanvasLocalCoords(clientX, clientY);
+            let nx = coords.x;
+            let ny = coords.y;
+            if (document.getElementById("snapGridToggle").checked) {
+                nx = Math.round(nx * 2) / 2;
+                ny = Math.round(ny * 2) / 2;
+            }
+            nx = parseFloat(nx.toFixed(2));
+            ny = parseFloat(ny.toFixed(2));
+            if (pickCoordTarget === 'zone') {
+                document.getElementById("newDeptX").value = nx;
+                document.getElementById("newDeptY").value = ny;
+            } else if (pickCoordTarget === 'asset') {
+                document.getElementById("newAssetX").value = nx;
+                document.getElementById("newAssetY").value = ny;
+            }
+            triggerHaptic(25);
+            cancelPickCoords();
+            if (window.innerWidth <= 768) {
+                document.getElementById("sidebar").classList.remove("collapsed");
+            }
+        }
+
         container.addEventListener("mousemove", (e) => {
             handlePointerMove(e.clientX, e.clientY);
             if (isPanning) {
                 viewTransform.x = e.clientX - panStart.x;
                 viewTransform.y = e.clientY - panStart.y;
-                render();
+                updateTransformString();
             }
         });
+
         function getTouchDistance(touches) {
             let dx = touches[0].clientX - touches[1].clientX;
             let dy = touches[0].clientY - touches[1].clientY;
             return Math.sqrt(dx * dx + dy * dy);
         }
+
         container.addEventListener("touchstart", (e) => {
             if (e.touches.length === 2) {
                 isPanning = false;
@@ -2099,6 +2928,11 @@
             } else if (e.touches.length === 1) {
                 let touch = e.touches[0];
                 handlePointerMove(touch.clientX, touch.clientY);
+                if (pickCoordTarget) {
+                    e.preventDefault();
+                    handlePickCoordTap(touch.clientX, touch.clientY);
+                    return;
+                }
                 if (currentMode === 'pan') {
                     isPanning = true;
                     panStart = { x: touch.clientX - viewTransform.x, y: touch.clientY - viewTransform.y };
@@ -2117,7 +2951,7 @@
                     } else {
                         document.getElementById("dist-result-display").innerText = "Click second point to complete calculation";
                     }
-                    render();
+                    renderOverlays();
                 } else if (currentMode === 'draw_line' && drawingLineState) {
                     e.preventDefault();
                     triggerHaptic(15);
@@ -2128,14 +2962,19 @@
                         nx = Math.round(nx * 2) / 2;
                         ny = Math.round(ny * 2) / 2;
                     }
-                    drawingLineState.points.push({ x: parseFloat(nx.toFixed(2)), y: parseFloat(ny.toFixed(2)) });
-                    render();
+                    let pt = { x: parseFloat(nx.toFixed(2)), y: parseFloat(ny.toFixed(2)) };
+                    if (drawingLineState.points.length > 0) {
+                        pt = applyOrthoConstraint(drawingLineState.points[drawingLineState.points.length - 1], pt);
+                    }
+                    drawingLineState.points.push(pt);
+                    renderOverlays();
                 } else if (currentMode === 'edit') {
-                    selectedId = null;
+                    setSelection(null);
                     render();
                 }
             }
         }, { passive: false });
+
         container.addEventListener("touchmove", (e) => {
             if (e.touches.length === 2 && initialPinchDistance) {
                 e.preventDefault();
@@ -2151,19 +2990,21 @@
                 viewTransform.scale = newScale;
                 viewTransform.x = touchX - (touchX - viewTransform.x) * (newScale / oldScale);
                 viewTransform.y = touchY - (touchY - viewTransform.y) * (newScale / oldScale);
-                render();
+                updateTransformString();
             } else if (e.touches.length === 1 && isPanning) {
                 e.preventDefault();
                 let touch = e.touches[0];
                 viewTransform.x = touch.clientX - panStart.x;
                 viewTransform.y = touch.clientY - panStart.y;
-                render();
+                updateTransformString();
             }
         }, { passive: false });
+
         container.addEventListener("touchend", (e) => {
             if (e.touches.length < 2) initialPinchDistance = null;
             if (e.touches.length === 0) isPanning = false;
         });
+
         container.addEventListener("wheel", (e) => {
             e.preventDefault();
             let zoomIntensity = 0.1;
@@ -2178,9 +3019,14 @@
             let mouseY = e.clientY - rect.top;
             viewTransform.x = mouseX - (mouseX - viewTransform.x) * (viewTransform.scale / oldScale);
             viewTransform.y = mouseY - (mouseY - viewTransform.y) * (viewTransform.scale / oldScale);
-            render();
+            updateTransformString();
         }, { passive: false });
+
         container.addEventListener("mousedown", (e) => {
+            if (pickCoordTarget) {
+                handlePickCoordTap(e.clientX, e.clientY);
+                return;
+            }
             if (currentMode === 'pan') {
                 isPanning = true;
                 container.classList.add("panning");
@@ -2199,7 +3045,7 @@
                 } else {
                     document.getElementById("dist-result-display").innerText = "Click second point to complete calculation";
                 }
-                render();
+                renderOverlays();
             } else if (currentMode === 'draw_line' && drawingLineState) {
                 let coords = getCanvasLocalCoords(e.clientX, e.clientY);
                 let nx = coords.x;
@@ -2208,29 +3054,97 @@
                     nx = Math.round(nx * 2) / 2;
                     ny = Math.round(ny * 2) / 2;
                 }
-                drawingLineState.points.push({ x: parseFloat(nx.toFixed(2)), y: parseFloat(ny.toFixed(2)) });
-                render();
+                let pt = { x: parseFloat(nx.toFixed(2)), y: parseFloat(ny.toFixed(2)) };
+                if (drawingLineState.points.length > 0) {
+                    pt = applyOrthoConstraint(drawingLineState.points[drawingLineState.points.length - 1], pt);
+                }
+                drawingLineState.points.push(pt);
+                renderOverlays();
             } else if (currentMode === 'edit') {
-                selectedId = null;
+                setSelection(null);
                 render();
             }
         });
+
         container.addEventListener("dblclick", () => {
             if (currentMode === 'draw_line' && drawingLineState && drawingLineState.points.length >= 2) {
                 finishDrawingLine();
             }
         });
+
         window.addEventListener("mouseup", () => {
             if (isPanning) {
                 isPanning = false;
                 container.classList.remove("panning");
             }
-            if (draggingVertex) {
-                draggingVertex = null;
+        });
+
+        /* ==========================================
+           KEYBOARD SHORTCUTS (UNDO, REDO, CLONE, ARROWS, ESC)
+           ========================================== */
+        window.addEventListener("keydown", (e) => {
+            shiftKeyPressed = e.shiftKey;
+            const activeTag = document.activeElement?.tagName;
+            const isTyping = activeTag === "INPUT" || activeTag === "TEXTAREA" || activeTag === "SELECT";
+
+            if ((e.ctrlKey || e.metaKey) && !isTyping) {
+                if (e.key.toLowerCase() === 'z' && !e.shiftKey) {
+                    e.preventDefault();
+                    undoLayout();
+                    return;
+                }
+                if (e.key.toLowerCase() === 'y' || (e.key.toLowerCase() === 'z' && e.shiftKey)) {
+                    e.preventDefault();
+                    redoLayout();
+                    return;
+                }
+                if (e.key.toLowerCase() === 'd') {
+                    e.preventDefault();
+                    duplicateSelected();
+                    return;
+                }
+            }
+
+            if (e.key === "Escape") {
+                if (pickCoordTarget) cancelPickCoords();
+                if (currentMode === 'draw_line') cancelDrawingLine();
+            }
+
+            // Arrow-key fine nudging for selected items
+            if (!isTyping && (selectedId || multiSelectedIds.size > 0) && ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(e.key)) {
+                e.preventDefault();
+                const step = document.getElementById("snapGridToggle").checked ? 0.5 : 0.1;
+                const dx = e.key === "ArrowLeft" ? -step : (e.key === "ArrowRight" ? step : 0);
+                const dy = e.key === "ArrowUp" ? -step : (e.key === "ArrowDown" ? step : 0);
+                pushHistorySnapshot();
+                const ids = multiSelectedIds.size > 0 ? Array.from(multiSelectedIds) : [selectedId];
+                ids.forEach(id => {
+                    const el = elements.find(item => item.id === id);
+                    if (!el) return;
+                    if (el.type === 'conveyance_line' && el.points) {
+                        el.points.forEach(pt => {
+                            pt.x = parseFloat((pt.x + dx).toFixed(2));
+                            pt.y = parseFloat((pt.y + dy).toFixed(2));
+                        });
+                    } else {
+                        el.x = parseFloat(((el.x || 0) + dx).toFixed(2));
+                        el.y = parseFloat(((el.y || 0) + dy).toFixed(2));
+                    }
+                });
+                render();
                 saveToFirebase();
             }
         });
+
+        window.addEventListener("keyup", (e) => {
+            shiftKeyPressed = e.shiftKey;
+        });
+
+        /* ==========================================
+           DRAG VERTICES, RESIZE ZONES, DRAG ELEMENTS
+           ========================================== */
         function startDragVertex(e, lineId, vertexIndex) {
+            pushHistorySnapshot();
             draggingVertex = { lineId, vertexIndex };
             let lineEl = elements.find(el => el.id === lineId);
             if (!lineEl) return;
@@ -2240,8 +3154,11 @@
             let origX = origPt.x;
             let origY = origPt.y;
             let snapEnabled = document.getElementById("snapGridToggle").checked;
+            let moved = false;
+
             function onMove(ev) {
                 if (!draggingVertex) return;
+                moved = true;
                 let clientX = ev.clientX || (ev.touches && ev.touches[0].clientX);
                 let clientY = ev.clientY || (ev.touches && ev.touches[0].clientY);
                 let dx = (clientX - startX) / viewTransform.scale;
@@ -2252,8 +3169,12 @@
                     nx = Math.round(nx * 2) / 2;
                     ny = Math.round(ny * 2) / 2;
                 }
-                origPt.x = parseFloat(nx.toFixed(2));
-                origPt.y = parseFloat(ny.toFixed(2));
+                let pt = { x: parseFloat(nx.toFixed(2)), y: parseFloat(ny.toFixed(2)) };
+                if (vertexIndex > 0) {
+                    pt = applyOrthoConstraint(lineEl.points[vertexIndex - 1], pt);
+                }
+                origPt.x = pt.x;
+                origPt.y = pt.y;
                 render();
             }
             function onEnd() {
@@ -2262,35 +3183,103 @@
                 window.removeEventListener("mouseup", onEnd);
                 window.removeEventListener("touchmove", onMove);
                 window.removeEventListener("touchend", onEnd);
-                saveToFirebase();
+                if (!moved) {
+                    undoStack.pop();
+                    updateHistoryButtons();
+                } else {
+                    saveToFirebase(true);
+                }
             }
             window.addEventListener("mousemove", onMove);
             window.addEventListener("mouseup", onEnd);
             window.addEventListener("touchmove", onMove);
             window.addEventListener("touchend", onEnd);
         }
+
+        function startResizeZone(e, el) {
+            pushHistorySnapshot();
+            resizingZone = el;
+            let startX = e.clientX || (e.touches && e.touches[0].clientX);
+            let startY = e.clientY || (e.touches && e.touches[0].clientY);
+            let origW = el.w;
+            let origH = el.h;
+            let snapEnabled = document.getElementById("snapGridToggle").checked;
+            let moved = false;
+
+            function onMove(ev) {
+                if (!resizingZone) return;
+                moved = true;
+                let clientX = ev.clientX || (ev.touches && ev.touches[0].clientX);
+                let clientY = ev.clientY || (ev.touches && ev.touches[0].clientY);
+                let dx = (clientX - startX) / viewTransform.scale;
+                let dy = (clientY - startY) / viewTransform.scale;
+                let nw = origW + (dx / gridSize);
+                let nh = origH + (dy / gridSize);
+                if (snapEnabled) {
+                    nw = Math.round(nw * 2) / 2;
+                    nh = Math.round(nh * 2) / 2;
+                }
+                el.w = Math.max(0.5, parseFloat(nw.toFixed(2)));
+                el.h = Math.max(0.5, parseFloat(nh.toFixed(2)));
+                render();
+            }
+            function onEnd() {
+                resizingZone = null;
+                window.removeEventListener("mousemove", onMove);
+                window.removeEventListener("mouseup", onEnd);
+                window.removeEventListener("touchmove", onMove);
+                window.removeEventListener("touchend", onEnd);
+                if (!moved) {
+                    undoStack.pop();
+                    updateHistoryButtons();
+                } else {
+                    saveToFirebase(true);
+                }
+            }
+            window.addEventListener("mousemove", onMove);
+            window.addEventListener("mouseup", onEnd);
+            window.addEventListener("touchmove", onMove);
+            window.addEventListener("touchend", onEnd);
+        }
+
         function startDragElement(e, el) {
-            selectedId = el.id;
+            if (!multiSelectedIds.has(el.id)) {
+                setSelection(el.id, false);
+            } else {
+                selectedId = el.id;
+            }
+            pushHistorySnapshot();
             isDraggingElement = true;
             let startX = e.clientX || (e.touches && e.touches[0].clientX);
             let startY = e.clientY || (e.touches && e.touches[0].clientY);
-            let origX = el.x;
-            let origY = el.y;
+
+            // Capture original positions of all selected elements for group drag
+            const dragTargets = Array.from(multiSelectedIds)
+                .map(id => elements.find(item => item.id === id))
+                .filter(item => item && item.type !== 'conveyance_line')
+                .map(item => ({ item, origX: item.x, origY: item.y }));
+
             let snapEnabled = document.getElementById("snapGridToggle").checked;
+            let moved = false;
+
             function onMouseMove(ev) {
                 if (!isDraggingElement) return;
                 let clientX = ev.clientX || (ev.touches && ev.touches[0].clientX);
                 let clientY = ev.clientY || (ev.touches && ev.touches[0].clientY);
                 let dx = (clientX - startX) / viewTransform.scale;
                 let dy = (clientY - startY) / viewTransform.scale;
-                let nx = origX + (dx / gridSize);
-                let ny = origY + (dy / gridSize);
-                if (snapEnabled) {
-                    nx = Math.round(nx * 2) / 2;
-                    ny = Math.round(ny * 2) / 2;
-                }
-                el.x = parseFloat(nx.toFixed(2));
-                el.y = parseFloat(ny.toFixed(2));
+                if (Math.abs(dx) > 2 || Math.abs(dy) > 2) moved = true;
+
+                dragTargets.forEach(({ item, origX, origY }) => {
+                    let nx = origX + (dx / gridSize);
+                    let ny = origY + (dy / gridSize);
+                    if (snapEnabled) {
+                        nx = Math.round(nx * 2) / 2;
+                        ny = Math.round(ny * 2) / 2;
+                    }
+                    item.x = parseFloat(nx.toFixed(2));
+                    item.y = parseFloat(ny.toFixed(2));
+                });
                 render();
             }
             function onMouseUp() {
@@ -2299,7 +3288,12 @@
                 window.removeEventListener("mouseup", onMouseUp);
                 window.removeEventListener("touchmove", onMouseMove);
                 window.removeEventListener("touchend", onMouseUp);
-                saveToFirebase(); 
+                if (!moved) {
+                    undoStack.pop();
+                    updateHistoryButtons();
+                } else {
+                    saveToFirebase(true);
+                }
             }
             window.addEventListener("mousemove", onMouseMove);
             window.addEventListener("mouseup", onMouseUp);
@@ -2307,8 +3301,12 @@
             window.addEventListener("touchend", onMouseUp);
             render();
         }
+
+        /* ==========================================
+           INSPECT / EDIT MODAL FUNCTIONS
+           ========================================== */
         function openModal(el) {
-            selectedId = el.id;
+            setSelection(el.id, false);
             document.getElementById("modalElementId").value = el.id;
             document.getElementById("modalTitle").innerText = `Edit: ${el.name}`;
             document.getElementById("modalName").value = el.name;
@@ -2383,11 +3381,13 @@
             document.getElementById("modal-overlay").style.display = "flex";
             render();
         }
+
         window.openManualUrl = function() {
             let url = document.getElementById("modalManualUrl").value;
             if (url) window.open(url, '_blank');
             else alert("No URL/Manual link entered.");
         };
+
         function renderLotoChecklist(el) {
             let container = document.getElementById("lotoChecklistList");
             container.innerHTML = "";
@@ -2405,6 +3405,7 @@
                 container.appendChild(div);
             });
         }
+
         window.addLotoStep = function() {
             triggerHaptic(15);
             let id = parseInt(document.getElementById("modalElementId").value);
@@ -2419,6 +3420,7 @@
                 saveToFirebase();
             }
         };
+
         window.toggleLotoStep = function(index, checked) {
             triggerHaptic(15);
             let id = parseInt(document.getElementById("modalElementId").value);
@@ -2429,6 +3431,7 @@
                 saveToFirebase();
             }
         };
+
         window.deleteLotoStep = function(index) {
             let id = parseInt(document.getElementById("modalElementId").value);
             let el = elements.find(item => item.id === id);
@@ -2438,6 +3441,7 @@
                 saveToFirebase();
             }
         };
+
         function renderBomTable(el) {
             let tbody = document.getElementById("bomBody");
             tbody.innerHTML = "";
@@ -2483,6 +3487,7 @@
                 tbody.appendChild(tr);
             });
         }
+
         window.addBomRow = function() {
             triggerHaptic(15);
             let id = parseInt(document.getElementById("modalElementId").value);
@@ -2494,6 +3499,7 @@
                 saveToFirebase();
             }
         };
+
         function renderWorkTickets(el) {
             let box = document.getElementById("ticketsBox");
             box.innerHTML = "";
@@ -2510,6 +3516,7 @@
                 box.appendChild(div);
             });
         }
+
         window.addWorkTicket = function() {
             triggerHaptic(15);
             let id = parseInt(document.getElementById("modalElementId").value);
@@ -2524,6 +3531,7 @@
                 saveToFirebase();
             }
         };
+
         window.resolveWorkTicket = function(index) {
             triggerHaptic(15);
             let id = parseInt(document.getElementById("modalElementId").value);
@@ -2534,12 +3542,14 @@
                 saveToFirebase();
             }
         };
+
         window.closeModal = function() {
             document.getElementById("modal-overlay").style.display = "none";
-            selectedId = null;
+            setSelection(null);
             render();
-            saveToFirebase();
+            saveToFirebase(true);
         };
+
         window.saveModalLiveChanges = function() {
             let id = parseInt(document.getElementById("modalElementId").value);
             let el = elements.find(item => item.id === id);
@@ -2573,8 +3583,10 @@
                 }
                 document.getElementById("modalTitle").innerText = `Edit: ${el.name}`;
                 render();
+                saveToFirebase();
             }
         };
+
         window.handlePhotoUpload = async function(event) {
             let id = parseInt(document.getElementById("modalElementId").value);
             let el = elements.find(item => item.id === id);
@@ -2595,7 +3607,7 @@
                     if (photoUrl) {
                         el.photos.push(photoUrl);
                         renderPhotos(el);
-                        saveToFirebase();
+                        saveToFirebase(true);
                     }
                 } catch (error) {
                     console.error("Upload error:", error);
@@ -2605,6 +3617,7 @@
             statusSpan.innerText = "";
             event.target.value = "";
         };
+
         function renderPhotos(el) {
             let gallery = document.getElementById("modalPhotoGallery");
             gallery.innerHTML = "";
@@ -2623,21 +3636,24 @@
                     e.stopPropagation();
                     el.photos.splice(index, 1);
                     renderPhotos(el);
-                    saveToFirebase();
+                    saveToFirebase(true);
                 };
                 containerDiv.appendChild(img);
                 containerDiv.appendChild(delBtn);
                 gallery.appendChild(containerDiv);
             });
         }
+
         window.openLightbox = function(url, itemName) {
             document.getElementById("lightboxImage").src = url;
             document.getElementById("lightboxCaption").innerText = itemName || "Photo Preview";
             document.getElementById("lightbox-overlay").style.display = "flex";
         };
+
         window.closeLightbox = function() {
             document.getElementById("lightbox-overlay").style.display = "none";
         };
+
         function renderSpreadsheet(el) {
             let tbody = document.getElementById("spreadsheetBody");
             tbody.innerHTML = "";
@@ -2676,6 +3692,7 @@
                 tbody.appendChild(tr);
             });
         }
+
         window.addSpreadsheetRow = function() {
             triggerHaptic(15);
             let id = parseInt(document.getElementById("modalElementId").value);
@@ -2687,54 +3704,102 @@
                 saveToFirebase();
             }
         };
+
         window.deleteItemFromModal = function() {
             let id = parseInt(document.getElementById("modalElementId").value);
             if (confirm("Are you sure you want to delete this item?")) {
+                pushHistorySnapshot();
                 elements = elements.filter(item => item.id !== id);
                 closeModal();
-                saveToFirebase();
                 triggerHaptic(30);
             }
         };
+
+        /* ==========================================
+           BULK / SINGLE ADD ZONES & ASSETS
+           ========================================== */
         window.addDepartment = function() {
             triggerHaptic(20);
-            let newEl = {
-                id: Date.now(),
-                layer: currentLayer, 
-                name: document.getElementById("newDeptName").value,
-                type: document.getElementById("newDeptType").value,
-                x: parseFloat(document.getElementById("newDeptX").value) || 0,
-                y: parseFloat(document.getElementById("newDeptY").value) || 0,
-                w: parseFloat(document.getElementById("newDeptW").value) || 5,
-                h: parseFloat(document.getElementById("newDeptH").value) || 5,
-                photos: [],
-                spreadsheetData: [{key: "Status", value: "Active"}]
-            };
-            elements.push(newEl);
+            pushHistorySnapshot();
+            const baseName = document.getElementById("newDeptName").value.trim() || "Zone";
+            const type = document.getElementById("newDeptType").value;
+            const startX = parseFloat(document.getElementById("newDeptX").value) || 0;
+            const startY = parseFloat(document.getElementById("newDeptY").value) || 0;
+            const w = parseFloat(document.getElementById("newDeptW").value) || 5;
+            const h = parseFloat(document.getElementById("newDeptH").value) || 5;
+            const count = Math.min(Math.max(parseInt(document.getElementById("zoneRepeatCount").value) || 1, 1), 50);
+            const stepX = parseFloat(document.getElementById("zoneStepX").value) || 0;
+            const stepY = parseFloat(document.getElementById("zoneStepY").value) || 0;
+
+            let lastCreatedId = null;
+            for (let i = 0; i < count; i++) {
+                let newEl = {
+                    id: Date.now() + i,
+                    layer: currentLayer, 
+                    name: incrementTrailingNumber(baseName, i),
+                    type: type,
+                    x: parseFloat((startX + (stepX * i)).toFixed(2)),
+                    y: parseFloat((startY + (stepY * i)).toFixed(2)),
+                    w: w,
+                    h: h,
+                    photos: [],
+                    spreadsheetData: [{key: "Status", value: "Active"}]
+                };
+                elements.push(newEl);
+                lastCreatedId = newEl.id;
+            }
+            setSelection(lastCreatedId, false);
             render();
-            saveToFirebase();
+            saveToFirebase(true);
         };
+
         window.addAsset = function() {
             triggerHaptic(20);
-            let newEl = {
-                id: Date.now(),
-                layer: currentLayer, 
-                name: document.getElementById("newAssetName").value,
-                type: "asset",
-                category: document.getElementById("newAssetCategory").value,
-                status: document.getElementById("newAssetStatus").value || "operational",
-                emoji: document.getElementById("newAssetEmoji").value || "📍",
-                x: parseFloat(document.getElementById("newAssetX").value) || 0,
-                y: parseFloat(document.getElementById("newAssetY").value) || 0,
-                partsNeeded: false, parentId: "", plcNode: "", manualUrl: "", runHours: "", temp: "", vibration: "", lube: "", utilityDraw: "", estopZone: "", vendorName: "", vendorContact: "",
-                lotoSteps: [], spareParts: [], workTickets: [], lastInspect: "", pmDue: "", photos: [],
-                spreadsheetData: [{key: "Asset Type", value: "Automation System Node"}]
-            };
-            elements.push(newEl);
+            pushHistorySnapshot();
+            const baseName = document.getElementById("newAssetName").value.trim() || "Asset";
+            const category = document.getElementById("newAssetCategory").value;
+            const status = document.getElementById("newAssetStatus").value || "operational";
+            const emoji = document.getElementById("newAssetEmoji").value || "📍";
+            const startX = parseFloat(document.getElementById("newAssetX").value) || 0;
+            const startY = parseFloat(document.getElementById("newAssetY").value) || 0;
+            const count = Math.min(Math.max(parseInt(document.getElementById("assetRepeatCount").value) || 1, 1), 50);
+            const stepX = parseFloat(document.getElementById("assetStepX").value) || 0;
+            const stepY = parseFloat(document.getElementById("assetStepY").value) || 0;
+
+            let lastCreatedId = null;
+            for (let i = 0; i < count; i++) {
+                let newEl = {
+                    id: Date.now() + i,
+                    layer: currentLayer, 
+                    name: incrementTrailingNumber(baseName, i),
+                    type: "asset",
+                    category: category,
+                    status: status,
+                    emoji: emoji,
+                    x: parseFloat((startX + (stepX * i)).toFixed(2)),
+                    y: parseFloat((startY + (stepY * i)).toFixed(2)),
+                    partsNeeded: false, parentId: "", plcNode: "", manualUrl: "", runHours: "", temp: "", vibration: "", lube: "", utilityDraw: "", estopZone: "", vendorName: "", vendorContact: "",
+                    lotoSteps: [], spareParts: [], workTickets: [], lastInspect: "", pmDue: "", photos: [],
+                    spreadsheetData: [{key: "Asset Type", value: "Automation System Node"}]
+                };
+                elements.push(newEl);
+                lastCreatedId = newEl.id;
+            }
+            setSelection(lastCreatedId, false);
+            populateParentAssetDropdown();
             render();
-            saveToFirebase();
+            saveToFirebase(true);
         };
-        loadFromFirebase();
+
+        // Initial Boot
+        buildStaticGrid();
+        populateCategoryDropdowns();
+        populateParentAssetDropdown();
+        populateAllShiftDropdowns();
+        renderAllActionLists();
+        updateHistoryButtons();
+        render();
+        initFirebaseLiveSync();
     </script>
 </body>
 </html>
