@@ -23,7 +23,7 @@
             touch-action: none;
         }
         #sidebar {
-            width: 385px;
+            width: 395px;
             background-color: #111b27;
             padding: 15px;
             display: flex;
@@ -136,9 +136,9 @@
         }
         .danger { background: #7f1d1d; border-color: #ef4444; color: white; }
         .danger:hover, .danger:active { background: #ef4444; color: #fff; }
-        .tab-bar { display: flex; gap: 3px; margin-bottom: 5px; }
+        .tab-bar { display: flex; gap: 3px; margin-bottom: 5px; flex-wrap: wrap; }
         .tab-btn {
-            flex: 1; padding: 8px 2px; background: #070d14; border: 1px solid #1e293b; color: #94a3b8; font-size: 9.5px; cursor: pointer; border-radius: 6px; text-align: center; min-height: 36px;
+            flex: 1; min-width: 52px; padding: 7px 2px; background: #070d14; border: 1px solid #1e293b; color: #94a3b8; font-size: 9.5px; cursor: pointer; border-radius: 6px; text-align: center; min-height: 34px;
         }
         .tab-btn.active { background: #1e293b; color: #38bdf8; border-color: #38bdf8; }
         .panel { display: none; }
@@ -156,7 +156,6 @@
         .item-group:hover .asset-popup { opacity: 1; }
         .grid-line { stroke: #132235; stroke-width: 1; pointer-events: none; }
         .coord-label { fill: #64748b; font-size: 10px; font-family: monospace; pointer-events: none; }
-        /* QUICK STAMP PALETTE & BUILDER CARDS */
         .builder-box {
             background: #070d14;
             border: 1px solid #1e293b;
@@ -187,7 +186,6 @@
             background: #0284c7;
             color: #fff;
         }
-        /* SEARCH RESULTS DROPDOWN */
         #searchResultsDropdown {
             display: none;
             background: #070d14;
@@ -211,7 +209,6 @@
             background: #1e293b;
             color: #38bdf8;
         }
-        /* FLOATING SELECTION / BATCH EDIT / GEOMETRY BAR */
         #selection-action-bar {
             display: none;
             position: absolute;
@@ -224,9 +221,9 @@
             border-radius: 12px;
             padding: 10px 14px;
             box-shadow: 0 8px 25px rgba(0,0,0,0.85);
-            max-width: 92%;
+            max-width: 94%;
             flex-direction: column;
-            gap: 8px;
+            gap: 7px;
         }
         @media (max-width: 768px) {
             #selection-action-bar { bottom: 68px; }
@@ -234,13 +231,13 @@
         .sel-bar-row {
             display: flex;
             flex-wrap: wrap;
-            gap: 6px;
+            gap: 5px;
             align-items: center;
         }
         .sel-mini-btn {
             width: auto;
-            min-height: 32px;
-            padding: 5px 10px;
+            min-height: 30px;
+            padding: 4px 8px;
             font-size: 11px;
             margin: 0;
             background: #1e293b;
@@ -249,13 +246,12 @@
         }
         .sel-mini-select, .sel-mini-input {
             width: auto;
-            min-width: 115px;
-            min-height: 32px;
-            padding: 4px 8px;
+            min-width: 105px;
+            min-height: 30px;
+            padding: 4px 7px;
             font-size: 11px;
             margin: 0;
         }
-        /* FLOATING VIEWPORT ZOOM / CENTER CONTROLS */
         #viewport-controls {
             position: absolute;
             bottom: 16px;
@@ -288,7 +284,6 @@
         @media (max-width: 768px) {
             #viewport-controls { bottom: 68px; right: 10px; }
         }
-        /* MULTI-BUILDER REMOTE SYNC BANNER */
         #remote-sync-banner {
             display: none;
             position: absolute;
@@ -304,7 +299,22 @@
             font-weight: bold;
             box-shadow: 0 6px 20px rgba(0,0,0,0.75);
         }
-        /* MOBILE FLOATING BOTTOM TOOLBAR */
+        #readonly-banner {
+            display: none;
+            position: absolute;
+            top: 56px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 32;
+            background: #451a03;
+            border: 1.5px solid #f59e0b;
+            color: #fde68a;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 11.5px;
+            font-weight: bold;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.75);
+        }
         #mobile-bottom-toolbar {
             display: none;
             position: absolute;
@@ -339,7 +349,6 @@
             color: #fff;
             border-color: #38bdf8;
         }
-        /* EMERGENCY QUICK-FILTER FLOATING BAR */
         #quick-filter-bar {
             position: absolute;
             top: 10px;
@@ -380,12 +389,12 @@
             background: #0f172a; border: 1px solid #f59e0b; color: #fbbf24; padding: 8px; border-radius: 6px; font-family: monospace; font-size: 12px; text-align: center; display: none;
         }
         #sync-status { font-size: 10.5px; text-align: center; color: #10b981; font-weight: bold; margin-top: -2px; }
-        #modal-overlay, #category-modal-overlay, #lightbox-overlay, #scanner-modal-overlay, #ar-modal-overlay, #shift-manager-modal-overlay {
+        #modal-overlay, #category-modal-overlay, #lightbox-overlay, #scanner-modal-overlay, #ar-modal-overlay, #shift-manager-modal-overlay, #tools-hub-modal-overlay {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.85); z-index: 1000; justify-content: center; align-items: center; padding: 10px;
         }
         #lightbox-overlay { z-index: 2000; }
         .modal-content {
-            background: #111b27; border: 1px solid #38bdf8; border-radius: 10px; width: 720px; max-width: 100%; max-height: 92vh; display: flex; flex-direction: column; box-shadow: 0 10px 25px rgba(0,0,0,0.8); overflow: hidden;
+            background: #111b27; border: 1px solid #38bdf8; border-radius: 10px; width: 740px; max-width: 100%; max-height: 92vh; display: flex; flex-direction: column; box-shadow: 0 10px 25px rgba(0,0,0,0.8); overflow: hidden;
         }
         .modal-header { background: #0b131d; padding: 14px 18px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1f2d3d; }
         .modal-body { padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; -webkit-overflow-scrolling: touch; }
@@ -418,6 +427,7 @@
         }
         .loto-step { display: flex; align-items: center; gap: 8px; font-size: 12px; border-bottom: 1px solid #1f2d3d; padding: 6px 0; }
         .action-item-row { display: flex; align-items: center; gap: 8px; font-size: 12px; border-bottom: 1px solid #1f2d3d; padding: 4px 0; }
+        .audit-badge { background: #451a03; border: 1px solid #f59e0b; color: #fde68a; border-radius: 6px; padding: 8px 10px; font-size: 11.5px; }
     </style>
 </head>
 <body>
@@ -428,7 +438,10 @@
     <div id="sidebar" class="collapsed">
         <div style="display:flex; justify-content:space-between; align-items:center;">
             <h2>Site & Layout Builder</h2>
-            <span style="font-size:10px; background:#0284c7; color:#fff; padding:2px 7px; border-radius:10px; font-weight:bold;">BUILDER PRO</span>
+            <div style="display:flex; gap:4px; align-items:center;">
+                <button onclick="openToolsHubModal('audit')" style="width:auto; min-height:26px; padding:2px 8px; font-size:10px; background:#1e293b; border-color:#f59e0b; color:#fbbf24;">🛡️ Audit & Tools</button>
+                <span style="font-size:10px; background:#0284c7; color:#fff; padding:2px 7px; border-radius:10px; font-weight:bold;">PRO+</span>
+            </div>
         </div>
         
         <!-- FIND & PAN TO + QR SCANNER -->
@@ -468,6 +481,11 @@
                 <button onclick="document.getElementById('importJsonInput').click()" style="flex:1; font-size:11px; padding:6px; min-height:34px; background:#0f172a;">📂 Restore JSON</button>
                 <input type="file" id="importJsonInput" accept=".json" style="display:none;" onchange="importJsonBackup(event)">
             </div>
+            <div style="display: flex; gap: 6px;">
+                <button onclick="openToolsHubModal('checkpoints')" style="flex:1; font-size:11px; padding:6px; min-height:32px; background:#0f172a; border-color:#a855f7; color:#d8b4fe;">📸 Checkpoints</button>
+                <button onclick="openToolsHubModal('replace')" style="flex:1; font-size:11px; padding:6px; min-height:32px; background:#0f172a; border-color:#38bdf8; color:#7dd3fc;">🔁 Find/Replace</button>
+                <button onclick="openToolsHubModal('share')" style="flex:1; font-size:11px; padding:6px; min-height:32px; background:#0f172a; border-color:#10b981; color:#6ee7b7;">🔗 Share/Copy</button>
+            </div>
             <div style="display:flex; flex-direction:column; gap:4px; margin-top:2px;">
                 <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
                     <input type="checkbox" id="snapGridToggle" checked style="width:auto; margin:0; min-height:auto; transform: scale(1.15);">
@@ -488,6 +506,10 @@
                 <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
                     <input type="checkbox" id="lockZonesToggle" onchange="render()" style="width:auto; margin:0; min-height:auto; transform: scale(1.15);">
                     <span style="color:#94a3b8; font-weight:bold;">🔒 Lock Background Zones (Prevent Drag)</span>
+                </label>
+                <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+                    <input type="checkbox" id="auditBadgesToggle" onchange="render()" style="width:auto; margin:0; min-height:auto; transform: scale(1.15);">
+                    <span style="color:#fde68a; font-weight:bold;">⚠️ Show Completeness Audit Badges</span>
                 </label>
                 <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
                     <input type="checkbox" id="heatmapToggle" onchange="toggleHeatmap(this.checked)" style="width:auto; margin:0; min-height:auto; transform: scale(1.15);">
@@ -525,7 +547,7 @@
         </div>
 
         <div>
-            <label>Interaction Mode <span style="color:#64748b;">(Shift+Click multi-select, Arrows nudge)</span></label>
+            <label>Interaction Mode <span style="color:#64748b;">(Shift+Drag box-select, Arrows nudge)</span></label>
             <div style="display: flex; flex-direction: column; gap: 6px; margin-top: 4px;">
                 <div style="display: flex; gap: 6px;">
                     <button id="modeEditBtn" class="mode-btn active" style="flex:1;" onclick="setMode('edit')">✋ Edit (Drag)</button>
@@ -549,12 +571,25 @@
             <button class="tab-btn" id="tabTomBtn" onclick="switchTab('tom')">Tom Team</button>
         </div>
 
-        <!-- ZONES PANEL -->
+        <!-- ZONES & BAY CLUSTER PRESETS PANEL -->
         <div id="panelDept" class="panel active">
             <div style="display:flex; justify-content:space-between; align-items:center;">
                 <h3>Zone / Yard Management</h3>
                 <button id="pickZoneCoordBtn" onclick="startPickCoords('zone')" style="width:auto; padding:4px 10px; font-size:11px; background:#0284c7; color:#fff; min-height:30px;">📍 Pick Coords</button>
             </div>
+
+            <!-- SAVED BAY / CLUSTER PRESETS -->
+            <div class="builder-box">
+                <label style="color:#a855f7; font-weight:bold;">🏗️ Bay / Cluster Presets (Stamp Multi-Item Group)</label>
+                <div style="display:flex; gap:5px;">
+                    <select id="clusterPresetSelect" style="flex:2; min-height:32px; padding:4px 6px; font-size:11px;">
+                        <option value="">-- Select Bay Cluster --</option>
+                    </select>
+                    <button onclick="stampSelectedClusterPreset()" style="flex:1; min-height:32px; padding:4px 6px; font-size:11px; background:#7e22ce; color:#fff;">⚡ Stamp</button>
+                    <button onclick="saveSelectionAsClusterPreset()" style="flex:1; min-height:32px; padding:4px 6px; font-size:11px; background:#0f172a; border-color:#a855f7; color:#d8b4fe;" title="Save currently selected items as a reusable bay cluster">💾 Save Sel</button>
+                </div>
+            </div>
+
             <div>
                 <label>Zone Name / Prefix (e.g. "DD-" or "UIS Bay 1")</label>
                 <input type="text" id="newDeptName" value="OPEX UIS Induction Bay 1">
@@ -576,7 +611,6 @@
                     <div style="flex:1;"><label>Width</label><input type="number" id="newDeptW" step="0.5" value="12"></div>
                     <div style="flex:1;"><label>Height</label><input type="number" id="newDeptH" step="0.5" value="5"></div>
                 </div>
-                <!-- STEP & REPEAT + AUTO-NUMBERING PATTERN -->
                 <div class="builder-box" style="margin-top:6px;">
                     <label style="color:#fbbf24; font-weight:bold;">🔁 Step & Repeat + Auto-Numbering</label>
                     <div style="display:flex; gap:6px;">
@@ -613,9 +647,9 @@
                 </select>
                 <div style="font-size:11px; color:#94a3b8; margin-top:6px; background:#070d14; padding:7px; border-radius:6px; border:1px solid #1e293b;">
                     💡 <b>Builder Tips:</b><br>
-                    • Select a line to drag bends or click green <b>+</b> midpoints to insert bends.<br>
+                    • Select a line to drag bends, click green <b>+</b> midpoints to add bends, or view total length & flow arrows.<br>
                     • <b>Right-click</b> an interior bend to <b>Split Line</b> or <b>Delete Bend</b>.<br>
-                    • Use the bottom selection bar to <b>Rotate 90°</b> or <b>Flip</b>.
+                    • Hold <b>Shift + Drag</b> on canvas to box-select multiple items.
                 </div>
                 <button onclick="startDrawingLine()" style="margin-top: 8px; background: #0284c7; color: #fff; min-height: 40px;">✏️ Draw Multi-Point Line</button>
                 <div id="draw-controls" style="display: none; background: #070d14; border: 1px solid #38bdf8; padding: 8px; border-radius: 6px; margin-top: 8px;">
@@ -638,7 +672,6 @@
                 </div>
             </div>
 
-            <!-- QUICK-STAMP PRESETS -->
             <div class="builder-box">
                 <label style="color:#38bdf8; font-weight:bold;">⚡ Quick-Stamp Presets (Tap to Fill & Pick)</label>
                 <div class="stamp-grid">
@@ -654,7 +687,6 @@
                 </div>
             </div>
 
-            <!-- CUSTOM BUILDER TEMPLATES & AUTO-MEMORY -->
             <div class="builder-box">
                 <div style="display:flex; justify-content:space-between; align-items:center;">
                     <label style="color:#10b981; font-weight:bold;">🧩 Custom Saved Presets & Defaults</label>
@@ -667,8 +699,8 @@
                     <select id="customPresetSelect" onchange="loadCustomPreset(this.value)" style="flex:2; min-height:32px; padding:4px 6px; font-size:11.5px;">
                         <option value="">-- Load Saved Preset --</option>
                     </select>
-                    <button onclick="saveCurrentAsPreset()" style="flex:1; min-height:32px; padding:4px 6px; font-size:11px; background:#0f172a; border-color:#10b981; color:#10b981;" title="Save current fields as reusable preset">💾 Save</button>
-                    <button onclick="deleteSelectedPreset()" class="danger" style="width:auto; min-height:32px; padding:4px 8px; font-size:11px;" title="Delete selected preset">✕</button>
+                    <button onclick="saveCurrentAsPreset()" style="flex:1; min-height:32px; padding:4px 6px; font-size:11px; background:#0f172a; border-color:#10b981; color:#10b981;">💾 Save</button>
+                    <button onclick="deleteSelectedPreset()" class="danger" style="width:auto; min-height:32px; padding:4px 8px; font-size:11px;">✕</button>
                 </div>
             </div>
 
@@ -704,7 +736,6 @@
                     <div style="flex:1;"><label>OEM / Vendor</label><input type="text" id="newAssetVendor" placeholder="OPEX / Dematic"></div>
                 </div>
 
-                <!-- STEP & REPEAT + AUTO-NUMBERING -->
                 <div class="builder-box" style="margin-top:6px;">
                     <label style="color:#fbbf24; font-weight:bold;">🔁 Step & Repeat + Auto-Numbering</label>
                     <div style="display:flex; gap:6px;">
@@ -739,7 +770,10 @@
                 <select id="techShiftName"></select>
                 <label>Handover Note / Parts Waiting in Cage</label>
                 <textarea id="techLogText" placeholder="Detailed handoff notes, jams, or parts set aside in cage..." style="height:60px;"></textarea>
-                <button onclick="addShiftLog('tech')" style="margin-top: 6px; background:#0284c7; color:#fff; min-height: 40px;">+ Post Tech Entry</button>
+                <div style="display:flex; gap:6px; margin-top:6px;">
+                    <button onclick="addShiftLog('tech')" style="flex:2; background:#0284c7; color:#fff; min-height: 38px;">+ Post Tech Entry</button>
+                    <button onclick="carryOverOpenActionItems('tech')" style="flex:1; background:#1e293b; border-color:#f59e0b; color:#fbbf24; font-size:11px; min-height: 38px;" title="Post open tasks & down assets into handover log">⏩ Carry Open</button>
+                </div>
             </div>
             <div style="margin-top: 6px;">
                 <label>📋 Shift Action Items / Tasks</label>
@@ -750,8 +784,9 @@
                 </div>
             </div>
             <div style="display: flex; gap: 6px; margin-top: 6px;">
-                <button onclick="printHandoverReport('tech')" style="font-size: 11px; padding: 6px; min-height: 36px;">🖨️ Print Summary</button>
-                <button onclick="exportShiftLogsCSV('tech')" style="font-size: 11px; padding: 6px; min-height: 36px;">📥 CSV Export</button>
+                <button onclick="printHandoverReport('tech')" style="font-size: 11px; padding: 6px; min-height: 36px;">🖨️ Print</button>
+                <button onclick="exportShiftLogsCSV('tech')" style="font-size: 11px; padding: 6px; min-height: 36px;">📥 CSV</button>
+                <button onclick="openToolsHubModal('delta')" style="font-size: 11px; padding: 6px; min-height: 36px; border-color:#10b981; color:#6ee7b7;">📊 Delta</button>
             </div>
             <div style="margin-top: 6px; margin-bottom: 2px;">
                 <label>Filter Log View</label>
@@ -773,7 +808,10 @@
                 <select id="shiftName"></select>
                 <label>Handover Note / Updates</label>
                 <textarea id="shiftLogText" placeholder="Detailed handoff notes, equipment status..." style="height:60px;"></textarea>
-                <button onclick="addShiftLog('ops')" style="margin-top: 6px; background:#0284c7; color:#fff; min-height: 40px;">+ Post Ops Entry</button>
+                <div style="display:flex; gap:6px; margin-top:6px;">
+                    <button onclick="addShiftLog('ops')" style="flex:2; background:#0284c7; color:#fff; min-height: 38px;">+ Post Ops Entry</button>
+                    <button onclick="carryOverOpenActionItems('ops')" style="flex:1; background:#1e293b; border-color:#f59e0b; color:#fbbf24; font-size:11px; min-height: 38px;">⏩ Carry Open</button>
+                </div>
             </div>
             <div style="margin-top: 6px;">
                 <label>📋 Ops Shift Action Items</label>
@@ -784,8 +822,9 @@
                 </div>
             </div>
             <div style="display: flex; gap: 6px; margin-top: 6px;">
-                <button onclick="printHandoverReport('ops')" style="font-size: 11px; padding: 6px; min-height: 36px;">🖨️ Print Summary</button>
-                <button onclick="exportShiftLogsCSV('ops')" style="font-size: 11px; padding: 6px; min-height: 36px;">📥 CSV Export</button>
+                <button onclick="printHandoverReport('ops')" style="font-size: 11px; padding: 6px; min-height: 36px;">🖨️ Print</button>
+                <button onclick="exportShiftLogsCSV('ops')" style="font-size: 11px; padding: 6px; min-height: 36px;">📥 CSV</button>
+                <button onclick="openToolsHubModal('delta')" style="font-size: 11px; padding: 6px; min-height: 36px; border-color:#10b981; color:#6ee7b7;">📊 Delta</button>
             </div>
             <div style="margin-top: 6px; margin-bottom: 2px;">
                 <label>Filter Log View</label>
@@ -807,7 +846,10 @@
                 <select id="safetyShiftName"></select>
                 <label>Safety Incidents / Audits / PPE Notes</label>
                 <textarea id="safetyLogText" placeholder="Near misses, safety audits, eyewash checks..." style="height:60px;"></textarea>
-                <button onclick="addShiftLog('safety')" style="margin-top: 6px; background:#0284c7; color:#fff; min-height: 40px;">+ Post Safety Entry</button>
+                <div style="display:flex; gap:6px; margin-top:6px;">
+                    <button onclick="addShiftLog('safety')" style="flex:2; background:#0284c7; color:#fff; min-height: 38px;">+ Post Safety Entry</button>
+                    <button onclick="carryOverOpenActionItems('safety')" style="flex:1; background:#1e293b; border-color:#f59e0b; color:#fbbf24; font-size:11px; min-height: 38px;">⏩ Carry Open</button>
+                </div>
             </div>
             <div style="margin-top: 6px;">
                 <label>📋 Safety Follow-up Action Items</label>
@@ -818,8 +860,9 @@
                 </div>
             </div>
             <div style="display: flex; gap: 6px; margin-top: 6px;">
-                <button onclick="printHandoverReport('safety')" style="font-size: 11px; padding: 6px; min-height: 36px;">🖨️ Print Summary</button>
-                <button onclick="exportShiftLogsCSV('safety')" style="font-size: 11px; padding: 6px; min-height: 36px;">📥 CSV Export</button>
+                <button onclick="printHandoverReport('safety')" style="font-size: 11px; padding: 6px; min-height: 36px;">🖨️ Print</button>
+                <button onclick="exportShiftLogsCSV('safety')" style="font-size: 11px; padding: 6px; min-height: 36px;">📥 CSV</button>
+                <button onclick="openToolsHubModal('delta')" style="font-size: 11px; padding: 6px; min-height: 36px; border-color:#10b981; color:#6ee7b7;">📊 Delta</button>
             </div>
             <div style="margin-top: 6px; margin-bottom: 2px;">
                 <label>Filter Log View</label>
@@ -841,7 +884,10 @@
                 <select id="tomShiftName"></select>
                 <label>Yard / Yard Truck / Trailer Notes</label>
                 <textarea id="tomLogText" placeholder="Yard flow, spotter truck status, trailer moves..." style="height:60px;"></textarea>
-                <button onclick="addShiftLog('tom')" style="margin-top: 6px; background:#0284c7; color:#fff; min-height: 40px;">+ Post Tom Team Entry</button>
+                <div style="display:flex; gap:6px; margin-top:6px;">
+                    <button onclick="addShiftLog('tom')" style="flex:2; background:#0284c7; color:#fff; min-height: 38px;">+ Post Tom Team Entry</button>
+                    <button onclick="carryOverOpenActionItems('tom')" style="flex:1; background:#1e293b; border-color:#f59e0b; color:#fbbf24; font-size:11px; min-height: 38px;">⏩ Carry Open</button>
+                </div>
             </div>
             <div style="margin-top: 6px;">
                 <label>📋 Tom Team Action Items</label>
@@ -852,8 +898,9 @@
                 </div>
             </div>
             <div style="display: flex; gap: 6px; margin-top: 6px;">
-                <button onclick="printHandoverReport('tom')" style="font-size: 11px; padding: 6px; min-height: 36px;">🖨️ Print Summary</button>
-                <button onclick="exportShiftLogsCSV('tom')" style="font-size: 11px; padding: 6px; min-height: 36px;">📥 CSV Export</button>
+                <button onclick="printHandoverReport('tom')" style="font-size: 11px; padding: 6px; min-height: 36px;">🖨️ Print</button>
+                <button onclick="exportShiftLogsCSV('tom')" style="font-size: 11px; padding: 6px; min-height: 36px;">📥 CSV</button>
+                <button onclick="openToolsHubModal('delta')" style="font-size: 11px; padding: 6px; min-height: 36px; border-color:#10b981; color:#6ee7b7;">📊 Delta</button>
             </div>
             <div style="margin-top: 6px; margin-bottom: 2px;">
                 <label>Filter Log View</label>
@@ -866,41 +913,59 @@
     </div>
 
     <div id="canvas-container">
-        <!-- EMERGENCY QUICK-FILTER FLOATING PILLS -->
+        <!-- EMERGENCY QUICK-FILTER FLOATING PILLS WITH LIVE COUNTS -->
         <div id="quick-filter-bar">
-            <button class="filter-pill down-pill" onclick="toggleQuickFilter('down')">🚨 Down Assets</button>
-            <button class="filter-pill pm-pill" onclick="toggleQuickFilter('pm_due')">🔥 Overdue PMs</button>
-            <button class="filter-pill" onclick="toggleQuickFilter('parts_needed')">📦 Parts Needed</button>
-            <button class="filter-pill" onclick="toggleQuickFilter('water')">💧 Water Shutoffs</button>
-            <button class="filter-pill" onclick="toggleQuickFilter('estop')">⚡ E-Stop Zones</button>
+            <button class="filter-pill down-pill" id="pillDown" onclick="toggleQuickFilter('down')">🚨 Down (0)</button>
+            <button class="filter-pill pm-pill" id="pillPm" onclick="toggleQuickFilter('pm_due')">🔥 Overdue PM (0)</button>
+            <button class="filter-pill" id="pillParts" onclick="toggleQuickFilter('parts_needed')">📦 Parts (0)</button>
+            <button class="filter-pill" id="pillWater" onclick="toggleQuickFilter('water')">💧 Water (0)</button>
+            <button class="filter-pill" id="pillEstop" onclick="toggleQuickFilter('estop')">⚡ E-Stop (0)</button>
             <button class="filter-pill active" id="filterAllBtn" onclick="toggleQuickFilter('all')">Show All</button>
         </div>
 
-        <!-- REMOTE MULTI-BUILDER SYNC NOTICE -->
+        <div id="readonly-banner">👁️ READ-ONLY WALKTHROUGH VIEW</div>
         <div id="remote-sync-banner">🔄 Layout synced from co-builder</div>
 
-        <!-- FLOATING SELECTION / BATCH EDIT / LAYER MOVE / ROTATE BAR -->
+        <!-- FLOATING SELECTION / ALIGN / DISTRIBUTE / STYLE / BATCH EDIT BAR -->
         <div id="selection-action-bar">
             <div class="sel-bar-row" style="justify-content: space-between;">
                 <span id="selBarTitle" style="color:#fbbf24; font-weight:bold; font-size:12px;">1 Item Selected</span>
-                <div style="display:flex; gap:5px; flex-wrap:wrap;">
+                <div style="display:flex; gap:4px; flex-wrap:wrap;">
                     <button class="sel-mini-btn" onclick="rotateSelected90()" title="Rotate 90° Clockwise">↻ 90°</button>
-                    <button class="sel-mini-btn" onclick="flipSelected('h')" title="Flip Horizontal">⇄ Flip H</button>
-                    <button class="sel-mini-btn" onclick="flipSelected('v')" title="Flip Vertical">⇅ Flip V</button>
-                    <button class="sel-mini-btn" id="splitVertexBtn" style="display:none; border-color:#10b981; color:#10b981;" onclick="splitSelectedLineAtBend()" title="Split line into 2 segments at selected vertex">✂️ Split at Bend</button>
+                    <button class="sel-mini-btn" onclick="flipSelected('h')" title="Flip Horizontal">⇄ H</button>
+                    <button class="sel-mini-btn" onclick="flipSelected('v')" title="Flip Vertical">⇅ V</button>
+                    <button class="sel-mini-btn" id="splitVertexBtn" style="display:none; border-color:#10b981; color:#10b981;" onclick="splitSelectedLineAtBend()">✂️ Split</button>
+                    <button class="sel-mini-btn" onclick="copySelectedStyle()" title="Copy asset category, emoji, PLC, E-Stop, LOTO & BOM">🎨 Copy Specs</button>
+                    <button class="sel-mini-btn" id="pasteStyleBtn" onclick="pasteCopiedStyle()" title="Paste copied asset specs onto selection">🖌️ Paste Specs</button>
                     <button class="sel-mini-btn" onclick="duplicateSelected()" style="border-color:#f59e0b; color:#fbbf24;">📋 Clone</button>
-                    <button class="sel-mini-btn danger" onclick="deleteSelectedItems()">🗑️ Delete</button>
+                    <button class="sel-mini-btn danger" onclick="deleteSelectedItems()">🗑️</button>
                     <button class="sel-mini-btn" onclick="clearSelectionBar()" style="border-color:#64748b; color:#94a3b8;">✕</button>
                 </div>
             </div>
+
+            <!-- ALIGN & DISTRIBUTE ROW (2+ ITEMS) -->
+            <div id="alignDistributeSection" class="sel-bar-row" style="display:none; border-top:1px solid #1e293b; padding-top:6px;">
+                <span style="font-size:11px; color:#10b981; font-weight:bold;">Align:</span>
+                <button class="sel-mini-btn" onclick="alignSelected('left')" title="Align Left Edges">⬅ L</button>
+                <button class="sel-mini-btn" onclick="alignSelected('centerH')" title="Align Horizontal Centers">↔ C</button>
+                <button class="sel-mini-btn" onclick="alignSelected('right')" title="Align Right Edges">➡ R</button>
+                <button class="sel-mini-btn" onclick="alignSelected('top')" title="Align Top Edges">⬆ T</button>
+                <button class="sel-mini-btn" onclick="alignSelected('centerV')" title="Align Vertical Centers">↕ M</button>
+                <button class="sel-mini-btn" onclick="alignSelected('bottom')" title="Align Bottom Edges">⬇ B</button>
+                <span style="font-size:11px; color:#a855f7; font-weight:bold; margin-left:4px;">Distribute:</span>
+                <button class="sel-mini-btn" onclick="distributeSelected('x')" title="Distribute Evenly Horizontally">⇿ X</button>
+                <button class="sel-mini-btn" onclick="distributeSelected('y')" title="Distribute Evenly Vertically">⇕ Y</button>
+            </div>
+
             <!-- LAYER MOVE / COPY -->
             <div class="sel-bar-row">
                 <span style="font-size:11px; color:#94a3b8; font-weight:bold;">Layer:</span>
                 <select id="batchLayerSelect" class="sel-mini-select"></select>
-                <button class="sel-mini-btn" onclick="moveSelectedToLayer(false)">➡️ Move to Layer</button>
-                <button class="sel-mini-btn" onclick="moveSelectedToLayer(true)">📑 Copy to Layer</button>
+                <button class="sel-mini-btn" onclick="moveSelectedToLayer(false)">➡️ Move</button>
+                <button class="sel-mini-btn" onclick="moveSelectedToLayer(true)">📑 Copy</button>
             </div>
-            <!-- BATCH PROPERTY STAMP (VISIBLE WHEN 2+ ITEMS SELECTED) -->
+
+            <!-- MULTI-SELECT PROPERTY INSPECTOR / BATCH STAMP (2+ ITEMS) -->
             <div id="batchEditSection" class="sel-bar-row" style="display:none; border-top:1px solid #1e293b; padding-top:6px;">
                 <span style="font-size:11px; color:#38bdf8; font-weight:bold;">Batch Stamp:</span>
                 <select id="batchCategorySelect" class="sel-mini-select">
@@ -919,8 +984,10 @@
                 </select>
                 <input type="text" id="batchPlcInput" class="sel-mini-input" placeholder="PLC Node">
                 <input type="text" id="batchEstopInput" class="sel-mini-input" placeholder="E-Stop Zone">
+                <input type="text" id="batchUtilityInput" class="sel-mini-input" placeholder="Power/Amps">
+                <input type="text" id="batchLotoInput" class="sel-mini-input" placeholder="+ Add LOTO Step">
                 <input type="date" id="batchPmDueInput" class="sel-mini-input" title="PM Due Date">
-                <button class="sel-mini-btn" style="background:#0284c7; color:#fff;" onclick="applyBatchEdit()">✅ Apply to All</button>
+                <button class="sel-mini-btn" style="background:#0284c7; color:#fff;" onclick="applyBatchEdit()">✅ Apply All</button>
             </div>
         </div>
 
@@ -940,14 +1007,12 @@
             <button onclick="cancelPickCoords()" class="danger" style="padding: 5px 12px; min-height: 32px; width: auto;">Cancel</button>
         </div>
 
-        <!-- VIEWPORT ZOOM & RESET CONTROLS -->
         <div id="viewport-controls">
             <button class="vp-btn" onclick="zoomViewport(1.2)" title="Zoom In">+</button>
             <button class="vp-btn" onclick="zoomViewport(0.83)" title="Zoom Out">−</button>
             <button class="vp-btn" onclick="resetViewport()" title="Center & Reset View">🎯</button>
         </div>
 
-        <!-- MOBILE FLOATING BOTTOM TOOLBAR -->
         <div id="mobile-bottom-toolbar">
             <button class="mob-tool-btn active" id="mobEditBtn" onclick="setMode('edit')">✋ Drag</button>
             <button class="mob-tool-btn" id="mobPanBtn" onclick="setMode('pan')">🗺️ Pan</button>
@@ -963,6 +1028,20 @@
                 <g id="overlay-tools-layer" style="pointer-events:none;"></g>
             </g>
         </svg>
+    </div>
+
+    <!-- AUDIT, CHECKPOINTS, FIND & REPLACE, DELTA & SHARE HUB MODAL -->
+    <div id="tools-hub-modal-overlay">
+        <div class="modal-content" style="width: 680px;">
+            <div class="modal-header">
+                <h3 id="toolsHubTitle" style="color: #38bdf8; margin: 0;">🛡️ Builder Pro Tools</h3>
+                <button class="close-modal" onclick="closeToolsHubModal()">×</button>
+            </div>
+            <div class="modal-body" id="toolsHubBody"></div>
+            <div class="modal-footer">
+                <button onclick="closeToolsHubModal()" style="width: auto; padding: 8px 16px; background: #38bdf8; color: #0b131d; min-height: 40px;">Close</button>
+            </div>
+        </div>
     </div>
 
     <!-- MAIN INSPECT & EDIT MODAL -->
@@ -989,7 +1068,6 @@
                         <select id="modalLayer" onchange="saveModalLiveChanges()"></select>
                     </div>
                 </div>
-                <!-- PARTS NEEDED QUICK TAG -->
                 <div>
                     <label style="display:flex; align-items:center; gap:8px; cursor:pointer; background:#1e293b; padding:8px; border-radius:6px; border:1px solid #38bdf8;">
                         <input type="checkbox" id="modalPartsNeeded" onchange="saveModalLiveChanges()" style="width:auto; margin:0; min-height:auto; transform: scale(1.2);">
@@ -1237,7 +1315,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, doc, setDoc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, runTransaction, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCrKAut8_5nHWTWtYqZZr5HOENGd8mqZxE",
@@ -1274,6 +1352,10 @@
             { id: 'loto', label: 'LOTO Isolation' }
         ];
 
+        // Read-only URL mode (?readonly=1&filter=down&layer=ground)
+        const urlParams = new URLSearchParams(window.location.search);
+        const isReadOnlyMode = urlParams.get("readonly") === "1" || urlParams.get("view") === "readonly";
+
         let currentMode = 'edit'; 
         let currentTab = 'dept'; 
         let currentLayer = 'ground'; 
@@ -1285,19 +1367,25 @@
         let calcPoints = []; 
         let drawingLineState = null; 
         let draggingVertex = null;
-        let selectedVertexInfo = null; // { lineId, vertexIndex }
+        let selectedVertexInfo = null;
         let resizingZone = null;
-        let pickCoordTarget = null; // 'asset' or 'zone'
+        let pickCoordTarget = null;
         let shiftKeyPressed = false;
         let lastMouseLocal = null;
 
-        // Alignment guides & Find/Pan beacon state
-        let activeAlignmentGuides = []; // [{ axis: 'x'|'y', val: number }]
-        let highlightedBeacon = null; // { x, y, until }
-        let activeLoadedPreset = null;
+        // Marquee box-select state
+        let marqueeBox = null; // { startX, startY, currX, currY }
 
-        // Multi-builder & Undo/Redo state
+        // Alignment guides, beacon & copied style
+        let activeAlignmentGuides = [];
+        let highlightedBeacon = null;
+        let activeLoadedPreset = null;
+        let copiedStyleSpecs = null;
+
+        // Multi-builder, transaction revision, offline queue & undo/redo
         const clientSessionId = "builder_" + Math.random().toString(36).substring(2, 10);
+        let docRevision = 0;
+        let hasPendingOfflineWrite = false;
         let undoStack = [];
         let redoStack = [];
         const MAX_HISTORY = 30;
@@ -1318,6 +1406,8 @@
         ];
 
         let customPresets = JSON.parse(localStorage.getItem("imi_builder_custom_presets") || "[]");
+        let clusterPresets = JSON.parse(localStorage.getItem("imi_builder_cluster_presets") || "[]");
+        let savedCheckpoints = JSON.parse(localStorage.getItem("imi_builder_checkpoints") || "[]");
 
         let elements = [
             { 
@@ -1347,7 +1437,6 @@
         let tomActions = [];
         let activeShiftCategory = 'tech';
 
-        // Selection (supports single primary + multi-select)
         let selectedId = null;
         let multiSelectedIds = new Set();
         let isDraggingElement = false;
@@ -1373,9 +1462,6 @@
             document.getElementById("sidebar").classList.toggle("collapsed");
         };
 
-        /* ==========================================
-           LAYER DROPDOWN POPULATION
-           ========================================== */
         function populateLayerDropdowns() {
             const batchSel = document.getElementById("batchLayerSelect");
             const modalSel = document.getElementById("modalLayer");
@@ -1436,13 +1522,11 @@
                 ? `Selected: ${firstEl ? firstEl.name : '1 Item'}`
                 : `${ids.length} Items Selected`;
 
-            // Sync layer selector default
             const batchLayerSel = document.getElementById("batchLayerSelect");
             if (firstEl && batchLayerSel && !batchLayerSel.dataset.userTouched) {
                 batchLayerSel.value = firstEl.layer || currentLayer;
             }
 
-            // Show Split Line button when an interior vertex of a conveyance line is selected
             const splitBtn = document.getElementById("splitVertexBtn");
             if (splitBtn) {
                 const canSplit = selectedVertexInfo &&
@@ -1455,11 +1539,10 @@
                 splitBtn.style.display = canSplit ? "inline-block" : "none";
             }
 
-            // Show Batch Property Stamp section when 2+ items are selected
             const batchSec = document.getElementById("batchEditSection");
-            if (batchSec) {
-                batchSec.style.display = ids.length >= 2 ? "flex" : "none";
-            }
+            const alignSec = document.getElementById("alignDistributeSection");
+            if (batchSec) batchSec.style.display = ids.length >= 2 ? "flex" : "none";
+            if (alignSec) alignSec.style.display = ids.length >= 2 ? "flex" : "none";
         }
         window.clearSelectionBar = function() {
             setSelection(null);
@@ -1517,13 +1600,226 @@
         }
 
         /* ==========================================
-           AUTO-NUMBERING PATTERN & CLONE HELPERS
+           ALIGN, DISTRIBUTE & COPY/PASTE SPECS
+           ========================================== */
+        function getItemBounds(el) {
+            if (el.type === 'conveyance_line' && Array.isArray(el.points) && el.points.length > 0) {
+                const xs = el.points.map(p => p.x);
+                const ys = el.points.map(p => p.y);
+                const minX = Math.min(...xs), maxX = Math.max(...xs);
+                const minY = Math.min(...ys), maxY = Math.max(...ys);
+                return { minX, maxX, minY, maxY, w: maxX - minX, h: maxY - minY, cx: (minX + maxX) / 2, cy: (minY + maxY) / 2 };
+            } else if (el.type === 'asset') {
+                return { minX: el.x, maxX: el.x + 1, minY: el.y, maxY: el.y + 1, w: 1, h: 1, cx: el.x + 0.5, cy: el.y + 0.5 };
+            } else {
+                const w = el.w || 1, h = el.h || 1;
+                return { minX: el.x, maxX: el.x + w, minY: el.y, maxY: el.y + h, w, h, cx: el.x + w / 2, cy: el.y + h / 2 };
+            }
+        }
+        function shiftItemBy(el, dx, dy) {
+            if (el.type === 'conveyance_line' && Array.isArray(el.points)) {
+                el.points.forEach(pt => {
+                    pt.x = parseFloat((pt.x + dx).toFixed(2));
+                    pt.y = parseFloat((pt.y + dy).toFixed(2));
+                });
+            } else {
+                el.x = parseFloat(((el.x || 0) + dx).toFixed(2));
+                el.y = parseFloat(((el.y || 0) + dy).toFixed(2));
+            }
+        }
+        window.alignSelected = function(mode) {
+            const ids = Array.from(multiSelectedIds);
+            const targets = elements.filter(e => ids.includes(e.id));
+            if (targets.length < 2) return;
+            triggerHaptic(20);
+            pushHistorySnapshot();
+            const boundsList = targets.map(el => ({ el, b: getItemBounds(el) }));
+            const refMinX = Math.min(...boundsList.map(x => x.b.minX));
+            const refMaxX = Math.max(...boundsList.map(x => x.b.maxX));
+            const refCx = (refMinX + refMaxX) / 2;
+            const refMinY = Math.min(...boundsList.map(x => x.b.minY));
+            const refMaxY = Math.max(...boundsList.map(x => x.b.maxY));
+            const refCy = (refMinY + refMaxY) / 2;
+
+            boundsList.forEach(({ el, b }) => {
+                let dx = 0, dy = 0;
+                if (mode === 'left') dx = refMinX - b.minX;
+                else if (mode === 'centerH') dx = refCx - b.cx;
+                else if (mode === 'right') dx = refMaxX - b.maxX;
+                else if (mode === 'top') dy = refMinY - b.minY;
+                else if (mode === 'centerV') dy = refCy - b.cy;
+                else if (mode === 'bottom') dy = refMaxY - b.maxY;
+                shiftItemBy(el, dx, dy);
+            });
+            render();
+            saveToFirebase(true);
+        };
+        window.distributeSelected = function(axis) {
+            const ids = Array.from(multiSelectedIds);
+            const targets = elements.filter(e => ids.includes(e.id));
+            if (targets.length < 3) {
+                alert("Select at least 3 items to distribute evenly.");
+                return;
+            }
+            triggerHaptic(20);
+            pushHistorySnapshot();
+            const entries = targets.map(el => ({ el, b: getItemBounds(el) }));
+            if (axis === 'x') {
+                entries.sort((a, b) => a.b.cx - b.b.cx);
+                const firstCx = entries[0].b.cx;
+                const lastCx = entries[entries.length - 1].b.cx;
+                const step = (lastCx - firstCx) / (entries.length - 1);
+                entries.forEach((entry, idx) => {
+                    const targetCx = firstCx + step * idx;
+                    shiftItemBy(entry.el, targetCx - entry.b.cx, 0);
+                });
+            } else {
+                entries.sort((a, b) => a.b.cy - b.b.cy);
+                const firstCy = entries[0].b.cy;
+                const lastCy = entries[entries.length - 1].b.cy;
+                const step = (lastCy - firstCy) / (entries.length - 1);
+                entries.forEach((entry, idx) => {
+                    const targetCy = firstCy + step * idx;
+                    shiftItemBy(entry.el, 0, targetCy - entry.b.cy);
+                });
+            }
+            render();
+            saveToFirebase(true);
+        };
+        window.copySelectedStyle = function() {
+            const id = selectedId || Array.from(multiSelectedIds)[0];
+            const src = elements.find(e => e.id === id);
+            if (!src) return;
+            copiedStyleSpecs = {
+                category: src.category || "General",
+                status: src.status || "operational",
+                emoji: src.emoji || "📍",
+                plcNode: src.plcNode || "",
+                estopZone: src.estopZone || "",
+                utilityDraw: src.utilityDraw || "",
+                vendorName: src.vendorName || "",
+                vendorContact: src.vendorContact || "",
+                lotoSteps: cloneData(src.lotoSteps || []),
+                spareParts: cloneData(src.spareParts || [])
+            };
+            triggerHaptic(20);
+        };
+        window.pasteCopiedStyle = function() {
+            if (!copiedStyleSpecs) {
+                alert("Click 'Copy Specs' on an asset first.");
+                return;
+            }
+            const ids = multiSelectedIds.size > 0 ? Array.from(multiSelectedIds) : (selectedId ? [selectedId] : []);
+            const targets = elements.filter(e => ids.includes(e.id) && e.type === 'asset');
+            if (targets.length === 0) return;
+            triggerHaptic(25);
+            pushHistorySnapshot();
+            targets.forEach(el => {
+                el.category = copiedStyleSpecs.category;
+                el.status = copiedStyleSpecs.status;
+                el.emoji = copiedStyleSpecs.emoji;
+                el.estopZone = copiedStyleSpecs.estopZone;
+                el.utilityDraw = copiedStyleSpecs.utilityDraw;
+                el.vendorName = copiedStyleSpecs.vendorName;
+                el.vendorContact = copiedStyleSpecs.vendorContact;
+                if (copiedStyleSpecs.plcNode) el.plcNode = copiedStyleSpecs.plcNode;
+                if (copiedStyleSpecs.lotoSteps.length > 0) el.lotoSteps = cloneData(copiedStyleSpecs.lotoSteps);
+                if (copiedStyleSpecs.spareParts.length > 0) el.spareParts = cloneData(copiedStyleSpecs.spareParts);
+            });
+            render();
+            saveToFirebase(true);
+        };
+
+        /* ==========================================
+           BAY CLUSTER PRESETS (SAVE & STAMP)
+           ========================================== */
+        function populateClusterPresetDropdown() {
+            const sel = document.getElementById("clusterPresetSelect");
+            if (!sel) return;
+            const prev = sel.value;
+            sel.innerHTML = '<option value="">-- Select Bay Cluster --</option>';
+            clusterPresets.forEach((cp, idx) => {
+                const opt = document.createElement("option");
+                opt.value = idx;
+                opt.textContent = `${cp.name} (${cp.items.length} items)`;
+                sel.appendChild(opt);
+            });
+            if (prev !== "" && clusterPresets[prev]) sel.value = prev;
+        }
+        window.saveSelectionAsClusterPreset = function() {
+            const ids = multiSelectedIds.size > 0 ? Array.from(multiSelectedIds) : (selectedId ? [selectedId] : []);
+            const targets = elements.filter(e => ids.includes(e.id));
+            if (targets.length === 0) {
+                alert("Select 1 or more zones/assets/lines on the map first to save as a bay cluster.");
+                return;
+            }
+            const name = prompt("Name this Bay / Cluster Preset (e.g. 'Standard Dock Bay'):", `Bay Cluster (${targets.length})`);
+            if (!name) return;
+            const anchor = getItemBounds(targets[0]);
+            const ax = anchor.minX;
+            const ay = anchor.minY;
+            const serialized = targets.map(el => {
+                const copy = cloneData(el);
+                delete copy.id;
+                if (copy.type === 'conveyance_line' && Array.isArray(copy.points)) {
+                    copy.points = copy.points.map(p => ({
+                        dx: parseFloat((p.x - ax).toFixed(2)),
+                        dy: parseFloat((p.y - ay).toFixed(2))
+                    }));
+                } else {
+                    copy.dx = parseFloat(((copy.x || 0) - ax).toFixed(2));
+                    copy.dy = parseFloat(((copy.y || 0) - ay).toFixed(2));
+                }
+                return copy;
+            });
+            clusterPresets.push({ name: name.trim(), items: serialized });
+            localStorage.setItem("imi_builder_cluster_presets", JSON.stringify(clusterPresets));
+            populateClusterPresetDropdown();
+            document.getElementById("clusterPresetSelect").value = String(clusterPresets.length - 1);
+            triggerHaptic(25);
+        };
+        window.stampSelectedClusterPreset = function() {
+            const sel = document.getElementById("clusterPresetSelect");
+            if (!sel || sel.value === "") return;
+            const cp = clusterPresets[parseInt(sel.value, 10)];
+            if (!cp || !Array.isArray(cp.items)) return;
+            const baseX = parseFloat(document.getElementById("newDeptX").value) || 0;
+            const baseY = parseFloat(document.getElementById("newDeptY").value) || 0;
+            triggerHaptic(25);
+            pushHistorySnapshot();
+            const createdIds = [];
+            cp.items.forEach((tpl, idx) => {
+                const item = cloneData(tpl);
+                item.id = Date.now() + idx + Math.floor(Math.random() * 100);
+                item.layer = currentLayer;
+                if (item.type === 'conveyance_line' && Array.isArray(item.points)) {
+                    item.points = item.points.map(pt => ({
+                        x: parseFloat((baseX + pt.dx).toFixed(2)),
+                        y: parseFloat((baseY + pt.dy).toFixed(2))
+                    }));
+                } else {
+                    item.x = parseFloat((baseX + (item.dx || 0)).toFixed(2));
+                    item.y = parseFloat((baseY + (item.dy || 0)).toFixed(2));
+                }
+                delete item.dx;
+                delete item.dy;
+                elements.push(item);
+                createdIds.push(item.id);
+            });
+            multiSelectedIds.clear();
+            createdIds.forEach(cid => multiSelectedIds.add(cid));
+            selectedId = createdIds[0] || null;
+            updateHistoryButtons();
+            render();
+            saveToFirebase(true);
+        };
+
+        /* ==========================================
+           AUTO-NUMBERING, CLONE, LAYER & BATCH STAMP
            ========================================== */
         function generatePatternName(baseName, index, startNumOverride = null, padDigits = 0) {
             const hasStart = startNumOverride !== null && !Number.isNaN(startNumOverride);
             const pad = parseInt(padDigits, 10) || 0;
-
-            // Check if name ends with digits (e.g. "DD-01", "Bay 1", "UIS-A-01")
             const trailingMatch = baseName.match(/^(.*?)(\d+)(\s*)$/);
             if (trailingMatch) {
                 const prefix = trailingMatch[1];
@@ -1534,8 +1830,6 @@
                 const formatted = String(startVal + index).padStart(width, '0');
                 return `${prefix}${formatted}${suffix}`;
             }
-
-            // If explicit start number or zero-padding is requested on a prefix like "DD-" or "UIS-A-"
             if (hasStart || pad > 0) {
                 const startVal = hasStart ? startNumOverride : 1;
                 const width = pad > 0 ? pad : 2;
@@ -1543,7 +1837,6 @@
                 const needsSep = baseName.length > 0 && !/[-_\s#]$/.test(baseName);
                 return `${baseName}${needsSep ? '-' : ''}${formatted}`;
             }
-
             if (index === 0) return baseName;
             return `${baseName} (${index + 1})`;
         }
@@ -1610,9 +1903,6 @@
             saveToFirebase(true);
         };
 
-        /* ==========================================
-           LAYER MOVE / COPY & BATCH PROPERTY STAMP
-           ========================================== */
         window.moveSelectedToLayer = function(makeCopy = false) {
             const targetLayer = document.getElementById("batchLayerSelect").value;
             if (!targetLayer) return;
@@ -1656,10 +1946,12 @@
             const partsVal = document.getElementById("batchPartsSelect").value;
             const plcVal = document.getElementById("batchPlcInput").value.trim();
             const estopVal = document.getElementById("batchEstopInput").value.trim();
+            const utilVal = document.getElementById("batchUtilityInput").value.trim();
+            const lotoVal = document.getElementById("batchLotoInput").value.trim();
             const pmDueVal = document.getElementById("batchPmDueInput").value;
 
-            if (!catVal && !statusVal && !partsVal && !plcVal && !estopVal && !pmDueVal) {
-                alert("Choose at least one property in the Batch Stamp bar to apply.");
+            if (!catVal && !statusVal && !partsVal && !plcVal && !estopVal && !utilVal && !lotoVal && !pmDueVal) {
+                alert("Choose or enter at least one property in the Batch Stamp bar.");
                 return;
             }
             triggerHaptic(25);
@@ -1674,15 +1966,21 @@
                     if (statusVal) el.status = statusVal;
                     if (plcVal) el.plcNode = plcVal;
                     if (estopVal) el.estopZone = estopVal;
+                    if (utilVal) el.utilityDraw = utilVal;
                     if (pmDueVal) el.pmDue = pmDueVal;
+                    if (lotoVal) {
+                        if (!el.lotoSteps) el.lotoSteps = [];
+                        el.lotoSteps.push({ step: lotoVal, done: false });
+                    }
                 }
             });
-            // Reset inputs after stamp
             document.getElementById("batchCategorySelect").value = "";
             document.getElementById("batchStatusSelect").value = "";
             document.getElementById("batchPartsSelect").value = "";
             document.getElementById("batchPlcInput").value = "";
             document.getElementById("batchEstopInput").value = "";
+            document.getElementById("batchUtilityInput").value = "";
+            document.getElementById("batchLotoInput").value = "";
             document.getElementById("batchPmDueInput").value = "";
             render();
             saveToFirebase(true);
@@ -1694,28 +1992,14 @@
         function getSelectionCenter(targetEls) {
             let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
             targetEls.forEach(el => {
-                if (el.type === 'conveyance_line' && Array.isArray(el.points)) {
-                    el.points.forEach(pt => {
-                        minX = Math.min(minX, pt.x);
-                        maxX = Math.max(maxX, pt.x);
-                        minY = Math.min(minY, pt.y);
-                        maxY = Math.max(maxY, pt.y);
-                    });
-                } else if (el.type === 'asset') {
-                    minX = Math.min(minX, el.x);
-                    maxX = Math.max(maxX, el.x);
-                    minY = Math.min(minY, el.y);
-                    maxY = Math.max(maxY, el.y);
-                } else {
-                    minX = Math.min(minX, el.x);
-                    maxX = Math.max(maxX, el.x + (el.w || 1));
-                    minY = Math.min(minY, el.y);
-                    maxY = Math.max(maxY, el.y + (el.h || 1));
-                }
+                const b = getItemBounds(el);
+                minX = Math.min(minX, b.minX);
+                maxX = Math.max(maxX, b.maxX);
+                minY = Math.min(minY, b.minY);
+                maxY = Math.max(maxY, b.maxY);
             });
             return { cx: (minX + maxX) / 2, cy: (minY + maxY) / 2 };
         }
-
         function rotateElements90(targetEls) {
             if (!targetEls || targetEls.length === 0) return;
             const { cx, cy } = getSelectionCenter(targetEls);
@@ -1749,7 +2033,6 @@
                 }
             });
         }
-
         window.rotateSelected90 = function() {
             const ids = multiSelectedIds.size > 0 ? Array.from(multiSelectedIds) : (selectedId ? [selectedId] : []);
             const targets = elements.filter(e => ids.includes(e.id));
@@ -1760,7 +2043,6 @@
             render();
             saveToFirebase(true);
         };
-
         window.rotateModalElement90 = function() {
             const id = parseInt(document.getElementById("modalElementId").value);
             const el = elements.find(e => e.id === id);
@@ -1779,7 +2061,6 @@
             render();
             saveToFirebase(true);
         };
-
         window.flipSelected = function(axis) {
             const ids = multiSelectedIds.size > 0 ? Array.from(multiSelectedIds) : (selectedId ? [selectedId] : []);
             const targets = elements.filter(e => ids.includes(e.id));
@@ -1804,7 +2085,6 @@
             render();
             saveToFirebase(true);
         };
-
         function splitConveyanceLineAt(lineId, vertexIndex) {
             const lineEl = elements.find(e => e.id === lineId && e.type === 'conveyance_line');
             if (!lineEl || !Array.isArray(lineEl.points)) return;
@@ -1831,7 +2111,6 @@
             render();
             saveToFirebase(true);
         }
-
         window.splitSelectedLineAtBend = function() {
             if (!selectedVertexInfo) return;
             splitConveyanceLineAt(selectedVertexInfo.lineId, selectedVertexInfo.vertexIndex);
@@ -1907,9 +2186,6 @@
             populateCustomPresetDropdown();
         };
 
-        /* ==========================================
-           QUICK-STAMP PRESETS & PICK COORDS ON MAP
-           ========================================== */
         window.applyAssetPreset = function(name, category, emoji) {
             triggerHaptic(15);
             activeLoadedPreset = null;
@@ -1942,7 +2218,7 @@
         };
 
         /* ==========================================
-           JSON BACKUP & RESTORE
+           JSON BACKUP, CHECKPOINTS & AUDIT VALIDATION
            ========================================== */
         window.exportJsonBackup = function() {
             triggerHaptic(20);
@@ -1951,6 +2227,7 @@
                 elements,
                 categories,
                 customPresets,
+                clusterPresets,
                 shiftLogs,
                 safetyLogs,
                 tomLogs,
@@ -1994,6 +2271,11 @@
                         localStorage.setItem("imi_builder_custom_presets", JSON.stringify(customPresets));
                         populateCustomPresetDropdown();
                     }
+                    if (parsed.clusterPresets) {
+                        clusterPresets = parsed.clusterPresets;
+                        localStorage.setItem("imi_builder_cluster_presets", JSON.stringify(clusterPresets));
+                        populateClusterPresetDropdown();
+                    }
                     if (parsed.shiftLogs) shiftLogs = parsed.shiftLogs;
                     if (parsed.safetyLogs) safetyLogs = parsed.safetyLogs;
                     if (parsed.tomLogs) tomLogs = parsed.tomLogs;
@@ -2022,8 +2304,251 @@
             event.target.value = "";
         };
 
+        function runLayoutAudit() {
+            const issues = [];
+            const idMap = new Map();
+            const assetIdSet = new Set(elements.filter(e => e.type === 'asset').map(e => String(e.id)));
+
+            elements.forEach(el => {
+                if (idMap.has(el.id)) {
+                    issues.push({ type: "Duplicate ID", item: el, detail: `ID ${el.id} appears multiple times` });
+                } else {
+                    idMap.set(el.id, el);
+                }
+                if (el.type === 'asset' && el.parentId && !assetIdSet.has(String(el.parentId))) {
+                    issues.push({ type: "Orphan Parent Link", item: el, detail: `References missing parent ID ${el.parentId}` });
+                }
+                if (el.type === 'asset' && (el.status || 'operational') === 'operational') {
+                    const missing = [];
+                    if (!el.lotoSteps || el.lotoSteps.length === 0) missing.push("LOTO steps");
+                    if (!el.estopZone) missing.push("E-Stop zone");
+                    if (missing.length > 0) {
+                        issues.push({ type: "Incomplete Safety Specs", item: el, detail: `Missing ${missing.join(" & ")}` });
+                    }
+                }
+                if (el.type === 'conveyance_line' && (!el.points || el.points.length < 2)) {
+                    issues.push({ type: "Broken Line", item: el, detail: "Fewer than 2 vertices" });
+                }
+            });
+            return issues;
+        }
+
+        window.createNamedCheckpoint = function() {
+            const label = prompt("Checkpoint name (e.g. 'Before Dock Corral Update'):", `Checkpoint ${new Date().toLocaleTimeString()}`);
+            if (!label) return;
+            savedCheckpoints.unshift({
+                id: Date.now(),
+                name: label.trim(),
+                savedAt: new Date().toLocaleString(),
+                elementCount: elements.length,
+                elements: cloneData(elements)
+            });
+            if (savedCheckpoints.length > 15) savedCheckpoints.pop();
+            localStorage.setItem("imi_builder_checkpoints", JSON.stringify(savedCheckpoints));
+            openToolsHubModal('checkpoints');
+        };
+        window.restoreCheckpoint = function(cpId) {
+            const cp = savedCheckpoints.find(c => c.id === cpId);
+            if (!cp) return;
+            if (!confirm(`Restore checkpoint "${cp.name}" (${cp.elementCount} items)?`)) return;
+            pushHistorySnapshot();
+            elements = cloneData(cp.elements);
+            setSelection(null);
+            render();
+            saveToFirebase(true);
+            closeToolsHubModal();
+        };
+        window.deleteCheckpoint = function(cpId) {
+            savedCheckpoints = savedCheckpoints.filter(c => c.id !== cpId);
+            localStorage.setItem("imi_builder_checkpoints", JSON.stringify(savedCheckpoints));
+            openToolsHubModal('checkpoints');
+        };
+
+        window.runFindAndReplace = function() {
+            const scope = document.getElementById("frScopeSelect").value;
+            const findStr = document.getElementById("frFindInput").value;
+            const replaceStr = document.getElementById("frReplaceInput").value;
+            if (!findStr) {
+                alert("Enter text to find.");
+                return;
+            }
+            pushHistorySnapshot();
+            let count = 0;
+            elements.forEach(el => {
+                if (scope === 'name' || scope === 'all') {
+                    if (el.name && el.name.includes(findStr)) {
+                        el.name = el.name.split(findStr).join(replaceStr);
+                        count++;
+                    }
+                }
+                if (scope === 'plc' || scope === 'all') {
+                    if (el.plcNode && el.plcNode.includes(findStr)) {
+                        el.plcNode = el.plcNode.split(findStr).join(replaceStr);
+                        count++;
+                    }
+                }
+                if (scope === 'estop' || scope === 'all') {
+                    if (el.estopZone && el.estopZone.includes(findStr)) {
+                        el.estopZone = el.estopZone.split(findStr).join(replaceStr);
+                        count++;
+                    }
+                }
+                if (scope === 'parts' || scope === 'all') {
+                    if (Array.isArray(el.spareParts)) {
+                        el.spareParts.forEach(sp => {
+                            if ((sp.partNum && sp.partNum.includes(findStr)) || (sp.binLoc && sp.binLoc.includes(findStr))) {
+                                sp.partNum = (sp.partNum || "").split(findStr).join(replaceStr);
+                                sp.binLoc = (sp.binLoc || "").split(findStr).join(replaceStr);
+                                count++;
+                            }
+                        });
+                    }
+                }
+            });
+            document.getElementById("frResultMsg").innerText = `Updated ${count} matching field(s).`;
+            render();
+            saveToFirebase(true);
+        };
+
+        function buildCompactHandoverSummary() {
+            const downAssets = elements.filter(e => e.type === 'asset' && e.status === 'down');
+            const partsAssets = elements.filter(e => e.type === 'asset' && e.partsNeeded);
+            const openTech = techActions.filter(a => !a.done).map(a => a.text);
+            const openOps = opsActions.filter(a => !a.done).map(a => a.text);
+            const latestTech = techLogs[0] ? `[${techLogs[0].shift}] ${techLogs[0].note}` : "None";
+            return [
+                `📋 HANDOVER SUMMARY (${new Date().toLocaleString()})`,
+                `🚨 Down Assets (${downAssets.length}): ${downAssets.map(a => a.name).join(", ") || "None"}`,
+                `📦 Waiting on Parts (${partsAssets.length}): ${partsAssets.map(a => a.name).join(", ") || "None"}`,
+                `🔧 Open Tech Tasks: ${openTech.join("; ") || "None"}`,
+                `🏭 Open Ops Tasks: ${openOps.join("; ") || "None"}`,
+                `📝 Latest Tech Note: ${latestTech}`
+            ].join("\n");
+        }
+        window.copyHandoverSummaryToClipboard = function() {
+            const txt = buildCompactHandoverSummary();
+            navigator.clipboard?.writeText(txt).then(() => {
+                alert("Compact handover summary copied to clipboard!");
+            }).catch(() => {
+                prompt("Copy handover summary:", txt);
+            });
+        };
+        window.copyReadOnlyShareLink = function() {
+            const baseUrl = `${window.location.origin}${window.location.pathname}`;
+            const link = `${baseUrl}?readonly=1&layer=${encodeURIComponent(currentLayer)}&filter=${encodeURIComponent(activeQuickFilter)}`;
+            navigator.clipboard?.writeText(link).then(() => {
+                alert("Read-only walkthrough link copied:\n" + link);
+            }).catch(() => {
+                prompt("Copy read-only link:", link);
+            });
+        };
+
+        window.openToolsHubModal = function(section = 'audit') {
+            const titleEl = document.getElementById("toolsHubTitle");
+            const bodyEl = document.getElementById("toolsHubBody");
+            document.getElementById("tools-hub-modal-overlay").style.display = "flex";
+
+            if (section === 'audit') {
+                titleEl.innerText = "🛡️ Layout Validation & Audit";
+                const issues = runLayoutAudit();
+                if (issues.length === 0) {
+                    bodyEl.innerHTML = `<div style="color:#10b981; font-weight:bold; padding:12px; background:#070d14; border-radius:8px; border:1px solid #10b981;">✅ All ${elements.length} map items passed ID, link, geometry, and LOTO/E-Stop checks!</div>`;
+                } else {
+                    bodyEl.innerHTML = `<div style="font-size:12px; color:#94a3b8;">Found <b>${issues.length}</b> item(s) needing attention. Click an item to pan & inspect:</div>` +
+                        issues.map(iss => `
+                            <div class="search-result-row" onclick="closeToolsHubModal(); focusAndPanToElement(${iss.item.id})">
+                                <div><span style="color:#f59e0b; font-weight:bold;">[${iss.type}]</span> <b>${iss.item.name}</b> — <span style="color:#cbd5e1;">${iss.detail}</span></div>
+                                <span style="color:#38bdf8; font-size:11px;">Go →</span>
+                            </div>
+                        `).join("");
+                }
+            } else if (section === 'checkpoints') {
+                titleEl.innerText = "📸 Named Checkpoints & Rollback";
+                bodyEl.innerHTML = `
+                    <button onclick="createNamedCheckpoint()" style="background:#7e22ce; color:#fff; min-height:38px;">+ Save Current Map as Checkpoint</button>
+                    <div style="display:flex; flex-direction:column; gap:6px; margin-top:6px;">
+                        ${savedCheckpoints.length === 0 ? `<div style="color:#64748b; font-size:12px;">No saved checkpoints yet.</div>` : savedCheckpoints.map(cp => `
+                            <div style="display:flex; justify-content:space-between; align-items:center; background:#070d14; border:1px solid #1e293b; padding:8px 10px; border-radius:6px; gap:8px;">
+                                <div>
+                                    <div style="font-weight:bold; color:#38bdf8; font-size:12.5px;">${cp.name}</div>
+                                    <div style="font-size:10.5px; color:#94a3b8;">${cp.savedAt} • ${cp.elementCount} items</div>
+                                </div>
+                                <div style="display:flex; gap:6px;">
+                                    <button onclick="restoreCheckpoint(${cp.id})" style="width:auto; min-height:30px; padding:4px 10px; font-size:11px; background:#0284c7; color:#fff;">Restore</button>
+                                    <button onclick="deleteCheckpoint(${cp.id})" class="danger" style="width:auto; min-height:30px; padding:4px 8px; font-size:11px;">✕</button>
+                                </div>
+                            </div>
+                        `).join("")}
+                    </div>
+                `;
+            } else if (section === 'replace') {
+                titleEl.innerText = "🔁 Find & Replace Across Specs";
+                bodyEl.innerHTML = `
+                    <label>Target Field</label>
+                    <select id="frScopeSelect">
+                        <option value="all">All Fields (Name, PLC, E-Stop, Parts/Bins)</option>
+                        <option value="name">Item Names Only</option>
+                        <option value="plc">PLC Nodes Only</option>
+                        <option value="estop">E-Stop Zones Only</option>
+                        <option value="parts">Spare Parts SKU & Bin Locations</option>
+                    </select>
+                    <div style="display:flex; gap:8px;">
+                        <div style="flex:1;"><label>Find Text</label><input type="text" id="frFindInput" placeholder="e.g. PLC-02 or Zone A"></div>
+                        <div style="flex:1;"><label>Replace With</label><input type="text" id="frReplaceInput" placeholder="e.g. PLC-04 or Zone B"></div>
+                    </div>
+                    <button onclick="runFindAndReplace()" style="background:#0284c7; color:#fff; min-height:38px;">Run Batch Replace</button>
+                    <div id="frResultMsg" style="color:#10b981; font-size:12px; font-weight:bold;"></div>
+                `;
+            } else if (section === 'delta') {
+                titleEl.innerText = "📊 Shift Delta & Active Blockers";
+                const downList = elements.filter(e => e.type === 'asset' && e.status === 'down');
+                const maintList = elements.filter(e => e.type === 'asset' && e.status === 'maintenance');
+                const partsList = elements.filter(e => e.type === 'asset' && e.partsNeeded);
+                const latestLogs = [
+                    ...(techLogs[0] ? [`Tech [${techLogs[0].shift} ${techLogs[0].time}]: ${techLogs[0].note}`] : []),
+                    ...(shiftLogs[0] ? [`Ops [${shiftLogs[0].shift} ${shiftLogs[0].time}]: ${shiftLogs[0].note}`] : []),
+                    ...(safetyLogs[0] ? [`Safety [${safetyLogs[0].shift} ${safetyLogs[0].time}]: ${safetyLogs[0].note}`] : []),
+                    ...(tomLogs[0] ? [`Tom [${tomLogs[0].shift} ${tomLogs[0].time}]: ${tomLogs[0].note}`] : [])
+                ];
+                bodyEl.innerHTML = `
+                    <div class="builder-box">
+                        <b style="color:#ef4444;">🚨 Down Assets (${downList.length}):</b>
+                        <div style="font-size:12px;">${downList.map(a => `• ${a.name} (${a.plcNode || 'No PLC'})`).join("<br>") || "None"}</div>
+                    </div>
+                    <div class="builder-box">
+                        <b style="color:#f59e0b;">🔧 Under Maintenance (${maintList.length}):</b>
+                        <div style="font-size:12px;">${maintList.map(a => `• ${a.name}`).join("<br>") || "None"}</div>
+                    </div>
+                    <div class="builder-box">
+                        <b style="color:#38bdf8;">📦 Waiting on Parts (${partsList.length}):</b>
+                        <div style="font-size:12px;">${partsList.map(a => `• ${a.name}`).join("<br>") || "None"}</div>
+                    </div>
+                    <div class="builder-box">
+                        <b style="color:#10b981;">📝 Latest Entry Per Team:</b>
+                        <div style="font-size:12px;">${latestLogs.join("<br>") || "No shift logs posted yet."}</div>
+                    </div>
+                `;
+            } else if (section === 'share') {
+                titleEl.innerText = "🔗 Read-Only Share Link & Summary Copy";
+                const summaryPreview = buildCompactHandoverSummary();
+                bodyEl.innerHTML = `
+                    <label>Shareable Read-Only Walkthrough Link (Current Layer & Filter)</label>
+                    <div style="display:flex; gap:6px;">
+                        <input type="text" readonly value="${window.location.origin}${window.location.pathname}?readonly=1&layer=${encodeURIComponent(currentLayer)}&filter=${encodeURIComponent(activeQuickFilter)}">
+                        <button onclick="copyReadOnlyShareLink()" style="width:auto; background:#0284c7; color:#fff; min-height:38px;">Copy Link</button>
+                    </div>
+                    <label style="margin-top:6px;">Compact Handover Summary (Plain Text)</label>
+                    <textarea readonly style="height:130px; font-family:monospace; font-size:11.5px;">${summaryPreview}</textarea>
+                    <button onclick="copyHandoverSummaryToClipboard()" style="background:#10b981; color:#0b131d; min-height:38px;">📋 Copy Summary to Clipboard</button>
+                `;
+            }
+        };
+        window.closeToolsHubModal = function() {
+            document.getElementById("tools-hub-modal-overlay").style.display = "none";
+        };
+
         /* ==========================================
-           VIEWPORT ZOOM, RESET, FIND & PAN TO, GRID JUMP
+           VIEWPORT ZOOM, FIND & PAN TO, GRID JUMP
            ========================================== */
         window.zoomViewport = function(factor) {
             triggerHaptic(10);
@@ -2067,7 +2592,7 @@
             const code = clean.charCodeAt(0);
             if (code >= 65 && code <= 90) {
                 let idx = code - 65;
-                if (idx > 8) idx -= 1; // Inverse of getRowLabel skipping 'I'
+                if (idx > 8) idx -= 1;
                 return idx;
             }
             return null;
@@ -2122,9 +2647,12 @@
         };
 
         /* ==========================================
-           REAL-TIME MULTI-BUILDER FIRESTORE SYNC
+           SAFER FIRESTORE TRANSACTION & OFFLINE QUEUE
            ========================================== */
         function applyRemoteLayoutData(data) {
+            if (typeof data.revision === "number" && data.revision > docRevision) {
+                docRevision = data.revision;
+            }
             if (data.elements) {
                 elements = data.elements.map(el => {
                     if (el.type === 'conveyance_line' && !el.points && el.x1 !== undefined) {
@@ -2165,25 +2693,48 @@
                 banner.style.display = "none";
             }, 2600);
         }
+        function buildStatePayload() {
+            return {
+                elements,
+                categories,
+                shiftLogs,
+                safetyLogs,
+                tomLogs,
+                techLogs,
+                opsShifts,
+                safetyShifts,
+                tomShifts,
+                techShifts,
+                techActions,
+                opsActions,
+                safetyActions,
+                tomActions,
+                lastEditorId: clientSessionId,
+                updatedAt: new Date().toISOString()
+            };
+        }
         function initFirebaseLiveSync() {
             const docRef = doc(db, "layouts", "facility_main");
             onSnapshot(docRef, (docSnap) => {
                 if (!docSnap.exists()) {
-                    saveToFirebase(true);
+                    if (!isReadOnlyMode) saveToFirebase(true);
                     return;
                 }
                 const data = docSnap.data();
                 localStorage.setItem("cached_layout", JSON.stringify(data));
                 if (data.lastEditorId === clientSessionId && isLocalWriting) {
                     isLocalWriting = false;
-                    syncStatus.innerText = "Live Synced (Firebase)";
+                    hasPendingOfflineWrite = false;
+                    syncStatus.innerText = `Live Synced (v${data.revision || 1})`;
                     syncStatus.style.color = "#10b981";
                     return;
                 }
                 if (isDraggingElement || draggingVertex || resizingZone) return;
                 applyRemoteLayoutData(data);
-                syncStatus.innerText = "Live Synced (Firebase)";
-                syncStatus.style.color = "#10b981";
+                syncStatus.innerText = hasPendingOfflineWrite
+                    ? "⚠️ Queued Offline Edit"
+                    : `Live Synced (v${data.revision || 1})`;
+                syncStatus.style.color = hasPendingOfflineWrite ? "#f59e0b" : "#10b981";
                 if (data.lastEditorId && data.lastEditorId !== clientSessionId) {
                     showRemoteSyncNotice();
                 }
@@ -2192,7 +2743,7 @@
                 let offlineData = localStorage.getItem("cached_layout");
                 if (offlineData) {
                     applyRemoteLayoutData(JSON.parse(offlineData));
-                    syncStatus.innerText = "Offline Mode (Cached)";
+                    syncStatus.innerText = hasPendingOfflineWrite ? "⚠️ Offline (Queued)" : "Offline Mode (Cached)";
                 } else {
                     syncStatus.innerText = "Error Loading Database";
                 }
@@ -2200,39 +2751,46 @@
             });
         }
         function saveToFirebase(immediate = false) {
+            if (isReadOnlyMode) return;
             clearTimeout(saveDebounceTimer);
-            syncStatus.innerText = immediate ? "Saving..." : "Pending save...";
+            hasPendingOfflineWrite = true;
+            syncStatus.innerText = immediate ? "Saving (Txn)..." : "Pending save...";
             syncStatus.style.color = "#fbbf24";
+
             const execSave = async () => {
+                const payload = buildStatePayload();
+                localStorage.setItem("cached_layout", JSON.stringify({ ...payload, revision: docRevision + 1 }));
+                const docRef = doc(db, "layouts", "facility_main");
                 try {
                     isLocalWriting = true;
-                    let layoutObject = {
-                        elements: elements,
-                        categories: categories,
-                        shiftLogs: shiftLogs,
-                        safetyLogs: safetyLogs,
-                        tomLogs: tomLogs,
-                        techLogs: techLogs,
-                        opsShifts: opsShifts,
-                        safetyShifts: safetyShifts,
-                        tomShifts: tomShifts,
-                        techShifts: techShifts,
-                        techActions: techActions,
-                        opsActions: opsActions,
-                        safetyActions: safetyActions,
-                        tomActions: tomActions,
-                        lastEditorId: clientSessionId,
-                        updatedAt: new Date().toISOString()
-                    };
-                    localStorage.setItem("cached_layout", JSON.stringify(layoutObject));
-                    await setDoc(doc(db, "layouts", "facility_main"), layoutObject);
-                    syncStatus.innerText = "Live Synced (Firebase)";
+                    const nextRev = await runTransaction(db, async (transaction) => {
+                        const snap = await transaction.get(docRef);
+                        const currentServerRev = snap.exists() && typeof snap.data().revision === "number"
+                            ? snap.data().revision
+                            : 0;
+                        const targetRev = Math.max(currentServerRev, docRevision) + 1;
+                        transaction.set(docRef, { ...payload, revision: targetRev }, { merge: true });
+                        return targetRev;
+                    });
+                    docRevision = nextRev;
+                    hasPendingOfflineWrite = false;
+                    syncStatus.innerText = `Live Synced (v${docRevision})`;
                     syncStatus.style.color = "#10b981";
-                } catch (error) {
-                    isLocalWriting = false;
-                    console.error("Error saving layout:", error);
-                    syncStatus.innerText = "Saved Locally (Offline)";
-                    syncStatus.style.color = "#f59e0b";
+                } catch (txnErr) {
+                    console.warn("Transaction fallback to setDoc:", txnErr);
+                    try {
+                        docRevision += 1;
+                        await setDoc(docRef, { ...payload, revision: docRevision }, { merge: true });
+                        hasPendingOfflineWrite = false;
+                        syncStatus.innerText = `Live Synced (v${docRevision})`;
+                        syncStatus.style.color = "#10b981";
+                    } catch (err) {
+                        isLocalWriting = false;
+                        hasPendingOfflineWrite = true;
+                        console.error("Error saving layout:", err);
+                        syncStatus.innerText = "⚠️ Offline — Queued to Sync";
+                        syncStatus.style.color = "#f59e0b";
+                    }
                 }
             };
             if (immediate) {
@@ -2241,10 +2799,38 @@
                 saveDebounceTimer = setTimeout(execSave, 550);
             }
         }
+        window.addEventListener("online", () => {
+            if (hasPendingOfflineWrite && !isReadOnlyMode) {
+                saveToFirebase(true);
+            }
+        });
 
         /* ==========================================
-           SHIFT LOGS & ACTION ITEMS
+           SHIFT LOGS, CARRY-OVER & ACTION ITEMS
            ========================================== */
+        window.carryOverOpenActionItems = function(category) {
+            triggerHaptic(20);
+            const openTasks = getActionList(category).filter(a => !a.done).map(a => a.text);
+            const downAssets = elements.filter(e => e.type === 'asset' && e.status === 'down').map(a => a.name);
+            if (openTasks.length === 0 && downAssets.length === 0) {
+                alert("No open action items or down assets to carry over.");
+                return;
+            }
+            const parts = [];
+            if (openTasks.length > 0) parts.push(`Open Tasks: ${openTasks.join(" | ")}`);
+            if (downAssets.length > 0) parts.push(`Active Down: ${downAssets.join(", ")}`);
+            const shiftSelectId = category === 'safety' ? 'safetyShiftName' : (category === 'tom' ? 'tomShiftName' : (category === 'tech' ? 'techShiftName' : 'shiftName'));
+            const shift = document.getElementById(shiftSelectId).value;
+            const timestamp = new Date().toISOString().replace('T', ' ').slice(0, 16);
+            const entry = { time: timestamp, shift, note: `[Carried Over] ${parts.join(" — ")}` };
+            if (category === 'safety') safetyLogs.unshift(entry);
+            else if (category === 'tom') tomLogs.unshift(entry);
+            else if (category === 'tech') techLogs.unshift(entry);
+            else shiftLogs.unshift(entry);
+            const filterSelectId = category === 'safety' ? 'safetyFilterSelect' : (category === 'tom' ? 'tomFilterSelect' : (category === 'tech' ? 'techFilterSelect' : 'shiftFilterSelect'));
+            renderShiftLogs(category, document.getElementById(filterSelectId).value);
+            saveToFirebase(true);
+        };
         window.addShiftLog = function(category) {
             triggerHaptic(20);
             let shiftSelectId = category === 'safety' ? 'safetyShiftName' : (category === 'tom' ? 'tomShiftName' : (category === 'tech' ? 'techShiftName' : 'shiftName'));
@@ -2522,16 +3108,35 @@
             `);
             qrWin.document.close();
         };
+
+        function updateQuickFilterCounts() {
+            const downCnt = elements.filter(e => e.type === 'asset' && e.status === 'down').length;
+            const pmCnt = elements.filter(e => getPmAlertStatus(e.pmDue) === 'overdue').length;
+            const partsCnt = elements.filter(e => e.partsNeeded === true).length;
+            const waterCnt = elements.filter(e => e.layer === 'water' || (e.category && e.category.toLowerCase().includes('water'))).length;
+            const estopCnt = elements.filter(e => e.estopZone || (e.category && e.category.toLowerCase().includes('safety'))).length;
+            const pDown = document.getElementById("pillDown");
+            const pPm = document.getElementById("pillPm");
+            const pParts = document.getElementById("pillParts");
+            const pWater = document.getElementById("pillWater");
+            const pEstop = document.getElementById("pillEstop");
+            if (pDown) pDown.innerText = `🚨 Down (${downCnt})`;
+            if (pPm) pPm.innerText = `🔥 Overdue PM (${pmCnt})`;
+            if (pParts) pParts.innerText = `📦 Parts (${partsCnt})`;
+            if (pWater) pWater.innerText = `💧 Water (${waterCnt})`;
+            if (pEstop) pEstop.innerText = `⚡ E-Stop (${estopCnt})`;
+        }
+
         window.toggleQuickFilter = function(filterType) {
             triggerHaptic(15);
             activeQuickFilter = filterType;
             document.querySelectorAll('.filter-pill').forEach(btn => btn.classList.remove('active'));
-            if (filterType === 'down') document.querySelector('.down-pill').classList.add('active');
-            else if (filterType === 'pm_due') document.querySelector('.pm-pill').classList.add('active');
-            else if (filterType === 'parts_needed') document.querySelectorAll('.filter-pill')[2].classList.add('active');
-            else if (filterType === 'water') document.querySelectorAll('.filter-pill')[3].classList.add('active');
-            else if (filterType === 'estop') document.querySelectorAll('.filter-pill')[4].classList.add('active');
-            else document.getElementById('filterAllBtn').classList.add('active');
+            if (filterType === 'down') document.getElementById('pillDown')?.classList.add('active');
+            else if (filterType === 'pm_due') document.getElementById('pillPm')?.classList.add('active');
+            else if (filterType === 'parts_needed') document.getElementById('pillParts')?.classList.add('active');
+            else if (filterType === 'water') document.getElementById('pillWater')?.classList.add('active');
+            else if (filterType === 'estop') document.getElementById('pillEstop')?.classList.add('active');
+            else document.getElementById('filterAllBtn')?.classList.add('active');
             render();
         };
         window.openARModal = function() {
@@ -2892,7 +3497,6 @@
             drawingLineState = { name, conveyanceType, points: [] };
             currentMode = 'draw_line';
             container.style.cursor = 'crosshair';
-            
             let drawCtrl = document.getElementById("draw-controls");
             if (drawCtrl) drawCtrl.style.display = "block";
             let banner = document.getElementById("canvas-draw-banner");
@@ -2931,7 +3535,6 @@
             drawingLineState = null;
             currentMode = 'edit';
             container.style.cursor = 'default';
-            
             let drawCtrl = document.getElementById("draw-controls");
             if (drawCtrl) drawCtrl.style.display = "none";
             let banner = document.getElementById("canvas-draw-banner");
@@ -2951,7 +3554,7 @@
         };
 
         /* ==========================================
-           FAST SVG LAYERED RENDERING
+           FAST SVG LAYERED RENDERING + FLOW ARROWS
            ========================================== */
         function updateTransformString() {
             viewport.setAttribute("transform", `translate(${viewTransform.x}, ${viewTransform.y}) scale(${viewTransform.scale})`);
@@ -3081,6 +3684,25 @@
         function renderOverlays() {
             overlayToolsLayer.innerHTML = "";
 
+            /* MARQUEE BOX-SELECT OVERLAY */
+            if (marqueeBox) {
+                const x = Math.min(marqueeBox.startX, marqueeBox.currX) * gridSize;
+                const y = Math.min(marqueeBox.startY, marqueeBox.currY) * gridSize;
+                const w = Math.abs(marqueeBox.currX - marqueeBox.startX) * gridSize;
+                const h = Math.abs(marqueeBox.currY - marqueeBox.startY) * gridSize;
+                let box = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+                box.setAttribute("x", x);
+                box.setAttribute("y", y);
+                box.setAttribute("width", w);
+                box.setAttribute("height", h);
+                box.setAttribute("fill", "#38bdf8");
+                box.setAttribute("fill-opacity", "0.14");
+                box.setAttribute("stroke", "#38bdf8");
+                box.setAttribute("stroke-width", "1.5");
+                box.setAttribute("stroke-dasharray", "5,3");
+                overlayToolsLayer.appendChild(box);
+            }
+
             /* SNAP-TO-ELEMENT ALIGNMENT GUIDES */
             if (activeAlignmentGuides.length > 0) {
                 activeAlignmentGuides.forEach(guide => {
@@ -3112,7 +3734,7 @@
                 overlayToolsLayer.appendChild(ring);
             }
 
-            /* LIVE DRAWING LINE PREVIEW + RUBBER-BAND SEGMENT & LENGTH */
+            /* LIVE DRAWING LINE PREVIEW */
             if (currentMode === 'draw_line' && drawingLineState && drawingLineState.points.length > 0) {
                 let pts = drawingLineState.points;
                 let previewPts = [...pts];
@@ -3192,12 +3814,13 @@
             }
         }
         function render() {
+            updateQuickFilterCounts();
             updateTransformString();
             renderGhostGroundLayer();
             dynamicLayer.innerHTML = "";
             const zonesLocked = document.getElementById("lockZonesToggle")?.checked;
+            const showAuditBadges = document.getElementById("auditBadgesToggle")?.checked;
 
-            // Dependency lines
             elements.forEach(el => {
                 if (el.parentId) {
                     let parent = elements.find(p => p.id == el.parentId);
@@ -3276,8 +3899,10 @@
                     let pts = el.points || [];
                     if (pts.length >= 2) {
                         let pathStr = `M ${pts[0].x * gridSize} ${pts[0].y * gridSize}`;
+                        let totalUnits = 0;
                         for (let i = 1; i < pts.length; i++) {
                             pathStr += ` L ${pts[i].x * gridSize} ${pts[i].y * gridSize}`;
+                            totalUnits += Math.hypot(pts[i].x - pts[i - 1].x, pts[i].y - pts[i - 1].y);
                         }
                         let path = document.createElementNS("http://www.w3.org/2000/svg", "path");
                         path.setAttribute("d", pathStr);
@@ -3289,20 +3914,41 @@
                             path.setAttribute("stroke", "#fbbf24");
                             path.setAttribute("stroke-width", "9");
                         }
+                        g.appendChild(path);
+
+                        // Directional flow chevrons along segments
+                        for (let i = 0; i < pts.length - 1; i++) {
+                            const x1 = pts[i].x * gridSize, y1 = pts[i].y * gridSize;
+                            const x2 = pts[i + 1].x * gridSize, y2 = pts[i + 1].y * gridSize;
+                            const segLen = Math.hypot(x2 - x1, y2 - y1);
+                            if (segLen > 24) {
+                                const mx = (x1 + x2) / 2;
+                                const my = (y1 + y2) / 2;
+                                const angleDeg = (Math.atan2(y2 - y1, x2 - x1) * 180) / Math.PI;
+                                let chevron = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+                                chevron.setAttribute("points", "-5,-4 5,0 -5,4");
+                                chevron.setAttribute("fill", "#0b131d");
+                                chevron.setAttribute("stroke", "#fff");
+                                chevron.setAttribute("stroke-width", "1");
+                                chevron.setAttribute("transform", `translate(${mx}, ${my}) rotate(${angleDeg})`);
+                                chevron.style.pointerEvents = "none";
+                                g.appendChild(chevron);
+                            }
+                        }
+
                         let text = document.createElementNS("http://www.w3.org/2000/svg", "text");
                         let midPt = pts[Math.floor(pts.length / 2)];
                         text.setAttribute("x", midPt.x * gridSize);
-                        text.setAttribute("y", (midPt.y * gridSize) - 6);
+                        text.setAttribute("y", (midPt.y * gridSize) - 8);
                         text.setAttribute("text-anchor", "middle");
                         text.setAttribute("fill", "#fff");
                         text.setAttribute("font-size", "10px");
                         text.setAttribute("font-weight", "bold");
-                        text.textContent = el.name;
-                        g.appendChild(path);
+                        const lenSuffix = isSelected ? ` [${totalUnits.toFixed(1)}u / ~${Math.round(totalUnits * 25)}ft]` : "";
+                        text.textContent = el.name + lenSuffix;
                         g.appendChild(text);
 
-                        if (isSelected) {
-                            // Midpoint "+" handles to insert new bend vertices
+                        if (isSelected && !isReadOnlyMode) {
                             for (let i = 0; i < pts.length - 1; i++) {
                                 const mx = ((pts[i].x + pts[i + 1].x) / 2) * gridSize;
                                 const my = ((pts[i].y + pts[i + 1].y) / 2) * gridSize;
@@ -3331,7 +3977,6 @@
                                 g.appendChild(midCircle);
                             }
 
-                            // Draggable vertex handles (Click selects bend for Split; Right-click splits or deletes bend)
                             pts.forEach((pt, pIdx) => {
                                 const isVertexSelected = selectedVertexInfo && selectedVertexInfo.lineId === el.id && selectedVertexInfo.vertexIndex === pIdx;
                                 let hitCircle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
@@ -3436,6 +4081,15 @@
                         partsBadge.textContent = "📦";
                         g.appendChild(partsBadge);
                     }
+                    if (showAuditBadges && (!el.lotoSteps || el.lotoSteps.length === 0 || !el.estopZone)) {
+                        let warnTag = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                        warnTag.setAttribute("x", cx + 10);
+                        warnTag.setAttribute("y", cy + 11);
+                        warnTag.setAttribute("font-size", "10px");
+                        warnTag.style.pointerEvents = "none";
+                        warnTag.textContent = "⚠️";
+                        g.appendChild(warnTag);
+                    }
                     let popupGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
                     popupGroup.setAttribute("class", "asset-popup");
                     let boxWidth = (el.name.length * 6.5) + 12;
@@ -3464,7 +4118,6 @@
                     g.appendChild(emojiText);
                     g.appendChild(popupGroup);
                 } else {
-                    // Rectangular Zone
                     let rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
                     rect.setAttribute("x", el.x * gridSize);
                     rect.setAttribute("y", el.y * gridSize);
@@ -3486,8 +4139,7 @@
                     g.appendChild(rect);
                     g.appendChild(text);
 
-                    // On-canvas bottom-right resize handle when zone is selected & unlocked
-                    if (isSelected && !zonesLocked && currentMode === 'edit') {
+                    if (isSelected && !zonesLocked && currentMode === 'edit' && !isReadOnlyMode) {
                         const rx = (el.x + el.w) * gridSize;
                         const ry = (el.y + el.h) * gridSize;
                         let resizeHandle = document.createElementNS("http://www.w3.org/2000/svg", "rect");
@@ -3512,7 +4164,7 @@
                 }
 
                 const handleStart = (e) => {
-                    if (currentMode === 'draw_line' || pickCoordTarget) return;
+                    if (currentMode === 'draw_line' || pickCoordTarget || isReadOnlyMode) return;
                     if (e.shiftKey) return;
                     if (currentMode === 'edit' && el.type !== 'conveyance_line') {
                         if (el.type !== 'asset' && zonesLocked) {
@@ -3539,7 +4191,7 @@
         }
 
         /* ==========================================
-           COORDINATE HELPERS & POINTER INTERACTIONS
+           COORDINATES, MARQUEE SELECT & POINTERS
            ========================================== */
         function getCanvasLocalCoords(clientX, clientY) {
             let rect = container.getBoundingClientRect();
@@ -3589,8 +4241,32 @@
                 document.getElementById("sidebar").classList.remove("collapsed");
             }
         }
+        function selectElementsInMarquee(box) {
+            const minX = Math.min(box.startX, box.currX);
+            const maxX = Math.max(box.startX, box.currX);
+            const minY = Math.min(box.startY, box.currY);
+            const maxY = Math.max(box.startY, box.currY);
+
+            const hits = elements.filter(el => {
+                if ((el.layer || 'ground') !== currentLayer && currentLayer !== 'assets') return false;
+                const b = getItemBounds(el);
+                return !(b.maxX < minX || b.minX > maxX || b.maxY < minY || b.minY > maxY);
+            });
+            multiSelectedIds.clear();
+            hits.forEach(h => multiSelectedIds.add(h.id));
+            selectedId = hits.length > 0 ? hits[0].id : null;
+            updateHistoryButtons();
+            render();
+        }
         container.addEventListener("mousemove", (e) => {
             handlePointerMove(e.clientX, e.clientY);
+            if (marqueeBox) {
+                const coords = getCanvasLocalCoords(e.clientX, e.clientY);
+                marqueeBox.currX = coords.x;
+                marqueeBox.currY = coords.y;
+                renderOverlays();
+                return;
+            }
             if (isPanning) {
                 viewTransform.x = e.clientX - panStart.x;
                 viewTransform.y = e.clientY - panStart.y;
@@ -3615,974 +4291,191 @@
                     handlePickCoordTap(touch.clientX, touch.clientY);
                     return;
                 }
-                if (currentMode === 'pan') {
-                    isPanning = true;
-                    panStart = { x: touch.clientX - viewTransform.x, y: touch.clientY - viewTransform.y };
-                } else if (currentMode === 'calc') {
-                    triggerHaptic(15);
+                if (currentMode === 'draw_line' && drawingLineState) {
                     let coords = getCanvasLocalCoords(touch.clientX, touch.clientY);
-                    if (calcPoints.length >= 2) calcPoints = [];
+                    let ptX = coords.x;
+                    let ptY = coords.y;
+                    if (document.getElementById("snapGridToggle").checked) {
+                        ptX = Math.round(ptX * 2) / 2;
+                        ptY = Math.round(ptY * 2) / 2;
+                    }
+                    const prevPt = drawingLineState.points[drawingLineState.points.length - 1];
+                    const constrained = applyOrthoConstraint(prevPt, { x: ptX, y: ptY });
+                    drawingLineState.points.push({ x: parseFloat(constrained.x.toFixed(2)), y: parseFloat(constrained.y.toFixed(2)) });
+                    triggerHaptic(20);
+                    renderOverlays();
+                    return;
+                }
+                if (currentMode === 'calc') {
+                    let coords = getCanvasLocalCoords(touch.clientX, touch.clientY);
                     calcPoints.push({ x: coords.x, y: coords.y });
-                    if (calcPoints.length === 2) {
+                    if (calcPoints.length === 1) {
+                        document.getElementById("dist-result-display").innerText = "Tap second point to measure";
+                    } else if (calcPoints.length === 2) {
                         let dx = calcPoints[1].x - calcPoints[0].x;
                         let dy = calcPoints[1].y - calcPoints[0].y;
-                        let distGrid = Math.sqrt(dx * dx + dy * dy);
-                        let distFeet = distGrid * 25; 
-                        document.getElementById("dist-result-display").innerHTML = 
-                            `Dist: <b>${distGrid.toFixed(2)} units</b> (~${distFeet.toFixed(0)} ft)`;
+                        let gridDist = Math.sqrt(dx * dx + dy * dy);
+                        let feetDist = gridDist * 25; 
+                        document.getElementById("dist-result-display").innerHTML = `Dist: <b>${gridDist.toFixed(2)} units</b> (~${Math.round(feetDist)} ft)`;
                     } else {
-                        document.getElementById("dist-result-display").innerText = "Click second point to complete calculation";
+                        calcPoints = [{ x: coords.x, y: coords.y }];
+                        document.getElementById("dist-result-display").innerText = "Tap second point to measure";
                     }
                     renderOverlays();
-                } else if (currentMode === 'draw_line' && drawingLineState) {
-                    e.preventDefault();
-                    triggerHaptic(15);
-                    let coords = getCanvasLocalCoords(touch.clientX, touch.clientY);
-                    let nx = coords.x;
-                    let ny = coords.y;
-                    if (document.getElementById("snapGridToggle").checked) {
-                        nx = Math.round(nx * 2) / 2;
-                        ny = Math.round(ny * 2) / 2;
-                    }
-                    let pt = { x: parseFloat(nx.toFixed(2)), y: parseFloat(ny.toFixed(2)) };
-                    if (drawingLineState.points.length > 0) {
-                        pt = applyOrthoConstraint(drawingLineState.points[drawingLineState.points.length - 1], pt);
-                    }
-                    drawingLineState.points.push(pt);
-                    renderOverlays();
-                } else if (currentMode === 'edit') {
-                    setSelection(null);
-                    render();
+                    return;
+                }
+                if (currentMode === 'pan' || !isDraggingElement) {
+                    isPanning = true;
+                    container.classList.add('panning');
+                    panStart = { x: touch.clientX - viewTransform.x, y: touch.clientY - viewTransform.y };
                 }
             }
         }, { passive: false });
         container.addEventListener("touchmove", (e) => {
             if (e.touches.length === 2 && initialPinchDistance) {
                 e.preventDefault();
-                let currentDistance = getTouchDistance(e.touches);
-                let factor = currentDistance / initialPinchDistance;
-                let oldScale = viewTransform.scale;
-                let newScale = Math.min(Math.max(initialScale * factor, 0.3), 3.0);
-                let midX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
-                let midY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+                let currentDist = getTouchDistance(e.touches);
+                let scaleFactor = currentDist / initialPinchDistance;
+                let newScale = Math.min(Math.max(initialScale * scaleFactor, 0.3), 3.0);
                 let rect = container.getBoundingClientRect();
-                let touchX = midX - rect.left;
-                let touchY = midY - rect.top;
+                let centerX = ((e.touches[0].clientX + e.touches[1].clientX) / 2) - rect.left;
+                let centerY = ((e.touches[0].clientY + e.touches[1].clientY) / 2) - rect.top;
+                viewTransform.x = centerX - (centerX - viewTransform.x) * (newScale / viewTransform.scale);
+                viewTransform.y = centerY - (centerY - viewTransform.y) * (newScale / viewTransform.scale);
                 viewTransform.scale = newScale;
-                viewTransform.x = touchX - (touchX - viewTransform.x) * (newScale / oldScale);
-                viewTransform.y = touchY - (touchY - viewTransform.y) * (newScale / oldScale);
                 updateTransformString();
-            } else if (e.touches.length === 1 && isPanning) {
-                e.preventDefault();
+            } else if (e.touches.length === 1) {
                 let touch = e.touches[0];
-                viewTransform.x = touch.clientX - panStart.x;
-                viewTransform.y = touch.clientY - panStart.y;
-                updateTransformString();
+                handlePointerMove(touch.clientX, touch.clientY);
+                if (isPanning && !isDraggingElement) {
+                    viewTransform.x = touch.clientX - panStart.x;
+                    viewTransform.y = touch.clientY - panStart.y;
+                    updateTransformString();
+                }
             }
         }, { passive: false });
-        container.addEventListener("touchend", (e) => {
-            if (e.touches.length < 2) initialPinchDistance = null;
-            if (e.touches.length === 0) isPanning = false;
+        container.addEventListener("touchend", () => {
+            isPanning = false;
+            initialPinchDistance = null;
+            container.classList.remove('panning');
         });
-        container.addEventListener("wheel", (e) => {
-            e.preventDefault();
-            let zoomIntensity = 0.1;
-            let oldScale = viewTransform.scale;
-            if (e.deltaY < 0) {
-                viewTransform.scale = Math.min(viewTransform.scale * (1 + zoomIntensity), 3.0);
-            } else {
-                viewTransform.scale = Math.max(viewTransform.scale * (1 - zoomIntensity), 0.3);
-            }
-            let rect = container.getBoundingClientRect();
-            let mouseX = e.clientX - rect.left;
-            let mouseY = e.clientY - rect.top;
-            viewTransform.x = mouseX - (mouseX - viewTransform.x) * (viewTransform.scale / oldScale);
-            viewTransform.y = mouseY - (mouseY - viewTransform.y) * (viewTransform.scale / oldScale);
-            updateTransformString();
-        }, { passive: false });
         container.addEventListener("mousedown", (e) => {
+            if (e.button !== 0) return;
             if (pickCoordTarget) {
                 handlePickCoordTap(e.clientX, e.clientY);
                 return;
             }
-            if (currentMode === 'pan') {
-                isPanning = true;
-                container.classList.add("panning");
-                panStart = { x: e.clientX - viewTransform.x, y: e.clientY - viewTransform.y };
-            } else if (currentMode === 'calc') {
+            if (currentMode === 'draw_line' && drawingLineState) {
                 let coords = getCanvasLocalCoords(e.clientX, e.clientY);
-                if (calcPoints.length >= 2) calcPoints = [];
+                let ptX = coords.x;
+                let ptY = coords.y;
+                if (document.getElementById("snapGridToggle").checked) {
+                    ptX = Math.round(ptX * 2) / 2;
+                    ptY = Math.round(ptY * 2) / 2;
+                }
+                const prevPt = drawingLineState.points[drawingLineState.points.length - 1];
+                const constrained = applyOrthoConstraint(prevPt, { x: ptX, y: ptY });
+                drawingLineState.points.push({ x: parseFloat(constrained.x.toFixed(2)), y: parseFloat(constrained.y.toFixed(2)) });
+                triggerHaptic(20);
+                renderOverlays();
+                return;
+            }
+            if (currentMode === 'calc') {
+                let coords = getCanvasLocalCoords(e.clientX, e.clientY);
                 calcPoints.push({ x: coords.x, y: coords.y });
-                if (calcPoints.length === 2) {
+                if (calcPoints.length === 1) {
+                    document.getElementById("dist-result-display").innerText = "Click second point to measure";
+                } else if (calcPoints.length === 2) {
                     let dx = calcPoints[1].x - calcPoints[0].x;
                     let dy = calcPoints[1].y - calcPoints[0].y;
-                    let distGrid = Math.sqrt(dx * dx + dy * dy);
-                    let distFeet = distGrid * 25; 
-                    document.getElementById("dist-result-display").innerHTML = 
-                        `Dist: <b>${distGrid.toFixed(2)} units</b> (~${distFeet.toFixed(0)} ft)`;
+                    let gridDist = Math.sqrt(dx * dx + dy * dy);
+                    let feetDist = gridDist * 25; 
+                    document.getElementById("dist-result-display").innerHTML = `Dist: <b>${gridDist.toFixed(2)} units</b> (~${Math.round(feetDist)} ft)`;
                 } else {
-                    document.getElementById("dist-result-display").innerText = "Click second point to complete calculation";
+                    calcPoints = [{ x: coords.x, y: coords.y }];
+                    document.getElementById("dist-result-display").innerText = "Click second point to measure";
                 }
                 renderOverlays();
-            } else if (currentMode === 'draw_line' && drawingLineState) {
-                let coords = getCanvasLocalCoords(e.clientX, e.clientY);
-                let nx = coords.x;
-                let ny = coords.y;
-                if (document.getElementById("snapGridToggle").checked) {
-                    nx = Math.round(nx * 2) / 2;
-                    ny = Math.round(ny * 2) / 2;
-                }
-                let pt = { x: parseFloat(nx.toFixed(2)), y: parseFloat(ny.toFixed(2)) };
-                if (drawingLineState.points.length > 0) {
-                    pt = applyOrthoConstraint(drawingLineState.points[drawingLineState.points.length - 1], pt);
-                }
-                drawingLineState.points.push(pt);
-                renderOverlays();
-            } else if (currentMode === 'edit') {
-                setSelection(null);
-                render();
+                return;
             }
-        });
-        container.addEventListener("dblclick", () => {
-            if (currentMode === 'draw_line' && drawingLineState && drawingLineState.points.length >= 2) {
-                finishDrawingLine();
+            // Shift + Drag on empty canvas starts Marquee Box Select
+            if (e.shiftKey && !isDraggingElement && !draggingVertex && !resizingZone) {
+                const coords = getCanvasLocalCoords(e.clientX, e.clientY);
+                marqueeBox = { startX: coords.x, startY: coords.y, currX: coords.x, currY: coords.y };
+                renderOverlays();
+                return;
+            }
+            if (!isDraggingElement && !draggingVertex && !resizingZone) {
+                isPanning = true;
+                container.classList.add('panning');
+                panStart = { x: e.clientX - viewTransform.x, y: e.clientY - viewTransform.y };
             }
         });
         window.addEventListener("mouseup", () => {
-            if (isPanning) {
-                isPanning = false;
-                container.classList.remove("panning");
+            if (marqueeBox) {
+                const box = marqueeBox;
+                marqueeBox = null;
+                selectElementsInMarquee(box);
+                renderOverlays();
             }
-        });
-
-        /* ==========================================
-           KEYBOARD SHORTCUTS (UNDO, REDO, CLONE, ARROWS, ESC)
-           ========================================== */
-        window.addEventListener("keydown", (e) => {
-            shiftKeyPressed = e.shiftKey;
-            const activeTag = document.activeElement?.tagName;
-            const isTyping = activeTag === "INPUT" || activeTag === "TEXTAREA" || activeTag === "SELECT";
-            if ((e.ctrlKey || e.metaKey) && !isTyping) {
-                if (e.key.toLowerCase() === 'z' && !e.shiftKey) {
-                    e.preventDefault();
-                    undoLayout();
-                    return;
-                }
-                if (e.key.toLowerCase() === 'y' || (e.key.toLowerCase() === 'z' && e.shiftKey)) {
-                    e.preventDefault();
-                    redoLayout();
-                    return;
-                }
-                if (e.key.toLowerCase() === 'd') {
-                    e.preventDefault();
-                    duplicateSelected();
-                    return;
-                }
-            }
-            if (e.key === "Escape") {
-                if (pickCoordTarget) cancelPickCoords();
-                if (currentMode === 'draw_line') cancelDrawingLine();
-            }
-            if (!isTyping && (selectedId || multiSelectedIds.size > 0) && ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(e.key)) {
-                e.preventDefault();
-                const step = document.getElementById("snapGridToggle").checked ? 0.5 : 0.1;
-                const dx = e.key === "ArrowLeft" ? -step : (e.key === "ArrowRight" ? step : 0);
-                const dy = e.key === "ArrowUp" ? -step : (e.key === "ArrowDown" ? step : 0);
-                pushHistorySnapshot();
-                const ids = multiSelectedIds.size > 0 ? Array.from(multiSelectedIds) : [selectedId];
-                ids.forEach(id => {
-                    const el = elements.find(item => item.id === id);
-                    if (!el) return;
-                    if (el.type === 'conveyance_line' && el.points) {
-                        el.points.forEach(pt => {
-                            pt.x = parseFloat((pt.x + dx).toFixed(2));
-                            pt.y = parseFloat((pt.y + dy).toFixed(2));
-                        });
-                    } else {
-                        el.x = parseFloat(((el.x || 0) + dx).toFixed(2));
-                        el.y = parseFloat(((el.y || 0) + dy).toFixed(2));
-                    }
-                });
-                render();
-                saveToFirebase();
-            }
-        });
-        window.addEventListener("keyup", (e) => {
-            shiftKeyPressed = e.shiftKey;
-        });
-
-        /* ==========================================
-           SNAP-TO-ELEMENT ALIGNMENT ENGINE
-           ========================================== */
-        function computeElementAlignment(primaryEl, candidateX, candidateY, excludeIds) {
+            isPanning = false;
+            container.classList.remove('panning');
             activeAlignmentGuides = [];
-            if (!document.getElementById("alignGuidesToggle")?.checked) {
-                return { x: candidateX, y: candidateY, snappedX: false, snappedY: false };
+            renderOverlays();
+        });
+        container.addEventListener("wheel", (e) => {
+            e.preventDefault();
+            let rect = container.getBoundingClientRect();
+            let mouseX = e.clientX - rect.left;
+            let mouseY = e.clientY - rect.top;
+            let zoomFactor = e.deltaY < 0 ? 1.15 : 0.85;
+            let oldScale = viewTransform.scale;
+            let newScale = Math.min(Math.max(oldScale * zoomFactor, 0.3), 3.0);
+            viewTransform.scale = newScale;
+            viewTransform.x = mouseX - (mouseX - viewTransform.x) * (newScale / oldScale);
+            viewTransform.y = mouseY - (mouseY - viewTransform.y) * (newScale / oldScale);
+            updateTransformString();
+        }, { passive: false });
+
+        /* ==========================================
+           ELEMENT DRAG, ALIGNMENT SNAPS & RESIZE
+           ========================================== */
+        function computeAlignmentSnaps(movingEl, candidateX, candidateY) {
+            const guidesEnabled = document.getElementById("alignGuidesToggle")?.checked;
+            if (!guidesEnabled || !movingEl || movingEl.type === 'conveyance_line') {
+                activeAlignmentGuides = [];
+                return { x: candidateX, y: candidateY };
             }
             const threshold = 0.22;
-            const peers = elements.filter(peer =>
-                !excludeIds.has(peer.id) &&
-                peer.type !== 'conveyance_line' &&
-                (peer.layer || 'ground') === (primaryEl.layer || currentLayer)
-            );
+            const mW = movingEl.type === 'asset' ? 1 : (movingEl.w || 1);
+            const mH = movingEl.type === 'asset' ? 1 : (movingEl.h || 1);
+            const mLeft = candidateX;
+            const mCx = candidateX + mW / 2;
+            const mRight = candidateX + mW;
+            const mTop = candidateY;
+            const mCy = candidateY + mH / 2;
+            const mBottom = candidateY + mH;
 
-            // Calculate anchor X and Y points of moving element (center + edges)
-            const w = primaryEl.type === 'asset' ? 1 : (primaryEl.w || 1);
-            const h = primaryEl.type === 'asset' ? 1 : (primaryEl.h || 1);
-            const selfXAnchors = [
-                { offset: 0, val: candidateX },
-                { offset: w / 2, val: candidateX + w / 2 },
-                { offset: w, val: candidateX + w }
-            ];
-            const selfYAnchors = [
-                { offset: 0, val: candidateY },
-                { offset: h / 2, val: candidateY + h / 2 },
-                { offset: h, val: candidateY + h }
-            ];
+            let bestX = candidateX, bestDx = threshold;
+            let bestY = candidateY, bestDy = threshold;
+            const xGuides = [];
+            const yGuides = [];
 
-            let bestDx = null, bestGuideX = null;
-            let bestDy = null, bestGuideY = null;
+            elements.forEach(other => {
+                if (other.id === movingEl.id) return;
+                if ((other.layer || 'ground') !== (movingEl.layer || 'ground') && currentLayer !== 'assets') return;
+                const b = getItemBounds(other);
+                const xTargets = [b.minX, b.cx, b.maxX];
+                const yTargets = [b.minY, b.cy, b.maxY];
+                const xSources = [{ val: mLeft, shift: 0 }, { val: mCx, shift: -mW / 2 }, { val: mRight, shift: -mW }];
+                const ySources = [{ val: mTop, shift: 0 }, { val: mCy, shift: -mH / 2 }, { val: mBottom, shift: -mH }];
 
-            peers.forEach(peer => {
-                const pw = peer.type === 'asset' ? 1 : (peer.w || 1);
-                const ph = peer.type === 'asset' ? 1 : (peer.h || 1);
-                const peerXs = peer.type === 'asset' ? [peer.x + 0.5] : [peer.x, peer.x + pw / 2, peer.x + pw];
-                const peerYs = peer.type === 'asset' ? [peer.y + 0.5] : [peer.y, peer.y + ph / 2, peer.y + ph];
-
-                selfXAnchors.forEach(sa => {
-                    peerXs.forEach(px => {
-                        const diff = px - sa.val;
-                        if (Math.abs(diff) <= threshold && (bestDx === null || Math.abs(diff) < Math.abs(bestDx))) {
+                xSources.forEach(src => {
+                    xTargets.forEach(tgt => {
+                        const diff = Math.abs(src.val - tgt);
+                        if (diff < bestDx) {
                             bestDx = diff;
-                            bestGuideX = px;
+                            bestX = tgt + src.shift;
                         }
                     });
                 });
-
-                selfYAnchors.forEach(sa => {
-                    peerYs.forEach(py => {
-                        const diff = py - sa.val;
-                        if (Math.abs(diff) <= threshold && (bestDy === null || Math.abs(diff) < Math.abs(bestDy))) {
-                            bestDy = diff;
-                            bestGuideY = py;
-                        }
-                    });
-                });
-            });
-
-            let finalX = candidateX;
-            let finalY = candidateY;
-            if (bestDx !== null) {
-                finalX = parseFloat((candidateX + bestDx).toFixed(2));
-                activeAlignmentGuides.push({ axis: 'x', val: bestGuideX });
-            }
-            if (bestDy !== null) {
-                finalY = parseFloat((candidateY + bestDy).toFixed(2));
-                activeAlignmentGuides.push({ axis: 'y', val: bestGuideY });
-            }
-            return { x: finalX, y: finalY, snappedX: bestDx !== null, snappedY: bestDy !== null };
-        }
-
-        /* ==========================================
-           DRAG VERTICES, RESIZE ZONES, DRAG ELEMENTS
-           ========================================== */
-        function startDragVertex(e, lineId, vertexIndex) {
-            pushHistorySnapshot();
-            draggingVertex = { lineId, vertexIndex };
-            let lineEl = elements.find(el => el.id === lineId);
-            if (!lineEl) return;
-            let startX = e.clientX || (e.touches && e.touches[0].clientX);
-            let startY = e.clientY || (e.touches && e.touches[0].clientY);
-            let origPt = lineEl.points[vertexIndex];
-            let origX = origPt.x;
-            let origY = origPt.y;
-            let snapEnabled = document.getElementById("snapGridToggle").checked;
-            let moved = false;
-            function onMove(ev) {
-                if (!draggingVertex) return;
-                moved = true;
-                let clientX = ev.clientX || (ev.touches && ev.touches[0].clientX);
-                let clientY = ev.clientY || (ev.touches && ev.touches[0].clientY);
-                let dx = (clientX - startX) / viewTransform.scale;
-                let dy = (clientY - startY) / viewTransform.scale;
-                let nx = origX + (dx / gridSize);
-                let ny = origY + (dy / gridSize);
-                if (snapEnabled) {
-                    nx = Math.round(nx * 2) / 2;
-                    ny = Math.round(ny * 2) / 2;
-                }
-                let pt = { x: parseFloat(nx.toFixed(2)), y: parseFloat(ny.toFixed(2)) };
-                if (vertexIndex > 0) {
-                    pt = applyOrthoConstraint(lineEl.points[vertexIndex - 1], pt);
-                }
-                origPt.x = pt.x;
-                origPt.y = pt.y;
-                render();
-            }
-            function onEnd() {
-                draggingVertex = null;
-                window.removeEventListener("mousemove", onMove);
-                window.removeEventListener("mouseup", onEnd);
-                window.removeEventListener("touchmove", onMove);
-                window.removeEventListener("touchend", onEnd);
-                if (!moved) {
-                    undoStack.pop();
-                    updateHistoryButtons();
-                } else {
-                    saveToFirebase(true);
-                }
-            }
-            window.addEventListener("mousemove", onMove);
-            window.addEventListener("mouseup", onEnd);
-            window.addEventListener("touchmove", onMove);
-            window.addEventListener("touchend", onEnd);
-        }
-        function startResizeZone(e, el) {
-            pushHistorySnapshot();
-            resizingZone = el;
-            let startX = e.clientX || (e.touches && e.touches[0].clientX);
-            let startY = e.clientY || (e.touches && e.touches[0].clientY);
-            let origW = el.w;
-            let origH = el.h;
-            let snapEnabled = document.getElementById("snapGridToggle").checked;
-            let moved = false;
-            function onMove(ev) {
-                if (!resizingZone) return;
-                moved = true;
-                let clientX = ev.clientX || (ev.touches && ev.touches[0].clientX);
-                let clientY = ev.clientY || (ev.touches && ev.touches[0].clientY);
-                let dx = (clientX - startX) / viewTransform.scale;
-                let dy = (clientY - startY) / viewTransform.scale;
-                let nw = origW + (dx / gridSize);
-                let nh = origH + (dy / gridSize);
-                if (snapEnabled) {
-                    nw = Math.round(nw * 2) / 2;
-                    nh = Math.round(nh * 2) / 2;
-                }
-                el.w = Math.max(0.5, parseFloat(nw.toFixed(2)));
-                el.h = Math.max(0.5, parseFloat(nh.toFixed(2)));
-                render();
-            }
-            function onEnd() {
-                resizingZone = null;
-                window.removeEventListener("mousemove", onMove);
-                window.removeEventListener("mouseup", onEnd);
-                window.removeEventListener("touchmove", onMove);
-                window.removeEventListener("touchend", onEnd);
-                if (!moved) {
-                    undoStack.pop();
-                    updateHistoryButtons();
-                } else {
-                    saveToFirebase(true);
-                }
-            }
-            window.addEventListener("mousemove", onMove);
-            window.addEventListener("mouseup", onEnd);
-            window.addEventListener("touchmove", onMove);
-            window.addEventListener("touchend", onEnd);
-        }
-        function startDragElement(e, el) {
-            if (!multiSelectedIds.has(el.id)) {
-                setSelection(el.id, false);
-            } else {
-                selectedId = el.id;
-            }
-            pushHistorySnapshot();
-            isDraggingElement = true;
-            let startX = e.clientX || (e.touches && e.touches[0].clientX);
-            let startY = e.clientY || (e.touches && e.touches[0].clientY);
-            const dragTargets = Array.from(multiSelectedIds)
-                .map(id => elements.find(item => item.id === id))
-                .filter(item => item && item.type !== 'conveyance_line')
-                .map(item => ({ item, origX: item.x, origY: item.y }));
-            const primaryTarget = dragTargets.find(t => t.item.id === el.id) || dragTargets[0];
-            let snapEnabled = document.getElementById("snapGridToggle").checked;
-            let moved = false;
-
-            function onMouseMove(ev) {
-                if (!isDraggingElement) return;
-                let clientX = ev.clientX || (ev.touches && ev.touches[0].clientX);
-                let clientY = ev.clientY || (ev.touches && ev.touches[0].clientY);
-                let dx = (clientX - startX) / viewTransform.scale;
-                let dy = (clientY - startY) / viewTransform.scale;
-                if (Math.abs(dx) > 2 || Math.abs(dy) > 2) moved = true;
-
-                let candX = primaryTarget.origX + (dx / gridSize);
-                let candY = primaryTarget.origY + (dy / gridSize);
-                if (snapEnabled) {
-                    candX = Math.round(candX * 2) / 2;
-                    candY = Math.round(candY * 2) / 2;
-                }
-                const aligned = computeElementAlignment(primaryTarget.item, candX, candY, multiSelectedIds);
-                const deltaGridX = aligned.x - primaryTarget.origX;
-                const deltaGridY = aligned.y - primaryTarget.origY;
-
-                dragTargets.forEach(({ item, origX, origY }) => {
-                    item.x = parseFloat((origX + deltaGridX).toFixed(2));
-                    item.y = parseFloat((origY + deltaGridY).toFixed(2));
-                });
-                render();
-            }
-            function onMouseUp() {
-                isDraggingElement = false;
-                activeAlignmentGuides = [];
-                window.removeEventListener("mousemove", onMouseMove);
-                window.removeEventListener("mouseup", onMouseUp);
-                window.removeEventListener("touchmove", onMouseMove);
-                window.removeEventListener("touchend", onMouseUp);
-                renderOverlays();
-                if (!moved) {
-                    undoStack.pop();
-                    updateHistoryButtons();
-                } else {
-                    saveToFirebase(true);
-                }
-            }
-            window.addEventListener("mousemove", onMouseMove);
-            window.addEventListener("mouseup", onMouseUp);
-            window.addEventListener("touchmove", onMouseMove);
-            window.addEventListener("touchend", onMouseUp);
-            render();
-        }
-
-        /* ==========================================
-           INSPECT / EDIT MODAL FUNCTIONS
-           ========================================== */
-        function openModal(el) {
-            setSelection(el.id, false);
-            document.getElementById("modalElementId").value = el.id;
-            document.getElementById("modalTitle").innerText = `Edit: ${el.name}`;
-            document.getElementById("modalName").value = el.name;
-            populateLayerDropdowns();
-            document.getElementById("modalLayer").value = el.layer || currentLayer;
-            document.getElementById("modalPartsNeeded").checked = el.partsNeeded || false;
-            document.getElementById("modalRotateBtn").style.display = el.type === 'asset' ? "none" : "inline-block";
-
-            if (el.type === 'conveyance_line') {
-                document.getElementById("modalCoordContainer").style.display = "none";
-                document.getElementById("modalSizeContainer").style.display = "none";
-                document.getElementById("modalAssetFields").style.display = "none";
-                document.getElementById("modalDependencyContainer").style.display = "none";
-                document.getElementById("modalDocLinkContainer").style.display = "none";
-                document.getElementById("modalLotoContainer").style.display = "none";
-                document.getElementById("modalPmContainer").style.display = "none";
-                document.getElementById("modalPredictiveContainer").style.display = "none";
-                document.getElementById("modalUtilitiesContainer").style.display = "none";
-                document.getElementById("modalVendorContainer").style.display = "none";
-                document.getElementById("modalBomContainer").style.display = "none";
-                document.getElementById("modalTicketsContainer").style.display = "none";
-            } else if (el.type === 'asset') {
-                document.getElementById("modalCoordContainer").style.display = "flex";
-                document.getElementById("modalSizeContainer").style.display = "none";
-                document.getElementById("modalAssetFields").style.display = "flex";
-                document.getElementById("modalDependencyContainer").style.display = "flex";
-                document.getElementById("modalDocLinkContainer").style.display = "block";
-                document.getElementById("modalLotoContainer").style.display = "block";
-                document.getElementById("modalPmContainer").style.display = "flex";
-                document.getElementById("modalPredictiveContainer").style.display = "flex";
-                document.getElementById("modalUtilitiesContainer").style.display = "flex";
-                document.getElementById("modalVendorContainer").style.display = "flex";
-                document.getElementById("modalBomContainer").style.display = "block";
-                document.getElementById("modalTicketsContainer").style.display = "block";
-                document.getElementById("modalX").value = el.x;
-                document.getElementById("modalY").value = el.y;
-                populateCategoryDropdowns(null, el.category);
-                populateParentAssetDropdown(el.parentId);
-                document.getElementById("modalStatus").value = el.status || "operational";
-                document.getElementById("modalEmoji").value = el.emoji || "📍";
-                document.getElementById("modalPlcNode").value = el.plcNode || "";
-                document.getElementById("modalLastInspect").value = el.lastInspect || "";
-                document.getElementById("modalPmDue").value = el.pmDue || "";
-                document.getElementById("modalManualUrl").value = el.manualUrl || "";
-                document.getElementById("modalRunHours").value = el.runHours || "";
-                document.getElementById("modalTemp").value = el.temp || "";
-                document.getElementById("modalVibration").value = el.vibration || "";
-                document.getElementById("modalLube").value = el.lube || "";
-                document.getElementById("modalUtilityDraw").value = el.utilityDraw || "";
-                document.getElementById("modalEstopZone").value = el.estopZone || "";
-                document.getElementById("modalVendorName").value = el.vendorName || "";
-                document.getElementById("modalVendorContact").value = el.vendorContact || "";
-                renderLotoChecklist(el);
-                renderBomTable(el);
-                renderWorkTickets(el);
-            } else {
-                document.getElementById("modalCoordContainer").style.display = "flex";
-                document.getElementById("modalSizeContainer").style.display = "flex";
-                document.getElementById("modalAssetFields").style.display = "none";
-                document.getElementById("modalDependencyContainer").style.display = "none";
-                document.getElementById("modalDocLinkContainer").style.display = "none";
-                document.getElementById("modalLotoContainer").style.display = "none";
-                document.getElementById("modalPmContainer").style.display = "none";
-                document.getElementById("modalPredictiveContainer").style.display = "none";
-                document.getElementById("modalUtilitiesContainer").style.display = "none";
-                document.getElementById("modalVendorContainer").style.display = "none";
-                document.getElementById("modalBomContainer").style.display = "none";
-                document.getElementById("modalTicketsContainer").style.display = "none";
-                document.getElementById("modalX").value = el.x;
-                document.getElementById("modalY").value = el.y;
-                document.getElementById("modalW").value = el.w;
-                document.getElementById("modalH").value = el.h;
-            }
-            renderPhotos(el);
-            renderSpreadsheet(el);
-            document.getElementById("modal-overlay").style.display = "flex";
-            render();
-        }
-        window.openManualUrl = function() {
-            let url = document.getElementById("modalManualUrl").value;
-            if (url) window.open(url, '_blank');
-            else alert("No URL/Manual link entered.");
-        };
-        function renderLotoChecklist(el) {
-            let container = document.getElementById("lotoChecklistList");
-            container.innerHTML = "";
-            if (!el.lotoSteps) el.lotoSteps = [];
-            if (el.lotoSteps.length === 0) {
-                container.innerHTML = `<span style="color: #64748b; font-style: italic;">No LOTO steps added.</span>`;
-                return;
-            }
-            el.lotoSteps.forEach((s, idx) => {
-                let div = document.createElement("div");
-                div.className = "loto-step";
-                div.innerHTML = `<input type="checkbox" ${s.done ? 'checked' : ''} onchange="toggleLotoStep(${idx}, this.checked)" style="transform: scale(1.2);">
-                <span style="${s.done ? 'text-decoration: line-through; color: #64748b;' : 'color: #fff;'}">${s.step}</span>
-                <button onclick="deleteLotoStep(${idx})" style="width: auto; padding: 2px 6px; font-size: 10px; margin-left: auto; min-height: auto;" class="danger">X</button>`;
-                container.appendChild(div);
-            });
-        }
-        window.addLotoStep = function() {
-            triggerHaptic(15);
-            let id = parseInt(document.getElementById("modalElementId").value);
-            let el = elements.find(item => item.id === id);
-            let input = document.getElementById("newLotoStepText");
-            let text = input.value.trim();
-            if (el && text) {
-                if (!el.lotoSteps) el.lotoSteps = [];
-                el.lotoSteps.push({ step: text, done: false });
-                input.value = "";
-                renderLotoChecklist(el);
-                saveToFirebase();
-            }
-        };
-        window.toggleLotoStep = function(index, checked) {
-            triggerHaptic(15);
-            let id = parseInt(document.getElementById("modalElementId").value);
-            let el = elements.find(item => item.id === id);
-            if (el && el.lotoSteps[index]) {
-                el.lotoSteps[index].done = checked;
-                renderLotoChecklist(el);
-                saveToFirebase();
-            }
-        };
-        window.deleteLotoStep = function(index) {
-            let id = parseInt(document.getElementById("modalElementId").value);
-            let el = elements.find(item => item.id === id);
-            if (el && el.lotoSteps) {
-                el.lotoSteps.splice(index, 1);
-                renderLotoChecklist(el);
-                saveToFirebase();
-            }
-        };
-        function renderBomTable(el) {
-            let tbody = document.getElementById("bomBody");
-            tbody.innerHTML = "";
-            if (!el.spareParts) el.spareParts = [];
-            el.spareParts.forEach((part, index) => {
-                let tr = document.createElement("tr");
-                let tdName = document.createElement("td");
-                let inputName = document.createElement("input");
-                inputName.type = "text";
-                inputName.value = part.partName;
-                inputName.oninput = function() { part.partName = inputName.value; saveToFirebase(); };
-                tdName.appendChild(inputName);
-                let tdNum = document.createElement("td");
-                let inputNum = document.createElement("input");
-                inputNum.type = "text";
-                inputNum.value = part.partNum;
-                inputNum.oninput = function() { part.partNum = inputNum.value; saveToFirebase(); };
-                tdNum.appendChild(inputNum);
-                let tdBin = document.createElement("td");
-                let inputBin = document.createElement("input");
-                inputBin.type = "text";
-                inputBin.value = part.binLoc || "";
-                inputBin.oninput = function() { part.binLoc = inputBin.value; saveToFirebase(); };
-                tdBin.appendChild(inputBin);
-                let tdAction = document.createElement("td");
-                tdAction.style.textAlign = "center";
-                let delBtn = document.createElement("button");
-                delBtn.className = "danger";
-                delBtn.style.padding = "4px 8px";
-                delBtn.style.fontSize = "11px";
-                delBtn.style.minHeight = "auto";
-                delBtn.innerText = "X";
-                delBtn.onclick = function() {
-                    el.spareParts.splice(index, 1);
-                    renderBomTable(el);
-                    saveToFirebase();
-                };
-                tdAction.appendChild(delBtn);
-                tr.appendChild(tdName);
-                tr.appendChild(tdNum);
-                tr.appendChild(tdBin);
-                tr.appendChild(tdAction);
-                tbody.appendChild(tr);
-            });
-        }
-        window.addBomRow = function() {
-            triggerHaptic(15);
-            let id = parseInt(document.getElementById("modalElementId").value);
-            let el = elements.find(item => item.id === id);
-            if (el) {
-                if (!el.spareParts) el.spareParts = [];
-                el.spareParts.push({ partName: "Spare Part / Belt / Relay", partNum: "PART-101", binLoc: "Aisle 1, Bin A-1" });
-                renderBomTable(el);
-                saveToFirebase();
-            }
-        };
-        function renderWorkTickets(el) {
-            let box = document.getElementById("ticketsBox");
-            box.innerHTML = "";
-            if (!el.workTickets) el.workTickets = [];
-            if (el.workTickets.length === 0) {
-                box.innerHTML = `<span style="color: #64748b; font-style: italic;">No open breakdown tickets.</span>`;
-                return;
-            }
-            el.workTickets.forEach((t, idx) => {
-                let div = document.createElement("div");
-                div.className = "note-entry";
-                div.innerHTML = `<span class="note-timestamp">[${t.time}] PRIORITY: ${t.priority}</span> - ${t.desc} 
-                <button onclick="resolveWorkTicket(${idx})" style="width: auto; padding: 2px 8px; font-size: 10px; float: right; background: #10b981; min-height: auto;">Resolve</button>`;
-                box.appendChild(div);
-            });
-        }
-        window.addWorkTicket = function() {
-            triggerHaptic(15);
-            let id = parseInt(document.getElementById("modalElementId").value);
-            let el = elements.find(item => item.id === id);
-            let desc = prompt("Enter breakdown / work order issue description:");
-            let priority = prompt("Enter priority (High, Medium, Low):", "High");
-            if (el && desc) {
-                if (!el.workTickets) el.workTickets = [];
-                let timestamp = new Date().toISOString().replace('T', ' ').slice(0, 16);
-                el.workTickets.unshift({ time: timestamp, priority: priority || "High", desc: desc });
-                renderWorkTickets(el);
-                saveToFirebase();
-            }
-        };
-        window.resolveWorkTicket = function(index) {
-            triggerHaptic(15);
-            let id = parseInt(document.getElementById("modalElementId").value);
-            let el = elements.find(item => item.id === id);
-            if (el && el.workTickets) {
-                el.workTickets.splice(index, 1);
-                renderWorkTickets(el);
-                saveToFirebase();
-            }
-        };
-        window.closeModal = function() {
-            document.getElementById("modal-overlay").style.display = "none";
-            setSelection(null);
-            render();
-            saveToFirebase(true);
-        };
-        window.saveModalLiveChanges = function() {
-            let id = parseInt(document.getElementById("modalElementId").value);
-            let el = elements.find(item => item.id === id);
-            if (el) {
-                el.name = document.getElementById("modalName").value;
-                el.layer = document.getElementById("modalLayer").value || el.layer;
-                el.partsNeeded = document.getElementById("modalPartsNeeded").checked;
-                if (el.type !== 'conveyance_line') {
-                    el.x = parseFloat(document.getElementById("modalX").value) || 0;
-                    el.y = parseFloat(document.getElementById("modalY").value) || 0;
-                }
-                if (el.type === 'asset') {
-                    el.category = document.getElementById("modalCategory").value;
-                    el.status = document.getElementById("modalStatus").value;
-                    el.parentId = document.getElementById("modalParentAsset").value;
-                    el.plcNode = document.getElementById("modalPlcNode").value;
-                    el.emoji = document.getElementById("modalEmoji").value || "📍";
-                    el.lastInspect = document.getElementById("modalLastInspect").value;
-                    el.pmDue = document.getElementById("modalPmDue").value;
-                    el.manualUrl = document.getElementById("modalManualUrl").value;
-                    el.runHours = document.getElementById("modalRunHours").value;
-                    el.temp = document.getElementById("modalTemp").value;
-                    el.vibration = document.getElementById("modalVibration").value;
-                    el.lube = document.getElementById("modalLube").value;
-                    el.utilityDraw = document.getElementById("modalUtilityDraw").value;
-                    el.estopZone = document.getElementById("modalEstopZone").value;
-                    el.vendorName = document.getElementById("modalVendorName").value;
-                    el.vendorContact = document.getElementById("modalVendorContact").value;
-                } else if (el.type !== 'conveyance_line') {
-                    el.w = parseFloat(document.getElementById("modalW").value) || 1;
-                    el.h = parseFloat(document.getElementById("modalH").value) || 1;
-                }
-                document.getElementById("modalTitle").innerText = `Edit: ${el.name}`;
-                render();
-                saveToFirebase();
-            }
-        };
-        window.handlePhotoUpload = async function(event) {
-            let id = parseInt(document.getElementById("modalElementId").value);
-            let el = elements.find(item => item.id === id);
-            if (!el) return;
-            if (!el.photos) el.photos = [];
-            let files = event.target.files;
-            let statusSpan = document.getElementById("upload-status");
-            for (let file of files) {
-                try {
-                    statusSpan.innerText = `(Uploading ${file.name}...)`;
-                    let formData = new FormData();
-                    formData.append("file", file);
-                    let response = await fetch("https://imi1-map-uploader.curtisarmy21589.workers.dev", { method: "POST", body: formData });
-                    if (!response.ok) throw new Error("Upload failed");
-                    let result = await response.json();
-                    let photoUrl = result.url || result.fileUrl || (typeof result === 'string' ? result : null);
-                    if (!photoUrl) photoUrl = await response.text();
-                    if (photoUrl) {
-                        el.photos.push(photoUrl);
-                        renderPhotos(el);
-                        saveToFirebase(true);
-                    }
-                } catch (error) {
-                    console.error("Upload error:", error);
-                    alert("Failed to upload photo.");
-                }
-            }
-            statusSpan.innerText = "";
-            event.target.value = "";
-        };
-        function renderPhotos(el) {
-            let gallery = document.getElementById("modalPhotoGallery");
-            gallery.innerHTML = "";
-            if (!el.photos) el.photos = [];
-            el.photos.forEach((photoUrl, index) => {
-                let containerDiv = document.createElement("div");
-                containerDiv.className = "photo-thumb-container";
-                containerDiv.title = "Tap to enlarge photo";
-                containerDiv.onclick = () => openLightbox(photoUrl, el.name);
-                let img = document.createElement("img");
-                img.src = photoUrl;
-                let delBtn = document.createElement("button");
-                delBtn.className = "delete-photo-btn";
-                delBtn.innerHTML = "×";
-                delBtn.onclick = (e) => {
-                    e.stopPropagation();
-                    el.photos.splice(index, 1);
-                    renderPhotos(el);
-                    saveToFirebase(true);
-                };
-                containerDiv.appendChild(img);
-                containerDiv.appendChild(delBtn);
-                gallery.appendChild(containerDiv);
-            });
-        }
-        window.openLightbox = function(url, itemName) {
-            document.getElementById("lightboxImage").src = url;
-            document.getElementById("lightboxCaption").innerText = itemName || "Photo Preview";
-            document.getElementById("lightbox-overlay").style.display = "flex";
-        };
-        window.closeLightbox = function() {
-            document.getElementById("lightbox-overlay").style.display = "none";
-        };
-        function renderSpreadsheet(el) {
-            let tbody = document.getElementById("spreadsheetBody");
-            tbody.innerHTML = "";
-            if (!el.spreadsheetData) el.spreadsheetData = [];
-            el.spreadsheetData.forEach((row, index) => {
-                let tr = document.createElement("tr");
-                let tdKey = document.createElement("td");
-                let inputKey = document.createElement("input");
-                inputKey.type = "text";
-                inputKey.value = row.key;
-                inputKey.oninput = function() { row.key = inputKey.value; saveToFirebase(); };
-                tdKey.appendChild(inputKey);
-                let tdVal = document.createElement("td");
-                let inputVal = document.createElement("input");
-                inputVal.type = "text";
-                inputVal.value = row.value;
-                inputVal.oninput = function() { row.value = inputVal.value; saveToFirebase(); };
-                tdVal.appendChild(inputVal);
-                let tdAction = document.createElement("td");
-                tdAction.style.textAlign = "center";
-                let delRowBtn = document.createElement("button");
-                delRowBtn.className = "danger";
-                delRowBtn.style.padding = "4px 8px";
-                delRowBtn.style.fontSize = "11px";
-                delRowBtn.style.minHeight = "auto";
-                delRowBtn.innerText = "X";
-                delRowBtn.onclick = function() {
-                    el.spreadsheetData.splice(index, 1);
-                    renderSpreadsheet(el);
-                    saveToFirebase();
-                };
-                tdAction.appendChild(delRowBtn);
-                tr.appendChild(tdKey);
-                tr.appendChild(tdVal);
-                tr.appendChild(tdAction);
-                tbody.appendChild(tr);
-            });
-        }
-        window.addSpreadsheetRow = function() {
-            triggerHaptic(15);
-            let id = parseInt(document.getElementById("modalElementId").value);
-            let el = elements.find(item => item.id === id);
-            if (el) {
-                if (!el.spreadsheetData) el.spreadsheetData = [];
-                el.spreadsheetData.push({ key: "New Field", value: "Value" });
-                renderSpreadsheet(el);
-                saveToFirebase();
-            }
-        };
-        window.deleteItemFromModal = function() {
-            let id = parseInt(document.getElementById("modalElementId").value);
-            if (confirm("Are you sure you want to delete this item?")) {
-                pushHistorySnapshot();
-                elements = elements.filter(item => item.id !== id);
-                closeModal();
-                triggerHaptic(30);
-            }
-        };
-
-        /* ==========================================
-           BULK / SINGLE ADD ZONES & ASSETS + AUTO-NUMBERING
-           ========================================== */
-        window.addDepartment = function() {
-            triggerHaptic(20);
-            pushHistorySnapshot();
-            const baseName = document.getElementById("newDeptName").value.trim() || "Zone";
-            const type = document.getElementById("newDeptType").value;
-            const startX = parseFloat(document.getElementById("newDeptX").value) || 0;
-            const startY = parseFloat(document.getElementById("newDeptY").value) || 0;
-            const w = parseFloat(document.getElementById("newDeptW").value) || 5;
-            const h = parseFloat(document.getElementById("newDeptH").value) || 5;
-            const count = Math.min(Math.max(parseInt(document.getElementById("zoneRepeatCount").value) || 1, 1), 50);
-            const stepX = parseFloat(document.getElementById("zoneStepX").value) || 0;
-            const stepY = parseFloat(document.getElementById("zoneStepY").value) || 0;
-            const startNumRaw = document.getElementById("zoneStartNum").value;
-            const startNum = startNumRaw !== "" ? parseInt(startNumRaw, 10) : null;
-            const padDigits = parseInt(document.getElementById("zonePadDigits").value, 10) || 0;
-
-            let lastCreatedId = null;
-            for (let i = 0; i < count; i++) {
-                let newEl = {
-                    id: Date.now() + i,
-                    layer: currentLayer, 
-                    name: generatePatternName(baseName, i, startNum, padDigits),
-                    type: type,
-                    x: parseFloat((startX + (stepX * i)).toFixed(2)),
-                    y: parseFloat((startY + (stepY * i)).toFixed(2)),
-                    w: w,
-                    h: h,
-                    photos: [],
-                    spreadsheetData: [{key: "Status", value: "Active"}]
-                };
-                elements.push(newEl);
-                lastCreatedId = newEl.id;
-            }
-            setSelection(lastCreatedId, false);
-            render();
-            saveToFirebase(true);
-        };
-        window.addAsset = function() {
-            triggerHaptic(20);
-            pushHistorySnapshot();
-            const baseName = document.getElementById("newAssetName").value.trim() || "Asset";
-            const category = document.getElementById("newAssetCategory").value;
-            const status = document.getElementById("newAssetStatus").value;
-            const emoji = document.getElementById("newAssetEmoji").value || "📍";
-            const startX = parseFloat(document.getElementById("newAssetX").value) || 0;
-            const startY = parseFloat(document.getElementById("newAssetY").value) || 0;
-            const plcPrefix = document.getElementById("newAssetPlc").value.trim();
-            const estopZone = document.getElementById("newAssetEstop").value.trim();
-            const utilityDraw = document.getElementById("newAssetUtility").value.trim();
-            const vendorName = document.getElementById("newAssetVendor").value.trim();
-            const count = Math.min(Math.max(parseInt(document.getElementById("assetRepeatCount").value) || 1, 1), 50);
-            const stepX = parseFloat(document.getElementById("assetStepX").value) || 0;
-            const stepY = parseFloat(document.getElementById("assetStepY").value) || 0;
-            const startNumRaw = document.getElementById("assetStartNum").value;
-            const startNum = startNumRaw !== "" ? parseInt(startNumRaw, 10) : null;
-            const padDigits = parseInt(document.getElementById("assetPadDigits").value, 10) || 0;
-
-            const presetLoto = activeLoadedPreset?.lotoSteps ? cloneData(activeLoadedPreset.lotoSteps) : [];
-            const presetBom = activeLoadedPreset?.spareParts ? cloneData(activeLoadedPreset.spareParts) : [];
-
-            let lastCreatedId = null;
-            for (let i = 0; i < count; i++) {
-                let newEl = {
-                    id: Date.now() + i,
-                    layer: currentLayer, 
-                    name: generatePatternName(baseName, i, startNum, padDigits),
-                    type: "asset",
-                    category: category,
-                    status: status,
-                    emoji: emoji,
-                    x: parseFloat((startX + (stepX * i)).toFixed(2)),
-                    y: parseFloat((startY + (stepY * i)).toFixed(2)),
-                    partsNeeded: false,
-                    parentId: "",
-                    plcNode: plcPrefix ? generatePatternName(plcPrefix, i) : "",
-                    manualUrl: "",
-                    runHours: "",
-                    temp: "",
-                    vibration: "",
-                    lube: "",
-                    utilityDraw: utilityDraw,
-                    estopZone: estopZone,
-                    vendorName: vendorName,
-                    vendorContact: "",
-                    lotoSteps: cloneData(presetLoto),
-                    spareParts: cloneData(presetBom),
-                    workTickets: [],
-                    lastInspect: "",
-                    pmDue: "",
-                    photos: [],
-                    spreadsheetData: [{key: "Manufacturer / Specs", value: vendorName || "Pending"}]
-                };
-                elements.push(newEl);
-                lastCreatedId = newEl.id;
-            }
-
-            // Auto-remember last entered asset defaults
-            if (document.getElementById("rememberDefaultsToggle")?.checked) {
-                localStorage.setItem("imi_builder_last_defaults", JSON.stringify({
-                    category, status, emoji, plcPrefix, estopZone, utilityDraw, vendorName
-                }));
-            }
-
-            setSelection(lastCreatedId, false);
-            render();
-            saveToFirebase(true);
-        };
-
-        function restoreLastAssetDefaults() {
-            try {
-                const raw = localStorage.getItem("imi_builder_last_defaults");
-                if (!raw) return;
-                const d = JSON.parse(raw);
-                if (d.category && categories.some(c => c.name === d.category)) {
-                    document.getElementById("newAssetCategory").value = d.category;
-                }
-                if (d.status) document.getElementById("newAssetStatus").value = d.status;
-                if (d.emoji) document.getElementById("newAssetEmoji").value = d.emoji;
-                if (d.plcPrefix) document.getElementById("newAssetPlc").value = d.plcPrefix;
-                if (d.estopZone) document.getElementById("newAssetEstop").value = d.estopZone;
-                if (d.utilityDraw) document.getElementById("newAssetUtility").value = d.utilityDraw;
-                if (d.vendorName) document.getElementById("newAssetVendor").value = d.vendorName;
-            } catch (e) {}
-        }
-
-        // Initial Boot
-        populateLayerDropdowns();
-        populateCategoryDropdowns();
-        populateCustomPresetDropdown();
-        restoreLastAssetDefaults();
-        populateAllShiftDropdowns();
-        renderAllActionLists();
-        buildStaticGrid();
-        render();
-        updateHistoryButtons();
-        initFirebaseLiveSync();
-    </script>
-</body>
-</html>
