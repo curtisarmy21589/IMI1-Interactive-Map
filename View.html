@@ -566,6 +566,42 @@
             fill: none;
             pointer-events: none;
         }
+        /* LIVE KPI STRIP & QUICK LOG CHIPS */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 6px;
+            margin-top: 4px;
+        }
+        .kpi-card {
+            background: #070d14;
+            border: 1px solid #1f2d3d;
+            border-radius: 6px;
+            padding: 7px 8px;
+            cursor: pointer;
+            transition: border-color 0.15s, transform 0.1s;
+        }
+        .kpi-card:hover { border-color: #38bdf8; }
+        .kpi-card .kpi-num { font-size: 16px; font-weight: bold; font-family: monospace; }
+        .kpi-card .kpi-lbl { font-size: 9.5px; color: #94a3b8; text-transform: uppercase; }
+        .log-chip-row {
+            display: flex;
+            gap: 4px;
+            flex-wrap: wrap;
+            margin: 4px 0 2px 0;
+        }
+        .log-chip {
+            width: auto;
+            min-height: auto;
+            padding: 3px 7px;
+            font-size: 10px;
+            background: #1e293b;
+            border: 1px solid #334155;
+            color: #cbd5e1;
+            border-radius: 12px;
+            margin: 0;
+        }
+        .log-chip:hover { background: #0284c7; color: #fff; border-color: #38bdf8; }
     </style>
 </head>
 <body>
@@ -583,6 +619,7 @@
             </div>
             <div style="display: flex; gap: 4px;">
                 <input type="text" id="assetSearchInput" placeholder="Search Asset Name, Tag ID, PLC..." oninput="handleSearch(this.value)">
+                <button id="focusSearchBtn" onclick="focusFirstSearchMatch()" title="Center map on first match" style="display:none; width: auto; padding: 4px 8px; font-size: 11px; background:#0284c7; color:#fff;">🎯</button>
                 <button id="clearSearchBtn" onclick="clearAssetSearch()" title="Clear search" style="display:none; width: auto; padding: 4px 8px; font-size: 11px; background:#334155;">✕</button>
                 <button onclick="openScannerModal()" style="width: auto; padding: 4px 10px; font-size: 11px;">📷 Scan</button>
             </div>
@@ -644,8 +681,30 @@
             <button class="tab-btn" id="tabTomBtn" onclick="switchTab('tom')">Tom Team</button>
         </div>
         <div id="panelInfo" class="panel active">
-            <p style="font-size: 10px; color: #64748b; margin: 0;">
-                💡 <b>Tip:</b> Tap any asset or zone to inspect details, specs, LOTO instructions, and photos. Pan by dragging with one finger, zoom using pinch or scroll wheel.
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <h3 style="margin:0;">📊 Live Facility Snapshot</h3>
+                <button onclick="refreshMapData()" style="width:auto; min-height:auto; padding:3px 8px; font-size:10px; background:#1e293b; color:#38bdf8; margin:0;">🔄 Sync Now</button>
+            </div>
+            <div class="kpi-grid" id="facilityKpiGrid">
+                <div class="kpi-card" onclick="toggleQuickFilter('all')">
+                    <div class="kpi-num" id="kpiTotal" style="color:#38bdf8;">0</div>
+                    <div class="kpi-lbl">Total Assets</div>
+                </div>
+                <div class="kpi-card" onclick="toggleQuickFilter('down')">
+                    <div class="kpi-num" id="kpiDown" style="color:#ef4444;">0</div>
+                    <div class="kpi-lbl">🚨 Down Assets</div>
+                </div>
+                <div class="kpi-card" onclick="toggleQuickFilter('pm_due')">
+                    <div class="kpi-num" id="kpiPmDue" style="color:#f59e0b;">0</div>
+                    <div class="kpi-lbl">🔥 Overdue PMs</div>
+                </div>
+                <div class="kpi-card" onclick="toggleQuickFilter('parts_needed')">
+                    <div class="kpi-num" id="kpiParts" style="color:#a855f7;">0</div>
+                    <div class="kpi-lbl">📦 Parts Needed</div>
+                </div>
+            </div>
+            <p style="font-size: 10px; color: #64748b; margin: 4px 0 0 0;">
+                💡 <b>Tip:</b> Tap any KPI card above to filter the floor map, or tap any asset/zone to inspect LOTO steps, spare part bins, and wiring links.
             </p>
         </div>
         <!-- MAINTENANCE TECH SHIFT HANDOVER PANEL -->
@@ -658,6 +717,12 @@
                 </div>
                 <select id="techShiftName"></select>
                 <label>Handover Note / Parts Waiting in Cage</label>
+                <div class="log-chip-row">
+                    <button type="button" class="log-chip" onclick="insertLogTag('techLogText', '[Cage Parts] ')">📦 Cage Parts</button>
+                    <button type="button" class="log-chip" onclick="insertLogTag('techLogText', '[Jam / Fault] ')">⚠️ Jam/Fault</button>
+                    <button type="button" class="log-chip" onclick="insertLogTag('techLogText', '[LOTO Active] ')">🔒 LOTO</button>
+                    <button type="button" class="log-chip" onclick="insertLogTag('techLogText', '[PM Complete] ')">✅ PM Done</button>
+                </div>
                 <textarea id="techLogText" placeholder="Detailed handoff notes, jams, or parts set aside in cage..." style="height:50px;"></textarea>
                 <button onclick="addShiftLog('tech')" style="margin-top: 4px; background:#0284c7; color:#fff;">+ Post Tech Entry</button>
             </div>
@@ -848,6 +913,7 @@
                 <h3 id="modalTitle" style="color: #38bdf8; margin: 0;">Item Details</h3>
                 <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
                     <button id="assetPracticeSimBtn" onclick="launchSimForCurrentAsset()" style="display:none; width: auto; padding: 4px 8px; font-size: 10px; background: #10b981; color: #0b131d; font-weight:bold;">🎯 Practice Fault Sim</button>
+                    <button onclick="copyAssetDeepLink()" style="width: auto; padding: 4px 8px; font-size: 10px; background: #1e293b; color: #10b981;">🔗 Copy Link</button>
                     <button onclick="printAssetSpecSheet()" style="width: auto; padding: 4px 8px; font-size: 10px; background: #1e293b; color: #38bdf8;">📄 Print Spec Sheet</button>
                     <button onclick="printAssetQrCode()" style="width: auto; padding: 4px 8px; font-size: 10px; background: #0284c7; color: #fff;">🖨️ Print QR Label</button>
                     <button class="close-modal" onclick="closeModal()">×</button>
@@ -2439,6 +2505,7 @@ ${fbText}` : '');
                 renderShiftLogs('safety', document.getElementById('safetyFilterSelect').value);
                 renderShiftLogs('tom', document.getElementById('tomFilterSelect').value);
                 render();
+                checkInitialAssetDeepLink();
             } catch (error) {
                 console.error("Error loading layout:", error);
                 let loadedFromCache = false;
@@ -3361,6 +3428,11 @@ ${fbText}` : '');
             if (countEl) {
                 countEl.innerText = searchQuery ? `${visibleElements.length} match${visibleElements.length === 1 ? '' : 'es'}` : "";
             }
+            const focusBtn = document.getElementById("focusSearchBtn");
+            if (focusBtn) {
+                focusBtn.style.display = (searchQuery && visibleElements.length > 0) ? "inline-block" : "none";
+            }
+            updateFacilityKpis();
 
             visibleElements.forEach(el => {
                 let g = document.createElementNS("http://www.w3.org/2000/svg", "g");
@@ -3407,6 +3479,13 @@ ${fbText}` : '');
                         pulseRing.setAttribute("cy", cy);
                         pulseRing.setAttribute("class", pmAlert === 'overdue' ? 'pm-overdue-pulse' : 'pm-due-pulse');
                         g.appendChild(pulseRing);
+                    }
+                    if (searchQuery) {
+                        let searchRing = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                        searchRing.setAttribute("cx", cx);
+                        searchRing.setAttribute("cy", cy);
+                        searchRing.setAttribute("class", "search-highlight-ring");
+                        g.appendChild(searchRing);
                     }
                     let circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
                     circle.setAttribute("cx", cx);
@@ -3783,6 +3862,76 @@ ${fbText}` : '');
                 tr.appendChild(tdVal);
                 tbody.appendChild(tr);
             });
+        }
+
+        function updateFacilityKpis() {
+            const assets = elements.filter(el => el.type === 'asset');
+            const downCount = assets.filter(el => el.status === 'down').length;
+            const pmOverdueCount = assets.filter(el => getPmAlertStatus(el.pmDue) === 'overdue').length;
+            const partsCount = assets.filter(el => el.partsNeeded === true).length;
+            const setTxt = (id, val) => { const n = document.getElementById(id); if (n) n.innerText = val; };
+            setTxt('kpiTotal', assets.length);
+            setTxt('kpiDown', downCount);
+            setTxt('kpiPmDue', pmOverdueCount);
+            setTxt('kpiParts', partsCount);
+        }
+
+        window.focusFirstSearchMatch = function() {
+            if (!searchQuery) return;
+            const match = elements.find(el =>
+                (el.name && el.name.toLowerCase().includes(searchQuery)) ||
+                (el.category && el.category.toLowerCase().includes(searchQuery)) ||
+                el.id.toString().includes(searchQuery) ||
+                (el.plcNode && el.plcNode.toLowerCase().includes(searchQuery))
+            );
+            if (!match) return;
+            if (match.layer && match.layer !== currentLayer && currentLayer !== 'assets') {
+                switchLayer(match.layer);
+            }
+            const targetX = match.points && match.points.length ? match.points[0].x : (match.x || 0);
+            const targetY = match.points && match.points.length ? match.points[0].y : (match.y || 0);
+            const rect = container.getBoundingClientRect();
+            viewTransform.scale = Math.max(viewTransform.scale, 1.35);
+            viewTransform.x = Math.round(rect.width / 2 - ((targetX + 0.5) * gridSize) * viewTransform.scale);
+            viewTransform.y = Math.round(rect.height / 2 - ((targetY + 0.5) * gridSize) * viewTransform.scale);
+            render();
+        };
+
+        window.insertLogTag = function(textareaId, tagText) {
+            const ta = document.getElementById(textareaId);
+            if (!ta) return;
+            ta.value = tagText + ta.value;
+            ta.focus();
+        };
+
+        window.copyAssetDeepLink = function() {
+            const id = document.getElementById("modalElementId").value;
+            if (!id) return;
+            const url = new URL(window.location.href);
+            url.searchParams.set('asset', id);
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(url.toString()).catch(() => {});
+            }
+        };
+
+        window.refreshMapData = async function() {
+            syncStatus.innerText = "Syncing...";
+            syncStatus.style.color = "#fbbf24";
+            await loadFromFirebase();
+        };
+
+        let initialDeepLinkChecked = false;
+        function checkInitialAssetDeepLink() {
+            if (initialDeepLinkChecked) return;
+            initialDeepLinkChecked = true;
+            const params = new URLSearchParams(window.location.search);
+            const assetParam = params.get('asset');
+            if (!assetParam) return;
+            const found = elements.find(el => el.id.toString() === assetParam);
+            if (found) {
+                if (found.layer) switchLayer(found.layer);
+                openModal(found);
+            }
         }
 
         loadFromFirebase();
