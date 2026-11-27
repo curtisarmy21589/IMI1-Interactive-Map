@@ -175,10 +175,21 @@
             display: flex;
             align-items: center;
             gap: 4px;
+            width: auto;
+            min-height: auto;
+            margin-top: 0;
         }
         .filter-pill.active { background: #0284c7; color: #fff; border-color: #38bdf8; }
         .filter-pill.down-pill.active { background: #7f1d1d; border-color: #ef4444; }
         .filter-pill.pm-pill.active { background: #b45309; border-color: #f59e0b; }
+        .pill-count {
+            background: rgba(15, 23, 42, 0.85);
+            color: #e2e8f0;
+            border-radius: 10px;
+            padding: 1px 5px;
+            font-size: 9.5px;
+            font-family: monospace;
+        }
         #canvas-container {
             flex-grow: 1;
             position: relative;
@@ -210,6 +221,23 @@
         }
         #sync-status {
             font-size: 10px; text-align: center; color: #10b981; font-weight: bold; margin-top: -4px;
+        }
+        #layer-status-strip {
+            display: flex;
+            justify-content: space-between;
+            gap: 4px;
+            background: #070d14;
+            border: 1px solid #1e293b;
+            border-radius: 4px;
+            padding: 5px 6px;
+            font-size: 10px;
+            font-weight: bold;
+        }
+        .status-chip {
+            display: flex;
+            align-items: center;
+            gap: 3px;
+            color: #cbd5e1;
         }
         #modal-overlay, #lightbox-overlay, #scanner-modal-overlay, #ar-modal-overlay, #shift-manager-modal-overlay, #electrical-training-modal-overlay {
             display: none;
@@ -260,6 +288,15 @@
         .notes-log-box { background: #070d14; border: 1px solid #1f2d3d; border-radius: 4px; padding: 8px; max-height: 110px; overflow-y: auto; font-size: 11px; display: flex; flex-direction: column; gap: 4px; }
         .note-entry { border-bottom: 1px dotted #1f2d3d; padding-bottom: 3px; }
         .note-timestamp { color: #38bdf8; font-size: 9px; font-weight: bold; }
+        .today-badge {
+            background: #065f46;
+            color: #6ee7b7;
+            border: 1px solid #10b981;
+            border-radius: 3px;
+            padding: 0 4px;
+            font-size: 8.5px;
+            margin-left: 4px;
+        }
         @keyframes pmPulse { 0% { r: 7px; opacity: 1; } 50% { r: 12px; opacity: 0.3; } 100% { r: 7px; opacity: 1; } }
         .pm-overdue-pulse { animation: pmPulse 1.5s infinite ease-in-out; stroke: #ef4444; stroke-width: 2; fill: none; }
         .pm-due-pulse { animation: pmPulse 2s infinite ease-in-out; stroke: #f59e0b; stroke-width: 2; fill: none; }
@@ -267,21 +304,17 @@
         .action-item-row { display: flex; align-items: center; gap: 6px; font-size: 11px; border-bottom: 1px solid #1f2d3d; padding: 2px 0; }
         .danger { background: #7f1d1d; border-color: #ef4444; color: white; }
         .danger:hover { background: #ef4444; }
-
         /* ELECTRICAL SIMULATOR STYLES */
         .test-point-btn {
             background: #1e293b; border: 1px solid #38bdf8; color: #38bdf8; padding: 4px 8px; border-radius: 4px; font-size: 10px; cursor: pointer; text-align: left; transition: all 0.2s;
         }
         .test-point-btn:hover { background: #0284c7; color: #fff; }
         .test-point-btn.selected-probe { background: #eab308; color: #000; font-weight: bold; border-color: #fff; }
-
         .modal-content, .modal-body, .notes-log-box, #schematicDiagramBox, #scenarioSymptomText, #diagnosisFeedback, input, textarea, select {
             user-select: text !important;
             -webkit-user-select: text !important;
             touch-action: auto !important;
         }
-
-
         #equipment-sim-modal-overlay {
             display: none;
             position: fixed;
@@ -382,8 +415,6 @@
             -webkit-user-select: text !important;
             touch-action: auto !important;
         }
-
-
         #additional-sims-modal-overlay {
             display: none;
             position: fixed;
@@ -475,8 +506,6 @@
             -webkit-user-select: text !important;
             touch-action: auto !important;
         }
-
-
         /* NEW TECH VIEWER & FIELD HELPERS */
         #map-legend-panel {
             display: none;
@@ -556,7 +585,7 @@
         }
         @keyframes searchTargetPulse {
             0% { r: 10px; opacity: 1; }
-            50% { r: 18px; opacity: 0.25; }
+            50% { r: 19px; opacity: 0.25; }
             100% { r: 10px; opacity: 1; }
         }
         .search-highlight-ring {
@@ -566,42 +595,6 @@
             fill: none;
             pointer-events: none;
         }
-        /* LIVE KPI STRIP & QUICK LOG CHIPS */
-        .kpi-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 6px;
-            margin-top: 4px;
-        }
-        .kpi-card {
-            background: #070d14;
-            border: 1px solid #1f2d3d;
-            border-radius: 6px;
-            padding: 7px 8px;
-            cursor: pointer;
-            transition: border-color 0.15s, transform 0.1s;
-        }
-        .kpi-card:hover { border-color: #38bdf8; }
-        .kpi-card .kpi-num { font-size: 16px; font-weight: bold; font-family: monospace; }
-        .kpi-card .kpi-lbl { font-size: 9.5px; color: #94a3b8; text-transform: uppercase; }
-        .log-chip-row {
-            display: flex;
-            gap: 4px;
-            flex-wrap: wrap;
-            margin: 4px 0 2px 0;
-        }
-        .log-chip {
-            width: auto;
-            min-height: auto;
-            padding: 3px 7px;
-            font-size: 10px;
-            background: #1e293b;
-            border: 1px solid #334155;
-            color: #cbd5e1;
-            border-radius: 12px;
-            margin: 0;
-        }
-        .log-chip:hover { background: #0284c7; color: #fff; border-color: #38bdf8; }
     </style>
 </head>
 <body>
@@ -618,8 +611,8 @@
                 <span id="searchMatchCount" style="font-size:10px; color:#38bdf8; font-weight:bold;"></span>
             </div>
             <div style="display: flex; gap: 4px;">
-                <input type="text" id="assetSearchInput" placeholder="Search Asset Name, Tag ID, PLC..." oninput="handleSearch(this.value)">
-                <button id="focusSearchBtn" onclick="focusFirstSearchMatch()" title="Center map on first match" style="display:none; width: auto; padding: 4px 8px; font-size: 11px; background:#0284c7; color:#fff;">🎯</button>
+                <input type="text" id="assetSearchInput" placeholder="Search Asset Name, Tag ID, PLC..." oninput="handleSearch(this.value)" onkeydown="if(event.key==='Enter') focusNextSearchMatch()">
+                <button id="focusMatchBtn" onclick="focusNextSearchMatch()" title="Center map on next search match" style="display:none; width: auto; padding: 4px 8px; font-size: 11px; background:#0284c7; color:#fff;">🎯</button>
                 <button id="clearSearchBtn" onclick="clearAssetSearch()" title="Clear search" style="display:none; width: auto; padding: 4px 8px; font-size: 11px; background:#334155;">✕</button>
                 <button onclick="openScannerModal()" style="width: auto; padding: 4px 10px; font-size: 11px;">📷 Scan</button>
             </div>
@@ -631,12 +624,24 @@
         </div>
         <div id="coord-display">Col: -- | Row: --</div>
         <div id="sync-status">Connected (View Only)</div>
+
+        <!-- LIVE LAYER STATUS SUMMARY -->
+        <div id="layer-status-strip" title="Live asset counts in current view">
+            <span class="status-chip"><span style="color:#10b981;">●</span> OK: <span id="statOkCount">0</span></span>
+            <span class="status-chip"><span style="color:#f59e0b;">●</span> Maint: <span id="statMaintCount">0</span></span>
+            <span class="status-chip"><span style="color:#ef4444;">●</span> Down: <span id="statDownCount">0</span></span>
+            <span class="status-chip">📦 Parts: <span id="statPartsCount">0</span></span>
+        </div>
         
-        <!-- HEATMAP OVERLAY TOGGLE -->
-        <div>
+        <!-- MAP OVERLAY TOGGLES -->
+        <div style="display:flex; flex-direction:column; gap:4px;">
             <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
                 <input type="checkbox" id="heatmapToggle" onchange="toggleHeatmap(this.checked)" style="width:auto; margin:0; min-height:auto;">
                 <span style="color:#f59e0b; font-weight:bold;">🔥 Show Downtime & Breakdown Heatmap</span>
+            </label>
+            <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+                <input type="checkbox" id="zoneLabelsToggle" checked onchange="toggleZoneLabels(this.checked)" style="width:auto; margin:0; min-height:auto;">
+                <span style="color:#38bdf8; font-weight:bold;">🧭 Show Building Zone Orientation Labels</span>
             </label>
         </div>
         <!-- LAYER SELECTION MENU -->
@@ -663,6 +668,7 @@
                 <button class="layer-btn" id="layerLotoBtn" onclick="switchLayer('loto')">LOTO Isolation</button>
             </div>
             <div style="display: flex; gap: 4px; margin-top: 4px;">
+                <button class="layer-btn" id="layerUnderMezzSprinklersBtn" onclick="switchLayer('under_mezz_sprinklers')">Under-Mezz Sprinklers</button>
                 <button class="layer-btn" id="layerAssetsBtn" onclick="switchLayer('assets')">All Assets & Utilities</button>
             </div>
         </div>
@@ -681,30 +687,11 @@
             <button class="tab-btn" id="tabTomBtn" onclick="switchTab('tom')">Tom Team</button>
         </div>
         <div id="panelInfo" class="panel active">
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-                <h3 style="margin:0;">📊 Live Facility Snapshot</h3>
-                <button onclick="refreshMapData()" style="width:auto; min-height:auto; padding:3px 8px; font-size:10px; background:#1e293b; color:#38bdf8; margin:0;">🔄 Sync Now</button>
-            </div>
-            <div class="kpi-grid" id="facilityKpiGrid">
-                <div class="kpi-card" onclick="toggleQuickFilter('all')">
-                    <div class="kpi-num" id="kpiTotal" style="color:#38bdf8;">0</div>
-                    <div class="kpi-lbl">Total Assets</div>
-                </div>
-                <div class="kpi-card" onclick="toggleQuickFilter('down')">
-                    <div class="kpi-num" id="kpiDown" style="color:#ef4444;">0</div>
-                    <div class="kpi-lbl">🚨 Down Assets</div>
-                </div>
-                <div class="kpi-card" onclick="toggleQuickFilter('pm_due')">
-                    <div class="kpi-num" id="kpiPmDue" style="color:#f59e0b;">0</div>
-                    <div class="kpi-lbl">🔥 Overdue PMs</div>
-                </div>
-                <div class="kpi-card" onclick="toggleQuickFilter('parts_needed')">
-                    <div class="kpi-num" id="kpiParts" style="color:#a855f7;">0</div>
-                    <div class="kpi-lbl">📦 Parts Needed</div>
-                </div>
-            </div>
-            <p style="font-size: 10px; color: #64748b; margin: 4px 0 0 0;">
-                💡 <b>Tip:</b> Tap any KPI card above to filter the floor map, or tap any asset/zone to inspect LOTO steps, spare part bins, and wiring links.
+            <p style="font-size: 10px; color: #94a3b8; margin: 0; line-height: 1.45;">
+                💡 <b>Quick Floor Guide:</b><br>
+                • Tap any asset or zone for specs, LOTO isolation steps, parent feed, spare parts bins, and photos.<br>
+                • Use <b>🧭 New Tech Tour</b> at the top of the map for an 8-stop guided walkthrough of shutoffs, LOTO, and equipment.<br>
+                • Pan with one finger/drag; zoom with pinch or scroll wheel.
             </p>
         </div>
         <!-- MAINTENANCE TECH SHIFT HANDOVER PANEL -->
@@ -717,12 +704,6 @@
                 </div>
                 <select id="techShiftName"></select>
                 <label>Handover Note / Parts Waiting in Cage</label>
-                <div class="log-chip-row">
-                    <button type="button" class="log-chip" onclick="insertLogTag('techLogText', '[Cage Parts] ')">📦 Cage Parts</button>
-                    <button type="button" class="log-chip" onclick="insertLogTag('techLogText', '[Jam / Fault] ')">⚠️ Jam/Fault</button>
-                    <button type="button" class="log-chip" onclick="insertLogTag('techLogText', '[LOTO Active] ')">🔒 LOTO</button>
-                    <button type="button" class="log-chip" onclick="insertLogTag('techLogText', '[PM Complete] ')">✅ PM Done</button>
-                </div>
                 <textarea id="techLogText" placeholder="Detailed handoff notes, jams, or parts set aside in cage..." style="height:50px;"></textarea>
                 <button onclick="addShiftLog('tech')" style="margin-top: 4px; background:#0284c7; color:#fff;">+ Post Tech Entry</button>
             </div>
@@ -858,18 +839,17 @@
                 <span id="activeFilterBadge" style="display:none; background:#0f172a; border:1px solid #38bdf8; color:#38bdf8; padding:4px 9px; border-radius:20px; font-size:10px; font-weight:bold;"></span>
             </div>
             <div id="quick-filter-bar">
-                <button class="filter-pill down-pill" onclick="toggleQuickFilter('down')">🚨 Down Assets</button>
-                <button class="filter-pill pm-pill" onclick="toggleQuickFilter('pm_due')">🔥 Overdue PMs</button>
-                <button class="filter-pill" onclick="toggleQuickFilter('parts_needed')">📦 Parts Needed</button>
-                <button class="filter-pill" onclick="toggleQuickFilter('water')">💧 Water Shutoffs</button>
-                <button class="filter-pill" onclick="toggleQuickFilter('estop')">⚡ E-Stop Zones</button>
-                <button class="filter-pill active" id="filterAllBtn" onclick="toggleQuickFilter('all')">Show All</button>
+                <button class="filter-pill down-pill" data-filter="down" onclick="toggleQuickFilter('down')">🚨 Down Assets <span class="pill-count" id="pillCountDown">0</span></button>
+                <button class="filter-pill pm-pill" data-filter="pm_due" onclick="toggleQuickFilter('pm_due')">🔥 Overdue PMs <span class="pill-count" id="pillCountPm">0</span></button>
+                <button class="filter-pill" data-filter="parts_needed" onclick="toggleQuickFilter('parts_needed')">📦 Parts Needed <span class="pill-count" id="pillCountParts">0</span></button>
+                <button class="filter-pill" data-filter="water" onclick="toggleQuickFilter('water')">💧 Water Shutoffs <span class="pill-count" id="pillCountWater">0</span></button>
+                <button class="filter-pill" data-filter="estop" onclick="toggleQuickFilter('estop')">⚡ E-Stop Zones <span class="pill-count" id="pillCountEstop">0</span></button>
+                <button class="filter-pill active" id="filterAllBtn" data-filter="all" onclick="toggleQuickFilter('all')">Show All</button>
                 <button class="filter-pill" onclick="resetMapView()" style="border-color:#38bdf8; color:#38bdf8;">🎯 Reset View</button>
                 <button class="filter-pill" id="legendToggleBtn" onclick="toggleMapLegend()" style="border-color:#f59e0b; color:#fbbf24;">📖 Map Legend</button>
                 <button class="filter-pill" id="tourToggleBtn" onclick="startGuidedFloorTour()" style="border-color:#10b981; color:#34d399;">🧭 New Tech Tour</button>
             </div>
         </div>
-
         <!-- FLOATING MAP LEGEND DRAWER -->
         <div id="map-legend-panel">
             <h4>
@@ -882,10 +862,10 @@
             <div class="legend-row"><span class="legend-swatch" style="background:#ef4444; border-color:#0b131d;"></span> Down / Out of Service</div>
             <div class="legend-row"><span style="width:14px; text-align:center;">📦</span> Spare Parts Waiting / Needed</div>
             <div class="legend-row"><span style="width:14px; text-align:center; color:#ef4444; font-weight:bold;">◎</span> Pulsing Ring: PM Due / Overdue</div>
+            <div class="legend-row"><span style="width:14px; text-align:center; color:#38bdf8; font-weight:bold;">◎</span> Cyan Ring: Search Match</div>
             <div style="color:#94a3b8; font-size:10px; font-weight:bold; margin:6px 0 3px 0; border-top:1px solid #1f2d3d; padding-top:5px;">ASSET CATEGORIES</div>
             <div id="legendCategoriesList"></div>
         </div>
-
         <!-- GUIDED NEW TECH FLOOR TOUR BANNER -->
         <div id="guided-tour-banner">
             <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:4px;">
@@ -913,7 +893,6 @@
                 <h3 id="modalTitle" style="color: #38bdf8; margin: 0;">Item Details</h3>
                 <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
                     <button id="assetPracticeSimBtn" onclick="launchSimForCurrentAsset()" style="display:none; width: auto; padding: 4px 8px; font-size: 10px; background: #10b981; color: #0b131d; font-weight:bold;">🎯 Practice Fault Sim</button>
-                    <button onclick="copyAssetDeepLink()" style="width: auto; padding: 4px 8px; font-size: 10px; background: #1e293b; color: #10b981;">🔗 Copy Link</button>
                     <button onclick="printAssetSpecSheet()" style="width: auto; padding: 4px 8px; font-size: 10px; background: #1e293b; color: #38bdf8;">📄 Print Spec Sheet</button>
                     <button onclick="printAssetQrCode()" style="width: auto; padding: 4px 8px; font-size: 10px; background: #0284c7; color: #fff;">🖨️ Print QR Label</button>
                     <button class="close-modal" onclick="closeModal()">×</button>
@@ -938,9 +917,12 @@
                     </div>
                 </div>
                 <div id="modalDependencyContainer" style="display: flex; gap: 6px; flex-wrap: wrap;">
-                    <div style="flex: 1; min-width: 180px;">
+                    <div style="flex: 1.2; min-width: 200px;">
                         <label>Upstream Parent Asset / Power Source</label>
-                        <input type="text" id="modalParentAsset" disabled>
+                        <div style="display: flex; gap: 4px;">
+                            <input type="text" id="modalParentAsset" disabled>
+                            <button id="jumpToParentBtn" onclick="jumpToParentAsset()" style="display:none; width:auto; padding:4px 8px; font-size:10px; background:#0284c7; color:#fff;">🔍 Inspect</button>
+                        </div>
                     </div>
                     <div style="flex: 1; min-width: 180px;">
                         <label>PLC Rack / EtherNet IP Drop / Node ID</label>
@@ -955,8 +937,9 @@
                     </div>
                 </div>
                 <div style="display: flex; gap: 6px;" id="modalCoordContainer">
-                    <div style="flex:1;"><label>X Col</label><input type="number" id="modalX" disabled></div>
-                    <div style="flex:1;"><label>Y Row</label><input type="number" id="modalY" disabled></div>
+                    <div style="flex:1;"><label>Grid Position</label><input type="text" id="modalGridHuman" disabled></div>
+                    <div style="flex:0.6;"><label>X Col</label><input type="number" id="modalX" disabled></div>
+                    <div style="flex:0.6;"><label>Y Row</label><input type="number" id="modalY" disabled></div>
                 </div>
                 <div id="modalLotoContainer">
                     <h4>🔒 Lockout/Tagout (LOTO) Sequence & ESWC Checklist</h4>
@@ -1046,7 +1029,6 @@
                         <option value="scenario8">WO-108: VFD Conveyor Faults Immediately on Run Command</option>
                     </select>
                 </div>
-
                 <div style="display: flex; gap: 10px; flex-wrap: wrap;">
                     <!-- LEFT COLUMN: MULTIMETER & TEST POINTS -->
                     <div style="flex: 1; min-width: 295px; background: #111b27; padding: 10px; border-radius: 6px; border: 1px solid #1f2d3d;">
@@ -1060,13 +1042,11 @@
                             <div id="meterDisplayValue" style="font-family: monospace; font-size: 24px; color: #10b981; font-weight: bold;">0.00 VDC</div>
                             <div id="meterModeText" style="font-size: 10px; color: #38bdf8; margin-top: 2px;">Mode: VDC (DC Volts)</div>
                         </div>
-
                         <div style="display: flex; gap: 4px; margin-bottom: 8px;">
                             <button id="btnModeVDC" onclick="setMeterMode('VDC')" style="flex:1; font-size:10px; padding:4px; background:#0284c7;">VDC</button>
                             <button id="btnModeVAC" onclick="setMeterMode('VAC')" style="flex:1; font-size:10px; padding:4px;">VAC</button>
                             <button id="btnModeOHM" onclick="setMeterMode('OHM')" style="flex:1; font-size:10px; padding:4px;">Ω (Ohms)</button>
                         </div>
-
                         <div style="display: flex; gap: 6px; margin-bottom: 6px;">
                             <div style="flex:1; background:#0b131d; padding:4px 6px; border-radius:4px; border:1px solid #ef4444;">
                                 <span style="color:#ef4444; font-weight:bold; font-size:10px;">🔴 Red Lead (+)</span>
@@ -1077,18 +1057,15 @@
                                 <div id="blackProbeText" style="font-size:10px; color:#fff; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">Not Connected</div>
                             </div>
                         </div>
-
                         <label style="color: #38bdf8; font-weight: bold; font-size: 11px;">Circuit Test Points (Select Red & Black Lead):</label>
                         <div id="testPointsContainer" style="display: flex; flex-direction: column; gap: 4px; max-height: 210px; overflow-y: auto; margin-top: 4px; padding-right: 4px;"></div>
                     </div>
-
                     <!-- RIGHT COLUMN: SCHEMATIC & SYMPTOMS -->
                     <div style="flex: 1.3; min-width: 310px; display: flex; flex-direction: column; gap: 10px;">
                         <div style="background: #111b27; padding: 10px; border-radius: 6px; border: 1px solid #1f2d3d;">
                             <h4 style="color: #f59e0b; margin: 0 0 4px 0;">🚨 Operator Report & Field Observations</h4>
                             <div id="scenarioSymptomText" style="color: #e0e1dd; font-size: 11px; line-height: 1.45;">Select a work order above to begin troubleshooting.</div>
                         </div>
-
                         <div style="background: #111b27; padding: 10px; border-radius: 6px; border: 1px solid #1f2d3d;">
                             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
                                 <h4 style="color: #38bdf8; margin: 0;">📐 Control / Power Schematic & Spec Notes</h4>
@@ -1096,7 +1073,6 @@
                             </div>
                             <div id="schematicDiagramBox" style="background: #070d14; border: 1px solid #1f2d3d; border-radius: 4px; padding: 8px; font-family: monospace; font-size: 10px; color: #38bdf8; white-space: pre; overflow-x: auto; line-height: 1.4;"></div>
                         </div>
-
                         <div style="background: #111b27; padding: 10px; border-radius: 6px; border: 1px solid #1f2d3d;">
                             <h4 style="color: #10b981; margin: 0 0 4px 0;">💡 Close Work Order — Root Cause Diagnosis</h4>
                             <div style="display: flex; gap: 6px; flex-wrap: wrap;">
@@ -1126,8 +1102,6 @@
             </div>
         </div>
     </div>
-
-
     <!-- EQUIPMENT & FACILITY TRAINING SIMULATORS MODAL -->
     <div id="equipment-sim-modal-overlay">
         <div class="modal-content" style="width: 980px; max-width: 96vw;">
@@ -1147,15 +1121,13 @@
                     <button class="sim-module-btn" id="simTrackBtn_pneumatics" onclick="switchEqSimTrack('pneumatics')">💨 Pneumatics & PLC I/O</button>
                     <button class="sim-module-btn" id="simTrackBtn_onboarding" onclick="switchEqSimTrack('onboarding')">🧭 New Tech Map Walkthrough</button>
                 </div>
-
-                <!-- SCENARIO SIMULATOR VIEW (Tracks 1-4) -->
+                <!-- SCENARIO SIMULATOR VIEW (Tracks 1-5) -->
                 <div id="eqSimScenarioView" style="display: flex; flex-direction: column; gap: 10px;">
                     <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
                         <label style="color: #10b981; font-weight: bold;">Work Order Scenario:</label>
                         <select id="eqSimScenarioSelect" onchange="loadEqScenario(this.value)" style="flex: 1; border-color: #10b981;"></select>
                         <button onclick="copyEqWorkOrderSummary()" style="width: auto; padding: 5px 10px; font-size: 11px; background: #1e293b; color: #38bdf8; margin: 0;">📋 Copy WO & Notes</button>
                     </div>
-
                     <div style="display: flex; gap: 10px; flex-wrap: wrap;">
                         <!-- LEFT COLUMN: DIAGNOSTIC GAUGES & FIELD CHECKS -->
                         <div style="flex: 1.05; min-width: 300px; background: #111b27; padding: 10px; border-radius: 6px; border: 1px solid #1f2d3d; display: flex; flex-direction: column; gap: 8px;">
@@ -1164,28 +1136,23 @@
                                 <button onclick="resetEqChecks()" style="width: auto; font-size: 10px; padding: 2px 8px; background: #334155; color: #e2e8f0; margin: 0;">Reset Checks</button>
                             </div>
                             <div id="eqSimTelemetryGrid" style="display: flex; gap: 6px; flex-wrap: wrap;"></div>
-
                             <label style="color: #38bdf8; font-weight: bold; font-size: 11px;">Interactive Field Inspection & Diagnostic Actions:</label>
                             <div id="eqSimChecksContainer" style="display: flex; flex-direction: column; gap: 5px; max-height: 220px; overflow-y: auto; padding-right: 4px;"></div>
-
                             <div>
                                 <label style="color: #f59e0b; font-weight: bold; font-size: 11px;">📝 Diagnostic Findings Log:</label>
                                 <div id="eqSimDiagnosticLog" class="notes-log-box" style="max-height: 95px; margin-top: 3px; color: #cbd5e1;"></div>
                             </div>
                         </div>
-
                         <!-- RIGHT COLUMN: SYMPTOMS, SYSTEM DIAGRAM & ROOT CAUSE -->
                         <div style="flex: 1.25; min-width: 310px; display: flex; flex-direction: column; gap: 10px;">
                             <div style="background: #111b27; padding: 10px; border-radius: 6px; border: 1px solid #1f2d3d;">
                                 <h4 style="color: #f59e0b; margin: 0 0 4px 0;">🚨 Operations Report & Equipment Symptoms</h4>
                                 <div id="eqSimSymptomText" style="color: #e0e1dd; font-size: 11px; line-height: 1.45;"></div>
                             </div>
-
                             <div style="background: #111b27; padding: 10px; border-radius: 6px; border: 1px solid #1f2d3d;">
                                 <h4 style="color: #38bdf8; margin: 0 0 4px 0;">📐 Subsystem Layout, Specs & LOTO Reference</h4>
                                 <div id="eqSimSchematicBox" style="background: #070d14; border: 1px solid #1f2d3d; border-radius: 4px; padding: 8px; font-family: monospace; font-size: 10px; color: #38bdf8; white-space: pre; overflow-x: auto; line-height: 1.4;"></div>
                             </div>
-
                             <div style="background: #111b27; padding: 10px; border-radius: 6px; border: 1px solid #1f2d3d;">
                                 <h4 style="color: #10b981; margin: 0 0 4px 0;">💡 Close Work Order — Verified Root Cause & Corrective Action</h4>
                                 <div style="display: flex; gap: 6px; flex-wrap: wrap;">
@@ -1197,8 +1164,7 @@
                         </div>
                     </div>
                 </div>
-
-                <!-- NEW TECH ONBOARDING WALKTHROUGH VIEW (Track 5) -->
+                <!-- NEW TECH ONBOARDING WALKTHROUGH VIEW -->
                 <div id="eqSimOnboardingView" style="display: none; flex-direction: column; gap: 10px;">
                     <div style="background: #111b27; padding: 10px; border-radius: 6px; border: 1px solid #1f2d3d;">
                         <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px;">
@@ -1218,8 +1184,6 @@
             </div>
         </div>
     </div>
-
-
     <!-- ADDITIONAL TRAINING SIMULATORS HUB MODAL -->
     <div id="additional-sims-modal-overlay">
         <div class="modal-content" style="width: 960px; max-width: 96vw;">
@@ -1237,23 +1201,20 @@
                     <button class="add-sim-cat-btn" id="addSimCat_controls" onclick="filterAdditionalSims('controls')">Controls & Signals</button>
                     <button class="add-sim-cat-btn" id="addSimCat_inapp" onclick="filterAdditionalSims('inapp')">Built-In Map Sims</button>
                 </div>
-
                 <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center; justify-content: space-between;">
                     <span style="color: #94a3b8; font-size: 11px;">
                         External browser simulators launch in a new tab so your live map and shift logs stay open.
                     </span>
                     <button onclick="copyAdditionalSimsList()" style="width: auto; padding: 4px 10px; font-size: 10px; min-height: auto; background: #1e293b; color: #38bdf8; margin: 0;">📋 Copy Simulator Links</button>
                 </div>
-
                 <!-- SIMULATOR CARDS GRID -->
                 <div id="addSimCardsContainer" class="add-sim-grid"></div>
-
                 <!-- NEW TECH TRAINING ASSIGNMENTS / NOTES -->
                 <div id="addSimQuickNotes" style="background: #111b27; border: 1px solid #1f2d3d; border-radius: 6px; padding: 10px;">
                     <h4 style="color: #f59e0b; margin: 0 0 4px 0;">📌 Suggested Onboarding Sequence for Newer Techs</h4>
                     <div style="color: #cbd5e1; font-size: 11px; line-height: 1.5;">
                         1. Start with <b>New Tech Map Walkthrough</b> in Equipment Simulators to learn shutoffs, LOTO points, and zones on the map.<br>
-                        2. Practice <b>Controls & Electrical Simulator (`WO-101`–`WO-108`)</b> and <b>Equipment Simulators (`WO-201`–`WO-502`)</b> for facility-specific faults.<br>
+                        2. Practice <b>Controls & Electrical Simulator (`WO-101`–`WO-108`)</b> and <b>Equipment Simulators (`WO-201`–`WO-602`)</b> for facility-specific faults.<br>
                         3. Use external labs like <b>ControlsTrainer</b>, <b>CodePLC Labs</b>, <b>Automation Controls Toolbox</b>, or <b>rungs.dev</b> for deeper ladder logic and I/O drills.
                     </div>
                 </div>
@@ -1264,7 +1225,6 @@
             </div>
         </div>
     </div>
-
     <!-- SHIFT MANAGER MODAL -->
     <div id="shift-manager-modal-overlay">
         <div class="modal-content" style="width: 450px;">
@@ -1337,7 +1297,6 @@
             <div id="lightboxCaption" style="margin-top: 8px; color: #38bdf8; font-size: 13px; font-weight: bold;"></div>
         </div>
     </div>
-
     <!-- Firebase SDK Imports -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -1365,7 +1324,11 @@
         let currentLayer = 'ground'; 
         let currentTab = 'info';
         let searchQuery = '';
+        let searchDebounceTimer = null;
+        let currentSearchMatches = [];
+        let searchMatchIndex = 0;
         let showHeatmap = false;
+        let showZoneLabels = true;
         let activeQuickFilter = 'all';
         let html5QrCode = null;
         let arQrCode = null;
@@ -1395,13 +1358,11 @@
         let safetyActions = [];
         let tomActions = [];
         let activeShiftCategory = 'tech';
-
         /* SIMULATOR VARIABLES */
         let currentMeterMode = 'VDC';
         let activeRedProbe = null;
         let activeBlackProbe = null;
         let activeScenarioKey = 'scenario1';
-
         const simulatorScenarios = {
             scenario1: {
                 title: "WO-101: Main Infeed Conveyor Won't Start",
@@ -1575,7 +1536,6 @@
                 }
             }
         };
-
         let selectedId = null;
         let isPanning = false;
         let panStart = { x: 0, y: 0 };
@@ -1583,76 +1543,64 @@
         
         let activePointers = new Map();
         let initialPinchDistance = null;
+        let itemTapState = { pointerId: null, startX: 0, startY: 0, moved: false };
         const container = document.getElementById("canvas-container");
         const svg = document.getElementById("layoutSvg");
         const viewport = document.getElementById("viewport");
         const syncStatus = document.getElementById("sync-status");
-
         window.toggleSidebar = function() {
             document.getElementById("sidebar").classList.toggle("collapsed");
         };
-
         /* SIMULATOR FUNCTIONS */
         window.openElectricalTrainingModal = function() {
             document.getElementById("electrical-training-modal-overlay").style.display = "flex";
             loadScenario('scenario1');
         };
-
         window.closeElectricalTrainingModal = function() {
             document.getElementById("electrical-training-modal-overlay").style.display = "none";
         };
-
         window.clearProbes = function() {
             activeRedProbe = null;
             activeBlackProbe = null;
             updateProbeTextDisplays();
             updateMultimeterDisplay();
         };
-
         window.loadScenario = function(scenKey) {
             activeScenarioKey = scenKey;
             let scen = simulatorScenarios[scenKey];
             if (!scen) return;
-
             document.getElementById("scenarioSymptomText").innerText = scen.symptoms;
             document.getElementById("schematicDiagramBox").innerText = scen.schematic;
             document.getElementById("diagnosisFeedback").innerText = "";
             document.getElementById("diagnosisAnswerSelect").value = "";
-
             if (scen.defaultMode) {
                 setMeterMode(scen.defaultMode);
             }
-
             activeRedProbe = null;
             activeBlackProbe = null;
             updateProbeTextDisplays();
             updateMultimeterDisplay();
-
             let container = document.getElementById("testPointsContainer");
             container.innerHTML = "";
             scen.points.forEach(pt => {
                 let div = document.createElement("div");
                 div.style.display = "flex";
                 div.style.gap = "4px";
-
                 let redBtn = document.createElement("button");
                 redBtn.className = "test-point-btn";
                 redBtn.style.flex = "1";
                 redBtn.innerText = `🔴 ${pt.name}`;
                 redBtn.onclick = () => selectProbe('red', pt);
-
                 let blackBtn = document.createElement("button");
                 blackBtn.className = "test-point-btn";
                 blackBtn.style.flex = "1";
                 blackBtn.innerText = `⚫ ${pt.name}`;
                 blackBtn.onclick = () => selectProbe('black', pt);
-
                 div.appendChild(redBtn);
                 div.appendChild(blackBtn);
                 container.appendChild(div);
             });
         };
-
         window.setMeterMode = function(mode) {
             currentMeterMode = mode;
             const labels = {
@@ -1667,19 +1615,16 @@
             });
             updateMultimeterDisplay();
         };
-
         function selectProbe(color, pt) {
             if (color === 'red') activeRedProbe = pt;
             else activeBlackProbe = pt;
             updateProbeTextDisplays();
             updateMultimeterDisplay();
         }
-
         function updateProbeTextDisplays() {
             document.getElementById("redProbeText").innerText = activeRedProbe ? activeRedProbe.name : "Not Connected";
             document.getElementById("blackProbeText").innerText = activeBlackProbe ? activeBlackProbe.name : "Not Connected";
         }
-
         function updateMultimeterDisplay() {
             let display = document.getElementById("meterDisplayValue");
             let scen = simulatorScenarios[activeScenarioKey];
@@ -1687,7 +1632,6 @@
                 display.innerText = currentMeterMode === 'OHM' ? "O.L (OPEN)" : `0.00 ${currentMeterMode}`;
                 return;
             }
-
             if (currentMeterMode === 'VDC') {
                 let voltageDiff = (activeRedProbe.vdc || 0) - (activeBlackProbe.vdc || 0);
                 display.innerText = `${voltageDiff.toFixed(2)} VDC`;
@@ -1733,7 +1677,6 @@
                 }
             }
         }
-
         
         window.copyWorkOrderSummary = function() {
             const sel = document.getElementById("simScenarioSelect");
@@ -1746,7 +1689,6 @@
                 navigator.clipboard.writeText(text).catch(() => {});
             }
         };
-
         window.checkDiagnosis = function() {
             let userVal = document.getElementById("diagnosisAnswerSelect").value;
             let scen = simulatorScenarios[activeScenarioKey];
@@ -1764,13 +1706,10 @@
                 feedback.style.color = "#ef4444";
             }
         };
-
-
         /* EQUIPMENT & FACILITY TRAINING SIMULATOR DATA & LOGIC */
         let activeEqTrack = 'conveyance';
         let activeEqScenarioId = 'conv_1';
         let completedOnboardingTasks = JSON.parse(localStorage.getItem('imi1_onboarding_tasks') || '{}');
-
         const equipmentSimData = {
             conveyance: [
                 {
@@ -2078,7 +2017,6 @@ New Tech Tip: Check cable continuity while flexing near moving guards/frames bef
                 }
             ]
         };
-
         const onboardingChecklistItems = [
             { id: 'ob_1', title: 'Locate Main Water Shutoffs', desc: 'Switch to the Water Shutoffs layer and inspect main riser isolation points.', layer: 'water' },
             { id: 'ob_2', title: 'Verify Natural Gas Shutoff Valves', desc: 'Open the Gas Shutoffs layer to identify exterior & rooftop gas isolation valves.', layer: 'gas' },
@@ -2089,36 +2027,29 @@ New Tech Tip: Check cable continuity while flexing near moving guards/frames bef
             { id: 'ob_7', title: 'Inspect Dock Doors & Guardrails', desc: 'Open the Dock Doors layer to check dock leveler, restraint, and corral locations.', layer: 'dock_doors' },
             { id: 'ob_8', title: 'Check Rooftop HVAC Units', desc: 'View the HVAC / Roof layers to locate RTUs, exhaust fans, and roof hatch access.', layer: 'hvac' }
         ];
-
         window.openEquipmentSimModal = function(initialTrack) {
             document.getElementById('equipment-sim-modal-overlay').style.display = 'flex';
             switchEqSimTrack(initialTrack || activeEqTrack || 'conveyance');
         };
-
         window.closeEquipmentSimModal = function() {
             document.getElementById('equipment-sim-modal-overlay').style.display = 'none';
         };
-
         window.switchEqSimTrack = function(track) {
             activeEqTrack = track;
             ['conveyance', 'sorter', 'dock', 'hvac', 'pneumatics', 'onboarding'].forEach(t => {
                 const btn = document.getElementById('simTrackBtn_' + t);
                 if (btn) btn.classList.toggle('active', t === track);
             });
-
             const scenView = document.getElementById('eqSimScenarioView');
             const obView = document.getElementById('eqSimOnboardingView');
-
             if (track === 'onboarding') {
                 scenView.style.display = 'none';
                 obView.style.display = 'flex';
                 renderOnboardingChecklist();
                 return;
             }
-
             scenView.style.display = 'flex';
             obView.style.display = 'none';
-
             const scenarios = equipmentSimData[track] || [];
             const sel = document.getElementById('eqSimScenarioSelect');
             sel.innerHTML = '';
@@ -2128,12 +2059,10 @@ New Tech Tip: Check cable continuity while flexing near moving guards/frames bef
                 opt.textContent = s.title;
                 sel.appendChild(opt);
             });
-
             if (scenarios.length > 0) {
                 loadEqScenario(scenarios[0].id);
             }
         };
-
         function findEqScenarioById(id) {
             for (const track of Object.keys(equipmentSimData)) {
                 const found = equipmentSimData[track].find(s => s.id === id);
@@ -2141,18 +2070,14 @@ New Tech Tip: Check cable continuity while flexing near moving guards/frames bef
             }
             return null;
         }
-
         window.loadEqScenario = function(scenId) {
             activeEqScenarioId = scenId;
             const scen = findEqScenarioById(scenId);
             if (!scen) return;
-
             document.getElementById('eqSimSymptomText').innerText = scen.symptoms;
             document.getElementById('eqSimSchematicBox').innerText = scen.schematic;
             document.getElementById('eqSimFeedback').innerText = '';
             document.getElementById('eqSimDiagnosticLog').innerHTML = '<span style="color:#64748b; font-style:italic;">Click any field inspection step above to log live findings...</span>';
-
-            // Telemetry cards
             const teleGrid = document.getElementById('eqSimTelemetryGrid');
             teleGrid.innerHTML = '';
             (scen.telemetry || []).forEach(t => {
@@ -2161,8 +2086,6 @@ New Tech Tip: Check cable continuity while flexing near moving guards/frames bef
                 card.innerHTML = `<div class="gauge-label">${t.label}</div><div class="gauge-val ${t.status || ''}">${t.value}</div>`;
                 teleGrid.appendChild(card);
             });
-
-            // Interactive field check buttons
             const checksBox = document.getElementById('eqSimChecksContainer');
             checksBox.innerHTML = '';
             (scen.checks || []).forEach((chk, idx) => {
@@ -2173,8 +2096,6 @@ New Tech Tip: Check cable continuity while flexing near moving guards/frames bef
                 btn.onclick = () => runEqFieldCheck(idx, chk);
                 checksBox.appendChild(btn);
             });
-
-            // Root cause options
             const diagSel = document.getElementById('eqSimDiagnosisSelect');
             diagSel.innerHTML = '<option value="">Select Verified Root Cause...</option>';
             (scen.options || []).forEach(optData => {
@@ -2184,7 +2105,6 @@ New Tech Tip: Check cable continuity while flexing near moving guards/frames bef
                 diagSel.appendChild(opt);
             });
         };
-
         function runEqFieldCheck(idx, chk) {
             const btn = document.getElementById(`eqChkBtn_${idx}`);
             const logBox = document.getElementById('eqSimDiagnosticLog');
@@ -2202,11 +2122,9 @@ New Tech Tip: Check cable continuity while flexing near moving guards/frames bef
                 logBox.scrollTop = logBox.scrollHeight;
             }
         }
-
         window.resetEqChecks = function() {
             loadEqScenario(activeEqScenarioId);
         };
-
         window.checkEqDiagnosis = function() {
             const val = document.getElementById('eqSimDiagnosisSelect').value;
             const scen = findEqScenarioById(activeEqScenarioId);
@@ -2225,40 +2143,24 @@ New Tech Tip: Check cable continuity while flexing near moving guards/frames bef
                 fb.style.color = '#ef4444';
             }
         };
-
         window.copyEqWorkOrderSummary = function() {
             const scen = findEqScenarioById(activeEqScenarioId);
             if (!scen) return;
             const logText = document.getElementById('eqSimDiagnosticLog')?.innerText || '';
             const fbText = document.getElementById('eqSimFeedback')?.innerText || '';
-            const text = `${scen.title}
-
-Symptoms:
-${scen.symptoms}
-
-Subsystem & Specs:
-${scen.schematic}
-
-Field Findings:
-${logText}` + (fbText ? `
-
-Diagnosis:
-${fbText}` : '');
+            const text = `${scen.title}\nSymptoms:\n${scen.symptoms}\nSubsystem & Specs:\n${scen.schematic}\nField Findings:\n${logText}` + (fbText ? `\nDiagnosis:\n${fbText}` : '');
             if (navigator.clipboard && navigator.clipboard.writeText) {
                 navigator.clipboard.writeText(text).catch(() => {});
             }
         };
-
         function renderOnboardingChecklist() {
             const box = document.getElementById('scavengerChecklistBox');
             if (!box) return;
             box.innerHTML = '';
             let doneCount = 0;
-
             onboardingChecklistItems.forEach(item => {
                 const isDone = !!completedOnboardingTasks[item.id];
                 if (isDone) doneCount++;
-
                 const row = document.createElement('div');
                 row.className = 'scavenger-row' + (isDone ? ' completed' : '');
                 row.innerHTML = `
@@ -2273,25 +2175,20 @@ ${fbText}` : '');
                 `;
                 box.appendChild(row);
             });
-
             const badge = document.getElementById('onboardingProgressBadge');
             if (badge) badge.innerText = `${doneCount} / ${onboardingChecklistItems.length} Completed`;
         }
-
         window.toggleOnboardingTask = function(taskId, checked) {
             completedOnboardingTasks[taskId] = checked;
             localStorage.setItem('imi1_onboarding_tasks', JSON.stringify(completedOnboardingTasks));
             renderOnboardingChecklist();
         };
-
         window.jumpToOnboardingLayer = function(layerName) {
             closeEquipmentSimModal();
             switchLayer(layerName);
         };
-
         /* CONTEXTUAL BRIDGE FROM MAP ASSET MODAL TO MATCHING SIMULATOR */
         let currentModalAssetSimTarget = null;
-
         function detectSimulatorForElement(el) {
             if (!el) return null;
             const hay = `${el.name || ''} ${el.category || ''} ${el.layer || ''}`.toLowerCase();
@@ -2312,7 +2209,6 @@ ${fbText}` : '');
             }
             return null;
         }
-
         window.launchSimForCurrentAsset = function() {
             const target = currentModalAssetSimTarget;
             closeModal();
@@ -2323,11 +2219,8 @@ ${fbText}` : '');
                 openEquipmentSimModal(target.track);
             }
         };
-
-
         /* ADDITIONAL SIMULATORS HUB DATA & FUNCTIONS */
         let activeAddSimFilter = 'all';
-
         const additionalSimulatorCatalog = [
             {
                 id: 'sim_controlstrainer',
@@ -2388,16 +2281,13 @@ ${fbText}` : '');
                 actionLabel: 'Launch Built-In Sim'
             }
         ];
-
         window.openAdditionalSimsModal = function(filterCat) {
             document.getElementById('additional-sims-modal-overlay').style.display = 'flex';
             filterAdditionalSims(filterCat || activeAddSimFilter || 'all');
         };
-
         window.closeAdditionalSimsModal = function() {
             document.getElementById('additional-sims-modal-overlay').style.display = 'none';
         };
-
         window.filterAdditionalSims = function(cat) {
             activeAddSimFilter = cat;
             ['all', 'plc', 'controls', 'inapp'].forEach(c => {
@@ -2406,26 +2296,20 @@ ${fbText}` : '');
             });
             renderAdditionalSimCards();
         };
-
         function renderAdditionalSimCards() {
             const box = document.getElementById('addSimCardsContainer');
             if (!box) return;
             box.innerHTML = '';
-
             const items = activeAddSimFilter === 'all'
                 ? additionalSimulatorCatalog
                 : additionalSimulatorCatalog.filter(item => item.cat === activeAddSimFilter);
-
             items.forEach(item => {
                 const card = document.createElement('div');
                 card.className = 'add-sim-card';
-
                 const top = document.createElement('div');
                 top.innerHTML = `<div class="add-sim-badge">${item.badge}</div><div class="add-sim-title">${item.title}</div><p class="add-sim-desc">${item.desc}</p>`;
-
                 const actions = document.createElement('div');
                 actions.className = 'add-sim-actions';
-
                 if (item.actionType === 'external' && item.url) {
                     const link = document.createElement('a');
                     link.className = 'add-sim-link-btn';
@@ -2451,13 +2335,11 @@ ${fbText}` : '');
                     };
                     actions.appendChild(btn);
                 }
-
                 card.appendChild(top);
                 card.appendChild(actions);
                 box.appendChild(card);
             });
         }
-
         window.copyAdditionalSimsList = function() {
             const lines = additionalSimulatorCatalog
                 .filter(i => i.url)
@@ -2466,7 +2348,6 @@ ${fbText}` : '');
                 navigator.clipboard.writeText(lines.join('\n')).catch(() => {});
             }
         };
-
         async function loadFromFirebase() {
             try {
                 const docRef = doc(db, "layouts", "facility_main");
@@ -2500,12 +2381,12 @@ ${fbText}` : '');
                 }
                 populateAllShiftDropdowns();
                 renderAllActionLists();
+                updateTabActionBadges();
                 renderShiftLogs('tech', document.getElementById('techFilterSelect').value);
                 renderShiftLogs('ops', document.getElementById('shiftFilterSelect').value);
                 renderShiftLogs('safety', document.getElementById('safetyFilterSelect').value);
                 renderShiftLogs('tom', document.getElementById('tomFilterSelect').value);
                 render();
-                checkInitialAssetDeepLink();
             } catch (error) {
                 console.error("Error loading layout:", error);
                 let loadedFromCache = false;
@@ -2548,6 +2429,7 @@ ${fbText}` : '');
                 }
                 populateAllShiftDropdowns();
                 renderAllActionLists();
+                updateTabActionBadges();
                 renderShiftLogs('tech', document.getElementById('techFilterSelect').value);
                 renderShiftLogs('ops', document.getElementById('shiftFilterSelect').value);
                 renderShiftLogs('safety', document.getElementById('safetyFilterSelect').value);
@@ -2555,7 +2437,6 @@ ${fbText}` : '');
                 render();
             }
         }
-
         async function saveToFirebase() {
             try {
                 syncStatus.innerText = "Saving...";
@@ -2587,12 +2468,10 @@ ${fbText}` : '');
                 syncStatus.style.color = "#ef4444";
             }
         }
-
         window.addShiftLog = function(category) {
             let shiftSelectId = category === 'safety' ? 'safetyShiftName' : (category === 'tom' ? 'tomShiftName' : (category === 'tech' ? 'techShiftName' : 'shiftName'));
             let textInputId = category === 'safety' ? 'safetyLogText' : (category === 'tom' ? 'tomLogText' : (category === 'tech' ? 'techLogText' : 'shiftLogText'));
             let filterSelectId = category === 'safety' ? 'safetyFilterSelect' : (category === 'tom' ? 'tomFilterSelect' : (category === 'tech' ? 'techFilterSelect' : 'shiftFilterSelect'));
-
             let shift = document.getElementById(shiftSelectId).value;
             let note = document.getElementById(textInputId).value.trim();
             if (!note) {
@@ -2601,53 +2480,43 @@ ${fbText}` : '');
             }
             let timestamp = new Date().toISOString().replace('T', ' ').slice(0, 16);
             let entry = { time: timestamp, shift: shift, note: note };
-
             if (category === 'safety') safetyLogs.unshift(entry);
             else if (category === 'tom') tomLogs.unshift(entry);
             else if (category === 'tech') techLogs.unshift(entry);
             else shiftLogs.unshift(entry);
-
             document.getElementById(textInputId).value = "";
             let currentFilter = document.getElementById(filterSelectId).value;
             renderShiftLogs(category, currentFilter);
             saveToFirebase();
         };
-
         function populateAllShiftDropdowns() {
             populateDropdownForCategory('tech', 'techShiftName', 'techFilterSelect');
             populateDropdownForCategory('ops', 'shiftName', 'shiftFilterSelect');
             populateDropdownForCategory('safety', 'safetyShiftName', 'safetyFilterSelect');
             populateDropdownForCategory('tom', 'tomShiftName', 'tomFilterSelect');
         }
-
         function populateDropdownForCategory(cat, nameSelectId, filterSelectId) {
             let selectName = document.getElementById(nameSelectId);
             let selectFilter = document.getElementById(filterSelectId);
             if (!selectName || !selectFilter) return;
-
             let list = cat === 'safety' ? safetyShifts : (cat === 'tom' ? tomShifts : (cat === 'tech' ? techShifts : opsShifts));
             let currentNameVal = selectName.value;
             let currentFilterVal = selectFilter.value;
-
             selectName.innerHTML = "";
             selectFilter.innerHTML = '<option value="ALL">All Shifts</option>';
-
             list.forEach(s => {
                 let opt1 = document.createElement("option");
                 opt1.value = s;
                 opt1.textContent = s;
                 selectName.appendChild(opt1);
-
                 let opt2 = document.createElement("option");
                 opt2.value = s;
                 opt2.textContent = s;
                 selectFilter.appendChild(opt2);
             });
-
             if (list.includes(currentNameVal)) selectName.value = currentNameVal;
             if (currentFilterVal === "ALL" || list.includes(currentFilterVal)) selectFilter.value = currentFilterVal;
         }
-
         window.openShiftManagerModal = function(cat) {
             activeShiftCategory = cat;
             let titleMap = { tech: '⚙️ Manage Tech Shifts', ops: '⚙️ Manage Operations Shifts', safety: '⚙️ Manage Safety Shifts', tom: '⚙️ Manage Tom Team Shifts' };
@@ -2655,19 +2524,16 @@ ${fbText}` : '');
             renderShiftTable();
             document.getElementById("shift-manager-modal-overlay").style.display = "flex";
         };
-
         window.closeShiftManagerModal = function() {
             document.getElementById("shift-manager-modal-overlay").style.display = "none";
             populateAllShiftDropdowns();
             saveToFirebase();
         };
-
         function renderShiftTable() {
             let tbody = document.getElementById("shiftTableBody");
             if (!tbody) return;
             tbody.innerHTML = "";
             let list = activeShiftCategory === 'safety' ? safetyShifts : (activeShiftCategory === 'tom' ? tomShifts : (activeShiftCategory === 'tech' ? techShifts : opsShifts));
-
             list.forEach((shiftName, index) => {
                 let tr = document.createElement("tr");
                 let tdName = document.createElement("td");
@@ -2679,7 +2545,6 @@ ${fbText}` : '');
                     populateAllShiftDropdowns();
                 };
                 tdName.appendChild(inputName);
-
                 let tdAction = document.createElement("td");
                 tdAction.style.textAlign = "center";
                 let delBtn = document.createElement("button");
@@ -2703,7 +2568,6 @@ ${fbText}` : '');
                 tbody.appendChild(tr);
             });
         }
-
         window.addNewShift = function() {
             let input = document.getElementById("newShiftInput");
             let val = input.value.trim();
@@ -2721,35 +2585,32 @@ ${fbText}` : '');
             renderShiftTable();
             populateAllShiftDropdowns();
         };
-
         window.filterShiftLogs = function(cat, selectedShift) {
             renderShiftLogs(cat, selectedShift);
         };
-
         function renderShiftLogs(cat, filterShift = "ALL") {
             let containerId = cat === 'safety' ? 'safetyLogContainer' : (cat === 'tom' ? 'tomLogContainer' : (cat === 'tech' ? 'techLogContainer' : 'shiftLogContainer'));
             let box = document.getElementById(containerId);
             if (!box) return;
             box.innerHTML = "";
-
             let logsToDisplay = cat === 'safety' ? safetyLogs : (cat === 'tom' ? tomLogs : (cat === 'tech' ? techLogs : shiftLogs));
             if (filterShift && filterShift !== "ALL") {
                 logsToDisplay = logsToDisplay.filter(s => s.shift === filterShift);
             }
-
             if (!logsToDisplay || logsToDisplay.length === 0) {
                 box.innerHTML = `<span style="color:#64748b; font-style:italic;">No handover entries found for ${filterShift}.</span>`;
                 return;
             }
-
+            const todayPrefix = new Date().toISOString().slice(0, 10);
             logsToDisplay.forEach(s => {
                 let div = document.createElement("div");
                 div.className = "note-entry";
-                div.innerHTML = `<span class="note-timestamp">[${s.time}] ${s.shift}:</span> ${s.note}`;
+                const isToday = (s.time || "").startsWith(todayPrefix);
+                const badge = isToday ? `<span class="today-badge">TODAY</span>` : "";
+                div.innerHTML = `<span class="note-timestamp">[${s.time}] ${s.shift}:</span>${badge} ${s.note}`;
                 box.appendChild(div);
             });
         }
-
         /* ACTION ITEM TRACKER FUNCTIONS */
         function getActionList(cat) {
             if (cat === 'safety') return safetyActions;
@@ -2757,7 +2618,20 @@ ${fbText}` : '');
             if (cat === 'tech') return techActions;
             return opsActions;
         }
-
+        function updateTabActionBadges() {
+            const techOpen = techActions.filter(a => !a.done).length;
+            const opsOpen = opsActions.filter(a => !a.done).length;
+            const safetyOpen = safetyActions.filter(a => !a.done).length;
+            const tomOpen = tomActions.filter(a => !a.done).length;
+            const tBtn = document.getElementById("tabTechBtn");
+            const oBtn = document.getElementById("tabShiftBtn");
+            const sBtn = document.getElementById("tabSafetyBtn");
+            const mBtn = document.getElementById("tabTomBtn");
+            if (tBtn) tBtn.innerText = techOpen > 0 ? `Tech (${techOpen})` : "Tech Log";
+            if (oBtn) oBtn.innerText = opsOpen > 0 ? `Ops (${opsOpen})` : "Ops Log";
+            if (sBtn) sBtn.innerText = safetyOpen > 0 ? `Safety (${safetyOpen})` : "Safety";
+            if (mBtn) mBtn.innerText = tomOpen > 0 ? `Tom (${tomOpen})` : "Tom Team";
+        }
         window.addActionItem = function(cat) {
             let inputId = cat === 'safety' ? 'newSafetyActionText' : (cat === 'tom' ? 'newTomActionText' : (cat === 'tech' ? 'newTechActionText' : 'newOpsActionText'));
             let input = document.getElementById(inputId);
@@ -2767,32 +2641,31 @@ ${fbText}` : '');
             list.push({ text, done: false });
             input.value = "";
             renderActionList(cat);
+            updateTabActionBadges();
             saveToFirebase();
         };
-
         window.toggleActionItem = function(cat, index, checked) {
             let list = getActionList(cat);
             if (list[index]) {
                 list[index].done = checked;
                 renderActionList(cat);
+                updateTabActionBadges();
                 saveToFirebase();
             }
         };
-
         window.deleteActionItem = function(cat, index) {
             let list = getActionList(cat);
             list.splice(index, 1);
             renderActionList(cat);
+            updateTabActionBadges();
             saveToFirebase();
         };
-
         function renderAllActionLists() {
             renderActionList('tech');
             renderActionList('ops');
             renderActionList('safety');
             renderActionList('tom');
         }
-
         function renderActionList(cat) {
             let containerId = cat === 'safety' ? 'safetyActionList' : (cat === 'tom' ? 'tomActionList' : (cat === 'tech' ? 'techActionList' : 'opsActionList'));
             let box = document.getElementById(containerId);
@@ -2812,7 +2685,6 @@ ${fbText}` : '');
                 box.appendChild(div);
             });
         }
-
         /* PRINT HANDOVER REPORT FUNCTION */
         window.printHandoverReport = function(cat) {
             let catName = cat === 'safety' ? 'Safety' : (cat === 'tom' ? 'Tom Team' : (cat === 'tech' ? 'Maintenance Tech' : 'Operations'));
@@ -2821,7 +2693,6 @@ ${fbText}` : '');
             let logs = cat === 'safety' ? safetyLogs : (cat === 'tom' ? tomLogs : (cat === 'tech' ? techLogs : shiftLogs));
             if (selectedShift !== 'ALL') logs = logs.filter(l => l.shift === selectedShift);
             let actions = getActionList(cat);
-
             let printWin = window.open('', '_blank');
             printWin.document.write(`
                 <html><head><title>${catName} Shift Handover Summary</title>
@@ -2832,14 +2703,7 @@ ${fbText}` : '');
                     .entry { border-bottom: 1px dashed #ccc; padding: 6px 0; font-size: 13px; }
                     .timestamp { font-weight: bold; color: #0284c7; }
                     ul { padding-left: 20px; }
-            
-        .modal-content, .modal-body, .notes-log-box, #schematicDiagramBox, #scenarioSymptomText, #diagnosisFeedback, input, textarea, select {
-            user-select: text !important;
-            -webkit-user-select: text !important;
-            touch-action: auto !important;
-        }
-
-    </style></head><body>
+                </style></head><body>
                 <h2>📋 ${catName} Shift Handover Summary (${selectedShift})</h2>
                 <p><b>Generated:</b> ${new Date().toLocaleString()}</p>
                 <h3>Pending Action Items</h3>
@@ -2852,7 +2716,6 @@ ${fbText}` : '');
             printWin.focus();
             setTimeout(() => { printWin.print(); }, 250);
         };
-
         /* EXPORT LOGS CSV FUNCTION */
         window.exportShiftLogsCSV = function(cat) {
             let catName = cat === 'safety' ? 'Safety' : (cat === 'tom' ? 'Tom_Team' : (cat === 'tech' ? 'Tech' : 'Ops'));
@@ -2868,7 +2731,6 @@ ${fbText}` : '');
             a.click();
             URL.revokeObjectURL(url);
         };
-
         /* PRINT ASSET QR CODE LABEL */
         window.printAssetQrCode = function() {
             let id = parseInt(document.getElementById("modalElementId").value);
@@ -2876,7 +2738,6 @@ ${fbText}` : '');
             if (!el) return;
             let rowLabel = getRowLabel(Math.floor(el.y));
             let colNum = (el.x + 1).toFixed(1);
-
             let qrWin = window.open('', '_blank');
             qrWin.document.write(`
                 <html><head><title>Asset Label - ${el.name}</title>
@@ -2887,14 +2748,7 @@ ${fbText}` : '');
                     h3 { margin: 0 0 5px 0; font-size: 16px; }
                     p { margin: 2px 0; font-size: 12px; }
                     canvas { margin-top: 10px; }
-            
-        .modal-content, .modal-body, .notes-log-box, #schematicDiagramBox, #scenarioSymptomText, #diagnosisFeedback, input, textarea, select {
-            user-select: text !important;
-            -webkit-user-select: text !important;
-            touch-action: auto !important;
-        }
-
-    </style></head><body>
+                </style></head><body>
                 <div class="label-card">
                     <h3>${el.name}</h3>
                     <p><b>Category:</b> ${el.category || 'N/A'}</p>
@@ -2910,7 +2764,6 @@ ${fbText}` : '');
             `);
             qrWin.document.close();
         };
-
         let quickFilterMinimized = false;
         const quickFilterLabels = {
             all: 'Show All',
@@ -2920,7 +2773,6 @@ ${fbText}` : '');
             water: '💧 Water Shutoffs',
             estop: '⚡ E-Stop Zones'
         };
-
         function updateActiveFilterBadge() {
             const badge = document.getElementById('activeFilterBadge');
             if (!badge) return;
@@ -2932,7 +2784,6 @@ ${fbText}` : '');
                 badge.innerText = '';
             }
         }
-
         window.toggleQuickFilterBar = function(forceState) {
             quickFilterMinimized = (typeof forceState === 'boolean') ? forceState : !quickFilterMinimized;
             const wrapper = document.getElementById('quick-filter-wrapper');
@@ -2945,21 +2796,14 @@ ${fbText}` : '');
             }
             updateActiveFilterBadge();
         };
-
         window.toggleQuickFilter = function(filterType) {
             activeQuickFilter = filterType;
-            document.querySelectorAll('#quick-filter-bar .filter-pill').forEach(btn => btn.classList.remove('active'));
-            const barButtons = document.querySelectorAll('#quick-filter-bar .filter-pill');
-            if (filterType === 'down') document.querySelector('#quick-filter-bar .down-pill').classList.add('active');
-            else if (filterType === 'pm_due') document.querySelector('#quick-filter-bar .pm-pill').classList.add('active');
-            else if (filterType === 'parts_needed' && barButtons[2]) barButtons[2].classList.add('active');
-            else if (filterType === 'water' && barButtons[3]) barButtons[3].classList.add('active');
-            else if (filterType === 'estop' && barButtons[4]) barButtons[4].classList.add('active');
-            else document.getElementById('filterAllBtn').classList.add('active');
+            document.querySelectorAll('#quick-filter-bar .filter-pill').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.filter === filterType);
+            });
             updateActiveFilterBadge();
             render();
         };
-
         window.openARModal = function() {
             document.getElementById("ar-modal-overlay").style.display = "flex";
             arQrCode = new Html5Qrcode("ar-video-container");
@@ -2974,7 +2818,6 @@ ${fbText}` : '');
                 () => {}
             ).catch(err => console.error("AR Camera error:", err));
         };
-
         window.closeARModal = function() {
             if (arQrCode) {
                 arQrCode.stop().then(() => {
@@ -2987,7 +2830,6 @@ ${fbText}` : '');
                 document.getElementById("ar-modal-overlay").style.display = "none";
             }
         };
-
         window.openScannerModal = function() {
             document.getElementById("scanner-modal-overlay").style.display = "flex";
             html5QrCode = new Html5Qrcode("qr-reader");
@@ -3002,7 +2844,6 @@ ${fbText}` : '');
                 () => {}
             ).catch(err => console.error("Scanner error:", err));
         };
-
         window.closeScannerModal = function() {
             if (html5QrCode) {
                 html5QrCode.stop().then(() => {
@@ -3015,25 +2856,65 @@ ${fbText}` : '');
                 document.getElementById("scanner-modal-overlay").style.display = "none";
             }
         };
-
+        function getElementWorldCenter(el) {
+            if (!el) return null;
+            if (el.type === 'conveyance_line' && Array.isArray(el.points) && el.points.length > 0) {
+                const mid = el.points[Math.floor(el.points.length / 2)];
+                return { x: mid.x * gridSize, y: mid.y * gridSize };
+            }
+            const w = el.w || 1;
+            const h = el.h || 1;
+            return {
+                x: (el.x + (el.type === 'asset' ? 0.5 : w / 2)) * gridSize,
+                y: (el.y + (el.type === 'asset' ? 0.5 : h / 2)) * gridSize
+            };
+        }
+        function centerMapOnElement(el, targetMinScale = 1.2) {
+            const pt = getElementWorldCenter(el);
+            if (!pt) return;
+            const rect = container.getBoundingClientRect();
+            viewTransform.scale = Math.max(viewTransform.scale, targetMinScale);
+            viewTransform.x = Math.round(rect.width / 2 - pt.x * viewTransform.scale);
+            viewTransform.y = Math.round(rect.height / 2 - pt.y * viewTransform.scale);
+            render();
+        }
+        window.focusNextSearchMatch = function() {
+            if (!currentSearchMatches || currentSearchMatches.length === 0) return;
+            const el = currentSearchMatches[searchMatchIndex % currentSearchMatches.length];
+            searchMatchIndex = (searchMatchIndex + 1) % currentSearchMatches.length;
+            centerMapOnElement(el, 1.25);
+        };
         window.handleSearch = function(val) {
             searchQuery = val.trim().toLowerCase();
+            searchMatchIndex = 0;
             const clearBtn = document.getElementById("clearSearchBtn");
+            const focusBtn = document.getElementById("focusMatchBtn");
             if (clearBtn) clearBtn.style.display = searchQuery ? "inline-block" : "none";
+            if (focusBtn) focusBtn.style.display = searchQuery ? "inline-block" : "none";
             render();
+            if (searchDebounceTimer) clearTimeout(searchDebounceTimer);
+            if (searchQuery) {
+                searchDebounceTimer = setTimeout(() => {
+                    if (currentSearchMatches.length > 0) {
+                        centerMapOnElement(currentSearchMatches[0], 1.15);
+                    }
+                }, 420);
+            }
         };
-
         window.clearAssetSearch = function() {
             const input = document.getElementById("assetSearchInput");
             if (input) input.value = "";
             searchQuery = "";
+            currentSearchMatches = [];
+            searchMatchIndex = 0;
             const clearBtn = document.getElementById("clearSearchBtn");
+            const focusBtn = document.getElementById("focusMatchBtn");
             if (clearBtn) clearBtn.style.display = "none";
+            if (focusBtn) focusBtn.style.display = "none";
             const countEl = document.getElementById("searchMatchCount");
             if (countEl) countEl.innerText = "";
             render();
         };
-
         window.resetMapView = function() {
             const rect = container.getBoundingClientRect();
             const targetW = buildingCols * gridSize;
@@ -3046,11 +2927,9 @@ ${fbText}` : '');
             viewTransform.y = Math.round((rect.height - targetH * viewTransform.scale) / 2);
             render();
         };
-
         window.jumpToGridCoord = function() {
             const raw = (document.getElementById("gridJumpInput")?.value || "").trim().toUpperCase();
             if (!raw) return;
-            // Supports formats like C14, B-8, N1 5, etc.
             const match = raw.match(/^(N?\d+|[A-Z])\s*-?\s*(\d+(?:\.\d+)?)$/);
             if (!match) {
                 alert("Enter a grid coordinate like C14, B-8, or N1 5.");
@@ -3078,11 +2957,9 @@ ${fbText}` : '');
             viewTransform.y = Math.round(rect.height / 2 - worldY * viewTransform.scale);
             render();
         };
-
         /* MAP LEGEND & GUIDED NEW TECH FLOOR TOUR */
         let guidedTourActive = false;
         let guidedTourIndex = 0;
-
         window.toggleMapLegend = function() {
             const panel = document.getElementById("map-legend-panel");
             if (!panel) return;
@@ -3090,7 +2967,6 @@ ${fbText}` : '');
             panel.style.display = show ? "block" : "none";
             if (show) renderMapLegendCategories();
         };
-
         function renderMapLegendCategories() {
             const list = document.getElementById("legendCategoriesList");
             if (!list) return;
@@ -3102,7 +2978,6 @@ ${fbText}` : '');
                 list.appendChild(row);
             });
         }
-
         window.startGuidedFloorTour = function() {
             guidedTourActive = true;
             guidedTourIndex = 0;
@@ -3110,24 +2985,20 @@ ${fbText}` : '');
             if (banner) banner.style.display = "block";
             applyGuidedTourStep();
         };
-
         window.stopGuidedFloorTour = function() {
             guidedTourActive = false;
             const banner = document.getElementById("guided-tour-banner");
             if (banner) banner.style.display = "none";
             render();
         };
-
         window.nextTourStep = function() {
             guidedTourIndex = (guidedTourIndex + 1) % onboardingChecklistItems.length;
             applyGuidedTourStep();
         };
-
         window.prevTourStep = function() {
             guidedTourIndex = (guidedTourIndex - 1 + onboardingChecklistItems.length) % onboardingChecklistItems.length;
             applyGuidedTourStep();
         };
-
         function applyGuidedTourStep() {
             const step = onboardingChecklistItems[guidedTourIndex];
             if (!step) return;
@@ -3135,13 +3006,43 @@ ${fbText}` : '');
             document.getElementById("tourStepBadge").innerText = `Step ${guidedTourIndex + 1} of ${onboardingChecklistItems.length}`;
             document.getElementById("tourStepTitle").innerText = step.title;
             document.getElementById("tourStepDesc").innerText = step.desc;
-            const countMatches = elements.filter(el => (el.layer || 'ground') === step.layer).length;
-            document.getElementById("tourStepCountInfo").innerText = `${countMatches} mapped item(s) on ${step.layer.replace('_', ' ').toUpperCase()} layer`;
+            const layerItems = elements.filter(el => (el.layer || 'ground') === step.layer);
+            document.getElementById("tourStepCountInfo").innerText = `${layerItems.length} mapped item(s) on ${step.layer.replace('_', ' ').toUpperCase()} layer`;
+            if (layerItems.length > 0) {
+                centerMapOnElement(layerItems[0], 1.05);
+            }
         }
-
+        function resolveParentAsset(parentId) {
+            if (parentId === undefined || parentId === null || parentId === "") return null;
+            return elements.find(item => String(item.id) === String(parentId)) || null;
+        }
+        window.jumpToParentAsset = function() {
+            const currentId = parseInt(document.getElementById("modalElementId").value);
+            const currentEl = elements.find(item => item.id === currentId);
+            if (!currentEl || !currentEl.parentId) return;
+            const parentEl = resolveParentAsset(currentEl.parentId);
+            if (!parentEl) {
+                alert(`Parent asset ID ${currentEl.parentId} was not found on the map.`);
+                return;
+            }
+            if (parentEl.layer && parentEl.layer !== currentLayer && currentLayer !== 'assets') {
+                switchLayer(parentEl.layer);
+            }
+            centerMapOnElement(parentEl, 1.3);
+            openModal(parentEl);
+        };
         function buildNewTechQuickCheck(el) {
             const parts = [];
-            if (el.parentId) parts.push(`<b>Upstream/Feed:</b> Parent ID ${el.parentId}`);
+            if (el.parentId) {
+                const parentEl = resolveParentAsset(el.parentId);
+                if (parentEl) {
+                    const pRow = getRowLabel(Math.floor(parentEl.y));
+                    const pCol = (parentEl.x + 1).toFixed(1);
+                    parts.push(`<b>Upstream/Feed:</b> ${parentEl.name} (Row ${pRow}, Col ${pCol})`);
+                } else {
+                    parts.push(`<b>Upstream/Feed:</b> Parent ID ${el.parentId}`);
+                }
+            }
             if (el.plcNode) parts.push(`<b>Controls/PLC:</b> ${el.plcNode}`);
             if (el.utilityDraw) parts.push(`<b>Power/Utility Spec:</b> ${el.utilityDraw}`);
             if (el.estopZone) parts.push(`<b>Safety/E-Stop Zone:</b> ${el.estopZone}`);
@@ -3157,7 +3058,6 @@ ${fbText}` : '');
             }
             return `<b>New Tech Quick-Check:</b><br>• ` + parts.join('<br>• ');
         }
-
         function buildSafetyCallout(el) {
             const warnings = [];
             if (el.status === 'down') warnings.push("🚨 <b>ASSET MARKED DOWN:</b> Verify LOTO/tag status and open breakdown tickets before operating.");
@@ -3168,20 +3068,20 @@ ${fbText}` : '');
             }
             return warnings.join("<br>");
         }
-
         window.printAssetSpecSheet = function() {
             const id = parseInt(document.getElementById("modalElementId").value);
             const el = elements.find(item => item.id === id);
             if (!el) return;
             const rowLabel = getRowLabel(Math.floor(el.y));
             const colNum = (el.x + 1).toFixed(1);
+            const parentEl = resolveParentAsset(el.parentId);
+            const parentLabel = parentEl ? `${parentEl.name} (ID: ${parentEl.id})` : (el.parentId ? `Parent ID: ${el.parentId}` : 'None / Standalone');
             const lotoHtml = (el.lotoSteps && el.lotoSteps.length)
                 ? `<ol>${el.lotoSteps.map(s => `<li>${s.step}</li>`).join('')}</ol>`
                 : '<p>No specific LOTO steps recorded; follow site LOTO procedure.</p>';
             const bomHtml = (el.spareParts && el.spareParts.length)
                 ? `<ul>${el.spareParts.map(p => `<li><b>${p.partName}</b> — SKU: ${p.partNum || 'N/A'} — Bin: ${p.binLoc || 'N/A'}</li>`).join('')}</ul>`
                 : '<p>No spare parts mapped.</p>';
-
             const win = window.open('', '_blank');
             win.document.write(`
                 <html><head><title>Asset Spec Sheet - ${el.name}</title>
@@ -3196,6 +3096,7 @@ ${fbText}` : '');
                     <div><b>Category:</b> ${el.category || 'General'}</div>
                     <div><b>Status:</b> ${el.status || 'operational'}</div>
                     <div><b>Grid Location:</b> Row ${rowLabel}, Col ${colNum} (Layer: ${el.layer || 'ground'})</div>
+                    <div><b>Upstream / Feed:</b> ${parentLabel}</div>
                     <div><b>PLC / Node:</b> ${el.plcNode || 'N/A'}</div>
                     <div><b>Utility / Draw:</b> ${el.utilityDraw || 'N/A'}</div>
                     <div><b>Safety / E-Stop Zone:</b> ${el.estopZone || 'N/A'}</div>
@@ -3213,12 +3114,14 @@ ${fbText}` : '');
             `);
             win.document.close();
         };
-
         window.toggleHeatmap = function(checked) {
             showHeatmap = checked;
             render();
         };
-
+        window.toggleZoneLabels = function(checked) {
+            showZoneLabels = checked;
+            render();
+        };
         window.switchTab = function(tab) {
             currentTab = tab;
             document.getElementById("tabInfoBtn").classList.toggle("active", tab === 'info');
@@ -3226,25 +3129,21 @@ ${fbText}` : '');
             document.getElementById("tabShiftBtn").classList.toggle("active", tab === 'shift');
             document.getElementById("tabSafetyBtn").classList.toggle("active", tab === 'safety');
             document.getElementById("tabTomBtn").classList.toggle("active", tab === 'tom');
-
             document.getElementById("panelInfo").classList.toggle("active", tab === 'info');
             document.getElementById("panelTech").classList.toggle("active", tab === 'tech');
             document.getElementById("panelShift").classList.toggle("active", tab === 'shift');
             document.getElementById("panelSafety").classList.toggle("active", tab === 'safety');
             document.getElementById("panelTom").classList.toggle("active", tab === 'tom');
         };
-
         function getCategoryColor(catName) {
             let found = categories.find(c => c.name === catName);
             return found ? found.color : "#38bdf8";
         }
-
         function getStatusColor(status) {
             if (status === 'maintenance') return "#f59e0b";
             if (status === 'down') return "#ef4444";
             return "#10b981";
         }
-
         function getPmAlertStatus(pmDueStr) {
             if (!pmDueStr) return 'none';
             let due = new Date(pmDueStr);
@@ -3254,7 +3153,6 @@ ${fbText}` : '');
             if (diffDays <= 7) return 'due_soon';
             return 'none';
         }
-
         function getRowLabel(r) {
             if (r < 0) {
                 return "N" + Math.abs(r);
@@ -3265,7 +3163,6 @@ ${fbText}` : '');
             }
             return String.fromCharCode(65 + adjustedIndex); 
         }
-
         window.switchLayer = function(layerName) {
             currentLayer = layerName;
             let layerButtons = [
@@ -3291,14 +3188,39 @@ ${fbText}` : '');
             selectedId = null;
             render();
         };
-
         function updateTransformString() {
             viewport.setAttribute("transform", `translate(${viewTransform.x}, ${viewTransform.y}) scale(${viewTransform.scale})`);
         }
-
+        function updateGlobalFilterCounts() {
+            const assets = elements.filter(el => el.type === 'asset');
+            const downCount = assets.filter(el => el.status === 'down').length;
+            const pmCount = assets.filter(el => getPmAlertStatus(el.pmDue) === 'overdue').length;
+            const partsCount = assets.filter(el => el.partsNeeded === true).length;
+            const waterCount = elements.filter(el => el.layer === 'water' || (el.category && el.category.toLowerCase().includes('water'))).length;
+            const estopCount = elements.filter(el => el.estopZone || (el.category && el.category.toLowerCase().includes('safety'))).length;
+            const setTxt = (id, val) => { const n = document.getElementById(id); if (n) n.innerText = val; };
+            setTxt('pillCountDown', downCount);
+            setTxt('pillCountPm', pmCount);
+            setTxt('pillCountParts', partsCount);
+            setTxt('pillCountWater', waterCount);
+            setTxt('pillCountEstop', estopCount);
+        }
+        function updateLayerStatusStrip(visibleElements) {
+            const assets = visibleElements.filter(el => el.type === 'asset');
+            const okCount = assets.filter(el => !el.status || el.status === 'operational').length;
+            const maintCount = assets.filter(el => el.status === 'maintenance').length;
+            const downCount = assets.filter(el => el.status === 'down').length;
+            const partsCount = assets.filter(el => el.partsNeeded === true).length;
+            const setTxt = (id, val) => { const n = document.getElementById(id); if (n) n.innerText = val; };
+            setTxt('statOkCount', okCount);
+            setTxt('statMaintCount', maintCount);
+            setTxt('statDownCount', downCount);
+            setTxt('statPartsCount', partsCount);
+        }
         function render() {
             viewport.innerHTML = "";
             updateTransformString();
+            updateGlobalFilterCounts();
             
             // Site Background
             let siteBackground = document.createElementNS("http://www.w3.org/2000/svg", "g");
@@ -3320,7 +3242,6 @@ ${fbText}` : '');
             siteLabel.textContent = "▼ 6500 W MT HOPE HWY — SURROUNDING SITE EARTHWORK & AUTOMATION FOOTPRINT";
             siteBackground.appendChild(siteLabel);
             viewport.appendChild(siteBackground);
-
             // Grid Lines & Labels
             for (let c = minCol; c <= maxCol; c++) {
                 let line = document.createElementNS("http://www.w3.org/2000/svg", "line");
@@ -3354,7 +3275,6 @@ ${fbText}` : '');
                 text.textContent = getRowLabel(r);
                 viewport.appendChild(text);
             }
-
             // Building Footprint
             let buildingWall = document.createElementNS("http://www.w3.org/2000/svg", "rect");
             buildingWall.setAttribute("x", 0);
@@ -3367,7 +3287,41 @@ ${fbText}` : '');
             buildingWall.setAttribute("stroke-width", "2");
             viewport.appendChild(buildingWall);
 
-            let layerTitleName = currentLayer.toUpperCase();
+            // Subtle Building Orientation Watermarks (Toggleable)
+            if (showZoneLabels) {
+                const zoneGuides = [
+                    { x: 5 * gridSize, y: 6.5 * gridSize, label: "WEST SECTOR (COLS 1–10)" },
+                    { x: 15 * gridSize, y: 6.5 * gridSize, label: "CENTRAL CORE (COLS 11–20)" },
+                    { x: 25 * gridSize, y: 6.5 * gridSize, label: "EAST SECTOR (COLS 21–30)" }
+                ];
+                zoneGuides.forEach((zg, idx) => {
+                    if (idx > 0) {
+                        const divLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                        divLine.setAttribute("x1", idx * 10 * gridSize);
+                        divLine.setAttribute("y1", 0);
+                        divLine.setAttribute("x2", idx * 10 * gridSize);
+                        divLine.setAttribute("y2", buildingRows * gridSize);
+                        divLine.setAttribute("stroke", "#1e3a5f");
+                        divLine.setAttribute("stroke-width", "1");
+                        divLine.setAttribute("stroke-dasharray", "4,4");
+                        divLine.style.pointerEvents = "none";
+                        viewport.appendChild(divLine);
+                    }
+                    const zTxt = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                    zTxt.setAttribute("x", zg.x);
+                    zTxt.setAttribute("y", zg.y);
+                    zTxt.setAttribute("text-anchor", "middle");
+                    zTxt.setAttribute("fill", "#38bdf8");
+                    zTxt.setAttribute("fill-opacity", "0.14");
+                    zTxt.setAttribute("font-size", "12px");
+                    zTxt.setAttribute("font-weight", "bold");
+                    zTxt.style.pointerEvents = "none";
+                    zTxt.textContent = zg.label;
+                    viewport.appendChild(zTxt);
+                });
+            }
+
+            let layerTitleName = currentLayer.replace(/_/g, ' ').toUpperCase();
             let topLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
             topLabel.setAttribute("x", 0.5 * gridSize);
             topLabel.setAttribute("y", -8);
@@ -3384,7 +3338,6 @@ ${fbText}` : '');
             bottomLabel.setAttribute("font-weight", "bold");
             bottomLabel.textContent = `NORTH WALL - ROW N ▼`;
             viewport.appendChild(bottomLabel);
-
             // Draw Heatmap Overlay Circles if enabled
             if (showHeatmap) {
                 elements.forEach(el => {
@@ -3403,13 +3356,12 @@ ${fbText}` : '');
                     }
                 });
             }
-
             // Render Elements with Search & Quick-Filter Filtering
             let visibleElements = elements.filter(el => {
                 if (searchQuery) {
-                    let matchesName = el.name.toLowerCase().includes(searchQuery);
+                    let matchesName = el.name && el.name.toLowerCase().includes(searchQuery);
                     let matchesCat = el.category && el.category.toLowerCase().includes(searchQuery);
-                    let matchesId = el.id.toString().includes(searchQuery);
+                    let matchesId = el.id !== undefined && el.id.toString().includes(searchQuery);
                     let matchesPlc = el.plcNode && el.plcNode.toLowerCase().includes(searchQuery);
                     if (!matchesName && !matchesCat && !matchesId && !matchesPlc) return false;
                 }
@@ -3423,23 +3375,34 @@ ${fbText}` : '');
                 if (currentLayer === 'loto') return el.type === 'asset' && el.category === 'LOTO Isolation';
                 return (el.layer || 'ground') === currentLayer;
             });
-
+            currentSearchMatches = searchQuery ? visibleElements : [];
+            updateLayerStatusStrip(visibleElements);
             const countEl = document.getElementById("searchMatchCount");
             if (countEl) {
                 countEl.innerText = searchQuery ? `${visibleElements.length} match${visibleElements.length === 1 ? '' : 'es'}` : "";
             }
-            const focusBtn = document.getElementById("focusSearchBtn");
-            if (focusBtn) {
-                focusBtn.style.display = (searchQuery && visibleElements.length > 0) ? "inline-block" : "none";
-            }
-            updateFacilityKpis();
-
             visibleElements.forEach(el => {
                 let g = document.createElementNS("http://www.w3.org/2000/svg", "g");
                 g.setAttribute("class", "item-group");
                 g.addEventListener("pointerdown", (e) => {
-                    e.stopPropagation();
-                    openModal(el);
+                    itemTapState = { pointerId: e.pointerId, startX: e.clientX, startY: e.clientY, moved: false };
+                });
+                g.addEventListener("pointermove", (e) => {
+                    if (itemTapState.pointerId === e.pointerId) {
+                        if (Math.hypot(e.clientX - itemTapState.startX, e.clientY - itemTapState.startY) > 6) {
+                            itemTapState.moved = true;
+                        }
+                    }
+                });
+                g.addEventListener("pointerup", (e) => {
+                    if (itemTapState.pointerId === e.pointerId && !itemTapState.moved && activePointers.size <= 1) {
+                        e.stopPropagation();
+                        isPanning = false;
+                        container.classList.remove("panning");
+                        activePointers.delete(e.pointerId);
+                        openModal(el);
+                    }
+                    itemTapState.pointerId = null;
                 });
                 if (el.type === 'conveyance_line') {
                     let pts = el.points || [];
@@ -3473,19 +3436,19 @@ ${fbText}` : '');
                     let catColor = getCategoryColor(el.category);
                     let statusColor = getStatusColor(el.status || 'operational');
                     let pmAlert = getPmAlertStatus(el.pmDue);
-                    if (pmAlert !== 'none') {
-                        let pulseRing = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-                        pulseRing.setAttribute("cx", cx);
-                        pulseRing.setAttribute("cy", cy);
-                        pulseRing.setAttribute("class", pmAlert === 'overdue' ? 'pm-overdue-pulse' : 'pm-due-pulse');
-                        g.appendChild(pulseRing);
-                    }
                     if (searchQuery) {
                         let searchRing = document.createElementNS("http://www.w3.org/2000/svg", "circle");
                         searchRing.setAttribute("cx", cx);
                         searchRing.setAttribute("cy", cy);
                         searchRing.setAttribute("class", "search-highlight-ring");
                         g.appendChild(searchRing);
+                    }
+                    if (pmAlert !== 'none') {
+                        let pulseRing = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                        pulseRing.setAttribute("cx", cx);
+                        pulseRing.setAttribute("cy", cy);
+                        pulseRing.setAttribute("class", pmAlert === 'overdue' ? 'pm-overdue-pulse' : 'pm-due-pulse');
+                        g.appendChild(pulseRing);
                     }
                     let circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
                     circle.setAttribute("cx", cx);
@@ -3509,7 +3472,6 @@ ${fbText}` : '');
                     emojiText.setAttribute("font-size", "9px");
                     emojiText.style.pointerEvents = "none";
                     emojiText.textContent = el.emoji || "📍";
-
                     /* PARTS NEEDED MAP BADGE */
                     if (el.partsNeeded) {
                         let partsBadge = document.createElementNS("http://www.w3.org/2000/svg", "text");
@@ -3520,7 +3482,6 @@ ${fbText}` : '');
                         partsBadge.textContent = "📦";
                         g.appendChild(partsBadge);
                     }
-
                     let popupGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
                     popupGroup.setAttribute("class", "asset-popup");
                     let boxWidth = (el.name.length * 6.5) + 12;
@@ -3563,7 +3524,7 @@ ${fbText}` : '');
                     } else {
                         rect.setAttribute("fill", "#0284c7"); rect.setAttribute("fill-opacity", "0.35"); rect.setAttribute("stroke", "#38bdf8");
                     }
-                    rect.setAttribute("stroke-width", "1");
+                    rect.setAttribute("stroke-width", searchQuery ? "2.5" : "1");
                     
                     let text = document.createElementNS("http://www.w3.org/2000/svg", "text");
                     text.setAttribute("x", (el.x * gridSize) + 6);
@@ -3579,17 +3540,14 @@ ${fbText}` : '');
                 viewport.appendChild(g);
             });
         }
-
         function getPinchDistance(p1, p2) {
             let dx = p1.clientX - p2.clientX;
             let dy = p1.clientY - p2.clientY;
             return Math.sqrt(dx * dx + dy * dy);
         }
-
         function getPinchCenter(p1, p2) {
             return { x: (p1.clientX + p2.clientX) / 2, y: (p1.clientY + p2.clientY) / 2 };
         }
-
         function updateCoordinates(clientX, clientY) {
             let rect = container.getBoundingClientRect();
             let mouseX = clientX - rect.left;
@@ -3603,11 +3561,9 @@ ${fbText}` : '');
             let rowLabel = getRowLabel(rowIdx);
             coordDisplay.innerHTML = `Grid: <b>Row ${rowLabel}, Col ${preciseColNum}</b>`;
         }
-
         let initialPinchScale = 1;
         let initialPinchCenter = { x: 0, y: 0 };
         let initialTransform = { x: 0, y: 0 };
-
         container.addEventListener("pointerdown", (e) => {
             activePointers.set(e.pointerId, e);
             if (activePointers.size === 1) {
@@ -3624,7 +3580,6 @@ ${fbText}` : '');
                 initialTransform = { x: viewTransform.x, y: viewTransform.y };
             }
         });
-
         container.addEventListener("pointermove", (e) => {
             if (activePointers.has(e.pointerId)) activePointers.set(e.pointerId, e);
             if (activePointers.size === 1) {
@@ -3649,7 +3604,6 @@ ${fbText}` : '');
                 render();
             }
         });
-
         const handlePointerEnd = (e) => {
             activePointers.delete(e.pointerId);
             if (activePointers.size < 2) initialPinchDistance = null;
@@ -3661,7 +3615,6 @@ ${fbText}` : '');
         container.addEventListener("pointerup", handlePointerEnd);
         container.addEventListener("pointercancel", handlePointerEnd);
         container.addEventListener("pointerleave", handlePointerEnd);
-
         container.addEventListener("wheel", (e) => {
             e.preventDefault();
             let zoomIntensity = 0.1;
@@ -3678,7 +3631,6 @@ ${fbText}` : '');
             viewTransform.y = mouseY - (mouseY - viewTransform.y) * (viewTransform.scale / oldScale);
             render();
         }, { passive: false });
-
         function openModal(el) {
             selectedId = el.id;
             document.getElementById("modalElementId").value = el.id;
@@ -3693,6 +3645,12 @@ ${fbText}` : '');
                 } else {
                     pracBtn.style.display = "none";
                 }
+            }
+            const humanGridEl = document.getElementById("modalGridHuman");
+            if (humanGridEl) {
+                const rLbl = getRowLabel(Math.floor(el.y || 0));
+                const cNum = ((el.x || 0) + 1).toFixed(1);
+                humanGridEl.value = `Row ${rLbl}, Col ${cNum} (${(el.layer || 'ground').replace(/_/g, ' ').toUpperCase()})`;
             }
             
             if (el.type === 'asset') {
@@ -3709,7 +3667,15 @@ ${fbText}` : '');
                 document.getElementById("modalCoordContainer").style.display = "flex";
                 document.getElementById("modalCategory").value = el.category || "General";
                 document.getElementById("modalStatus").value = el.status || "operational";
-                document.getElementById("modalParentAsset").value = el.parentId ? `Parent ID: ${el.parentId}` : "None / Standalone";
+                const parentEl = resolveParentAsset(el.parentId);
+                const jumpParentBtn = document.getElementById("jumpToParentBtn");
+                if (parentEl) {
+                    document.getElementById("modalParentAsset").value = `${parentEl.name} (ID: ${parentEl.id})`;
+                    if (jumpParentBtn) jumpParentBtn.style.display = "inline-block";
+                } else {
+                    document.getElementById("modalParentAsset").value = el.parentId ? `Parent ID: ${el.parentId}` : "None / Standalone";
+                    if (jumpParentBtn) jumpParentBtn.style.display = "none";
+                }
                 document.getElementById("modalPlcNode").value = el.plcNode || "None";
                 document.getElementById("modalManualUrl").value = el.manualUrl || "";
                 document.getElementById("modalX").value = el.x;
@@ -3757,13 +3723,11 @@ ${fbText}` : '');
             renderSpreadsheet(el);
             document.getElementById("modal-overlay").style.display = "flex";
         }
-
         window.openManualUrl = function() {
             let url = document.getElementById("modalManualUrl").value;
             if (url) window.open(url, '_blank');
             else alert("No manual link available for this asset.");
         };
-
         function renderLotoChecklist(el) {
             let container = document.getElementById("lotoChecklistList");
             container.innerHTML = "";
@@ -3779,7 +3743,6 @@ ${fbText}` : '');
                 container.appendChild(div);
             });
         }
-
         function renderBomTable(el) {
             let tbody = document.getElementById("bomBody");
             tbody.innerHTML = "";
@@ -3793,7 +3756,6 @@ ${fbText}` : '');
                 tbody.appendChild(tr);
             });
         }
-
         function renderWorkTickets(el) {
             let box = document.getElementById("ticketsBox");
             box.innerHTML = "";
@@ -3808,12 +3770,10 @@ ${fbText}` : '');
                 box.appendChild(div);
             });
         }
-
         window.closeModal = function() {
             document.getElementById("modal-overlay").style.display = "none";
             selectedId = null;
         };
-
         function renderPhotos(el) {
             let gallery = document.getElementById("modalPhotoGallery");
             gallery.innerHTML = "";
@@ -3832,17 +3792,14 @@ ${fbText}` : '');
                 gallery.appendChild(containerDiv);
             });
         }
-
         window.openLightbox = function(url, itemName) {
             document.getElementById("lightboxImage").src = url;
             document.getElementById("lightboxCaption").innerText = itemName || "Photo Preview";
             document.getElementById("lightbox-overlay").style.display = "flex";
         };
-
         window.closeLightbox = function() {
             document.getElementById("lightbox-overlay").style.display = "none";
         };
-
         function renderSpreadsheet(el) {
             let tbody = document.getElementById("spreadsheetBody");
             tbody.innerHTML = "";
@@ -3863,77 +3820,6 @@ ${fbText}` : '');
                 tbody.appendChild(tr);
             });
         }
-
-        function updateFacilityKpis() {
-            const assets = elements.filter(el => el.type === 'asset');
-            const downCount = assets.filter(el => el.status === 'down').length;
-            const pmOverdueCount = assets.filter(el => getPmAlertStatus(el.pmDue) === 'overdue').length;
-            const partsCount = assets.filter(el => el.partsNeeded === true).length;
-            const setTxt = (id, val) => { const n = document.getElementById(id); if (n) n.innerText = val; };
-            setTxt('kpiTotal', assets.length);
-            setTxt('kpiDown', downCount);
-            setTxt('kpiPmDue', pmOverdueCount);
-            setTxt('kpiParts', partsCount);
-        }
-
-        window.focusFirstSearchMatch = function() {
-            if (!searchQuery) return;
-            const match = elements.find(el =>
-                (el.name && el.name.toLowerCase().includes(searchQuery)) ||
-                (el.category && el.category.toLowerCase().includes(searchQuery)) ||
-                el.id.toString().includes(searchQuery) ||
-                (el.plcNode && el.plcNode.toLowerCase().includes(searchQuery))
-            );
-            if (!match) return;
-            if (match.layer && match.layer !== currentLayer && currentLayer !== 'assets') {
-                switchLayer(match.layer);
-            }
-            const targetX = match.points && match.points.length ? match.points[0].x : (match.x || 0);
-            const targetY = match.points && match.points.length ? match.points[0].y : (match.y || 0);
-            const rect = container.getBoundingClientRect();
-            viewTransform.scale = Math.max(viewTransform.scale, 1.35);
-            viewTransform.x = Math.round(rect.width / 2 - ((targetX + 0.5) * gridSize) * viewTransform.scale);
-            viewTransform.y = Math.round(rect.height / 2 - ((targetY + 0.5) * gridSize) * viewTransform.scale);
-            render();
-        };
-
-        window.insertLogTag = function(textareaId, tagText) {
-            const ta = document.getElementById(textareaId);
-            if (!ta) return;
-            ta.value = tagText + ta.value;
-            ta.focus();
-        };
-
-        window.copyAssetDeepLink = function() {
-            const id = document.getElementById("modalElementId").value;
-            if (!id) return;
-            const url = new URL(window.location.href);
-            url.searchParams.set('asset', id);
-            if (navigator.clipboard && navigator.clipboard.writeText) {
-                navigator.clipboard.writeText(url.toString()).catch(() => {});
-            }
-        };
-
-        window.refreshMapData = async function() {
-            syncStatus.innerText = "Syncing...";
-            syncStatus.style.color = "#fbbf24";
-            await loadFromFirebase();
-        };
-
-        let initialDeepLinkChecked = false;
-        function checkInitialAssetDeepLink() {
-            if (initialDeepLinkChecked) return;
-            initialDeepLinkChecked = true;
-            const params = new URLSearchParams(window.location.search);
-            const assetParam = params.get('asset');
-            if (!assetParam) return;
-            const found = elements.find(el => el.id.toString() === assetParam);
-            if (found) {
-                if (found.layer) switchLayer(found.layer);
-                openModal(found);
-            }
-        }
-
         loadFromFirebase();
     </script>
 </body>
