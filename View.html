@@ -63,18 +63,7 @@
             cursor: pointer;
             width: auto;
         }
-        @media (max-width: 768px) {
-            body { flex-direction: column; }
-            #mobile-nav-toggle { display: flex; }
-            #sidebar { 
-                width: 100%; 
-                max-height: 50vh; 
-                border-right: none; 
-                border-bottom: 1px solid #1f2d3d;
-                box-shadow: 0 4px 10px rgba(0,0,0,0.5);
-            }
-            #sidebar.collapsed { display: none; }
-                            #offline-status-banner {
+        #offline-status-banner {
             display: none;
             position: absolute;
             top: 46px;
@@ -103,7 +92,18 @@
             border: none;
             border-radius: 4px;
         }
-        #canvas-container { height: 100%; flex-grow: 1; }
+        @media (max-width: 768px) {
+            body { flex-direction: column; }
+            #mobile-nav-toggle { display: flex; }
+            #sidebar {
+                width: 100%;
+                max-height: 50vh;
+                border-right: none;
+                border-bottom: 1px solid #1f2d3d;
+                box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            }
+            #sidebar.collapsed { display: none; }
+            #canvas-container { height: 100%; flex-grow: 1; }
         }
         h2, h3, h4 { margin: 0 0 5px 0; color: #38bdf8; font-size: 15px; }
         h4 { color: #f59e0b; font-size: 12px; margin-top: 8px; border-bottom: 1px solid #1f2d3d; padding-bottom: 2px; }
@@ -125,7 +125,7 @@
             background: #1e293b;
             font-weight: bold;
             cursor: pointer;
-            transition: background 0.2s;
+            transition: background 0.2s, transform 0.1s;
             touch-action: manipulation;
         }
         button:hover, button:active { background: #38bdf8; color: #0b131d; }
@@ -338,7 +338,6 @@
             background: #1e293b; border: 1px solid #38bdf8; color: #38bdf8; padding: 4px 8px; border-radius: 4px; font-size: 10px; cursor: pointer; text-align: left; transition: all 0.2s;
         }
         .test-point-btn:hover { background: #0284c7; color: #fff; }
-        .test-point-btn.selected-probe { background: #eab308; color: #000; font-weight: bold; border-color: #fff; }
         .modal-content, .modal-body, .notes-log-box, #schematicDiagramBox, #scenarioSymptomText, #diagnosisFeedback, input, textarea, select {
             user-select: text !important;
             -webkit-user-select: text !important;
@@ -633,7 +632,7 @@
     </div>
     <div id="sidebar" class="collapsed">
         <h2>Facility Viewer (View Only)</h2>
-        
+
         <div>
             <div style="display:flex; justify-content:space-between; align-items:center;">
                 <label>🔍 Asset Search / QR Scanner</label>
@@ -653,7 +652,6 @@
         </div>
         <div id="coord-display">Col: -- | Row: --</div>
         <div id="sync-status">Connected (View Only)</div>
-
         <!-- LIVE LAYER STATUS SUMMARY -->
         <div id="layer-status-strip" title="Live asset counts in current view">
             <span class="status-chip"><span style="color:#10b981;">●</span> OK: <span id="statOkCount">0</span></span>
@@ -661,7 +659,7 @@
             <span class="status-chip"><span style="color:#ef4444;">●</span> Down: <span id="statDownCount">0</span></span>
             <span class="status-chip">📦 Parts: <span id="statPartsCount">0</span></span>
         </div>
-        
+
         <!-- MAP OVERLAY TOGGLES -->
         <div style="display:flex; flex-direction:column; gap:4px;">
             <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
@@ -720,7 +718,7 @@
                 💡 <b>Quick Floor Guide:</b><br>
                 • Tap any asset or zone for specs, LOTO isolation steps, parent feed, spare parts bins, and photos.<br>
                 • Use <b>🧭 New Tech Tour</b> at the top of the map for an 8-stop guided walkthrough of shutoffs, LOTO, and equipment.<br>
-                • Pan with one finger/drag; zoom with pinch or scroll wheel.
+                • Pan with one finger/drag; zoom with pinch, scroll wheel, or <b>+</b>/<b>-</b> keys (<b>0</b> to fit map).
             </p>
         </div>
         <!-- MAINTENANCE TECH SHIFT HANDOVER PANEL -->
@@ -741,7 +739,7 @@
                 <div style="display:flex; justify-content:space-between; align-items:center; width:100%;"><label style="margin:0;">📋 Shift Action Items / Tasks</label><button onclick="clearCompletedActions('tech')" style="width:auto; padding:1px 6px; font-size:9px; background:#1e293b; color:#94a3b8; min-height:auto; margin:0;">🧹 Clear Done</button></div>
                 <div id="techActionList" style="max-height: 80px; overflow-y: auto; background: #070d14; border: 1px solid #1f2d3d; border-radius: 4px; padding: 4px; margin-top: 2px;"></div>
                 <div style="display: flex; gap: 4px; margin-top: 4px;">
-                    <input type="text" id="newTechActionText" placeholder="Add follow-up task..." style="min-height: 28px; padding: 4px;">
+                    <input type="text" id="newTechActionText" placeholder="Add follow-up task..." onkeydown="if(event.key==='Enter') addActionItem('tech')" style="min-height: 28px; padding: 4px;">
                     <button onclick="addActionItem('tech')" style="width: auto; padding: 2px 8px; font-size: 10px; min-height: 28px;">+ Add</button>
                 </div>
             </div>
@@ -775,7 +773,7 @@
                 <div style="display:flex; justify-content:space-between; align-items:center; width:100%;"><label style="margin:0;">📋 Ops Shift Action Items</label><button onclick="clearCompletedActions('ops')" style="width:auto; padding:1px 6px; font-size:9px; background:#1e293b; color:#94a3b8; min-height:auto; margin:0;">🧹 Clear Done</button></div>
                 <div id="opsActionList" style="max-height: 80px; overflow-y: auto; background: #070d14; border: 1px solid #1f2d3d; border-radius: 4px; padding: 4px; margin-top: 2px;"></div>
                 <div style="display: flex; gap: 4px; margin-top: 4px;">
-                    <input type="text" id="newOpsActionText" placeholder="Add follow-up task..." style="min-height: 28px; padding: 4px;">
+                    <input type="text" id="newOpsActionText" placeholder="Add follow-up task..." onkeydown="if(event.key==='Enter') addActionItem('ops')" style="min-height: 28px; padding: 4px;">
                     <button onclick="addActionItem('ops')" style="width: auto; padding: 2px 8px; font-size: 10px; min-height: 28px;">+ Add</button>
                 </div>
             </div>
@@ -809,7 +807,7 @@
                 <div style="display:flex; justify-content:space-between; align-items:center; width:100%;"><label style="margin:0;">📋 Safety Follow-up Action Items</label><button onclick="clearCompletedActions('safety')" style="width:auto; padding:1px 6px; font-size:9px; background:#1e293b; color:#94a3b8; min-height:auto; margin:0;">🧹 Clear Done</button></div>
                 <div id="safetyActionList" style="max-height: 80px; overflow-y: auto; background: #070d14; border: 1px solid #1f2d3d; border-radius: 4px; padding: 4px; margin-top: 2px;"></div>
                 <div style="display: flex; gap: 4px; margin-top: 4px;">
-                    <input type="text" id="newSafetyActionText" placeholder="Add follow-up task..." style="min-height: 28px; padding: 4px;">
+                    <input type="text" id="newSafetyActionText" placeholder="Add follow-up task..." onkeydown="if(event.key==='Enter') addActionItem('safety')" style="min-height: 28px; padding: 4px;">
                     <button onclick="addActionItem('safety')" style="width: auto; padding: 2px 8px; font-size: 10px; min-height: 28px;">+ Add</button>
                 </div>
             </div>
@@ -843,7 +841,7 @@
                 <div style="display:flex; justify-content:space-between; align-items:center; width:100%;"><label style="margin:0;">📋 Tom Team Action Items</label><button onclick="clearCompletedActions('tom')" style="width:auto; padding:1px 6px; font-size:9px; background:#1e293b; color:#94a3b8; min-height:auto; margin:0;">🧹 Clear Done</button></div>
                 <div id="tomActionList" style="max-height: 80px; overflow-y: auto; background: #070d14; border: 1px solid #1f2d3d; border-radius: 4px; padding: 4px; margin-top: 2px;"></div>
                 <div style="display: flex; gap: 4px; margin-top: 4px;">
-                    <input type="text" id="newTomActionText" placeholder="Add follow-up task..." style="min-height: 28px; padding: 4px;">
+                    <input type="text" id="newTomActionText" placeholder="Add follow-up task..." onkeydown="if(event.key==='Enter') addActionItem('tom')" style="min-height: 28px; padding: 4px;">
                     <button onclick="addActionItem('tom')" style="width: auto; padding: 2px 8px; font-size: 10px; min-height: 28px;">+ Add</button>
                 </div>
             </div>
@@ -879,7 +877,7 @@
                 <button class="filter-pill" id="tourToggleBtn" onclick="startGuidedFloorTour()" style="border-color:#10b981; color:#34d399;">🧭 New Tech Tour</button>
             </div>
         </div>
-                <!-- OFFLINE / RECONNECT BANNER -->
+        <!-- OFFLINE / RECONNECT BANNER -->
         <div id="offline-status-banner">
             <span id="offlineBannerText">⚠️ Offline — Showing cached layout</span>
             <button onclick="reconnectLiveSync()">↻ Retry Live Sync</button>
@@ -1070,7 +1068,7 @@
                             <h4 style="color: #38bdf8; margin: 0;">📟 Fluke-Style Digital Multimeter</h4>
                             <button onclick="clearProbes()" style="width: auto; font-size: 10px; padding: 2px 8px; background: #334155; color: #e2e8f0; margin: 0;">Clear Leads</button>
                         </div>
-                        
+
                         <div style="background: #000; border: 2px solid #38bdf8; border-radius: 6px; padding: 8px; text-align: center; margin-bottom: 8px;">
                             <div style="font-size: 9px; color: #94a3b8; text-transform: uppercase;">Digital Multimeter Reading</div>
                             <div id="meterDisplayValue" style="font-family: monospace; font-size: 24px; color: #10b981; font-weight: bold;">0.00 VDC</div>
@@ -1270,7 +1268,7 @@
                 <div>
                     <label>Add New Shift Code</label>
                     <div style="display: flex; gap: 6px; margin-top: 4px;">
-                        <input type="text" id="newShiftInput" placeholder="Shift Name (e.g. D1, N2)" style="flex: 2;">
+                        <input type="text" id="newShiftInput" placeholder="Shift Name (e.g. D1, N2)" onkeydown="if(event.key==='Enter') addNewShift()" style="flex: 2;">
                         <button onclick="addNewShift()" style="flex: 1; margin-top: 0; background: #0284c7; color: #fff;">Add Shift</button>
                     </div>
                 </div>
@@ -1334,8 +1332,8 @@
     <!-- Firebase SDK Imports -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, doc, getDoc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-        
+        import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
         const firebaseConfig = {
             apiKey: "AIzaSyCrKAut8_5nHWTWtYqZZr5HOENGd8mqZxE",
             authDomain: "imi1-interactive-map-8d929.firebaseapp.com",
@@ -1347,15 +1345,35 @@
         };
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
-        
+
+        function escapeHtml(str) {
+            if (str === null || str === undefined) return "";
+            return String(str)
+                .replace(/&/g, "&")
+                .replace(/</g, "<")
+                .replace(/>/g, ">")
+                .replace(/"/g, """)
+                .replace(/'/g, "'");
+        }
+
+        function copyToClipboard(text, successMsg = "Copied to clipboard.") {
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text)
+                    .then(() => showToast(successMsg, "success"))
+                    .catch(() => showToast("Clipboard permission denied.", "warn"));
+            } else {
+                showToast("Clipboard unavailable in this browser.", "warn");
+            }
+        }
+
         const gridSize = 25;
         const minCol = -8;
         const maxCol = 38;
         const minRow = -6;
         const maxRow = 20;
-        const buildingCols = 30; 
-        const buildingRows = 13; 
-        let currentLayer = 'ground'; 
+        const buildingCols = 30;
+        const buildingRows = 13;
+        let currentLayer = 'ground';
         let currentTab = 'info';
         let searchQuery = '';
         let searchDebounceTimer = null;
@@ -1392,6 +1410,7 @@
         let safetyActions = [];
         let tomActions = [];
         let activeShiftCategory = 'tech';
+
         /* SIMULATOR VARIABLES */
         let currentMeterMode = 'VDC';
         let activeRedProbe = null;
@@ -1570,11 +1589,12 @@
                 }
             }
         };
+
         let selectedId = null;
         let isPanning = false;
         let panStart = { x: 0, y: 0 };
         let viewTransform = { x: 250, y: 180, scale: 0.9 };
-        
+
         let activePointers = new Map();
         let initialPinchDistance = null;
         let itemTapState = { pointerId: null, startX: 0, startY: 0, moved: false };
@@ -1582,9 +1602,11 @@
         const svg = document.getElementById("layoutSvg");
         const viewport = document.getElementById("viewport");
         const syncStatus = document.getElementById("sync-status");
+
         window.toggleSidebar = function() {
             document.getElementById("sidebar").classList.toggle("collapsed");
         };
+
         /* SIMULATOR FUNCTIONS */
         window.openElectricalTrainingModal = function() {
             document.getElementById("electrical-training-modal-overlay").style.display = "flex";
@@ -1614,8 +1636,8 @@
             activeBlackProbe = null;
             updateProbeTextDisplays();
             updateMultimeterDisplay();
-            let container = document.getElementById("testPointsContainer");
-            container.innerHTML = "";
+            let tpContainer = document.getElementById("testPointsContainer");
+            tpContainer.innerHTML = "";
             scen.points.forEach(pt => {
                 let div = document.createElement("div");
                 div.style.display = "flex";
@@ -1632,7 +1654,7 @@
                 blackBtn.onclick = () => selectProbe('black', pt);
                 div.appendChild(redBtn);
                 div.appendChild(blackBtn);
-                container.appendChild(div);
+                tpContainer.appendChild(div);
             });
         };
         window.setMeterMode = function(mode) {
@@ -1711,7 +1733,7 @@
                 }
             }
         }
-        
+
         window.copyWorkOrderSummary = function() {
             const sel = document.getElementById("simScenarioSelect");
             const woTitle = sel && sel.options[sel.selectedIndex] ? sel.options[sel.selectedIndex].text : "Work Order";
@@ -1719,9 +1741,7 @@
             const sch = document.getElementById("schematicDiagramBox")?.innerText || "";
             const fb = document.getElementById("diagnosisFeedback")?.innerText || "";
             const text = `${woTitle}\n\nSymptoms:\n${sym}\n\nSchematic & Specs:\n${sch}` + (fb ? `\n\nDiagnosis:\n${fb}` : "");
-            if (navigator.clipboard && navigator.clipboard.writeText) {
-                navigator.clipboard.writeText(text).catch(() => {});
-            }
+            copyToClipboard(text, "Work order summary copied.");
         };
         window.checkDiagnosis = function() {
             let userVal = document.getElementById("diagnosisAnswerSelect").value;
@@ -1740,6 +1760,7 @@
                 feedback.style.color = "#ef4444";
             }
         };
+
         /* EQUIPMENT & FACILITY TRAINING SIMULATOR DATA & LOGIC */
         let activeEqTrack = 'conveyance';
         let activeEqScenarioId = 'conv_1';
@@ -1762,8 +1783,7 @@
                         { label: 'Verify Zone 4 Photoeye reflector alignment', result: 'Reflector clean and aligned; PE-Z4 switches cleanly between 0V (clear) and 24V (blocked).' },
                         { label: 'Check Conveyor Control Card DIP switches', result: 'DIP switches set to ZPA (Zero Pressure Accumulation) Singulation mode, matching adjacent zones.' }
                     ],
-                    schematic: `[Zone 3 Card] <--- (M8 ZPA Signal Jumper) --- [Zone 4 Card] <--- [PE-Z4 Retro-Reflective]
-Spec: ZPA Upstream Signal = +24VDC when downstream zone occupied | MDR Nominal = 0.8–1.8 A`,
+                    schematic: `[Zone 3 Card] <--- (M8 ZPA Signal Jumper) --- [Zone 4 Card] <--- [PE-Z4 Retro-Reflective]\nSpec: ZPA Upstream Signal = +24VDC when downstream zone occupied | MDR Nominal = 0.8–1.8 A`,
                     options: [
                         { value: 'zpa_jumper', text: 'Damaged / Unseated Inter-Zone ZPA Communication Jumper (Z4 to Z3)' },
                         { value: 'mdr_burnout', text: 'Burned Out Zone 4 Motor Driven Roller (MDR)' },
@@ -1789,8 +1809,7 @@ Spec: ZPA Upstream Signal = +24VDC when downstream zone occupied | MDR Nominal =
                         { label: 'Check lacing splice squareness', result: 'Alligator mechanical lace is square within 1/16" across belt width.' },
                         { label: 'Verify drive gearbox oil sight glass & mounting bolts', result: 'Oil level at mid-sightglass, clear amber; torque marks intact.' }
                     ],
-                    schematic: `[Head Drive Pulley] ===> Belt Travel ===> [Snubber] ===> [Take-Up Pulley (L/R Jackscrews)]
-Rule of Thumb: Belt moves toward the LOOSE (slack) side or the roller end it contacts FIRST.`,
+                    schematic: `[Head Drive Pulley] ===> Belt Travel ===> [Snubber] ===> [Take-Up Pulley (L/R Jackscrews)]\nRule of Thumb: Belt moves toward the LOOSE (slack) side or the roller end it contacts FIRST.`,
                     options: [
                         { value: 'uneven_takeup', text: 'Loose Left Take-Up Jackscrew Causing Uneven Belt Tension / Skew' },
                         { value: 'gearbox_seized', text: 'Seized Head Drive Gearbox Bearing' },
@@ -1816,8 +1835,7 @@ Rule of Thumb: Belt moves toward the LOOSE (slack) side or the roller end it con
                         { label: 'Test electromagnetic holding brake release', result: 'Brake coil receives 24.1 VDC and releases cleanly with zero drag.' },
                         { label: 'Inspect mast guide rollers', result: 'Guide rollers spin freely with no flat spots or rail scoring.' }
                     ],
-                    schematic: `[Hoist Servo + Brake] ---> [Toothed Drive Pulley] ===> [Carriage] <--- [Optical Mast Laser]
-Spec: Max Encoder-to-Laser Deviation = ±5 mm | Belt Deflection = 0.25"–0.40"`,
+                    schematic: `[Hoist Servo + Brake] ---> [Toothed Drive Pulley] ===> [Carriage] <--- [Optical Mast Laser]\nSpec: Max Encoder-to-Laser Deviation = ±5 mm | Belt Deflection = 0.25"–0.40"`,
                     options: [
                         { value: 'worn_hoist_belt', text: 'Worn / Slack Hoist Timing Belt Skipping Teeth Under Load' },
                         { value: 'dragging_brake', text: '24VDC Holding Brake Failing to Release' },
@@ -1845,8 +1863,7 @@ Spec: Max Encoder-to-Laser Deviation = ±5 mm | Belt Deflection = 0.25"–0.40"`
                         { label: 'Verify Chute 14 full-chute sensor & deflector', result: 'Other iBOTs discharge into Chute 14 with zero errors.' },
                         { label: 'Check iBOT #07 supercapacitor charge & wheel encoders', result: 'Capacitor bank holds 47.8 VDC; drive wheels and steering encoders calibrate normally.' }
                     ],
-                    schematic: `[iBOT Onboard Controller] ---> [24V Cross-Belt Discharge Motor] ===> [Top Conveyor Belt] ---> [Chute 14]
-Spec: Supercap Nominal = 48 VDC | Discharge Belt Speed = 1.8 m/s`,
+                    schematic: `[iBOT Onboard Controller] ---> [24V Cross-Belt Discharge Motor] ===> [Top Conveyor Belt] ---> [Chute 14]\nSpec: Supercap Nominal = 48 VDC | Discharge Belt Speed = 1.8 m/s`,
                     options: [
                         { value: 'ibot_discharge_motor', text: 'Failed Onboard Cross-Belt Discharge Motor on iBOT #07' },
                         { value: 'chute_14_full', text: 'Blocked Chute 14 Full-Chute Photoeye' },
@@ -1872,8 +1889,7 @@ Spec: Supercap Nominal = 48 VDC | Discharge Belt Speed = 1.8 m/s`,
                         { label: 'Test Induction Photoeye PE-IND2 response time', result: 'Sensor triggers within 2 ms with clean square-wave output.' },
                         { label: 'Check pneumatic pinch roller pressure', result: 'Regulator reads 65 PSI; pinch rollers engage smoothly.' }
                     ],
-                    schematic: `[Induct Belt 1: 120 FPM] ---> [Gap Belt 2: Spec 210 FPM] ---> [PE-IND2] ---> [UIS iBOT Load]
-Spec: Minimum Package Gap = 14 inches | Belt 2 Ratio = 1.75x Belt 1`,
+                    schematic: `[Induct Belt 1: 120 FPM] ---> [Gap Belt 2: Spec 210 FPM] ---> [PE-IND2] ---> [UIS iBOT Load]\nSpec: Minimum Package Gap = 14 inches | Belt 2 Ratio = 1.75x Belt 1`,
                     options: [
                         { value: 'sheared_pulley_key', text: 'Sheared Drive Pulley Key on Gap Belt 2 Causing Speed Loss' },
                         { value: 'slow_photoeye', text: 'Delayed Response on Induction Photoeye PE-IND2' },
@@ -1901,8 +1917,7 @@ Spec: Minimum Package Gap = 14 inches | Belt 2 Ratio = 1.75x Belt 1`,
                         { label: 'Check trailer Rear Impact Guard (RIG) bar contact', result: 'Trailer ICC bar is tight against the restraint housing; RIG sensor switch is made.' },
                         { label: 'Verify hydraulic fluid level in power pack', result: 'Reservoir full with clean ISO 32 hydraulic oil.' }
                     ],
-                    schematic: `[Trailer RIG Bar] ---> [Hydraulic Hook Cylinder] ---> [Hook Extended Limit LS-2] ---> [Green Interior Light]
-Fault Logic: If LS-2 is not made within 6 sec of Engage command, hook retracts & flashes Red/Green.`,
+                    schematic: `[Trailer RIG Bar] ---> [Hydraulic Hook Cylinder] ---> [Hook Extended Limit LS-2] ---> [Green Interior Light]\nFault Logic: If LS-2 is not made within 6 sec of Engage command, hook retracts & flashes Red/Green.`,
                     options: [
                         { value: 'pit_debris_ls2', text: 'Debris Obstructing Restraint Carriage Travel Before Limit Switch LS-2' },
                         { value: 'bad_rig_sensor', text: 'Failed Trailer RIG Presence Sensor' },
@@ -1928,8 +1943,7 @@ Fault Logic: If LS-2 is not made within 6 sec of Engage command, hook retracts &
                         { label: 'Test bottom sensing edge air switch / coil cord', result: 'Continuity across bottom edge switch is normal until compressed.' },
                         { label: 'Check operator limit cams', result: 'Open and close limit cams are tight on the threaded shaft.' }
                     ],
-                    schematic: `[Door Controller] <--- [Thru-Beam Photo-Eye] + [Bottom Sensing Edge] ---> [3Ø Door Operator]
-Safety Spec: Any interruption of safety beam during close cycle commands immediate full reversal.`,
+                    schematic: `[Door Controller] <--- [Thru-Beam Photo-Eye] + [Bottom Sensing Edge] ---> [3Ø Door Operator]\nSafety Spec: Any interruption of safety beam during close cycle commands immediate full reversal.`,
                     options: [
                         { value: 'misaligned_door_pe', text: 'Knocked / Misaligned Track Safety Photo-Eye Sensor' },
                         { value: 'broken_torsion_spring', text: 'Broken Overhead Torsion Spring' },
@@ -1957,8 +1971,7 @@ Safety Spec: Any interruption of safety beam during close cycle commands immedia
                         { label: 'Measure condenser fan motor winding resistance', result: 'Motor windings measure normal resistance (14.2 Ω) with infinite resistance to ground.' },
                         { label: 'Inspect condenser coil fins', result: 'Coil fins are clean and clear of cottonwood/debris.' }
                     ],
-                    schematic: `[240/480V Contactor] ---> [45+5 µF Dual-Run Capacitor (C / HERM / FAN)] ---> [Condenser Fan + Compressor]
-Spec: Capacitor Tolerance = ±6% of nameplate µF`,
+                    schematic: `[240/480V Contactor] ---> [45+5 µF Dual-Run Capacitor (C / HERM / FAN)] ---> [Condenser Fan + Compressor]\nSpec: Capacitor Tolerance = ±6% of nameplate µF`,
                     options: [
                         { value: 'bad_dual_cap', text: 'Failed Fan Section on Dual-Run Capacitor (0.4 µF vs 5 µF)' },
                         { value: 'seized_fan_motor', text: 'Seized Condenser Fan Motor Bearings' },
@@ -1983,8 +1996,7 @@ Spec: Capacitor Tolerance = ±6% of nameplate µF`,
                         { label: 'Verify pressure gauges above and below check valve', result: 'System pressure is steady at 92 PSI with no leaks.' },
                         { label: 'Confirm Fire Pump controller is in AUTO', result: 'Fire pump controller selector is in AUTO with normal power.' }
                     ],
-                    schematic: `[Main Water Supply] ---> [OS&Y Gate Valve + Tamper Switch] ---> [Alarm Check Valve] ---> [Sprinkler Grid]
-Note: Any partial closure of an OS&Y valve triggers an immediate FACP Supervisory signal.`,
+                    schematic: `[Main Water Supply] ---> [OS&Y Gate Valve + Tamper Switch] ---> [Alarm Check Valve] ---> [Sprinkler Grid]\nNote: Any partial closure of an OS&Y valve triggers an immediate FACP Supervisory signal.`,
                     options: [
                         { value: 'osy_partially_closed', text: 'Partially Closed OS&Y Gate Valve Tripping Supervisory Tamper Switch' },
                         { value: 'broken_sprinkler_head', text: 'Active Waterflow from Burst Sprinkler Head' },
@@ -2012,8 +2024,7 @@ Note: Any partial closure of an OS&Y valve triggers an immediate FACP Supervisor
                         { label: 'Inspect push-to-connect air lines for kinks or hiss leaks', result: '6mm/8mm polyurethane tubing shows no pinholes, kinks, or fitting blow-by.' },
                         { label: 'Verify LOTO stored-energy dump valve operation', result: 'Main supply isolation ball valve is open; dump exhaust is closed.' }
                     ],
-                    schematic: `[88 PSI Header] ---> [Shutoff + FRL (Spec 75 PSI)] ---> [24VDC 5/2 Solenoid] ---> [Double-Acting Cylinder]
-New Tech Note: Always bleed trapped pneumatic pressure after LOTO before disconnecting lines/fittings.`,
+                    schematic: `[88 PSI Header] ---> [Shutoff + FRL (Spec 75 PSI)] ---> [24VDC 5/2 Solenoid] ---> [Double-Acting Cylinder]\nNew Tech Note: Always bleed trapped pneumatic pressure after LOTO before disconnecting lines/fittings.`,
                     options: [
                         { value: 'low_frl_pressure', text: 'Low Downstream FRL Regulator Pressure (42 PSI vs. 75 PSI Spec)' },
                         { value: 'dead_solenoid_coil', text: 'De-energized / Open 24VDC Solenoid Coil' },
@@ -2038,8 +2049,7 @@ New Tech Note: Always bleed trapped pneumatic pressure after LOTO before disconn
                         { label: 'Verify PNP vs. NPN wiring & 24VDC common reference', result: 'PNP sensor wired properly (Pin 1 +24V, Pin 3 0V, Pin 4 Signal In).' },
                         { label: 'Check photoeye lens for dust/debris', result: 'Optical lens and reflector are clean.' }
                     ],
-                    schematic: `[PNP Sensor (Brown +24V / Blue 0V / Black Out)] --- (M12 Cordset) ---> [Remote I/O Input Port 3]
-New Tech Tip: Check cable continuity while flexing near moving guards/frames before replacing sensors.`,
+                    schematic: `[PNP Sensor (Brown +24V / Blue 0V / Black Out)] --- (M12 Cordset) ---> [Remote I/O Input Port 3]\nNew Tech Tip: Check cable continuity while flexing near moving guards/frames before replacing sensors.`,
                     options: [
                         { value: 'loose_m12_intermittent', text: 'Loose / Abraded M12 Sensor Cordset Causing Intermittent I/O Flicker' },
                         { value: 'plc_cpu_fault', text: 'Main PLC Processor Overheating / Faulting' },
@@ -2051,6 +2061,7 @@ New Tech Tip: Check cable continuity while flexing near moving guards/frames bef
                 }
             ]
         };
+
         const onboardingChecklistItems = [
             { id: 'ob_1', title: 'Locate Main Water Shutoffs', desc: 'Switch to the Water Shutoffs layer and inspect main riser isolation points.', layer: 'water' },
             { id: 'ob_2', title: 'Verify Natural Gas Shutoff Valves', desc: 'Open the Gas Shutoffs layer to identify exterior & rooftop gas isolation valves.', layer: 'gas' },
@@ -2061,6 +2072,7 @@ New Tech Tip: Check cable continuity while flexing near moving guards/frames bef
             { id: 'ob_7', title: 'Inspect Dock Doors & Guardrails', desc: 'Open the Dock Doors layer to check dock leveler, restraint, and corral locations.', layer: 'dock_doors' },
             { id: 'ob_8', title: 'Check Rooftop HVAC Units', desc: 'View the HVAC / Roof layers to locate RTUs, exhaust fans, and roof hatch access.', layer: 'hvac' }
         ];
+
         window.openEquipmentSimModal = function(initialTrack) {
             document.getElementById('equipment-sim-modal-overlay').style.display = 'flex';
             switchEqSimTrack(initialTrack || activeEqTrack || 'conveyance');
@@ -2117,7 +2129,7 @@ New Tech Tip: Check cable continuity while flexing near moving guards/frames bef
             (scen.telemetry || []).forEach(t => {
                 const card = document.createElement('div');
                 card.className = 'gauge-card';
-                card.innerHTML = `<div class="gauge-label">${t.label}</div><div class="gauge-val ${t.status || ''}">${t.value}</div>`;
+                card.innerHTML = `<div class="gauge-label">${escapeHtml(t.label)}</div><div class="gauge-val ${escapeHtml(t.status || '')}">${escapeHtml(t.value)}</div>`;
                 teleGrid.appendChild(card);
             });
             const checksBox = document.getElementById('eqSimChecksContainer');
@@ -2126,7 +2138,7 @@ New Tech Tip: Check cable continuity while flexing near moving guards/frames bef
                 const btn = document.createElement('button');
                 btn.className = 'inspect-step-btn';
                 btn.id = `eqChkBtn_${idx}`;
-                btn.innerHTML = `<span>🔍 ${chk.label}</span><span style="font-size:10px; color:#38bdf8;">Inspect</span>`;
+                btn.innerHTML = `<span>🔍 ${escapeHtml(chk.label)}</span><span style="font-size:10px; color:#38bdf8;">Inspect</span>`;
                 btn.onclick = () => runEqFieldCheck(idx, chk);
                 checksBox.appendChild(btn);
             });
@@ -2151,7 +2163,7 @@ New Tech Tip: Check cable continuity while flexing near moving guards/frames bef
                 btn.querySelector('span:last-child').style.color = '#10b981';
                 const entry = document.createElement('div');
                 entry.className = 'note-entry';
-                entry.innerHTML = `<span class="note-timestamp">[STEP ${idx + 1}] ${chk.label}:</span> ${chk.result}`;
+                entry.innerHTML = `<span class="note-timestamp">[STEP ${idx + 1}] ${escapeHtml(chk.label)}:</span> ${escapeHtml(chk.result)}`;
                 logBox.appendChild(entry);
                 logBox.scrollTop = logBox.scrollHeight;
             }
@@ -2183,9 +2195,7 @@ New Tech Tip: Check cable continuity while flexing near moving guards/frames bef
             const logText = document.getElementById('eqSimDiagnosticLog')?.innerText || '';
             const fbText = document.getElementById('eqSimFeedback')?.innerText || '';
             const text = `${scen.title}\nSymptoms:\n${scen.symptoms}\nSubsystem & Specs:\n${scen.schematic}\nField Findings:\n${logText}` + (fbText ? `\nDiagnosis:\n${fbText}` : '');
-            if (navigator.clipboard && navigator.clipboard.writeText) {
-                navigator.clipboard.writeText(text).catch(() => {});
-            }
+            copyToClipboard(text, "Equipment work order summary copied.");
         };
         function renderOnboardingChecklist() {
             const box = document.getElementById('scavengerChecklistBox');
@@ -2199,13 +2209,13 @@ New Tech Tip: Check cable continuity while flexing near moving guards/frames bef
                 row.className = 'scavenger-row' + (isDone ? ' completed' : '');
                 row.innerHTML = `
                     <label style="display:flex; align-items:flex-start; gap:8px; cursor:pointer; flex:1; color:#e0e1dd; font-size:11px;">
-                        <input type="checkbox" ${isDone ? 'checked' : ''} onchange="toggleOnboardingTask('${item.id}', this.checked)" style="width:auto; margin-top:2px; min-height:auto;">
+                        <input type="checkbox" ${isDone ? 'checked' : ''} onchange="toggleOnboardingTask('${escapeHtml(item.id)}', this.checked)" style="width:auto; margin-top:2px; min-height:auto;">
                         <div>
-                            <div style="font-weight:bold; color:${isDone ? '#10b981' : '#fff'};">${item.title}</div>
-                            <div style="color:#94a3b8; font-size:10px;">${item.desc}</div>
+                            <div style="font-weight:bold; color:${isDone ? '#10b981' : '#fff'};">${escapeHtml(item.title)}</div>
+                            <div style="color:#94a3b8; font-size:10px;">${escapeHtml(item.desc)}</div>
                         </div>
                     </label>
-                    <button onclick="jumpToOnboardingLayer('${item.layer}')" style="width:auto; padding:4px 10px; font-size:10px; min-height:auto; background:#0284c7; color:#fff; margin:0;">🗺️ View Layer</button>
+                    <button onclick="jumpToOnboardingLayer('${escapeHtml(item.layer)}')" style="width:auto; padding:4px 10px; font-size:10px; min-height:auto; background:#0284c7; color:#fff; margin:0;">🗺️ View Layer</button>
                 `;
                 box.appendChild(row);
             });
@@ -2214,13 +2224,16 @@ New Tech Tip: Check cable continuity while flexing near moving guards/frames bef
         }
         window.toggleOnboardingTask = function(taskId, checked) {
             completedOnboardingTasks[taskId] = checked;
-            localStorage.setItem('imi1_onboarding_tasks', JSON.stringify(completedOnboardingTasks));
+            try {
+                localStorage.setItem('imi1_onboarding_tasks', JSON.stringify(completedOnboardingTasks));
+            } catch (e) {}
             renderOnboardingChecklist();
         };
         window.jumpToOnboardingLayer = function(layerName) {
             closeEquipmentSimModal();
             switchLayer(layerName);
         };
+
         /* CONTEXTUAL BRIDGE FROM MAP ASSET MODAL TO MATCHING SIMULATOR */
         let currentModalAssetSimTarget = null;
         function detectSimulatorForElement(el) {
@@ -2253,6 +2266,7 @@ New Tech Tip: Check cable continuity while flexing near moving guards/frames bef
                 openEquipmentSimModal(target.track);
             }
         };
+
         /* ADDITIONAL SIMULATORS HUB DATA & FUNCTIONS */
         let activeAddSimFilter = 'all';
         const additionalSimulatorCatalog = [
@@ -2341,7 +2355,7 @@ New Tech Tip: Check cable continuity while flexing near moving guards/frames bef
                 const card = document.createElement('div');
                 card.className = 'add-sim-card';
                 const top = document.createElement('div');
-                top.innerHTML = `<div class="add-sim-badge">${item.badge}</div><div class="add-sim-title">${item.title}</div><p class="add-sim-desc">${item.desc}</p>`;
+                top.innerHTML = `<div class="add-sim-badge">${escapeHtml(item.badge)}</div><div class="add-sim-title">${escapeHtml(item.title)}</div><p class="add-sim-desc">${escapeHtml(item.desc)}</p>`;
                 const actions = document.createElement('div');
                 actions.className = 'add-sim-actions';
                 if (item.actionType === 'external' && item.url) {
@@ -2378,10 +2392,9 @@ New Tech Tip: Check cable continuity while flexing near moving guards/frames bef
             const lines = additionalSimulatorCatalog
                 .filter(i => i.url)
                 .map(i => `${i.title}: ${i.url}`);
-            if (navigator.clipboard && navigator.clipboard.writeText) {
-                navigator.clipboard.writeText(lines.join('\n')).catch(() => {});
-            }
+            copyToClipboard(lines.join('\n'), "Simulator links copied.");
         };
+
         /* NON-BLOCKING TOAST NOTIFICATIONS */
         function showToast(message, type = "info") {
             let toastBox = document.getElementById("toast-container");
@@ -2507,16 +2520,6 @@ New Tech Tip: Check cable continuity while flexing near moving guards/frames bef
             showToast("Cleared completed tasks.", "success");
         };
 
-        /* RAF-BATCHED RENDER SCHEDULER FOR SMOOTH PAN/ZOOM & UPDATES */
-        let renderRafId = null;
-        function scheduleRender() {
-            if (renderRafId !== null) return;
-            renderRafId = requestAnimationFrame(() => {
-                renderRafId = null;
-                render();
-            });
-        }
-
         /* URL QUERY DEEP-LINKING (?asset=ID&layer=NAME&filter=TYPE) */
         let deepLinkApplied = false;
         function applyUrlDeepLinks() {
@@ -2594,6 +2597,7 @@ New Tech Tip: Check cable continuity while flexing near moving guards/frames bef
                 loadFromLocalCache();
             });
         }
+
         async function saveToFirebase() {
             try {
                 syncStatus.innerText = "Saving...";
@@ -2615,7 +2619,9 @@ New Tech Tip: Check cable continuity while flexing near moving guards/frames bef
                     tomActions: tomActions,
                     updatedAt: new Date().toISOString()
                 };
-                localStorage.setItem("cached_layout", JSON.stringify(layoutObject));
+                try {
+                    localStorage.setItem("cached_layout", JSON.stringify(layoutObject));
+                } catch (e) {}
                 await setDoc(doc(db, "layouts", "facility_main"), layoutObject);
                 syncStatus.innerText = "Live Sync (View Only)";
                 syncStatus.style.color = "#10b981";
@@ -2625,6 +2631,7 @@ New Tech Tip: Check cable continuity while flexing near moving guards/frames bef
                 syncStatus.style.color = "#ef4444";
             }
         }
+
         window.addShiftLog = function(category) {
             let shiftSelectId = category === 'safety' ? 'safetyShiftName' : (category === 'tom' ? 'tomShiftName' : (category === 'tech' ? 'techShiftName' : 'shiftName'));
             let textInputId = category === 'safety' ? 'safetyLogText' : (category === 'tom' ? 'tomLogText' : (category === 'tech' ? 'techLogText' : 'shiftLogText'));
@@ -2645,7 +2652,9 @@ New Tech Tip: Check cable continuity while flexing near moving guards/frames bef
             let currentFilter = document.getElementById(filterSelectId).value;
             renderShiftLogs(category, currentFilter);
             saveToFirebase();
+            showToast("Shift log posted.", "success");
         };
+
         function populateAllShiftDropdowns() {
             populateDropdownForCategory('tech', 'techShiftName', 'techFilterSelect');
             populateDropdownForCategory('ops', 'shiftName', 'shiftFilterSelect');
@@ -2754,23 +2763,24 @@ New Tech Tip: Check cable continuity while flexing near moving guards/frames bef
             if (filterShift && filterShift !== "ALL") {
                 logsToDisplay = logsToDisplay.filter(s => s.shift === filterShift);
             }
-            if (!logsToDisplay || logsToDisplay.length === 0) {
-                box.innerHTML = `<span style="color:#64748b; font-style:italic;">No handover entries found for ${filterShift}.</span>`;
-                return;
-            }
             const todayPrefix = new Date().toISOString().slice(0, 10);
             if (todayOnlyLogState[cat]) {
                 logsToDisplay = logsToDisplay.filter(s => (s.time || "").startsWith(todayPrefix));
+            }
+            if (!logsToDisplay || logsToDisplay.length === 0) {
+                box.innerHTML = `<span style="color:#64748b; font-style:italic;">No handover entries found for ${escapeHtml(filterShift)}.</span>`;
+                return;
             }
             logsToDisplay.forEach(s => {
                 let div = document.createElement("div");
                 div.className = "note-entry";
                 const isToday = (s.time || "").startsWith(todayPrefix);
                 const badge = isToday ? `<span class="today-badge">TODAY</span>` : "";
-                div.innerHTML = `<span class="note-timestamp">[${s.time}] ${s.shift}:</span>${badge} ${s.note}`;
+                div.innerHTML = `<span class="note-timestamp">[${escapeHtml(s.time)}] ${escapeHtml(s.shift)}:</span>${badge} ${escapeHtml(s.note)}`;
                 box.appendChild(div);
             });
         }
+
         /* ACTION ITEM TRACKER FUNCTIONS */
         function getActionList(cat) {
             if (cat === 'safety') return safetyActions;
@@ -2839,12 +2849,13 @@ New Tech Tip: Check cable continuity while flexing near moving guards/frames bef
             list.forEach((item, idx) => {
                 let div = document.createElement("div");
                 div.className = "action-item-row";
-                div.innerHTML = `<input type="checkbox" ${item.done ? 'checked' : ''} onchange="toggleActionItem('${cat}', ${idx}, this.checked)" style="width:auto; margin:0; min-height:auto;">
-                <span style="${item.done ? 'text-decoration: line-through; color: #64748b;' : 'color: #fff;'} flex:1;">${item.text}</span>
-                <button onclick="deleteActionItem('${cat}', ${idx})" class="danger" style="width:auto; padding:0 4px; font-size:9px; min-height:auto;">X</button>`;
+                div.innerHTML = `<input type="checkbox" ${item.done ? 'checked' : ''} onchange="toggleActionItem('${escapeHtml(cat)}', ${idx}, this.checked)" style="width:auto; margin:0; min-height:auto;">
+                <span style="${item.done ? 'text-decoration: line-through; color: #64748b;' : 'color: #fff;'} flex:1;">${escapeHtml(item.text)}</span>
+                <button onclick="deleteActionItem('${escapeHtml(cat)}', ${idx})" class="danger" style="width:auto; padding:0 4px; font-size:9px; min-height:auto;">X</button>`;
                 box.appendChild(div);
             });
         }
+
         /* PRINT HANDOVER REPORT FUNCTION */
         window.printHandoverReport = function(cat) {
             let catName = cat === 'safety' ? 'Safety' : (cat === 'tom' ? 'Tom Team' : (cat === 'tech' ? 'Maintenance Tech' : 'Operations'));
@@ -2854,8 +2865,12 @@ New Tech Tip: Check cable continuity while flexing near moving guards/frames bef
             if (selectedShift !== 'ALL') logs = logs.filter(l => l.shift === selectedShift);
             let actions = getActionList(cat);
             let printWin = window.open('', '_blank');
+            if (!printWin) {
+                showToast("Pop-up blocked. Allow pop-ups to print report.", "warn");
+                return;
+            }
             printWin.document.write(`
-                <html><head><title>${catName} Shift Handover Summary</title>
+                <html><head><title>${escapeHtml(catName)} Shift Handover Summary</title>
                 <style>
                     body { font-family: sans-serif; padding: 20px; color: #111; }
                     h2 { color: #0284c7; border-bottom: 2px solid #0284c7; padding-bottom: 4px; }
@@ -2864,24 +2879,25 @@ New Tech Tip: Check cable continuity while flexing near moving guards/frames bef
                     .timestamp { font-weight: bold; color: #0284c7; }
                     ul { padding-left: 20px; }
                 </style></head><body>
-                <h2>📋 ${catName} Shift Handover Summary (${selectedShift})</h2>
-                <p><b>Generated:</b> ${new Date().toLocaleString()}</p>
+                <h2>📋 ${escapeHtml(catName)} Shift Handover Summary (${escapeHtml(selectedShift)})</h2>
+                <p><b>Generated:</b> ${escapeHtml(new Date().toLocaleString())}</p>
                 <h3>Pending Action Items</h3>
-                <ul>${actions.map(a => `<li>[${a.done ? 'X' : ' '}] ${a.text}</li>`).join('') || '<li>None</li>'}</ul>
+                <ul>${actions.map(a => `<li>[${a.done ? 'X' : ' '}] ${escapeHtml(a.text)}</li>`).join('') || '<li>None</li>'}</ul>
                 <h3>Shift Handover Notes</h3>
-                ${logs.map(l => `<div class="entry"><span class="timestamp">[${l.time}] ${l.shift}:</span> ${l.note}</div>`).join('') || '<p>No log entries found.</p>'}
+                ${logs.map(l => `<div class="entry"><span class="timestamp">[${escapeHtml(l.time)}] ${escapeHtml(l.shift)}:</span> ${escapeHtml(l.note)}</div>`).join('') || '<p>No log entries found.</p>'}
                 </body></html>
             `);
             printWin.document.close();
             printWin.focus();
             setTimeout(() => { printWin.print(); }, 250);
         };
+
         /* EXPORT LOGS CSV FUNCTION */
         window.exportShiftLogsCSV = function(cat) {
             let catName = cat === 'safety' ? 'Safety' : (cat === 'tom' ? 'Tom_Team' : (cat === 'tech' ? 'Tech' : 'Ops'));
             let logs = cat === 'safety' ? safetyLogs : (cat === 'tom' ? tomLogs : (cat === 'tech' ? techLogs : shiftLogs));
             let csvRows = [["Timestamp", "Shift", "Note / Handover Entry"]];
-            logs.forEach(l => csvRows.push([`"${l.time}"`, `"${l.shift}"`, `"${(l.note || '').replace(/"/g, '""')}"`]));
+            logs.forEach(l => csvRows.push([`"${(l.time || '').replace(/"/g, '""')}"`, `"${(l.shift || '').replace(/"/g, '""')}"`, `"${(l.note || '').replace(/"/g, '""')}"`]));
             let csvString = csvRows.map(row => row.join(",")).join("\n");
             let blob = new Blob([csvString], { type: "text/csv" });
             let url = URL.createObjectURL(blob);
@@ -2891,6 +2907,7 @@ New Tech Tip: Check cable continuity while flexing near moving guards/frames bef
             a.click();
             URL.revokeObjectURL(url);
         };
+
         /* PRINT ASSET QR CODE LABEL */
         window.printAssetQrCode = function() {
             let id = parseInt(document.getElementById("modalElementId").value);
@@ -2899,8 +2916,12 @@ New Tech Tip: Check cable continuity while flexing near moving guards/frames bef
             let rowLabel = getRowLabel(Math.floor(el.y));
             let colNum = (el.x + 1).toFixed(1);
             let qrWin = window.open('', '_blank');
+            if (!qrWin) {
+                showToast("Pop-up blocked. Allow pop-ups to print QR label.", "warn");
+                return;
+            }
             qrWin.document.write(`
-                <html><head><title>Asset Label - ${el.name}</title>
+                <html><head><title>Asset Label - ${escapeHtml(el.name)}</title>
                 <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"><\/script>
                 <style>
                     body { font-family: sans-serif; text-align: center; padding: 20px; }
@@ -2910,20 +2931,21 @@ New Tech Tip: Check cable continuity while flexing near moving guards/frames bef
                     canvas { margin-top: 10px; }
                 </style></head><body>
                 <div class="label-card">
-                    <h3>${el.name}</h3>
-                    <p><b>Category:</b> ${el.category || 'N/A'}</p>
-                    <p><b>Location:</b> Row ${rowLabel}, Col ${colNum}</p>
-                    <p><b>ID:</b> ${el.id}</p>
+                    <h3>${escapeHtml(el.name)}</h3>
+                    <p><b>Category:</b> ${escapeHtml(el.category || 'N/A')}</p>
+                    <p><b>Location:</b> Row ${escapeHtml(rowLabel)}, Col ${escapeHtml(colNum)}</p>
+                    <p><b>ID:</b> ${escapeHtml(el.id)}</p>
                     <canvas id="qrCanvas"></canvas>
                 </div>
                 <script>
-                    QRCode.toCanvas(document.getElementById('qrCanvas'), '${el.id}', { width: 140 }, function () {
+                    QRCode.toCanvas(document.getElementById('qrCanvas'), '${escapeHtml(el.id)}', { width: 140 }, function () {
                         window.print();
                     });
                 <\/script></body></html>
             `);
             qrWin.document.close();
         };
+
         let quickFilterMinimized = false;
         const quickFilterLabels = {
             all: 'Show All',
@@ -2964,8 +2986,16 @@ New Tech Tip: Check cable continuity while flexing near moving guards/frames bef
             updateActiveFilterBadge();
             render();
         };
+
         window.openARModal = function() {
             document.getElementById("ar-modal-overlay").style.display = "flex";
+            if (!window.Html5Qrcode) {
+                showToast("QR scanner library not loaded.", "error");
+                return;
+            }
+            if (arQrCode) {
+                try { arQrCode.clear(); } catch (e) {}
+            }
             arQrCode = new Html5Qrcode("ar-video-container");
             arQrCode.start(
                 { facingMode: "environment" },
@@ -2976,22 +3006,37 @@ New Tech Tip: Check cable continuity while flexing near moving guards/frames bef
                     closeARModal();
                 },
                 () => {}
-            ).catch(err => console.error("AR Camera error:", err));
+            ).catch(err => {
+                console.error("AR Camera error:", err);
+                showToast("Unable to access camera for AR view.", "warn");
+            });
         };
         window.closeARModal = function() {
+            const finishClose = () => {
+                document.getElementById("ar-modal-overlay").style.display = "none";
+            };
             if (arQrCode) {
                 arQrCode.stop().then(() => {
-                    arQrCode.clear();
-                    document.getElementById("ar-modal-overlay").style.display = "none";
+                    try { arQrCode.clear(); } catch (e) {}
+                    arQrCode = null;
+                    finishClose();
                 }).catch(() => {
-                    document.getElementById("ar-modal-overlay").style.display = "none";
+                    arQrCode = null;
+                    finishClose();
                 });
             } else {
-                document.getElementById("ar-modal-overlay").style.display = "none";
+                finishClose();
             }
         };
         window.openScannerModal = function() {
             document.getElementById("scanner-modal-overlay").style.display = "flex";
+            if (!window.Html5Qrcode) {
+                showToast("QR scanner library not loaded.", "error");
+                return;
+            }
+            if (html5QrCode) {
+                try { html5QrCode.clear(); } catch (e) {}
+            }
             html5QrCode = new Html5Qrcode("qr-reader");
             html5QrCode.start(
                 { facingMode: "environment" },
@@ -3002,20 +3047,29 @@ New Tech Tip: Check cable continuity while flexing near moving guards/frames bef
                     handleSearch(decodedText);
                 },
                 () => {}
-            ).catch(err => console.error("Scanner error:", err));
+            ).catch(err => {
+                console.error("Scanner error:", err);
+                showToast("Unable to access camera for QR scan.", "warn");
+            });
         };
         window.closeScannerModal = function() {
+            const finishClose = () => {
+                document.getElementById("scanner-modal-overlay").style.display = "none";
+            };
             if (html5QrCode) {
                 html5QrCode.stop().then(() => {
-                    html5QrCode.clear();
-                    document.getElementById("scanner-modal-overlay").style.display = "none";
+                    try { html5QrCode.clear(); } catch (e) {}
+                    html5QrCode = null;
+                    finishClose();
                 }).catch(() => {
-                    document.getElementById("scanner-modal-overlay").style.display = "none";
+                    html5QrCode = null;
+                    finishClose();
                 });
             } else {
-                document.getElementById("scanner-modal-overlay").style.display = "none";
+                finishClose();
             }
         };
+
         function getElementWorldCenter(el) {
             if (!el) return null;
             if (el.type === 'conveyance_line' && Array.isArray(el.points) && el.points.length > 0) {
@@ -3090,6 +3144,17 @@ New Tech Tip: Check cable continuity while flexing near moving guards/frames bef
             viewTransform.y = Math.round((rect.height - targetH * viewTransform.scale) / 2);
             render();
         };
+        window.zoomMapBy = function(factor) {
+            const rect = container.getBoundingClientRect();
+            const centerX = rect.width / 2;
+            const centerY = rect.height / 2;
+            const oldScale = viewTransform.scale;
+            const nextScale = Math.min(Math.max(oldScale * factor, 0.25), 4.0);
+            viewTransform.x = centerX - (centerX - viewTransform.x) * (nextScale / oldScale);
+            viewTransform.y = centerY - (centerY - viewTransform.y) * (nextScale / oldScale);
+            viewTransform.scale = nextScale;
+            updateTransformString();
+        };
         window.jumpToGridCoord = function() {
             const raw = (document.getElementById("gridJumpInput")?.value || "").trim().toUpperCase();
             if (!raw) return;
@@ -3120,6 +3185,7 @@ New Tech Tip: Check cable continuity while flexing near moving guards/frames bef
             viewTransform.y = Math.round(rect.height / 2 - worldY * viewTransform.scale);
             render();
         };
+
         /* MAP LEGEND & GUIDED NEW TECH FLOOR TOUR */
         let guidedTourActive = false;
         let guidedTourIndex = 0;
@@ -3137,7 +3203,7 @@ New Tech Tip: Check cable continuity while flexing near moving guards/frames bef
             categories.forEach(cat => {
                 const row = document.createElement("div");
                 row.className = "legend-row";
-                row.innerHTML = `<span class="legend-swatch" style="background:#111b27; border-color:${cat.color};"></span><span>${cat.name}</span>`;
+                row.innerHTML = `<span class="legend-swatch" style="background:#111b27; border-color:${escapeHtml(cat.color)};"></span><span>${escapeHtml(cat.name)}</span>`;
                 list.appendChild(row);
             });
         }
@@ -3175,6 +3241,7 @@ New Tech Tip: Check cable continuity while flexing near moving guards/frames bef
                 centerMapOnElement(layerItems[0], 1.05);
             }
         }
+
         function resolveParentAsset(parentId) {
             if (parentId === undefined || parentId === null || parentId === "") return null;
             return elements.find(item => String(item.id) === String(parentId)) || null;
@@ -3194,6 +3261,7 @@ New Tech Tip: Check cable continuity while flexing near moving guards/frames bef
             centerMapOnElement(parentEl, 1.3);
             openModal(parentEl);
         };
+
         function buildNewTechQuickCheck(el) {
             const parts = [];
             if (el.parentId) {
@@ -3201,33 +3269,34 @@ New Tech Tip: Check cable continuity while flexing near moving guards/frames bef
                 if (parentEl) {
                     const pRow = getRowLabel(Math.floor(parentEl.y));
                     const pCol = (parentEl.x + 1).toFixed(1);
-                    parts.push(`<b>Upstream/Feed:</b> ${parentEl.name} (Row ${pRow}, Col ${pCol})`);
+                    parts.push(`<b>Upstream/Feed:</b> ${escapeHtml(parentEl.name)} (Row ${escapeHtml(pRow)}, Col ${escapeHtml(pCol)})`);
                 } else {
-                    parts.push(`<b>Upstream/Feed:</b> Parent ID ${el.parentId}`);
+                    parts.push(`<b>Upstream/Feed:</b> Parent ID ${escapeHtml(el.parentId)}`);
                 }
             }
-            if (el.plcNode) parts.push(`<b>Controls/PLC:</b> ${el.plcNode}`);
-            if (el.utilityDraw) parts.push(`<b>Power/Utility Spec:</b> ${el.utilityDraw}`);
-            if (el.estopZone) parts.push(`<b>Safety/E-Stop Zone:</b> ${el.estopZone}`);
+            if (el.plcNode) parts.push(`<b>Controls/PLC:</b> ${escapeHtml(el.plcNode)}`);
+            if (el.utilityDraw) parts.push(`<b>Power/Utility Spec:</b> ${escapeHtml(el.utilityDraw)}`);
+            if (el.estopZone) parts.push(`<b>Safety/E-Stop Zone:</b> ${escapeHtml(el.estopZone)}`);
             if (el.lotoSteps && el.lotoSteps.length > 0) {
                 parts.push(`<b>LOTO Steps (${el.lotoSteps.length}):</b> Always verify zero-energy state & try-start before hands-on work.`);
             }
             if (el.spareParts && el.spareParts.length > 0) {
-                const bins = el.spareParts.map(p => `${p.partName}${p.binLoc ? ` [${p.binLoc}]` : ''}`).join(', ');
+                const bins = el.spareParts.map(p => `${escapeHtml(p.partName)}${p.binLoc ? ` [${escapeHtml(p.binLoc)}]` : ''}`).join(', ');
                 parts.push(`<b>Mapped Spares:</b> ${bins}`);
             }
             const nearestIso = findNearestIsolationAssets(el, 3);
             if (nearestIso.length > 0) {
                 const isoSummary = nearestIso
-                    .map(n => `${n.item.name} [${(n.item.layer || 'ground').replace(/_/g, ' ').toUpperCase()}, ~${n.distGrids} grids]`)
+                    .map(n => `${escapeHtml(n.item.name)} [${escapeHtml((n.item.layer || 'ground').replace(/_/g, ' ').toUpperCase())}, ~${escapeHtml(n.distGrids)} grids]`)
                     .join('; ');
                 parts.push(`<b>Nearest Isolation / Shutoffs:</b> ${isoSummary}`);
             }
             if (parts.length === 0) {
-                return `<b>New Tech Quick-Check:</b> Confirm grid location (Row ${getRowLabel(Math.floor(el.y))}, Col ${(el.x + 1).toFixed(1)}), inspect guards/sensors for debris or loose M12/terminal connections, and check recent shift handover logs before escalating.`;
+                return `<b>New Tech Quick-Check:</b> Confirm grid location (Row ${escapeHtml(getRowLabel(Math.floor(el.y)))}, Col ${escapeHtml((el.x + 1).toFixed(1))}), inspect guards/sensors for debris or loose M12/terminal connections, and check recent shift handover logs before escalating.`;
             }
             return `<b>New Tech Quick-Check:</b><br>• ` + parts.join('<br>• ');
         }
+
         function buildSafetyCallout(el) {
             const warnings = [];
             if (el.status === 'down') warnings.push("🚨 <b>ASSET MARKED DOWN:</b> Verify LOTO/tag status and open breakdown tickets before operating.");
@@ -3238,6 +3307,7 @@ New Tech Tip: Check cable continuity while flexing near moving guards/frames bef
             }
             return warnings.join("<br>");
         }
+
         window.printAssetSpecSheet = function() {
             const id = parseInt(document.getElementById("modalElementId").value);
             const el = elements.find(item => item.id === id);
@@ -3247,31 +3317,35 @@ New Tech Tip: Check cable continuity while flexing near moving guards/frames bef
             const parentEl = resolveParentAsset(el.parentId);
             const parentLabel = parentEl ? `${parentEl.name} (ID: ${parentEl.id})` : (el.parentId ? `Parent ID: ${el.parentId}` : 'None / Standalone');
             const lotoHtml = (el.lotoSteps && el.lotoSteps.length)
-                ? `<ol>${el.lotoSteps.map(s => `<li>${s.step}</li>`).join('')}</ol>`
+                ? `<ol>${el.lotoSteps.map(s => `<li>${escapeHtml(s.step)}</li>`).join('')}</ol>`
                 : '<p>No specific LOTO steps recorded; follow site LOTO procedure.</p>';
             const bomHtml = (el.spareParts && el.spareParts.length)
-                ? `<ul>${el.spareParts.map(p => `<li><b>${p.partName}</b> — SKU: ${p.partNum || 'N/A'} — Bin: ${p.binLoc || 'N/A'}</li>`).join('')}</ul>`
+                ? `<ul>${el.spareParts.map(p => `<li><b>${escapeHtml(p.partName)}</b> — SKU: ${escapeHtml(p.partNum || 'N/A')} — Bin: ${escapeHtml(p.binLoc || 'N/A')}</li>`).join('')}</ul>`
                 : '<p>No spare parts mapped.</p>';
             const win = window.open('', '_blank');
+            if (!win) {
+                showToast("Pop-up blocked. Allow pop-ups to print spec sheet.", "warn");
+                return;
+            }
             win.document.write(`
-                <html><head><title>Asset Spec Sheet - ${el.name}</title>
+                <html><head><title>Asset Spec Sheet - ${escapeHtml(el.name)}</title>
                 <style>
                     body { font-family: Arial, sans-serif; padding: 24px; color: #111; line-height: 1.45; }
                     h1 { margin: 0 0 6px 0; color: #0f172a; border-bottom: 2px solid #0284c7; padding-bottom: 6px; }
                     .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 18px; margin: 12px 0; font-size: 13px; }
                     h3 { margin: 16px 0 6px 0; color: #0284c7; border-bottom: 1px solid #cbd5e1; padding-bottom: 3px; }
                 </style></head><body>
-                <h1>${el.name}</h1>
+                <h1>${escapeHtml(el.name)}</h1>
                 <div class="grid">
-                    <div><b>Category:</b> ${el.category || 'General'}</div>
-                    <div><b>Status:</b> ${el.status || 'operational'}</div>
-                    <div><b>Grid Location:</b> Row ${rowLabel}, Col ${colNum} (Layer: ${el.layer || 'ground'})</div>
-                    <div><b>Upstream / Feed:</b> ${parentLabel}</div>
-                    <div><b>PLC / Node:</b> ${el.plcNode || 'N/A'}</div>
-                    <div><b>Utility / Draw:</b> ${el.utilityDraw || 'N/A'}</div>
-                    <div><b>Safety / E-Stop Zone:</b> ${el.estopZone || 'N/A'}</div>
-                    <div><b>PM Due:</b> ${el.pmDue || 'N/A'}</div>
-                    <div><b>Vendor:</b> ${el.vendorName || 'N/A'} ${el.vendorContact ? '(' + el.vendorContact + ')' : ''}</div>
+                    <div><b>Category:</b> ${escapeHtml(el.category || 'General')}</div>
+                    <div><b>Status:</b> ${escapeHtml(el.status || 'operational')}</div>
+                    <div><b>Grid Location:</b> Row ${escapeHtml(rowLabel)}, Col ${escapeHtml(colNum)} (Layer: ${escapeHtml(el.layer || 'ground')})</div>
+                    <div><b>Upstream / Feed:</b> ${escapeHtml(parentLabel)}</div>
+                    <div><b>PLC / Node:</b> ${escapeHtml(el.plcNode || 'N/A')}</div>
+                    <div><b>Utility / Draw:</b> ${escapeHtml(el.utilityDraw || 'N/A')}</div>
+                    <div><b>Safety / E-Stop Zone:</b> ${escapeHtml(el.estopZone || 'N/A')}</div>
+                    <div><b>PM Due:</b> ${escapeHtml(el.pmDue || 'N/A')}</div>
+                    <div><b>Vendor:</b> ${escapeHtml(el.vendorName || 'N/A')} ${el.vendorContact ? '(' + escapeHtml(el.vendorContact) + ')' : ''}</div>
                 </div>
                 <h3>New Tech Quick-Check</h3>
                 <p>${buildNewTechQuickCheck(el).replace(/<br>/g, ' | ')}</p>
@@ -3284,6 +3358,7 @@ New Tech Tip: Check cable continuity while flexing near moving guards/frames bef
             `);
             win.document.close();
         };
+
         window.toggleHeatmap = function(checked) {
             showHeatmap = checked;
             render();
@@ -3329,16 +3404,16 @@ New Tech Tip: Check cable continuity while flexing near moving guards/frames bef
             }
             let adjustedIndex = r;
             if (adjustedIndex >= 8) {
-                adjustedIndex += 1; 
+                adjustedIndex += 1;
             }
-            return String.fromCharCode(65 + adjustedIndex); 
+            return String.fromCharCode(65 + adjustedIndex);
         }
         window.switchLayer = function(layerName) {
             currentLayer = layerName;
             let layerButtons = [
-                'layerGroundBtn', 'layerMezzBtn', 'layerRoofBtn', 
+                'layerGroundBtn', 'layerMezzBtn', 'layerRoofBtn',
                 'layerUisBtn', 'layerAtrBtn', 'layerConveyanceBtn',
-                'layerSprinklerBtn', 'layerWaterBtn', 'layerGasBtn', 
+                'layerSprinklerBtn', 'layerWaterBtn', 'layerGasBtn',
                 'layerDockDoorsBtn', 'layerUnderMezzSprinklersBtn', 'layerHvacBtn', 'layerLotoBtn', 'layerAssetsBtn'
             ];
             layerButtons.forEach(btnId => {
@@ -3387,11 +3462,12 @@ New Tech Tip: Check cable continuity while flexing near moving guards/frames bef
             setTxt('statDownCount', downCount);
             setTxt('statPartsCount', partsCount);
         }
+
         function render() {
             viewport.innerHTML = "";
             updateTransformString();
             updateGlobalFilterCounts();
-            
+
             // Site Background
             let siteBackground = document.createElementNS("http://www.w3.org/2000/svg", "g");
             let earthGrading = document.createElementNS("http://www.w3.org/2000/svg", "rect");
@@ -3412,6 +3488,7 @@ New Tech Tip: Check cable continuity while flexing near moving guards/frames bef
             siteLabel.textContent = "▼ 6500 W MT HOPE HWY — SURROUNDING SITE EARTHWORK & AUTOMATION FOOTPRINT";
             siteBackground.appendChild(siteLabel);
             viewport.appendChild(siteBackground);
+
             // Grid Lines & Labels
             for (let c = minCol; c <= maxCol; c++) {
                 let line = document.createElementNS("http://www.w3.org/2000/svg", "line");
@@ -3426,7 +3503,7 @@ New Tech Tip: Check cable continuity while flexing near moving guards/frames bef
                 text.setAttribute("y", (minRow * gridSize) - 8);
                 text.setAttribute("text-anchor", "middle");
                 text.setAttribute("class", "coord-label");
-                text.textContent = c + 1; 
+                text.textContent = c + 1;
                 viewport.appendChild(text);
             }
             for (let r = 0; r < buildingRows; r++) {
@@ -3445,6 +3522,7 @@ New Tech Tip: Check cable continuity while flexing near moving guards/frames bef
                 text.textContent = getRowLabel(r);
                 viewport.appendChild(text);
             }
+
             // Building Footprint
             let buildingWall = document.createElementNS("http://www.w3.org/2000/svg", "rect");
             buildingWall.setAttribute("x", 0);
@@ -3500,6 +3578,7 @@ New Tech Tip: Check cable continuity while flexing near moving guards/frames bef
             topLabel.setAttribute("font-weight", "bold");
             topLabel.textContent = `SOUTH WALL - ROW A (${layerTitleName} LAYER) ▲`;
             viewport.appendChild(topLabel);
+
             let bottomLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
             bottomLabel.setAttribute("x", 0.5 * gridSize);
             bottomLabel.setAttribute("y", (buildingRows * gridSize) + 18);
@@ -3508,6 +3587,7 @@ New Tech Tip: Check cable continuity while flexing near moving guards/frames bef
             bottomLabel.setAttribute("font-weight", "bold");
             bottomLabel.textContent = `NORTH WALL - ROW N ▼`;
             viewport.appendChild(bottomLabel);
+
             // Draw Heatmap Overlay Circles if enabled
             if (showHeatmap) {
                 elements.forEach(el => {
@@ -3526,6 +3606,7 @@ New Tech Tip: Check cable continuity while flexing near moving guards/frames bef
                     }
                 });
             }
+
             // Render Elements with Search & Quick-Filter Filtering
             let visibleElements = elements.filter(el => {
                 if (searchQuery) {
@@ -3551,6 +3632,7 @@ New Tech Tip: Check cable continuity while flexing near moving guards/frames bef
             if (countEl) {
                 countEl.innerText = searchQuery ? `${visibleElements.length} match${visibleElements.length === 1 ? '' : 'es'}` : "";
             }
+
             visibleElements.forEach(el => {
                 let g = document.createElementNS("http://www.w3.org/2000/svg", "g");
                 g.setAttribute("class", "item-group");
@@ -3574,6 +3656,7 @@ New Tech Tip: Check cable continuity while flexing near moving guards/frames bef
                     }
                     itemTapState.pointerId = null;
                 });
+
                 if (el.type === 'conveyance_line') {
                     let pts = el.points || [];
                     if (pts.length >= 2) {
@@ -3587,7 +3670,7 @@ New Tech Tip: Check cable continuity while flexing near moving guards/frames bef
                         path.setAttribute("stroke", el.conveyanceType === 'flex' ? "#fbbf24" : "#22d3ee");
                         path.setAttribute("stroke-width", el.conveyanceType === 'flex' ? "4" : "6");
                         if (el.conveyanceType === 'flex') path.setAttribute("stroke-dasharray", "6,4");
-                        
+
                         let text = document.createElementNS("http://www.w3.org/2000/svg", "text");
                         let midPt = pts[Math.floor(pts.length / 2)];
                         text.setAttribute("x", midPt.x * gridSize);
@@ -3623,7 +3706,7 @@ New Tech Tip: Check cable continuity while flexing near moving guards/frames bef
                     let circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
                     circle.setAttribute("cx", cx);
                     circle.setAttribute("cy", cy);
-                    circle.setAttribute("r", 7); 
+                    circle.setAttribute("r", 7);
                     circle.setAttribute("fill", "#111b27");
                     circle.setAttribute("stroke", catColor);
                     circle.setAttribute("stroke-width", "2");
@@ -3642,7 +3725,6 @@ New Tech Tip: Check cable continuity while flexing near moving guards/frames bef
                     emojiText.setAttribute("font-size", "9px");
                     emojiText.style.pointerEvents = "none";
                     emojiText.textContent = el.emoji || "📍";
-                    /* PARTS NEEDED MAP BADGE */
                     if (el.partsNeeded) {
                         let partsBadge = document.createElementNS("http://www.w3.org/2000/svg", "text");
                         partsBadge.setAttribute("x", cx - 12);
@@ -3654,7 +3736,7 @@ New Tech Tip: Check cable continuity while flexing near moving guards/frames bef
                     }
                     let popupGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
                     popupGroup.setAttribute("class", "asset-popup");
-                    let boxWidth = (el.name.length * 6.5) + 12;
+                    let boxWidth = ((el.name || "").length * 6.5) + 12;
                     let popupBg = document.createElementNS("http://www.w3.org/2000/svg", "rect");
                     popupBg.setAttribute("x", cx - (boxWidth / 2));
                     popupBg.setAttribute("y", cy - 28);
@@ -3684,7 +3766,7 @@ New Tech Tip: Check cable continuity while flexing near moving guards/frames bef
                     rect.setAttribute("y", el.y * gridSize);
                     rect.setAttribute("width", el.w * gridSize);
                     rect.setAttribute("height", el.h * gridSize);
-                    
+
                     if (el.type === 'yard') {
                         rect.setAttribute("fill", "#b45309"); rect.setAttribute("fill-opacity", "0.3"); rect.setAttribute("stroke", "#d97706");
                     } else if (el.type === 'racking') {
@@ -3695,7 +3777,7 @@ New Tech Tip: Check cable continuity while flexing near moving guards/frames bef
                         rect.setAttribute("fill", "#0284c7"); rect.setAttribute("fill-opacity", "0.35"); rect.setAttribute("stroke", "#38bdf8");
                     }
                     rect.setAttribute("stroke-width", searchQuery ? "2.5" : "1");
-                    
+
                     let text = document.createElementNS("http://www.w3.org/2000/svg", "text");
                     text.setAttribute("x", (el.x * gridSize) + 6);
                     text.setAttribute("y", (el.y * gridSize) + 16);
@@ -3710,6 +3792,7 @@ New Tech Tip: Check cable continuity while flexing near moving guards/frames bef
                 viewport.appendChild(g);
             });
         }
+
         function getPinchDistance(p1, p2) {
             let dx = p1.clientX - p2.clientX;
             let dy = p1.clientY - p2.clientY;
@@ -3729,8 +3812,9 @@ New Tech Tip: Check cable continuity while flexing near moving guards/frames bef
             let rowIdx = Math.floor(localY / gridSize);
             let preciseColNum = (exactCol + 1).toFixed(2);
             let rowLabel = getRowLabel(rowIdx);
-            coordDisplay.innerHTML = `Grid: <b>Row ${rowLabel}, Col ${preciseColNum}</b>`;
+            coordDisplay.innerHTML = `Grid: <b>Row ${escapeHtml(rowLabel)}, Col ${escapeHtml(preciseColNum)}</b>`;
         }
+
         let initialPinchScale = 1;
         let initialPinchCenter = { x: 0, y: 0 };
         let initialTransform = { x: 0, y: 0 };
@@ -3801,6 +3885,7 @@ New Tech Tip: Check cable continuity while flexing near moving guards/frames bef
             viewTransform.y = mouseY - (mouseY - viewTransform.y) * (viewTransform.scale / oldScale);
             updateTransformString();
         }, { passive: false });
+
         function openModal(el) {
             selectedId = el.id;
             document.getElementById("modalElementId").value = el.id;
@@ -3822,7 +3907,7 @@ New Tech Tip: Check cable continuity while flexing near moving guards/frames bef
                 const cNum = ((el.x || 0) + 1).toFixed(1);
                 humanGridEl.value = `Row ${rLbl}, Col ${cNum} (${(el.layer || 'ground').replace(/_/g, ' ').toUpperCase()})`;
             }
-            
+
             if (el.type === 'asset') {
                 document.getElementById("modalAssetFields").style.display = "flex";
                 document.getElementById("modalDependencyContainer").style.display = "flex";
@@ -3846,10 +3931,8 @@ New Tech Tip: Check cable continuity while flexing near moving guards/frames bef
                     document.getElementById("modalParentAsset").value = el.parentId ? `Parent ID: ${el.parentId}` : "None / Standalone";
                     if (jumpParentBtn) jumpParentBtn.style.display = "none";
                 }
-                document.getElementById("modalPlcNode").value = el.plcNode || "None";
+                document.getElementById("modalPlcNode").value = el.plcNode || "N/A";
                 document.getElementById("modalManualUrl").value = el.manualUrl || "";
-                document.getElementById("modalX").value = el.x;
-                document.getElementById("modalY").value = el.y;
                 document.getElementById("modalLastInspect").value = el.lastInspect || "";
                 document.getElementById("modalPmDue").value = el.pmDue || "";
                 document.getElementById("modalRunHours").value = el.runHours || "";
@@ -3860,9 +3943,34 @@ New Tech Tip: Check cable continuity while flexing near moving guards/frames bef
                 document.getElementById("modalEstopZone").value = el.estopZone || "";
                 document.getElementById("modalVendorName").value = el.vendorName || "";
                 document.getElementById("modalVendorContact").value = el.vendorContact || "";
-                renderLotoChecklist(el);
-                renderBomTable(el);
-                renderWorkTickets(el);
+                document.getElementById("modalX").value = el.x;
+                document.getElementById("modalY").value = el.y;
+
+                let lotoList = document.getElementById("lotoChecklistList");
+                lotoList.innerHTML = "";
+                (el.lotoSteps || []).forEach(stepObj => {
+                    let div = document.createElement("div");
+                    div.className = "loto-step";
+                    div.innerHTML = `<span style="color:#10b981;">■</span> <span>${escapeHtml(stepObj.step)}</span>`;
+                    lotoList.appendChild(div);
+                });
+
+                let bomBody = document.getElementById("bomBody");
+                bomBody.innerHTML = "";
+                (el.spareParts || []).forEach(part => {
+                    let tr = document.createElement("tr");
+                    tr.innerHTML = `<td>${escapeHtml(part.partName)}</td><td>${escapeHtml(part.partNum)}</td><td>${escapeHtml(part.binLoc)}</td>`;
+                    bomBody.appendChild(tr);
+                });
+
+                let ticketsBox = document.getElementById("ticketsBox");
+                ticketsBox.innerHTML = "";
+                (el.workTickets || []).forEach(t => {
+                    let div = document.createElement("div");
+                    div.className = "note-entry";
+                    div.innerHTML = `<span class="note-timestamp">[${escapeHtml(t.time)}]</span> <b>${escapeHtml(t.title)}:</b> ${escapeHtml(t.desc)}`;
+                    ticketsBox.appendChild(div);
+                });
             } else {
                 document.getElementById("modalAssetFields").style.display = "none";
                 document.getElementById("modalDependencyContainer").style.display = "none";
@@ -3874,135 +3982,123 @@ New Tech Tip: Check cable continuity while flexing near moving guards/frames bef
                 document.getElementById("modalVendorContainer").style.display = "none";
                 document.getElementById("modalBomContainer").style.display = "none";
                 document.getElementById("modalTicketsContainer").style.display = "none";
-                document.getElementById("modalCoordContainer").style.display = "flex";
-                document.getElementById("modalX").value = el.x;
-                document.getElementById("modalY").value = el.y;
+                document.getElementById("modalCoordContainer").style.display = "none";
             }
+
             const safetyBox = document.getElementById("modalSafetyCallout");
-            const quickCheckBox = document.getElementById("modalNewTechQuickCheck");
             if (safetyBox) {
-                const warnHtml = buildSafetyCallout(el);
-                safetyBox.innerHTML = warnHtml;
-                safetyBox.style.display = warnHtml ? "block" : "none";
+                const safetyHtml = buildSafetyCallout(el);
+                if (safetyHtml) {
+                    safetyBox.style.display = "block";
+                    safetyBox.innerHTML = safetyHtml;
+                } else {
+                    safetyBox.style.display = "none";
+                    safetyBox.innerHTML = "";
+                }
             }
+            const quickCheckBox = document.getElementById("modalNewTechQuickCheck");
             if (quickCheckBox) {
-                quickCheckBox.innerHTML = buildNewTechQuickCheck(el);
                 quickCheckBox.style.display = "block";
+                quickCheckBox.innerHTML = buildNewTechQuickCheck(el);
             }
-            renderPhotos(el);
-            renderSpreadsheet(el);
-            document.getElementById("modal-overlay").style.display = "flex";
-        }
-        window.openManualUrl = function() {
-            let url = document.getElementById("modalManualUrl").value;
-            if (url) window.open(url, '_blank');
-            else showToast("No manual link available for this asset.", "info");
-        };
-        function renderLotoChecklist(el) {
-            let container = document.getElementById("lotoChecklistList");
-            container.innerHTML = "";
-            if (!el.lotoSteps || el.lotoSteps.length === 0) {
-                container.innerHTML = `<span style="color: #64748b; font-style: italic;">No LOTO steps documented.</span>`;
-                return;
+
+            let gallery = document.getElementById("modalPhotoGallery");
+            gallery.innerHTML = "";
+            if (el.photos && el.photos.length > 0) {
+                el.photos.forEach((p, idx) => {
+                    let thumb = document.createElement("div");
+                    thumb.className = "photo-thumb-container";
+                    thumb.onclick = () => openLightbox(p, `${el.name} - Photo ${idx + 1}`);
+                    let img = document.createElement("img");
+                    img.src = p;
+                    thumb.appendChild(img);
+                    gallery.appendChild(thumb);
+                });
             }
-            el.lotoSteps.forEach((s) => {
-                let div = document.createElement("div");
-                div.className = "loto-step";
-                div.innerHTML = `<input type="checkbox" ${s.done ? 'checked' : ''} disabled>
-                <span style="${s.done ? 'text-decoration: line-through; color: #64748b;' : 'color: #fff;'}">${s.step}</span>`;
-                container.appendChild(div);
-            });
-        }
-        function renderBomTable(el) {
-            let tbody = document.getElementById("bomBody");
+
+            let tbody = document.getElementById("spreadsheetBody");
             tbody.innerHTML = "";
-            if (!el.spareParts || el.spareParts.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="3" style="color: #64748b; font-style: italic;">No spare parts mapped.</td></tr>`;
-                return;
+            if (el.customData && el.customData.length > 0) {
+                el.customData.forEach(row => {
+                    let tr = document.createElement("tr");
+                    tr.innerHTML = `<td>${escapeHtml(row.key)}</td><td>${escapeHtml(row.value)}</td>`;
+                    tbody.appendChild(tr);
+                });
             }
-            el.spareParts.forEach(part => {
-                let tr = document.createElement("tr");
-                tr.innerHTML = `<td>${part.partName}</td><td>${part.partNum}</td><td>${part.binLoc || 'N/A'}</td>`;
-                tbody.appendChild(tr);
-            });
-        }
-        function renderWorkTickets(el) {
-            let box = document.getElementById("ticketsBox");
-            box.innerHTML = "";
-            if (!el.workTickets || el.workTickets.length === 0) {
-                box.innerHTML = `<span style="color: #64748b; font-style: italic;">No active breakdown tickets.</span>`;
-                return;
-            }
-            el.workTickets.forEach(t => {
-                let div = document.createElement("div");
-                div.className = "note-entry";
-                div.innerHTML = `<span class="note-timestamp">[${t.time}] PRIORITY: ${t.priority}</span> - ${t.desc}`;
-                box.appendChild(div);
-            });
+            document.getElementById("modal-overlay").style.display = "flex";
         }
         window.closeModal = function() {
             document.getElementById("modal-overlay").style.display = "none";
             selectedId = null;
         };
-        function renderPhotos(el) {
-            let gallery = document.getElementById("modalPhotoGallery");
-            gallery.innerHTML = "";
-            if (!el.photos || el.photos.length === 0) {
-                gallery.innerHTML = `<span style="color: #64748b; font-style: italic; font-size: 11px;">No photos uploaded.</span>`;
+        window.openManualUrl = function() {
+            let url = document.getElementById("modalManualUrl").value.trim();
+            if (!url) {
+                showToast("No equipment manual URL linked for this item.", "warn");
                 return;
             }
-            el.photos.forEach((photoUrl) => {
-                let containerDiv = document.createElement("div");
-                containerDiv.className = "photo-thumb-container";
-                containerDiv.title = "Click to enlarge photo";
-                containerDiv.onclick = () => openLightbox(photoUrl, el.name);
-                let img = document.createElement("img");
-                img.src = photoUrl;
-                containerDiv.appendChild(img);
-                gallery.appendChild(containerDiv);
-            });
-        }
-        window.openLightbox = function(url, itemName) {
-            document.getElementById("lightboxImage").src = url;
-            document.getElementById("lightboxCaption").innerText = itemName || "Photo Preview";
+            if (!/^https?:\/\//i.test(url)) url = "https://" + url;
+            window.open(url, "_blank", "noopener,noreferrer");
+        };
+        window.openLightbox = function(src, caption) {
+            document.getElementById("lightboxImage").src = src;
+            document.getElementById("lightboxCaption").innerText = caption;
             document.getElementById("lightbox-overlay").style.display = "flex";
         };
         window.closeLightbox = function() {
             document.getElementById("lightbox-overlay").style.display = "none";
         };
-        function renderSpreadsheet(el) {
-            let tbody = document.getElementById("spreadsheetBody");
-            tbody.innerHTML = "";
-            if (!el.spreadsheetData) el.spreadsheetData = [];
-            let rowsData = el.spreadsheetData.rows || el.spreadsheetData;
-            if (rowsData.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="2" style="color: #64748b; font-style: italic;">No custom records.</td></tr>`;
+
+        /* KEYBOARD SHORTCUTS FOR QUICK FLOOR NAVIGATION */
+        window.addEventListener("keydown", (e) => {
+            const tag = (e.target && e.target.tagName) ? e.target.tagName.toLowerCase() : "";
+            const isTyping = tag === "input" || tag === "textarea" || tag === "select";
+
+            if (e.key === "Escape") {
+                if (document.getElementById("lightbox-overlay").style.display === "flex") return closeLightbox();
+                if (document.getElementById("scanner-modal-overlay").style.display === "flex") return closeScannerModal();
+                if (document.getElementById("ar-modal-overlay").style.display === "flex") return closeARModal();
+                if (document.getElementById("shift-manager-modal-overlay").style.display === "flex") return closeShiftManagerModal();
+                if (document.getElementById("additional-sims-modal-overlay").style.display === "flex") return closeAdditionalSimsModal();
+                if (document.getElementById("equipment-sim-modal-overlay").style.display === "flex") return closeEquipmentSimModal();
+                if (document.getElementById("electrical-training-modal-overlay").style.display === "flex") return closeElectricalTrainingModal();
+                if (document.getElementById("modal-overlay").style.display === "flex") return closeModal();
                 return;
             }
-            rowsData.forEach((row) => {
-                let tr = document.createElement("tr");
-                let tdKey = document.createElement("td");
-                tdKey.innerText = row.key;
-                let tdVal = document.createElement("td");
-                tdVal.innerText = row.value;
-                tr.appendChild(tdKey);
-                tr.appendChild(tdVal);
-                tbody.appendChild(tr);
-            });
-        }
-        document.addEventListener("keydown", (e) => {
-            if (e.key === "Escape") {
-                closeLightbox();
-                closeModal();
-                closeElectricalTrainingModal();
-                closeEquipmentSimModal();
-                closeAdditionalSimsModal();
-                closeShiftManagerModal();
-                closeScannerModal();
-                closeARModal();
+
+            if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+                e.preventDefault();
+                const sidebar = document.getElementById("sidebar");
+                if (sidebar) sidebar.classList.remove("collapsed");
+                const searchInput = document.getElementById("assetSearchInput");
+                if (searchInput) { searchInput.focus(); searchInput.select(); }
+                return;
+            }
+
+            if (isTyping) return;
+
+            if (e.key === "/") {
+                e.preventDefault();
+                const sidebar = document.getElementById("sidebar");
+                if (sidebar) sidebar.classList.remove("collapsed");
+                const searchInput = document.getElementById("assetSearchInput");
+                if (searchInput) { searchInput.focus(); searchInput.select(); }
+            } else if (e.key === "+" || e.key === "=") {
+                e.preventDefault();
+                window.zoomMapBy(1.18);
+            } else if (e.key === "-" || e.key === "_") {
+                e.preventDefault();
+                window.zoomMapBy(0.84);
+            } else if (e.key === "0") {
+                e.preventDefault();
+                window.resetMapView();
             }
         });
+
+        /* INITIALIZATION */
+        loadFromLocalCache();
         loadFromFirebase();
+        render();
     </script>
 </body>
 </html>
