@@ -1300,7 +1300,7 @@
     <!-- Firebase SDK Imports -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
         
         const firebaseConfig = {
             apiKey: "AIzaSyCrKAut8_5nHWTWtYqZZr5HOENGd8mqZxE",
@@ -2348,94 +2348,126 @@ New Tech Tip: Check cable continuity while flexing near moving guards/frames bef
                 navigator.clipboard.writeText(lines.join('\n')).catch(() => {});
             }
         };
-        async function loadFromFirebase() {
-            try {
-                const docRef = doc(db, "layouts", "facility_main");
-                const docSnap = await getDoc(docRef);
-                if (docSnap.exists()) {
-                    let data = docSnap.data();
-                    if (data.elements) {
-                        elements = data.elements.map(el => {
-                            if (el.type === 'conveyance_line' && !el.points && el.x1 !== undefined) {
-                                el.points = [{x: el.x1, y: el.y1}, {x: el.x2, y: el.y2}];
-                            }
-                            return el;
-                        });
+        /* NON-BLOCKING TOAST NOTIFICATIONS */
+        function showToast(message, type = "info") {
+            let toastBox = document.getElementById("toast-container");
+            if (!toastBox) {
+                toastBox = document.createElement("div");
+                toastBox.id = "toast-container";
+                toastBox.style.cssText = "position:fixed; bottom:18px; right:18px; z-index:99999; display:flex; flex-direction:column; gap:8px; max-width:330px; pointer-events:none;";
+                document.body.appendChild(toastBox);
+            }
+            const colors = { info: "#0284c7", warn: "#f59e0b", error: "#ef4444", success: "#10b981" };
+            const toast = document.createElement("div");
+            toast.style.cssText = `background:#0f172a; color:#f8fafc; border-left:4px solid ${colors[type] || colors.info}; border-top:1px solid #1e293b; border-right:1px solid #1e293b; border-bottom:1px solid #1e293b; padding:10px 14px; border-radius:6px; font-size:12px; box-shadow:0 8px 20px rgba(0,0,0,0.55); transition:opacity 0.25s;`;
+            toast.textContent = message;
+            toastBox.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = "0";
+                setTimeout(() => toast.remove(), 250);
+            }, 3400);
+        }
+
+        /* NEAREST UTILITY / LOTO ISOLATION LOOKUP */
+        function findNearestIsolationAssets(targetEl, limit = 3) {
+            const targetCenter = getElementWorldCenter(targetEl);
+            if (!targetCenter) return [];
+            const isolationLayers = new Set(["water", "gas", "loto"]);
+            return elements
+                .filter(item => item.id !== targetEl.id && (isolationLayers.has(item.layer) || item.category === "LOTO Isolation"))
+                .map(item => {
+                    const c = getElementWorldCenter(item);
+                    if (!c) return null;
+                    const distGrids = Math.hypot((c.x - targetCenter.x) / gridSize, (c.y - targetCenter.y) / gridSize);
+                    return { item, distGrids: distGrids.toFixed(1) };
+                })
+                .filter(Boolean)
+                .sort((a, b) => parseFloat(a.distGrids) - parseFloat(b.distGrids))
+                .slice(0, limit);
+        }
+
+        function applyLayoutData(data) {
+            if (!data) return;
+            if (data.elements) {
+                elements = data.elements.map(el => {
+                    if (el.type === 'conveyance_line' && !el.points && el.x1 !== undefined) {
+                        el.points = [{x: el.x1, y: el.y1}, {x: el.x2, y: el.y2}];
                     }
-                    if (data.categories) categories = data.categories;
-                    if (data.shiftLogs) shiftLogs = data.shiftLogs;
-                    if (data.safetyLogs) safetyLogs = data.safetyLogs;
-                    if (data.tomLogs) tomLogs = data.tomLogs;
-                    if (data.techLogs) techLogs = data.techLogs;
-                    if (data.opsShifts) opsShifts = data.opsShifts;
-                    if (data.safetyShifts) safetyShifts = data.safetyShifts;
-                    if (data.tomShifts) tomShifts = data.tomShifts;
-                    if (data.techShifts) techShifts = data.techShifts;
-                    if (data.techActions) techActions = data.techActions;
-                    if (data.opsActions) opsActions = data.opsActions;
-                    if (data.safetyActions) safetyActions = data.safetyActions;
-                    if (data.tomActions) tomActions = data.tomActions;
-                    syncStatus.innerText = "Connected (View Only)";
+                    return el;
+                });
+            }
+            if (data.categories) categories = data.categories;
+            if (data.shiftLogs) shiftLogs = data.shiftLogs;
+            if (data.safetyLogs) safetyLogs = data.safetyLogs;
+            if (data.tomLogs) tomLogs = data.tomLogs;
+            if (data.techLogs) techLogs = data.techLogs;
+            if (data.opsShifts) opsShifts = data.opsShifts;
+            if (data.safetyShifts) safetyShifts = data.safetyShifts;
+            if (data.tomShifts) tomShifts = data.tomShifts;
+            if (data.techShifts) techShifts = data.techShifts;
+            if (data.techActions) techActions = data.techActions;
+            if (data.opsActions) opsActions = data.opsActions;
+            if (data.safetyActions) safetyActions = data.safetyActions;
+            if (data.tomActions) tomActions = data.tomActions;
+        }
+
+        function refreshAllViewerPanels() {
+            populateAllShiftDropdowns();
+            renderAllActionLists();
+            updateTabActionBadges();
+            renderShiftLogs('tech', document.getElementById('techFilterSelect').value);
+            renderShiftLogs('ops', document.getElementById('shiftFilterSelect').value);
+            renderShiftLogs('safety', document.getElementById('safetyFilterSelect').value);
+            renderShiftLogs('tom', document.getElementById('tomFilterSelect').value);
+            render();
+        }
+
+        function loadFromLocalCache() {
+            let loadedFromCache = false;
+            try {
+                const cachedRaw = localStorage.getItem("cached_layout");
+                if (cachedRaw) {
+                    const data = JSON.parse(cachedRaw);
+                    applyLayoutData(data);
+                    loadedFromCache = true;
+                    const syncTime = data.updatedAt ? new Date(data.updatedAt).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'}) : 'Local';
+                    syncStatus.innerText = `Offline Cache (${syncTime})`;
+                    syncStatus.style.color = "#f59e0b";
+                }
+            } catch (cacheErr) {
+                console.warn("Cache fallback unavailable:", cacheErr);
+            }
+            if (!loadedFromCache) {
+                syncStatus.innerText = "Offline / No Cached Data";
+                syncStatus.style.color = "#ef4444";
+            }
+            refreshAllViewerPanels();
+        }
+
+        let unsubscribeLayout = null;
+        function loadFromFirebase() {
+            const docRef = doc(db, "layouts", "facility_main");
+            if (unsubscribeLayout) unsubscribeLayout();
+            unsubscribeLayout = onSnapshot(docRef, (docSnap) => {
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    applyLayoutData(data);
+                    try {
+                        localStorage.setItem("cached_layout", JSON.stringify({
+                            ...data,
+                            updatedAt: data.updatedAt || new Date().toISOString()
+                        }));
+                    } catch (e) {}
+                    syncStatus.innerText = "Live Sync (View Only)";
+                    syncStatus.style.color = "#10b981";
                 } else {
                     syncStatus.innerText = "No Data Found";
                 }
-                populateAllShiftDropdowns();
-                renderAllActionLists();
-                updateTabActionBadges();
-                renderShiftLogs('tech', document.getElementById('techFilterSelect').value);
-                renderShiftLogs('ops', document.getElementById('shiftFilterSelect').value);
-                renderShiftLogs('safety', document.getElementById('safetyFilterSelect').value);
-                renderShiftLogs('tom', document.getElementById('tomFilterSelect').value);
-                render();
-            } catch (error) {
-                console.error("Error loading layout:", error);
-                let loadedFromCache = false;
-                try {
-                    const cachedRaw = localStorage.getItem("cached_layout");
-                    if (cachedRaw) {
-                        const data = JSON.parse(cachedRaw);
-                        if (data.elements) {
-                            elements = data.elements.map(el => {
-                                if (el.type === 'conveyance_line' && !el.points && el.x1 !== undefined) {
-                                    el.points = [{x: el.x1, y: el.y1}, {x: el.x2, y: el.y2}];
-                                }
-                                return el;
-                            });
-                        }
-                        if (data.categories) categories = data.categories;
-                        if (data.shiftLogs) shiftLogs = data.shiftLogs;
-                        if (data.safetyLogs) safetyLogs = data.safetyLogs;
-                        if (data.tomLogs) tomLogs = data.tomLogs;
-                        if (data.techLogs) techLogs = data.techLogs;
-                        if (data.opsShifts) opsShifts = data.opsShifts;
-                        if (data.safetyShifts) safetyShifts = data.safetyShifts;
-                        if (data.tomShifts) tomShifts = data.tomShifts;
-                        if (data.techShifts) techShifts = data.techShifts;
-                        if (data.techActions) techActions = data.techActions;
-                        if (data.opsActions) opsActions = data.opsActions;
-                        if (data.safetyActions) safetyActions = data.safetyActions;
-                        if (data.tomActions) tomActions = data.tomActions;
-                        loadedFromCache = true;
-                        const syncTime = data.updatedAt ? new Date(data.updatedAt).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'}) : 'Local';
-                        syncStatus.innerText = `Offline Cache (${syncTime})`;
-                        syncStatus.style.color = "#f59e0b";
-                    }
-                } catch (cacheErr) {
-                    console.warn("Cache fallback unavailable:", cacheErr);
-                }
-                if (!loadedFromCache) {
-                    syncStatus.innerText = "Offline / No Cached Data";
-                    syncStatus.style.color = "#ef4444";
-                }
-                populateAllShiftDropdowns();
-                renderAllActionLists();
-                updateTabActionBadges();
-                renderShiftLogs('tech', document.getElementById('techFilterSelect').value);
-                renderShiftLogs('ops', document.getElementById('shiftFilterSelect').value);
-                renderShiftLogs('safety', document.getElementById('safetyFilterSelect').value);
-                renderShiftLogs('tom', document.getElementById('tomFilterSelect').value);
-                render();
-            }
+                refreshAllViewerPanels();
+            }, (error) => {
+                console.error("Error with live layout sync:", error);
+                loadFromLocalCache();
+            });
         }
         async function saveToFirebase() {
             try {
@@ -2460,7 +2492,7 @@ New Tech Tip: Check cable continuity while flexing near moving guards/frames bef
                 };
                 localStorage.setItem("cached_layout", JSON.stringify(layoutObject));
                 await setDoc(doc(db, "layouts", "facility_main"), layoutObject);
-                syncStatus.innerText = "Connected (View Only)";
+                syncStatus.innerText = "Live Sync (View Only)";
                 syncStatus.style.color = "#10b981";
             } catch (error) {
                 console.error("Error saving to Firebase:", error);
@@ -2475,7 +2507,7 @@ New Tech Tip: Check cable continuity while flexing near moving guards/frames bef
             let shift = document.getElementById(shiftSelectId).value;
             let note = document.getElementById(textInputId).value.trim();
             if (!note) {
-                alert("Please enter handover notes.");
+                showToast("Please enter handover notes.", "warn");
                 return;
             }
             let timestamp = new Date().toISOString().replace('T', ' ').slice(0, 16);
@@ -2555,7 +2587,7 @@ New Tech Tip: Check cable continuity while flexing near moving guards/frames bef
                 delBtn.innerText = "X";
                 delBtn.onclick = function() {
                     if (list.length <= 1) {
-                        alert("You must keep at least one active shift.");
+                        showToast("You must keep at least one active shift.", "warn");
                         return;
                     }
                     list.splice(index, 1);
@@ -2572,12 +2604,12 @@ New Tech Tip: Check cable continuity while flexing near moving guards/frames bef
             let input = document.getElementById("newShiftInput");
             let val = input.value.trim();
             if (!val) {
-                alert("Please enter a shift designation.");
+                showToast("Please enter a shift designation.", "warn");
                 return;
             }
             let list = activeShiftCategory === 'safety' ? safetyShifts : (activeShiftCategory === 'tom' ? tomShifts : (activeShiftCategory === 'tech' ? techShifts : opsShifts));
             if (list.includes(val)) {
-                alert("This shift already exists.");
+                showToast("This shift already exists.", "warn");
                 return;
             }
             list.push(val);
@@ -2932,7 +2964,7 @@ New Tech Tip: Check cable continuity while flexing near moving guards/frames bef
             if (!raw) return;
             const match = raw.match(/^(N?\d+|[A-Z])\s*-?\s*(\d+(?:\.\d+)?)$/);
             if (!match) {
-                alert("Enter a grid coordinate like C14, B-8, or N1 5.");
+                showToast("Enter a grid coordinate like C14, B-8, or N1 5.", "warn");
                 return;
             }
             const rowToken = match[1];
@@ -2945,7 +2977,7 @@ New Tech Tip: Check cable continuity while flexing near moving guards/frames bef
                 }
             }
             if (targetRow === null) {
-                alert(`Row "${rowToken}" was not found on the grid.`);
+                showToast(`Row "${rowToken}" was not found on the grid.`, "error");
                 return;
             }
             const targetCol = colNum - 1;
@@ -3022,7 +3054,7 @@ New Tech Tip: Check cable continuity while flexing near moving guards/frames bef
             if (!currentEl || !currentEl.parentId) return;
             const parentEl = resolveParentAsset(currentEl.parentId);
             if (!parentEl) {
-                alert(`Parent asset ID ${currentEl.parentId} was not found on the map.`);
+                showToast(`Parent asset ID ${currentEl.parentId} was not found on the map.`, "error");
                 return;
             }
             if (parentEl.layer && parentEl.layer !== currentLayer && currentLayer !== 'assets') {
@@ -3052,6 +3084,13 @@ New Tech Tip: Check cable continuity while flexing near moving guards/frames bef
             if (el.spareParts && el.spareParts.length > 0) {
                 const bins = el.spareParts.map(p => `${p.partName}${p.binLoc ? ` [${p.binLoc}]` : ''}`).join(', ');
                 parts.push(`<b>Mapped Spares:</b> ${bins}`);
+            }
+            const nearestIso = findNearestIsolationAssets(el, 3);
+            if (nearestIso.length > 0) {
+                const isoSummary = nearestIso
+                    .map(n => `${n.item.name} [${(n.item.layer || 'ground').replace(/_/g, ' ').toUpperCase()}, ~${n.distGrids} grids]`)
+                    .join('; ');
+                parts.push(`<b>Nearest Isolation / Shutoffs:</b> ${isoSummary}`);
             }
             if (parts.length === 0) {
                 return `<b>New Tech Quick-Check:</b> Confirm grid location (Row ${getRowLabel(Math.floor(el.y))}, Col ${(el.x + 1).toFixed(1)}), inspect guards/sensors for debris or loose M12/terminal connections, and check recent shift handover logs before escalating.`;
@@ -3587,7 +3626,7 @@ New Tech Tip: Check cable continuity while flexing near moving guards/frames bef
                 if (isPanning) {
                     viewTransform.x = e.clientX - panStart.x;
                     viewTransform.y = e.clientY - panStart.y;
-                    render();
+                    updateTransformString();
                 }
             } else if (activePointers.size === 2 && initialPinchDistance) {
                 let points = Array.from(activePointers.values());
@@ -3601,7 +3640,7 @@ New Tech Tip: Check cable continuity while flexing near moving guards/frames bef
                 viewTransform.scale = targetScale;
                 viewTransform.x = currentCenter.x - rect.left - (centerX - initialTransform.x) * (targetScale / initialPinchScale);
                 viewTransform.y = currentCenter.y - rect.top - (centerY - initialTransform.y) * (targetScale / initialPinchScale);
-                render();
+                updateTransformString();
             }
         });
         const handlePointerEnd = (e) => {
@@ -3629,7 +3668,7 @@ New Tech Tip: Check cable continuity while flexing near moving guards/frames bef
             let mouseY = e.clientY - rect.top;
             viewTransform.x = mouseX - (mouseX - viewTransform.x) * (viewTransform.scale / oldScale);
             viewTransform.y = mouseY - (mouseY - viewTransform.y) * (viewTransform.scale / oldScale);
-            render();
+            updateTransformString();
         }, { passive: false });
         function openModal(el) {
             selectedId = el.id;
@@ -3726,7 +3765,7 @@ New Tech Tip: Check cable continuity while flexing near moving guards/frames bef
         window.openManualUrl = function() {
             let url = document.getElementById("modalManualUrl").value;
             if (url) window.open(url, '_blank');
-            else alert("No manual link available for this asset.");
+            else showToast("No manual link available for this asset.", "info");
         };
         function renderLotoChecklist(el) {
             let container = document.getElementById("lotoChecklistList");
@@ -3820,6 +3859,18 @@ New Tech Tip: Check cable continuity while flexing near moving guards/frames bef
                 tbody.appendChild(tr);
             });
         }
+        document.addEventListener("keydown", (e) => {
+            if (e.key === "Escape") {
+                closeLightbox();
+                closeModal();
+                closeElectricalTrainingModal();
+                closeEquipmentSimModal();
+                closeAdditionalSimsModal();
+                closeShiftManagerModal();
+                closeScannerModal();
+                closeARModal();
+            }
+        });
         loadFromFirebase();
     </script>
 </body>
