@@ -102,6 +102,18 @@
         }
         button:hover, button:active { background: #38bdf8; color: #0b131d; }
         button:disabled { opacity: 0.45; cursor: not-allowed; pointer-events: none; }
+        .mini-btn {
+            width: auto;
+            min-height: 28px;
+            padding: 3px 8px;
+            font-size: 10.5px;
+            margin: 0;
+            background: #111b27;
+            border: 1px solid #334155;
+            color: #e2e8f0;
+            border-radius: 5px;
+        }
+        .mini-btn:hover, .mini-btn:active { background: #0284c7; color: #fff; border-color: #38bdf8; }
         .mode-btn {
             background: #070d14;
             border: 2px solid #1e293b;
@@ -186,6 +198,31 @@
             border-color: #38bdf8;
             background: #0284c7;
             color: #fff;
+        }
+        #selection-inspector-box {
+            display: none;
+            background: #0f172a;
+            border: 1px solid #fbbf24;
+            border-radius: 8px;
+            padding: 8px;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .modal-summary-strip {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            background: #070d14;
+            border: 1px solid #1e293b;
+            border-radius: 6px;
+            padding: 8px;
+            font-size: 11px;
+            color: #cbd5e1;
+        }
+        .modal-jump-bar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
         }
         #viewport-controls {
             position: absolute;
@@ -361,6 +398,56 @@
         <div id="coord-display">Col: -- | Row: --</div>
         <div id="dist-result-display">Click 2 points to measure distance</div>
         <div id="sync-status">Connecting to Firebase...</div>
+
+        <!-- SELECTION INSPECTOR, ALIGNMENT, LAYER MOVE & BULK EDIT -->
+        <div id="selection-inspector-box">
+            <div style="display:flex; justify-content:space-between; align-items:center; gap:6px;">
+                <span id="selSummaryTitle" style="color:#fbbf24; font-weight:bold; font-size:11.5px;">Selected: --</span>
+                <button class="mini-btn" onclick="clearSelectionUI()">Clear</button>
+            </div>
+            <div id="selCoordsMeta" style="font-family:monospace; font-size:10.5px; color:#94a3b8;">--</div>
+            <div style="display:flex; flex-wrap:wrap; gap:4px;">
+                <button class="mini-btn" onclick="alignSelected('left')" title="Align Left Edges">⬅️ Left</button>
+                <button class="mini-btn" onclick="alignSelected('top')" title="Align Top Edges">⬆️ Top</button>
+                <button class="mini-btn" onclick="distributeSelected('x')" title="Evenly Space Horizontally">↔️ Dist X</button>
+                <button class="mini-btn" onclick="distributeSelected('y')" title="Evenly Space Vertically">↕️ Dist Y</button>
+            </div>
+            <div style="display:flex; gap:4px; align-items:center;">
+                <select id="selTargetLayer" style="flex:1; min-height:28px; padding:3px 6px; font-size:11px;">
+                    <option value="ground">Ground Floor</option>
+                    <option value="mezzanine">Mezz Floor</option>
+                    <option value="roof">Roof Layer</option>
+                    <option value="uis_sorter">OPEX UIS Sorter</option>
+                    <option value="atr_retrieval">ATR Tote Retrieval</option>
+                    <option value="conveyance">Conveyance Lines</option>
+                    <option value="sprinkler">Sprinkler Shutoffs</option>
+                    <option value="water">Water Shutoffs</option>
+                    <option value="gas">Gas Shutoffs</option>
+                    <option value="dock_doors">Dock Doors</option>
+                    <option value="hvac">HVAC</option>
+                    <option value="loto">LOTO Isolation</option>
+                    <option value="assets">All Assets & Utilities</option>
+                </select>
+                <button class="mini-btn" onclick="moveSelectedToTargetLayer()" title="Move Selected to Layer">➡️ Move</button>
+                <button class="mini-btn" onclick="copySelectedToTargetLayer()" title="Copy Selected onto Layer">📑 Copy</button>
+            </div>
+            <div id="selBulkAssetBar" style="display:none; flex-direction:column; gap:4px; border-top:1px solid #1e293b; padding-top:5px;">
+                <div style="display:flex; gap:4px;">
+                    <select id="bulkAssetStatus" style="flex:1; min-height:28px; padding:3px 6px; font-size:11px;">
+                        <option value="">Status: No Change</option>
+                        <option value="operational">Operational</option>
+                        <option value="maintenance">Under Maintenance</option>
+                        <option value="down">Down / Inoperable</option>
+                    </select>
+                    <button class="mini-btn" onclick="applyBulkAssetChanges()">Apply</button>
+                </div>
+                <div style="display:flex; gap:4px;">
+                    <button class="mini-btn" style="flex:1;" onclick="markSelectedInspectedToday()">🗓️ Inspected Today</button>
+                    <button class="mini-btn" style="flex:1;" onclick="toggleSelectedPartsFlag()">📦 Toggle Parts</button>
+                </div>
+            </div>
+        </div>
+
         <!-- BUILDER HISTORY, BACKUP & PRECISION TOGGLES -->
         <div class="builder-box">
             <div style="display: flex; gap: 6px;">
@@ -453,6 +540,16 @@
                 <h3>Zone / Yard Management</h3>
                 <button id="pickZoneCoordBtn" onclick="startPickCoords('zone')" style="width:auto; padding:4px 10px; font-size:11px; background:#0284c7; color:#fff; min-height:30px;">📍 Pick Coords</button>
             </div>
+            <div class="builder-box">
+                <label style="color:#38bdf8; font-weight:bold;">🏗️ Structural Presets (Tap to Fill & Pick)</label>
+                <div class="stamp-grid">
+                    <button class="stamp-chip" onclick="applyZonePreset('Perimeter Wall 1', 'general', 10, 0.5, 'Wall Segment', 'Perimeter')">🧱 Perimeter Wall</button>
+                    <button class="stamp-chip" onclick="applyZonePreset('Fire Wall 1', 'general', 8, 0.5, 'Fire / Demising Wall', '2-Hr Rated')">🔥 Fire Wall</button>
+                    <button class="stamp-chip" onclick="applyZonePreset('Column Line 1', 'general', 0.5, 0.5, 'Structural Column', 'Steel Bay')">🏛️ Column</button>
+                    <button class="stamp-chip" onclick="applyZonePreset('Staging Corral 1', 'yard', 6, 4, 'Staging Corral', 'Active')">🚧 Corral</button>
+                    <button class="stamp-chip" onclick="applyZonePreset('Dock Bay 1', 'yard', 2, 3, 'Dock Door Bay', 'Standard')">🚪 Dock Bay</button>
+                </div>
+            </div>
             <div>
                 <label>Zone Name (End with # to auto-increment on repeat)</label>
                 <input type="text" id="newDeptName" value="OPEX UIS Induction Bay 1">
@@ -519,17 +616,17 @@
                 </div>
             </div>
             <div class="builder-box">
-                <label style="color:#38bdf8; font-weight:bold;">⚡ Quick-Stamp Presets (Tap to Fill & Pick)</label>
+                <label style="color:#38bdf8; font-weight:bold;">⚡ Asset Templates (Pre-fills Category, LOTO & Specs)</label>
                 <div class="stamp-grid">
-                    <button class="stamp-chip" onclick="applyAssetPreset('OPEX UIS Node 1', 'OPEX UIS Sorter', '🤖')">🤖 UIS Node</button>
-                    <button class="stamp-chip" onclick="applyAssetPreset('ATR Cell 1', 'ATR Tote Retrieval', '📦')">📦 ATR Cell</button>
-                    <button class="stamp-chip" onclick="applyAssetPreset('MDR Drive 1', 'Conveyance', '⚙️')">⚙️ MDR Drive</button>
-                    <button class="stamp-chip" onclick="applyAssetPreset('E-Stop 1', 'Safety', '🛑')">🛑 E-Stop</button>
-                    <button class="stamp-chip" onclick="applyAssetPreset('Panel / Disconnect 1', 'Electrical', '⚡')">⚡ Panel</button>
-                    <button class="stamp-chip" onclick="applyAssetPreset('Water Valve 1', 'Plumbing', '💧')">💧 Water</button>
-                    <button class="stamp-chip" onclick="applyAssetPreset('Sprinkler Riser 1', 'Fire Safety', '🔥')">🔥 Sprinkler</button>
-                    <button class="stamp-chip" onclick="applyAssetPreset('LOTO Point 1', 'LOTO Isolation', '🔒')">🔒 LOTO</button>
-                    <button class="stamp-chip" onclick="applyAssetPreset('Dock Door 1', 'General', '🚪')">🚪 Dock Door</button>
+                    <button class="stamp-chip" onclick="applyAssetPreset('OPEX UIS Node 1', 'OPEX UIS Sorter', '🤖', 'uis_node')">🤖 UIS Node</button>
+                    <button class="stamp-chip" onclick="applyAssetPreset('ATR Cell 1', 'ATR Tote Retrieval', '📦', 'atr_cell')">📦 ATR Cell</button>
+                    <button class="stamp-chip" onclick="applyAssetPreset('MDR Drive 1', 'Conveyance', '⚙️', 'mdr_drive')">⚙️ MDR Drive</button>
+                    <button class="stamp-chip" onclick="applyAssetPreset('E-Stop 1', 'Safety', '🛑', 'estop')">🛑 E-Stop</button>
+                    <button class="stamp-chip" onclick="applyAssetPreset('Panel / Disconnect 1', 'Electrical', '⚡', 'panel')">⚡ Panel</button>
+                    <button class="stamp-chip" onclick="applyAssetPreset('Water Valve 1', 'Plumbing', '💧', 'water_valve')">💧 Water</button>
+                    <button class="stamp-chip" onclick="applyAssetPreset('Sprinkler Riser 1', 'Fire Safety', '🔥', 'sprinkler_riser')">🔥 Sprinkler</button>
+                    <button class="stamp-chip" onclick="applyAssetPreset('LOTO Point 1', 'LOTO Isolation', '🔒', 'loto_point')">🔒 LOTO</button>
+                    <button class="stamp-chip" onclick="applyAssetPreset('Dock Door 1', 'General', '🚪', 'dock_door')">🚪 Dock Door</button>
                 </div>
             </div>
             <div>
@@ -754,13 +851,22 @@
             <div class="modal-header">
                 <h3 id="modalTitle" style="color: #38bdf8; margin: 0;">Item Details</h3>
                 <div style="display: flex; gap: 6px; align-items: center;">
+                    <button onclick="copyDetailsFromCurrentModal()" style="width: auto; padding: 6px 10px; font-size: 11px; background: #1e293b; border-color:#38bdf8; color:#38bdf8; min-height: 36px;" title="Copy Specs/LOTO/BOM/Rows to Apply Elsewhere">📎 Copy Details</button>
+                    <button id="pasteDetailsModalBtn" onclick="pasteDetailsIntoCurrentModal()" disabled style="width: auto; padding: 6px 10px; font-size: 11px; background: #1e293b; border-color:#10b981; color:#34d399; min-height: 36px;" title="Paste Copied Specs/LOTO/BOM/Rows">📥 Paste</button>
                     <button onclick="duplicateFromModal()" style="width: auto; padding: 6px 10px; font-size: 11px; background: #1e293b; border-color:#f59e0b; color:#fbbf24; min-height: 36px;">📋 Duplicate</button>
                     <button onclick="printAssetQrCode()" style="width: auto; padding: 6px 10px; font-size: 11px; background: #0284c7; color: #fff; min-height: 36px;">🖨️ Print QR</button>
                     <button class="close-modal" onclick="closeModal()">×</button>
                 </div>
             </div>
-            <div class="modal-body">
+            <div class="modal-body" id="modalBodyScroll">
                 <input type="hidden" id="modalElementId">
+                <div class="modal-summary-strip" id="modalSummaryStrip"></div>
+                <div class="modal-jump-bar" id="modalJumpBar">
+                    <button class="mini-btn" onclick="jumpModalSection('modalLotoContainer')">🔒 LOTO</button>
+                    <button class="mini-btn" onclick="jumpModalSection('modalPmContainer')">⏱️ PM & Health</button>
+                    <button class="mini-btn" onclick="jumpModalSection('modalBomContainer')">📦 BOM & Tickets</button>
+                    <button class="mini-btn" onclick="jumpModalSection('modalPhotoGallery')">📷 Photos & Rows</button>
+                </div>
                 <div>
                     <label>Item Name / Designation</label>
                     <input type="text" id="modalName" oninput="saveModalLiveChanges()">
@@ -1041,12 +1147,108 @@
         let pickCoordTarget = null;
         let shiftKeyPressed = false;
         let lastMouseLocal = null;
+        let activeTemplatePreset = null;
+        let copiedAssetDetails = null;
         const clientSessionId = "builder_" + Math.random().toString(36).substring(2, 10);
         let undoStack = [];
         let redoStack = [];
         const MAX_HISTORY = 30;
         let saveDebounceTimer = null;
         let isLocalWriting = false;
+
+        const assetTemplates = {
+            uis_node: {
+                category: "OPEX UIS Sorter",
+                emoji: "🤖",
+                utilityDraw: "480V 30A / 8 Cal",
+                estopZone: "UIS Bay E-Stop Circuit",
+                lube: "iBOT Guide Rail Lube",
+                lotoSteps: [{ step: "Isolate UIS Control Panel Disconnect", done: false }],
+                spareParts: [{ partName: "iBOT Delivery Vehicle", partNum: "OPEX-IBOT-V3", binLoc: "Cage Shelf A" }],
+                spreadsheetData: [{ key: "System", value: "OPEX UIS Sorter" }]
+            },
+            atr_cell: {
+                category: "ATR Tote Retrieval",
+                emoji: "📦",
+                utilityDraw: "480V 25A / 8 Cal",
+                estopZone: "ATR Cell Perimeter E-Stop",
+                lube: "Linear Actuator Grease",
+                lotoSteps: [{ step: "Lockout ATR Cell Power & Pneumatic Supply", done: false }],
+                spareParts: [{ partName: "Tote Shuttle Drive Belt", partNum: "ATR-BELT-01", binLoc: "Cage Shelf B" }],
+                spreadsheetData: [{ key: "System", value: "ATR Tote Retrieval" }]
+            },
+            mdr_drive: {
+                category: "Conveyance",
+                emoji: "⚙️",
+                utilityDraw: "24V DC / 48V MDR Bus",
+                estopZone: "Conveyor Zone E-Stop",
+                lube: "Sealed Bearing (No Field Grease)",
+                lotoSteps: [{ step: "De-energize MDR Power Supply & Verify Zero Motion", done: false }],
+                spareParts: [{ partName: "24V MDR Roller Assembly", partNum: "MDR-24V-STD", binLoc: "Conveyor Bin" }],
+                spreadsheetData: [{ key: "Drive Type", value: "MDR" }]
+            },
+            estop: {
+                category: "Safety",
+                emoji: "🛑",
+                utilityDraw: "24V DC Safety Relay",
+                estopZone: "Local E-Stop Station",
+                lube: "N/A",
+                lotoSteps: [{ step: "Verify Safety Circuit Trip & Reset Lockout", done: false }],
+                spareParts: [{ partName: "E-Stop Contact Block (NC)", partNum: "ES-NC-01", binLoc: "Safety Bin" }],
+                spreadsheetData: [{ key: "Device", value: "Emergency Stop" }]
+            },
+            panel: {
+                category: "Electrical",
+                emoji: "⚡",
+                utilityDraw: "480V 3-Phase / Arc Flash Rated",
+                estopZone: "Main Disconnect",
+                lube: "N/A",
+                lotoSteps: [{ step: "Don Arc Flash PPE, Open Main Breaker, Apply Lock & Tag", done: false }],
+                spareParts: [{ partName: "Control Fuse Set", partNum: "FUSE-CC-10A", binLoc: "Electrical Cabinet" }],
+                spreadsheetData: [{ key: "Equipment", value: "Electrical Panel / Disconnect" }]
+            },
+            water_valve: {
+                category: "Plumbing",
+                emoji: "💧",
+                utilityDraw: "Domestic / Process Water",
+                estopZone: "N/A",
+                lube: "Valve Stem Lube",
+                lotoSteps: [{ step: "Close Isolation Valve & Lockout Chain/Wheel", done: false }],
+                spareParts: [{ partName: "Valve Packing / Gasket Kit", partNum: "WTR-GASK-01", binLoc: "Plumbing Bin" }],
+                spreadsheetData: [{ key: "Utility", value: "Water Shutoff Valve" }]
+            },
+            sprinkler_riser: {
+                category: "Fire Safety",
+                emoji: "🔥",
+                utilityDraw: "Fire Protection Water Main",
+                estopZone: "Fire Alarm / Tamper Switch",
+                lube: "N/A",
+                lotoSteps: [{ step: "Notify Fire/Safety & Tag Control Valve Before Closure", done: false }],
+                spareParts: [{ partName: "Tamper / Flow Switch", partNum: "FP-SW-01", binLoc: "Fire Safety Bin" }],
+                spreadsheetData: [{ key: "System", value: "Sprinkler Riser / Valve" }]
+            },
+            loto_point: {
+                category: "LOTO Isolation",
+                emoji: "🔒",
+                utilityDraw: "Energy Isolation Point",
+                estopZone: "LOTO Group / Personal Lockout",
+                lube: "N/A",
+                lotoSteps: [{ step: "Verify Zero Energy State Before Starting Work", done: false }],
+                spareParts: [],
+                spreadsheetData: [{ key: "Isolation Type", value: "LOTO Point" }]
+            },
+            dock_door: {
+                category: "General",
+                emoji: "🚪",
+                utilityDraw: "480V Dock Leveler / Restraint",
+                estopZone: "Dock Door Interlock",
+                lube: "Leveler Hinge & Restraint Grease",
+                lotoSteps: [{ step: "Chock Trailer, Engage Restraint, Isolate Dock Power", done: false }],
+                spareParts: [{ partName: "Dock Bumper / Leveler Limit Switch", partNum: "DOCK-LS-01", binLoc: "Dock Parts Bin" }],
+                spreadsheetData: [{ key: "Area", value: "Dock Door" }]
+            }
+        };
+
         const zoneStyles = {
             uis_cell: { fill: "#db2777", stroke: "#f472b6", opacity: 0.32 },
             atr_cell: { fill: "#7c3aed", stroke: "#a78bfa", opacity: 0.32 },
@@ -1119,7 +1321,7 @@
         };
 
         /* ==========================================
-           UNDO / REDO HISTORY & SELECTION HELPERS
+           UNDO / REDO, SELECTION INSPECTOR & BULK OPS
            ========================================== */
         function cloneData(obj) {
             return JSON.parse(JSON.stringify(obj));
@@ -1145,7 +1347,147 @@
             if (cBtn) {
                 cBtn.disabled = !selectedId && multiSelectedIds.size === 0;
             }
+            updateSelectionInspector();
         }
+        function getSelectedElementsList() {
+            const ids = multiSelectedIds.size > 0 ? Array.from(multiSelectedIds) : (selectedId ? [selectedId] : []);
+            return ids.map(id => elements.find(item => item.id === id)).filter(Boolean);
+        }
+        function updateSelectionInspector() {
+            const box = document.getElementById("selection-inspector-box");
+            if (!box) return;
+            const list = getSelectedElementsList();
+            if (list.length === 0) {
+                box.style.display = "none";
+                return;
+            }
+            box.style.display = "flex";
+            const titleEl = document.getElementById("selSummaryTitle");
+            const metaEl = document.getElementById("selCoordsMeta");
+            const bulkAssetBar = document.getElementById("selBulkAssetBar");
+            const layerSelect = document.getElementById("selTargetLayer");
+
+            if (list.length === 1) {
+                const el = list[0];
+                titleEl.textContent = `Selected: ${el.name}`;
+                if (layerSelect) layerSelect.value = el.layer || currentLayer;
+                if (el.type === 'conveyance_line') {
+                    const u = computeLineTotalUnits(el.points || []);
+                    metaEl.textContent = `Line • ${u.toFixed(1)}u (~${Math.round(u * 25)}ft) • Layer: ${el.layer || 'ground'}`;
+                } else if (el.type === 'asset') {
+                    const rLab = getRowLabel(Math.floor(el.y || 0));
+                    const cNum = ((el.x || 0) + 1).toFixed(2);
+                    metaEl.textContent = `Asset • Row ${rLab}, Col ${cNum} (${el.x}, ${el.y}) • Layer: ${el.layer || 'ground'}`;
+                } else {
+                    metaEl.textContent = `Zone (${el.type}) • X:${el.x}, Y:${el.y}, W:${el.w}, H:${el.h} • Layer: ${el.layer || 'ground'}`;
+                }
+            } else {
+                titleEl.textContent = `Selected: ${list.length} items`;
+                metaEl.textContent = `Multi-select active • Shift+Click to toggle items`;
+            }
+            const hasAssets = list.some(item => item.type === 'asset');
+            if (bulkAssetBar) bulkAssetBar.style.display = hasAssets ? "flex" : "none";
+        }
+        window.clearSelectionUI = function() {
+            setSelection(null);
+            render();
+        };
+        window.alignSelected = function(edge) {
+            const list = getSelectedElementsList().filter(el => el.type !== 'conveyance_line');
+            if (list.length < 2) return;
+            triggerHaptic(20);
+            pushHistorySnapshot();
+            if (edge === 'left') {
+                const minX = Math.min(...list.map(e => e.x || 0));
+                list.forEach(e => { e.x = parseFloat(minX.toFixed(2)); });
+            } else if (edge === 'top') {
+                const minY = Math.min(...list.map(e => e.y || 0));
+                list.forEach(e => { e.y = parseFloat(minY.toFixed(2)); });
+            }
+            render();
+            saveToFirebase(true);
+        };
+        window.distributeSelected = function(axis) {
+            const list = getSelectedElementsList().filter(el => el.type !== 'conveyance_line');
+            if (list.length < 3) return;
+            triggerHaptic(20);
+            pushHistorySnapshot();
+            const sorted = [...list].sort((a, b) => axis === 'x' ? ((a.x || 0) - (b.x || 0)) : ((a.y || 0) - (b.y || 0)));
+            const firstVal = axis === 'x' ? (sorted[0].x || 0) : (sorted[0].y || 0);
+            const lastVal = axis === 'x' ? (sorted[sorted.length - 1].x || 0) : (sorted[sorted.length - 1].y || 0);
+            const step = (lastVal - firstVal) / (sorted.length - 1);
+            sorted.forEach((item, idx) => {
+                const val = parseFloat((firstVal + step * idx).toFixed(2));
+                if (axis === 'x') item.x = val;
+                else item.y = val;
+            });
+            render();
+            saveToFirebase(true);
+        };
+        window.moveSelectedToTargetLayer = function() {
+            const targetLayer = document.getElementById("selTargetLayer")?.value;
+            const list = getSelectedElementsList();
+            if (!targetLayer || list.length === 0) return;
+            triggerHaptic(20);
+            pushHistorySnapshot();
+            list.forEach(el => { el.layer = targetLayer; });
+            render();
+            saveToFirebase(true);
+        };
+        window.copySelectedToTargetLayer = function() {
+            const targetLayer = document.getElementById("selTargetLayer")?.value;
+            const list = getSelectedElementsList();
+            if (!targetLayer || list.length === 0) return;
+            triggerHaptic(20);
+            pushHistorySnapshot();
+            const newIds = [];
+            list.forEach((el, idx) => {
+                const copy = cloneData(el);
+                copy.id = Date.now() + Math.floor(Math.random() * 10000) + idx;
+                copy.layer = targetLayer;
+                elements.push(copy);
+                newIds.push(copy.id);
+            });
+            multiSelectedIds.clear();
+            newIds.forEach(nid => multiSelectedIds.add(nid));
+            selectedId = newIds[0] || null;
+            updateHistoryButtons();
+            render();
+            saveToFirebase(true);
+        };
+        window.applyBulkAssetChanges = function() {
+            const newStatus = document.getElementById("bulkAssetStatus")?.value;
+            if (!newStatus) return;
+            const assets = getSelectedElementsList().filter(el => el.type === 'asset');
+            if (assets.length === 0) return;
+            triggerHaptic(20);
+            pushHistorySnapshot();
+            assets.forEach(a => { a.status = newStatus; });
+            document.getElementById("bulkAssetStatus").value = "";
+            render();
+            saveToFirebase(true);
+        };
+        window.markSelectedInspectedToday = function() {
+            const assets = getSelectedElementsList().filter(el => el.type === 'asset');
+            if (assets.length === 0) return;
+            triggerHaptic(20);
+            pushHistorySnapshot();
+            const todayStr = new Date().toISOString().slice(0, 10);
+            assets.forEach(a => { a.lastInspect = todayStr; });
+            render();
+            saveToFirebase(true);
+        };
+        window.toggleSelectedPartsFlag = function() {
+            const assets = getSelectedElementsList().filter(el => el.type === 'asset');
+            if (assets.length === 0) return;
+            triggerHaptic(20);
+            pushHistorySnapshot();
+            const nextState = !assets[0].partsNeeded;
+            assets.forEach(a => { a.partsNeeded = nextState; });
+            render();
+            saveToFirebase(true);
+        };
+
         window.undoLayout = function() {
             if (undoStack.length === 0) return;
             triggerHaptic(20);
@@ -1256,9 +1598,18 @@
         };
 
         /* ==========================================
-           QUICK-STAMP PRESETS & PICK COORDS ON MAP
+           TEMPLATES, PICK COORDS & DETAIL COPY/PASTE
            ========================================== */
-        window.applyAssetPreset = function(name, category, emoji) {
+        window.applyZonePreset = function(name, zoneType, w, h, fieldKey, fieldVal) {
+            triggerHaptic(15);
+            document.getElementById("newDeptName").value = name;
+            document.getElementById("newDeptType").value = zoneType;
+            document.getElementById("newDeptW").value = w;
+            document.getElementById("newDeptH").value = h;
+            window._pendingZoneMeta = { fieldKey, fieldVal };
+            startPickCoords('zone');
+        };
+        window.applyAssetPreset = function(name, category, emoji, templateKey = null) {
             triggerHaptic(15);
             document.getElementById("newAssetName").value = name;
             document.getElementById("newAssetEmoji").value = emoji;
@@ -1266,6 +1617,7 @@
             if (categories.some(c => c.name === category)) {
                 catSelect.value = category;
             }
+            activeTemplatePreset = templateKey && assetTemplates[templateKey] ? cloneData(assetTemplates[templateKey]) : null;
             startPickCoords('asset');
         };
         window.startPickCoords = function(target) {
@@ -1286,6 +1638,65 @@
             pickCoordTarget = null;
             container.style.cursor = currentMode === 'pan' ? 'grab' : (currentMode === 'calc' || currentMode === 'draw_line' ? 'crosshair' : 'default');
             document.getElementById("canvas-pick-banner").style.display = "none";
+        };
+        function updatePasteButtonState() {
+            const btn = document.getElementById("pasteDetailsModalBtn");
+            if (btn) btn.disabled = !copiedAssetDetails;
+        }
+        window.copyDetailsFromCurrentModal = function() {
+            const id = parseInt(document.getElementById("modalElementId").value);
+            const el = elements.find(item => item.id === id);
+            if (!el) return;
+            copiedAssetDetails = {
+                category: el.category || "General",
+                emoji: el.emoji || "📍",
+                parentId: el.parentId || "",
+                plcNode: el.plcNode || "",
+                manualUrl: el.manualUrl || "",
+                lube: el.lube || "",
+                utilityDraw: el.utilityDraw || "",
+                estopZone: el.estopZone || "",
+                vendorName: el.vendorName || "",
+                vendorContact: el.vendorContact || "",
+                lotoSteps: cloneData(el.lotoSteps || []),
+                spareParts: cloneData(el.spareParts || []),
+                spreadsheetData: cloneData(el.spreadsheetData || [])
+            };
+            updatePasteButtonState();
+            triggerHaptic(20);
+        };
+        window.pasteDetailsIntoCurrentModal = function() {
+            if (!copiedAssetDetails) return;
+            const id = parseInt(document.getElementById("modalElementId").value);
+            const el = elements.find(item => item.id === id);
+            if (!el) return;
+            triggerHaptic(25);
+            pushHistorySnapshot();
+            if (el.type === 'asset') {
+                el.category = copiedAssetDetails.category;
+                el.emoji = copiedAssetDetails.emoji;
+                el.parentId = copiedAssetDetails.parentId;
+                el.plcNode = copiedAssetDetails.plcNode;
+                el.manualUrl = copiedAssetDetails.manualUrl;
+                el.lube = copiedAssetDetails.lube;
+                el.utilityDraw = copiedAssetDetails.utilityDraw;
+                el.estopZone = copiedAssetDetails.estopZone;
+                el.vendorName = copiedAssetDetails.vendorName;
+                el.vendorContact = copiedAssetDetails.vendorContact;
+                el.lotoSteps = cloneData(copiedAssetDetails.lotoSteps);
+                el.spareParts = cloneData(copiedAssetDetails.spareParts);
+            }
+            el.spreadsheetData = cloneData(copiedAssetDetails.spreadsheetData);
+            render();
+            saveToFirebase(true);
+            openModal(el);
+        };
+        window.jumpModalSection = function(targetId) {
+            const scrollContainer = document.getElementById("modalBodyScroll");
+            const targetEl = document.getElementById(targetId);
+            if (scrollContainer && targetEl) {
+                targetEl.scrollIntoView({ behavior: "smooth", block: "start" });
+            }
         };
 
         /* ==========================================
@@ -1417,6 +1828,7 @@
             renderShiftLogs('ops', document.getElementById('shiftFilterSelect').value);
             renderShiftLogs('safety', document.getElementById('safetyFilterSelect').value);
             renderShiftLogs('tom', document.getElementById('tomFilterSelect').value);
+            updateSelectionInspector();
             render();
         }
         function showRemoteSyncNotice() {
@@ -2446,7 +2858,6 @@
 
             const visibleIdSet = new Set(visibleElements.map(e => String(e.id)));
 
-            // Dependency lines only between currently visible elements
             visibleElements.forEach(el => {
                 if (el.parentId && visibleIdSet.has(String(el.parentId))) {
                     let parent = visibleElements.find(p => String(p.id) === String(el.parentId));
@@ -3024,6 +3435,7 @@
                         el.y = parseFloat(((el.y || 0) + dy).toFixed(2));
                     }
                 });
+                updateSelectionInspector();
                 render();
                 saveToFirebase();
             }
@@ -3079,6 +3491,7 @@
                     undoStack.pop();
                     updateHistoryButtons();
                 } else {
+                    updateSelectionInspector();
                     saveToFirebase(true);
                 }
             }
@@ -3124,6 +3537,7 @@
                     undoStack.pop();
                     updateHistoryButtons();
                 } else {
+                    updateSelectionInspector();
                     saveToFirebase(true);
                 }
             }
@@ -3178,6 +3592,7 @@
                     undoStack.pop();
                     updateHistoryButtons();
                 } else {
+                    updateSelectionInspector();
                     saveToFirebase(true);
                 }
             }
@@ -3199,14 +3614,34 @@
             }
             return total;
         }
+        function updateModalSummaryStrip(el) {
+            const strip = document.getElementById("modalSummaryStrip");
+            if (!strip || !el) return;
+            const ticketsOpen = (el.workTickets || []).length;
+            const partsCount = (el.spareParts || []).length;
+            const lotoCount = (el.lotoSteps || []).length;
+            const locText = el.type === 'conveyance_line'
+                ? `${(el.points || []).length} pts`
+                : `Row ${getRowLabel(Math.floor(el.y || 0))}, Col ${((el.x || 0) + 1).toFixed(1)}`;
+            strip.innerHTML = `
+                <span><b>Layer:</b> ${el.layer || 'ground'}</span>
+                <span>•</span>
+                <span><b>Loc:</b> ${locText}</span>
+                ${el.type === 'asset' ? `<span>•</span><span><b>LOTO:</b> ${lotoCount}</span><span>•</span><span><b>BOM:</b> ${partsCount}</span><span>•</span><span><b>Tickets:</b> ${ticketsOpen}</span>` : ''}
+            `;
+        }
         function openModal(el) {
             setSelection(el.id, false);
+            updatePasteButtonState();
+            updateModalSummaryStrip(el);
             document.getElementById("modalElementId").value = el.id;
             document.getElementById("modalTitle").innerText = `Edit: ${el.name}`;
             document.getElementById("modalName").value = el.name;
             document.getElementById("modalPartsNeeded").checked = el.partsNeeded || false;
             const lineLenBox = document.getElementById("modalLineLengthInfo");
+            const jumpBar = document.getElementById("modalJumpBar");
             if (el.type === 'conveyance_line') {
+                if (jumpBar) jumpBar.style.display = "none";
                 const units = computeLineTotalUnits(el.points || []);
                 const feet = Math.round(units * 25);
                 lineLenBox.style.display = "block";
@@ -3224,6 +3659,7 @@
                 document.getElementById("modalBomContainer").style.display = "none";
                 document.getElementById("modalTicketsContainer").style.display = "none";
             } else if (el.type === 'asset') {
+                if (jumpBar) jumpBar.style.display = "flex";
                 lineLenBox.style.display = "none";
                 document.getElementById("modalCoordContainer").style.display = "flex";
                 document.getElementById("modalSizeContainer").style.display = "none";
@@ -3259,6 +3695,7 @@
                 renderBomTable(el);
                 renderWorkTickets(el);
             } else {
+                if (jumpBar) jumpBar.style.display = "none";
                 lineLenBox.style.display = "none";
                 document.getElementById("modalCoordContainer").style.display = "flex";
                 document.getElementById("modalSizeContainer").style.display = "flex";
@@ -3315,6 +3752,7 @@
                 el.lotoSteps.push({ step: text, done: false });
                 input.value = "";
                 renderLotoChecklist(el);
+                updateModalSummaryStrip(el);
                 saveToFirebase();
             }
         };
@@ -3334,6 +3772,7 @@
             if (el && el.lotoSteps) {
                 el.lotoSteps.splice(index, 1);
                 renderLotoChecklist(el);
+                updateModalSummaryStrip(el);
                 saveToFirebase();
             }
         };
@@ -3372,6 +3811,7 @@
                 delBtn.onclick = function() {
                     el.spareParts.splice(index, 1);
                     renderBomTable(el);
+                    updateModalSummaryStrip(el);
                     saveToFirebase();
                 };
                 tdAction.appendChild(delBtn);
@@ -3390,6 +3830,7 @@
                 if (!el.spareParts) el.spareParts = [];
                 el.spareParts.push({ partName: "Spare Part / Belt / Relay", partNum: "PART-101", binLoc: "Aisle 1, Bin A-1" });
                 renderBomTable(el);
+                updateModalSummaryStrip(el);
                 saveToFirebase();
             }
         };
@@ -3420,6 +3861,7 @@
                 let timestamp = new Date().toISOString().replace('T', ' ').slice(0, 16);
                 el.workTickets.unshift({ time: timestamp, priority: priority || "High", desc: desc });
                 renderWorkTickets(el);
+                updateModalSummaryStrip(el);
                 saveToFirebase();
             }
         };
@@ -3430,6 +3872,7 @@
             if (el && el.workTickets) {
                 el.workTickets.splice(index, 1);
                 renderWorkTickets(el);
+                updateModalSummaryStrip(el);
                 saveToFirebase();
             }
         };
@@ -3471,6 +3914,8 @@
                     el.h = parseFloat(document.getElementById("modalH").value) || 1;
                 }
                 document.getElementById("modalTitle").innerText = `Edit: ${el.name}`;
+                updateModalSummaryStrip(el);
+                updateSelectionInspector();
                 render();
                 saveToFirebase();
             }
@@ -3612,8 +4057,12 @@
             const count = Math.min(Math.max(parseInt(document.getElementById("zoneRepeatCount").value) || 1, 1), 50);
             const stepX = parseFloat(document.getElementById("zoneStepX").value) || 0;
             const stepY = parseFloat(document.getElementById("zoneStepY").value) || 0;
+            const meta = window._pendingZoneMeta;
+            window._pendingZoneMeta = null;
             let lastCreatedId = null;
             for (let i = 0; i < count; i++) {
+                const rows = [{ key: "Status", value: "Active" }];
+                if (meta && meta.fieldKey) rows.push({ key: meta.fieldKey, value: meta.fieldVal });
                 let newEl = {
                     id: Date.now() + i,
                     layer: currentLayer, 
@@ -3624,7 +4073,7 @@
                     w: w,
                     h: h,
                     photos: [],
-                    spreadsheetData: [{key: "Status", value: "Active"}]
+                    spreadsheetData: rows
                 };
                 elements.push(newEl);
                 lastCreatedId = newEl.id;
@@ -3645,6 +4094,8 @@
             const count = Math.min(Math.max(parseInt(document.getElementById("assetRepeatCount").value) || 1, 1), 50);
             const stepX = parseFloat(document.getElementById("assetStepX").value) || 0;
             const stepY = parseFloat(document.getElementById("assetStepY").value) || 0;
+            const tpl = activeTemplatePreset;
+            activeTemplatePreset = null;
             let lastCreatedId = null;
             for (let i = 0; i < count; i++) {
                 let newEl = {
@@ -3657,9 +4108,25 @@
                     emoji: emoji,
                     x: parseFloat((startX + (stepX * i)).toFixed(2)),
                     y: parseFloat((startY + (stepY * i)).toFixed(2)),
-                    partsNeeded: false, parentId: "", plcNode: "", manualUrl: "", runHours: "", temp: "", vibration: "", lube: "", utilityDraw: "", estopZone: "", vendorName: "", vendorContact: "",
-                    lotoSteps: [], spareParts: [], workTickets: [], lastInspect: "", pmDue: "", photos: [],
-                    spreadsheetData: [{key: "Asset Type", value: "Automation System Node"}]
+                    partsNeeded: false,
+                    parentId: "",
+                    plcNode: "",
+                    manualUrl: "",
+                    runHours: "",
+                    temp: "",
+                    vibration: "",
+                    lube: tpl ? tpl.lube : "",
+                    utilityDraw: tpl ? tpl.utilityDraw : "",
+                    estopZone: tpl ? tpl.estopZone : "",
+                    vendorName: "",
+                    vendorContact: "",
+                    lotoSteps: tpl ? cloneData(tpl.lotoSteps) : [],
+                    spareParts: tpl ? cloneData(tpl.spareParts) : [],
+                    workTickets: [],
+                    lastInspect: "",
+                    pmDue: "",
+                    photos: [],
+                    spreadsheetData: tpl ? cloneData(tpl.spreadsheetData) : [{key: "Asset Type", value: "Automation System Node"}]
                 };
                 elements.push(newEl);
                 lastCreatedId = newEl.id;
@@ -3677,6 +4144,7 @@
         populateAllShiftDropdowns();
         renderAllActionLists();
         updateHistoryButtons();
+        updatePasteButtonState();
         render();
         initFirebaseLiveSync();
     </script>
