@@ -74,7 +74,36 @@
                 box-shadow: 0 4px 10px rgba(0,0,0,0.5);
             }
             #sidebar.collapsed { display: none; }
-            #canvas-container { height: 100%; flex-grow: 1; }
+                    #offline-status-banner {
+            display: none;
+            position: absolute;
+            top: 46px;
+            left: 10px;
+            z-index: 16;
+            background: rgba(127, 29, 29, 0.95);
+            border: 1px solid #ef4444;
+            color: #fef2f2;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: bold;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 6px 16px rgba(0,0,0,0.65);
+            pointer-events: auto;
+        }
+        #offline-status-banner button {
+            width: auto;
+            min-height: auto;
+            padding: 3px 8px;
+            font-size: 10px;
+            margin: 0;
+            background: #fef2f2;
+            color: #7f1d1d;
+            border: none;
+            border-radius: 4px;
+        }
+        #canvas-container { height: 100%; flex-grow: 1; }
         }
         h2, h3, h4 { margin: 0 0 5px 0; color: #38bdf8; font-size: 15px; }
         h4 { color: #f59e0b; font-size: 12px; margin-top: 8px; border-bottom: 1px solid #1f2d3d; padding-bottom: 2px; }
@@ -709,7 +738,7 @@
             </div>
             <!-- ACTION ITEM TRACKER -->
             <div style="margin-top: 4px;">
-                <label>📋 Shift Action Items / Tasks</label>
+                <div style="display:flex; justify-content:space-between; align-items:center; width:100%;"><label style="margin:0;">📋 Shift Action Items / Tasks</label><button onclick="clearCompletedActions('tech')" style="width:auto; padding:1px 6px; font-size:9px; background:#1e293b; color:#94a3b8; min-height:auto; margin:0;">🧹 Clear Done</button></div>
                 <div id="techActionList" style="max-height: 80px; overflow-y: auto; background: #070d14; border: 1px solid #1f2d3d; border-radius: 4px; padding: 4px; margin-top: 2px;"></div>
                 <div style="display: flex; gap: 4px; margin-top: 4px;">
                     <input type="text" id="newTechActionText" placeholder="Add follow-up task..." style="min-height: 28px; padding: 4px;">
@@ -722,9 +751,9 @@
             </div>
             <div style="margin-top: 4px; margin-bottom: 2px;">
                 <label>Filter Log View</label>
-                <select id="techFilterSelect" onchange="filterShiftLogs('tech', this.value)">
+                <div style="display:flex; gap:4px; align-items:center;"><select style="flex:1;" id="techFilterSelect" onchange="filterShiftLogs('tech', this.value)">
                     <option value="ALL">All Shifts</option>
-                </select>
+                </select><button id="todayBtn_tech" onclick="toggleTodayOnlyLogs('tech')" style="width:auto; min-height:36px; padding:4px 8px; font-size:10px; background:#1e293b; color:#94a3b8; margin:0;">Today</button></div>
             </div>
             <div class="notes-log-box" id="techLogContainer" style="max-height: 120px;"></div>
         </div>
@@ -743,7 +772,7 @@
             </div>
             <!-- ACTION ITEM TRACKER -->
             <div style="margin-top: 4px;">
-                <label>📋 Ops Shift Action Items</label>
+                <div style="display:flex; justify-content:space-between; align-items:center; width:100%;"><label style="margin:0;">📋 Ops Shift Action Items</label><button onclick="clearCompletedActions('ops')" style="width:auto; padding:1px 6px; font-size:9px; background:#1e293b; color:#94a3b8; min-height:auto; margin:0;">🧹 Clear Done</button></div>
                 <div id="opsActionList" style="max-height: 80px; overflow-y: auto; background: #070d14; border: 1px solid #1f2d3d; border-radius: 4px; padding: 4px; margin-top: 2px;"></div>
                 <div style="display: flex; gap: 4px; margin-top: 4px;">
                     <input type="text" id="newOpsActionText" placeholder="Add follow-up task..." style="min-height: 28px; padding: 4px;">
@@ -756,9 +785,9 @@
             </div>
             <div style="margin-top: 4px; margin-bottom: 2px;">
                 <label>Filter Log View</label>
-                <select id="shiftFilterSelect" onchange="filterShiftLogs('ops', this.value)">
+                <div style="display:flex; gap:4px; align-items:center;"><select style="flex:1;" id="shiftFilterSelect" onchange="filterShiftLogs('ops', this.value)">
                     <option value="ALL">All Shifts</option>
-                </select>
+                </select><button id="todayBtn_ops" onclick="toggleTodayOnlyLogs('ops')" style="width:auto; min-height:36px; padding:4px 8px; font-size:10px; background:#1e293b; color:#94a3b8; margin:0;">Today</button></div>
             </div>
             <div class="notes-log-box" id="shiftLogContainer" style="max-height: 120px;"></div>
         </div>
@@ -777,7 +806,7 @@
             </div>
             <!-- ACTION ITEM TRACKER -->
             <div style="margin-top: 4px;">
-                <label>📋 Safety Follow-up Action Items</label>
+                <div style="display:flex; justify-content:space-between; align-items:center; width:100%;"><label style="margin:0;">📋 Safety Follow-up Action Items</label><button onclick="clearCompletedActions('safety')" style="width:auto; padding:1px 6px; font-size:9px; background:#1e293b; color:#94a3b8; min-height:auto; margin:0;">🧹 Clear Done</button></div>
                 <div id="safetyActionList" style="max-height: 80px; overflow-y: auto; background: #070d14; border: 1px solid #1f2d3d; border-radius: 4px; padding: 4px; margin-top: 2px;"></div>
                 <div style="display: flex; gap: 4px; margin-top: 4px;">
                     <input type="text" id="newSafetyActionText" placeholder="Add follow-up task..." style="min-height: 28px; padding: 4px;">
@@ -790,9 +819,9 @@
             </div>
             <div style="margin-top: 4px; margin-bottom: 2px;">
                 <label>Filter Log View</label>
-                <select id="safetyFilterSelect" onchange="filterShiftLogs('safety', this.value)">
+                <div style="display:flex; gap:4px; align-items:center;"><select style="flex:1;" id="safetyFilterSelect" onchange="filterShiftLogs('safety', this.value)">
                     <option value="ALL">All Shifts</option>
-                </select>
+                </select><button id="todayBtn_safety" onclick="toggleTodayOnlyLogs('safety')" style="width:auto; min-height:36px; padding:4px 8px; font-size:10px; background:#1e293b; color:#94a3b8; margin:0;">Today</button></div>
             </div>
             <div class="notes-log-box" id="safetyLogContainer" style="max-height: 120px;"></div>
         </div>
@@ -811,7 +840,7 @@
             </div>
             <!-- ACTION ITEM TRACKER -->
             <div style="margin-top: 4px;">
-                <label>📋 Tom Team Action Items</label>
+                <div style="display:flex; justify-content:space-between; align-items:center; width:100%;"><label style="margin:0;">📋 Tom Team Action Items</label><button onclick="clearCompletedActions('tom')" style="width:auto; padding:1px 6px; font-size:9px; background:#1e293b; color:#94a3b8; min-height:auto; margin:0;">🧹 Clear Done</button></div>
                 <div id="tomActionList" style="max-height: 80px; overflow-y: auto; background: #070d14; border: 1px solid #1f2d3d; border-radius: 4px; padding: 4px; margin-top: 2px;"></div>
                 <div style="display: flex; gap: 4px; margin-top: 4px;">
                     <input type="text" id="newTomActionText" placeholder="Add follow-up task..." style="min-height: 28px; padding: 4px;">
@@ -824,9 +853,9 @@
             </div>
             <div style="margin-top: 4px; margin-bottom: 2px;">
                 <label>Filter Log View</label>
-                <select id="tomFilterSelect" onchange="filterShiftLogs('tom', this.value)">
+                <div style="display:flex; gap:4px; align-items:center;"><select style="flex:1;" id="tomFilterSelect" onchange="filterShiftLogs('tom', this.value)">
                     <option value="ALL">All Shifts</option>
-                </select>
+                </select><button id="todayBtn_tom" onclick="toggleTodayOnlyLogs('tom')" style="width:auto; min-height:36px; padding:4px 8px; font-size:10px; background:#1e293b; color:#94a3b8; margin:0;">Today</button></div>
             </div>
             <div class="notes-log-box" id="tomLogContainer" style="max-height: 120px;"></div>
         </div>
@@ -849,6 +878,11 @@
                 <button class="filter-pill" id="legendToggleBtn" onclick="toggleMapLegend()" style="border-color:#f59e0b; color:#fbbf24;">📖 Map Legend</button>
                 <button class="filter-pill" id="tourToggleBtn" onclick="startGuidedFloorTour()" style="border-color:#10b981; color:#34d399;">🧭 New Tech Tour</button>
             </div>
+        </div>
+                <!-- OFFLINE / RECONNECT BANNER -->
+        <div id="offline-status-banner">
+            <span id="offlineBannerText">⚠️ Offline — Showing cached layout</span>
+            <button onclick="reconnectLiveSync()">↻ Retry Live Sync</button>
         </div>
         <!-- FLOATING MAP LEGEND DRAWER -->
         <div id="map-legend-panel">
@@ -2422,6 +2456,94 @@ New Tech Tip: Check cable continuity while flexing near moving guards/frames bef
             render();
         }
 
+        /* OFFLINE BANNER & LIVE RECONNECT */
+        let isOfflineMode = false;
+        function setOfflineBannerState(offline, msgText) {
+            isOfflineMode = offline;
+            const banner = document.getElementById("offline-status-banner");
+            const txt = document.getElementById("offlineBannerText");
+            if (banner) banner.style.display = offline ? "flex" : "none";
+            if (txt && msgText) txt.innerText = msgText;
+        }
+        window.reconnectLiveSync = function() {
+            showToast("Reconnecting to live layout stream...", "info");
+            loadFromFirebase();
+        };
+        window.addEventListener("offline", () => {
+            setOfflineBannerState(true, "⚠️ Device Offline — Showing cached layout");
+        });
+        window.addEventListener("online", () => {
+            setOfflineBannerState(false);
+            loadFromFirebase();
+        });
+
+        /* TODAY-ONLY LOG FILTER & CLEAR COMPLETED ACTION ITEMS */
+        const todayOnlyLogState = { tech: false, ops: false, safety: false, tom: false };
+        window.toggleTodayOnlyLogs = function(cat) {
+            todayOnlyLogState[cat] = !todayOnlyLogState[cat];
+            const btn = document.getElementById(`todayBtn_${cat}`);
+            if (btn) {
+                btn.style.background = todayOnlyLogState[cat] ? "#0284c7" : "#1e293b";
+                btn.style.color = todayOnlyLogState[cat] ? "#fff" : "#94a3b8";
+            }
+            const filterMap = { tech: 'techFilterSelect', ops: 'shiftFilterSelect', safety: 'safetyFilterSelect', tom: 'tomFilterSelect' };
+            const curFilter = document.getElementById(filterMap[cat])?.value || "ALL";
+            renderShiftLogs(cat, curFilter);
+        };
+        window.clearCompletedActions = function(cat) {
+            const list = getActionList(cat);
+            const remaining = list.filter(item => !item.done);
+            if (remaining.length === list.length) {
+                showToast("No completed tasks to clear.", "info");
+                return;
+            }
+            if (cat === 'safety') safetyActions = remaining;
+            else if (cat === 'tom') tomActions = remaining;
+            else if (cat === 'tech') techActions = remaining;
+            else opsActions = remaining;
+            renderActionList(cat);
+            updateTabActionBadges();
+            saveToFirebase();
+            showToast("Cleared completed tasks.", "success");
+        };
+
+        /* RAF-BATCHED RENDER SCHEDULER FOR SMOOTH PAN/ZOOM & UPDATES */
+        let renderRafId = null;
+        function scheduleRender() {
+            if (renderRafId !== null) return;
+            renderRafId = requestAnimationFrame(() => {
+                renderRafId = null;
+                render();
+            });
+        }
+
+        /* URL QUERY DEEP-LINKING (?asset=ID&layer=NAME&filter=TYPE) */
+        let deepLinkApplied = false;
+        function applyUrlDeepLinks() {
+            if (deepLinkApplied || elements.length === 0) return;
+            const params = new URLSearchParams(window.location.search);
+            const targetLayer = params.get("layer");
+            const targetFilter = params.get("filter");
+            const targetAssetId = params.get("asset");
+            if (targetLayer) {
+                switchLayer(targetLayer);
+            }
+            if (targetFilter && quickFilterLabels[targetFilter]) {
+                toggleQuickFilter(targetFilter);
+            }
+            if (targetAssetId) {
+                const found = elements.find(item => String(item.id) === String(targetAssetId));
+                if (found) {
+                    if (found.layer && !targetLayer && currentLayer !== 'assets') {
+                        switchLayer(found.layer);
+                    }
+                    centerMapOnElement(found, 1.3);
+                    openModal(found);
+                }
+            }
+            deepLinkApplied = true;
+        }
+
         function loadFromLocalCache() {
             let loadedFromCache = false;
             try {
@@ -2433,6 +2555,7 @@ New Tech Tip: Check cable continuity while flexing near moving guards/frames bef
                     const syncTime = data.updatedAt ? new Date(data.updatedAt).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'}) : 'Local';
                     syncStatus.innerText = `Offline Cache (${syncTime})`;
                     syncStatus.style.color = "#f59e0b";
+                    setOfflineBannerState(true, `⚠️ Offline — Showing cached layout (${syncTime})`);
                 }
             } catch (cacheErr) {
                 console.warn("Cache fallback unavailable:", cacheErr);
@@ -2460,6 +2583,8 @@ New Tech Tip: Check cable continuity while flexing near moving guards/frames bef
                     } catch (e) {}
                     syncStatus.innerText = "Live Sync (View Only)";
                     syncStatus.style.color = "#10b981";
+                    setOfflineBannerState(false);
+                    applyUrlDeepLinks();
                 } else {
                     syncStatus.innerText = "No Data Found";
                 }
@@ -2628,6 +2753,10 @@ New Tech Tip: Check cable continuity while flexing near moving guards/frames bef
             let logsToDisplay = cat === 'safety' ? safetyLogs : (cat === 'tom' ? tomLogs : (cat === 'tech' ? techLogs : shiftLogs));
             if (filterShift && filterShift !== "ALL") {
                 logsToDisplay = logsToDisplay.filter(s => s.shift === filterShift);
+            }
+            const todayPrefix = new Date().toISOString().slice(0, 10);
+            if (todayOnlyLogState[cat]) {
+                logsToDisplay = logsToDisplay.filter(s => (s.time || "").startsWith(todayPrefix));
             }
             if (!logsToDisplay || logsToDisplay.length === 0) {
                 box.innerHTML = `<span style="color:#64748b; font-style:italic;">No handover entries found for ${filterShift}.</span>`;
@@ -2912,8 +3041,11 @@ New Tech Tip: Check cable continuity while flexing near moving guards/frames bef
         }
         window.focusNextSearchMatch = function() {
             if (!currentSearchMatches || currentSearchMatches.length === 0) return;
-            const el = currentSearchMatches[searchMatchIndex % currentSearchMatches.length];
-            searchMatchIndex = (searchMatchIndex + 1) % currentSearchMatches.length;
+            const idx = searchMatchIndex % currentSearchMatches.length;
+            const el = currentSearchMatches[idx];
+            const countEl = document.getElementById("searchMatchCount");
+            if (countEl) countEl.innerText = `${idx + 1} / ${currentSearchMatches.length}`;
+            searchMatchIndex = (idx + 1) % currentSearchMatches.length;
             centerMapOnElement(el, 1.25);
         };
         window.handleSearch = function(val) {
