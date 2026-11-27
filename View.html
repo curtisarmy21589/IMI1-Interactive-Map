@@ -74,7 +74,7 @@
                 box-shadow: 0 4px 10px rgba(0,0,0,0.5);
             }
             #sidebar.collapsed { display: none; }
-                    #offline-status-banner {
+                            #offline-status-banner {
             display: none;
             position: absolute;
             top: 46px;
@@ -2754,15 +2754,14 @@ New Tech Tip: Check cable continuity while flexing near moving guards/frames bef
             if (filterShift && filterShift !== "ALL") {
                 logsToDisplay = logsToDisplay.filter(s => s.shift === filterShift);
             }
-            const todayPrefix = new Date().toISOString().slice(0, 10);
-            if (todayOnlyLogState[cat]) {
-                logsToDisplay = logsToDisplay.filter(s => (s.time || "").startsWith(todayPrefix));
-            }
             if (!logsToDisplay || logsToDisplay.length === 0) {
                 box.innerHTML = `<span style="color:#64748b; font-style:italic;">No handover entries found for ${filterShift}.</span>`;
                 return;
             }
             const todayPrefix = new Date().toISOString().slice(0, 10);
+            if (todayOnlyLogState[cat]) {
+                logsToDisplay = logsToDisplay.filter(s => (s.time || "").startsWith(todayPrefix));
+            }
             logsToDisplay.forEach(s => {
                 let div = document.createElement("div");
                 div.className = "note-entry";
